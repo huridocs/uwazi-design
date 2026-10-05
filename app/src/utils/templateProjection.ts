@@ -32,8 +32,8 @@ const LEGACY_TYPE: Record<PropertyType, MetadataField["type"] | null> = {
   media: "media",
   generatedid: "text",
   relationship: null,
-  geolocation: null,
-  image: null,
+  geolocation: "text",
+  image: "text",
   preview: null,
   nested: null,
 };
@@ -64,10 +64,16 @@ export function blankField(corpus: Corpus, p: PropertyDef, lang: Language): Meta
     value: "",
     ...((p.type === "select" || p.type === "multiselect") && p.content ? { thesaurus: p.content } : {}),
     ...(p.type === "multiselect" ? { values: [] } : {}),
-    // A list the form edits as one string; the bulk form leaves it out.
+    // A list type: the bulk form leaves it out.
     ...(p.type === "multidate" || p.type === "multidaterange" ? { list: true } : {}),
+    ...(p.type === "multidate" ? { dates: [], displayValues: [] } : {}),
+    ...(p.type === "daterange" || p.type === "multidaterange" ? { ranges: [], displayValues: [] } : {}),
   };
 }
+
+/** A short id for a "Generated ID" property on a new entity (Uwazi prefills
+ *  it, and it stays editable). */
+export const generatedId = () => Math.random().toString(36).slice(2, 10).toUpperCase();
 
 /** A template's blank form in one language: its properties in order, the
  *  common ones (title, dates) left to the form's own header. */
@@ -195,13 +201,21 @@ export function recordFieldsFor(
   const out: AnyMetadataField[] = [];
   for (const p of template?.properties ?? []) {
     const vals = (values[p.name] ?? []).filter((v) => v && v.value !== null && v.value !== undefined && v.value !== "");
-    if (p.type === "image" || p.type === "preview" || p.type === "nested") continue;
+    if (p.type === "preview" || p.type === "nested") continue;
     if (p.type === "relationship") {
       const f = relationshipFieldOf(p, vals, ctx);
       if (f) out.push(f);
       continue;
     }
     const base = { id: p.name, label: propertyLabel(ctx.corpus, p, "EN"), propertyType: p.type };
+    if (p.type === "image") {
+      // The stored reference, for the form's picker. The record draws a
+      // picture only for a URL; a corpus's own token (Travesía's portraits) is
+      // drawn by the record's image card.
+      const raw = vals[0]?.value;
+      out.push({ ...base, type: "text", value: typeof raw === "string" ? raw : "" });
+      continue;
+    }
     if (p.type === "media") {
       // The raw value, untouched: the editor must save it byte-identical.
       const raw = vals[0]?.value;
@@ -225,7 +239,6 @@ export function recordFieldsFor(
     }
     const strings = displayStrings(p.type, vals);
     if (!strings.length) {
-      if (p.type === "geolocation") continue;
       const blank = blankField(ctx.corpus, p, "EN");
       if (blank) out.push({ ...blank, label: base.label });
       continue;
@@ -234,6 +247,7 @@ export function recordFieldsFor(
     const value = p.type === "markdown" ? strings.join("\n\n") : multi ? strings.join(" · ") : strings.join(", ");
     out.push({
       ...base,
+      ...typedOf(p.type, vals),
       type:
         p.type === "markdown" || (p.type === "text" && value.length > 120)
           ? "multiline"
@@ -247,4 +261,32 @@ export function recordFieldsFor(
     });
   }
   return out;
+}
+
+/** The typed values a display string cannot hold (see MetadataField). */
+function typedOf(type: PropertyType, vals: RawValue[]): Partial<MetadataField> {
+  switch (type) {
+    case "link": {
+      const v = vals[0]?.value as { label?: string; url?: string } | string | undefined;
+      const url = typeof v === "string" ? v : v?.url ?? "";
+      return url ? { link: { label: (typeof v === "object" && v?.label) || "", url } } : {};
+    }
+    case "geolocation": {
+      const c = latLngOf(vals[0]?.value);
+      const label = (vals[0]?.value as { label?: string } | undefined)?.label;
+      return c ? { geo: { lat: c.lat, lon: c.lng, ...(label ? { label } : {}) } } : {};
+    }
+    case "multidate":
+      return { dates: vals.map((v) => fmtDate(v.value)).filter(Boolean) };
+    case "daterange":
+    case "multidaterange":
+      return {
+        ranges: vals.map((v) => {
+          const r = v.value as { from?: unknown; to?: unknown } | undefined;
+          return { from: fmtDate(r?.from), to: fmtDate(r?.to) };
+        }),
+      };
+    default:
+      return {};
+  }
 }

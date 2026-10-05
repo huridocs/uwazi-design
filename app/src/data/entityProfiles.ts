@@ -17,6 +17,8 @@ import { overlayCreated, overlayRecord, type EntityRecord } from "./entityChange
 import { v4RelationshipFields } from "./sampleSeedV4Fields";
 import { V4_DATES } from "./sampleSeedV4";
 import { lbl, TYPE_FIELDS } from "./sample/typeFields";
+import { templatesMirror } from "./templates/mirror";
+import type { TemplateDef } from "./templates/types";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -246,9 +248,23 @@ function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
   return profile;
 }
 
+/** Profiles are projections of their corpus's templates, so a template
+ *  change (Settings › Templates writes the store from step M8) must rebuild
+ *  them. The mirror returns the same array until the store changes; a new
+ *  array for any corpus clears the cache. */
+let seenTemplates: TemplateDef[][] = [];
+function invalidateOnTemplateChange() {
+  const now = (["mock", "cejil", "travesia", "artworks"] as const).map((c) => templatesMirror(c));
+  if (now.some((list, i) => list !== seenTemplates[i])) {
+    if (seenTemplates.length) lightweightCache.clear();
+    seenTemplates = now;
+  }
+}
+
 function baseProfile(id: string): EntityProfile {
   const authored = PROFILES[id];
   if (authored) return authored;
+  invalidateOnTemplateChange();
   const cached = lightweightCache.get(id);
   if (cached) return cached;
   // A corpus with real records builds a real profile (metadata / files /

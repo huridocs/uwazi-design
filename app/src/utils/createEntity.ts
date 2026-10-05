@@ -6,7 +6,7 @@ import type { Corpus, EntityRecord } from "../data/entityChanges";
 import { cejilDefaultTemplateId } from "../data/cejil/profile";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
 import { templateMirror } from "../data/templates/mirror";
-import { blankFieldsFor } from "./templateProjection";
+import { blankFieldsFor, generatedId } from "./templateProjection";
 import { travesiaDefaultTemplateId, travesiaTemplates } from "../data/travesia/schema";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -26,10 +26,13 @@ export interface EditResult {
  *  image) are left out, as they always were. */
 export function templateFields(typeId: string, corpus: Corpus): Record<Language, MetadataField[]> {
   const template = templateMirror(corpus, typeId);
-  return Object.fromEntries(LANGS.map((l) => [l, blankFieldsFor(corpus, template, l)])) as Record<
-    Language,
-    MetadataField[]
-  >;
+  // A "Generated ID" property starts with a value, the same in every language.
+  const ids = Object.fromEntries(
+    (template?.properties ?? []).filter((p) => p.type === "generatedid").map((p) => [p.name, generatedId()]),
+  );
+  return Object.fromEntries(
+    LANGS.map((l) => [l, blankFieldsFor(corpus, template, l).map((f) => (ids[f.id] ? { ...f, value: ids[f.id] } : f))]),
+  ) as Record<Language, MetadataField[]>;
 }
 
 /** The template a corpus flags as its default, if it flags one — Create entity

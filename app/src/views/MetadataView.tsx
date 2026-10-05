@@ -79,6 +79,8 @@ import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { TemplateSelect } from "../components/shared/TemplateSelect";
 import { flashElement } from "../utils/flash";
 import { MediaFieldEditor } from "../components/metadata/MediaFieldEditor";
+import { TypedFieldEditor } from "../components/metadata/TypedFieldEditors";
+import { armsOnFocus, withLink } from "../utils/typedValues";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -491,7 +493,15 @@ function EntityEditBody({
       // holds, so a missing field is created on first write; mapping only
       // would silently drop every keystroke and every fill.
       prev.some((f) => f.id === id)
-        ? prev.map((f) => (f.id === id ? { ...f, value } : f))
+        ? prev.map((f) =>
+            f.id !== id
+              ? f
+              : f.propertyType === "link"
+                ? { ...f, ...withLink({ label: f.link?.label ?? "", url: value }) }
+                : // A plain write over a list would leave its listed values
+                  // stale: they go, and the record prints the new text.
+                  { ...f, value, ...(f.displayValues ? { displayValues: undefined } : {}) },
+          )
         : [...prev, { id, label: id === "description" ? "Description" : id, type: "multiline", value }],
     );
     reflag(id, value);
@@ -612,6 +622,47 @@ function EntityEditBody({
     onFocus: arm(fieldId, label),
     onClick: arm(fieldId, label),
   });
+
+  /* ── Typed editors (step M4) ── A property type with its own value shape
+     (numeric, date lists and ranges, link, place, generated id, image) gets
+     its editor from TypedFieldEditors. Its value is the same in every
+     language, so a change is written into each language's copy, as a
+     thesaurus choice is. */
+  const isTyped = (f: MetadataField) =>
+    !!f.propertyType &&
+    ["numeric", "generatedid", "multidate", "daterange", "multidaterange", "link", "geolocation", "image"].includes(
+      f.propertyType,
+    );
+  const updateTyped = (id: string, patch: Partial<MetadataField>) => {
+    setFieldsByLang(
+      (prev) =>
+        Object.fromEntries(
+          LANGUAGES.map((l) => [
+            l,
+            prev[l].some((f) => f.id === id)
+              ? prev[l].map((f) => (f.id === id ? { ...f, ...patch } : f))
+              : [...prev[l], { ...(fields.find((f) => f.id === id) as MetadataField), ...patch }],
+          ]),
+        ) as Record<Language, MetadataField[]>,
+    );
+    if (patch.value !== undefined) reflag(id, patch.value);
+  };
+  const imageFiles = (profile.files ?? [])
+    .filter((f) => f.type === "image" && f.url)
+    .map((f) => ({ name: f.name, url: f.url! }));
+  const typedEditor = (field: MetadataField) =>
+    isTyped(field) ? (
+      <TypedFieldEditor
+        field={field}
+        inputId={inputId(field.id)}
+        onPatch={(patch) => updateTyped(field.id, patch)}
+        inputClass={fieldClass(field.id)}
+        armProps={armsOnFocus(field) ? armProps(field.id, field.label) : undefined}
+        aria={fieldAria(field.id)}
+        onBlur={(v) => flag(field.id, v)}
+        images={imageFiles}
+      />
+    ) : null;
 
   // One editor per connection, keyed so multi-inheritance siblings sync.
   // Read-only fields (CEJIL projections, chain inheritance) render as read
@@ -767,9 +818,13 @@ function EntityEditBody({
         // string on ", " would break a label that contains one.
         return f.type === "multiselect"
           ? withLabels(f, u.row.sourceValues ?? [], u.row.sourceValueIds)
-          : { ...f, value: u.row.sourceValue ?? "" };
+          : { ...f, ...u.row.sourceTyped, value: u.row.sourceValue ?? "" };
       }),
     );
+    // A typed value is the same in every language: it lands in each copy.
+    for (const u of taking)
+      if (u.kind === "value" && isTyped(fields.find((f) => f.id === u.key) ?? ({} as MetadataField)))
+        updateTyped(u.key, { ...u.row.sourceTyped, value: u.row.sourceValue ?? "" });
     setConnections((prev) => {
       const next = { ...prev };
       for (const u of taking) {
@@ -1036,7 +1091,7 @@ function EntityEditBody({
               onStopListening={() => setFillTarget(null)}
               action={pinFor(field.id, field.label)}
             >
-              {field.type === "media" ? (
+              {typedEditor(field) ?? (field.type === "media" ? (
                 // Keyed per language: chapter titles are translated and the
                 // editor seeds its rows at mount. Not armed for click-to-fill.
                 <MediaFieldEditor
@@ -1091,13 +1146,13 @@ function EntityEditBody({
                   {...fieldAria(field.id)}
                   className={fieldClass(field.id)}
                 />
-              )}
+              ))}
               {/* Only text and multiline are translated; other types are the same
                   in every language, so they reserve their own message line. */}
-              {field.type !== "text" && field.type !== "multiline" && (
+              {(isTyped(field) || (field.type !== "text" && field.type !== "multiline")) && (
                 <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
               )}
-              {(field.type === "text" || field.type === "multiline") && (
+              {!isTyped(field) && (field.type === "text" || field.type === "multiline") && (
                 <MultiLanguageField
                   messageSlot={<FieldMessage id={msgId(field.id)} issue={issues[field.id]} />}
                   label={field.label}

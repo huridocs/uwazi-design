@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isImageUrl } from "../../utils/typedValues";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
@@ -197,7 +198,7 @@ export function MetadataRecord({
       } else {
         entries.push({ kind: "item", item: connectionItem(f) });
       }
-    } else if (f.value?.trim()) {
+    } else if (f.value?.trim() && (f.propertyType !== "image" || isImageUrl(f.value))) {
       entries.push({ kind: "item", item: fieldItem(f) });
     }
   }

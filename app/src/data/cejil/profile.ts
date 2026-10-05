@@ -398,8 +398,10 @@ function placePropertyOf(templateId: string): string | undefined {
 /** An inherited column's value: one property of a CEJIL entity, as display
  *  text through its template's type. Registered with `getEntityProp`, which
  *  the inheritance resolver reads (as Travesía's profile does). */
-registerEntityPropReader((entityId, propName) => {
-  const doc = cejilEsBySid().get(entityId);
+registerEntityPropReader((entityId, propName, lang) => {
+  // The reading language's record, so an inherited thesaurus label is in the
+  // language the record around it is in (FR and AR read the Spanish one).
+  const doc = cejilBySidLang().get(`${entityId}::${LANG_CODE[lang]}`) ?? cejilEsBySid().get(entityId);
   if (!doc) return undefined;
   const p = templateMirror("cejil", doc.template)?.properties.find((x) => x.name === propName);
   if (!p) return undefined;
@@ -473,7 +475,13 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     const projected = recordFieldsFor(template, doc.metadata, recordCtx).map((f) =>
       f.type === "relationship" && f.id === placePropertyOf(es.template) ? { ...f, keyAliases: [PLACE_INHERITED_KEY] } : f,
     );
-    acc[lang] = orderByTemplate(es.template, [...projected, ...chainFields]);
+    // The chain field ("Jueces firmantes": the judges and their País) stands for
+    // the property it is built from: one field per connection, one card match.
+    const covered = new Set(chainFields.flatMap((f) => f.keyAliases ?? []));
+    acc[lang] = orderByTemplate(es.template, [
+      ...projected.filter((f) => !(f.type === "relationship" && covered.has(f.id))),
+      ...chainFields,
+    ]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

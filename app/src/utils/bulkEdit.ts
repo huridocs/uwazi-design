@@ -35,6 +35,10 @@ export interface BulkField {
  *  place is a map, the title is the entity's own, and a country is a name
  *  AND a flag per language that a text box can't keep in step. */
 const EXCLUDED = new Set<MetadataField["type"]>(["file-list", "media", "country"]);
+/** By template type: values one box cannot write to many entities without
+ *  losing their shape (a place, a picture, a link's label and URL, date lists
+ *  and ranges). Bulk edit compares template types exactly (spec §8). */
+const EXCLUDED_PROPERTY_TYPES = new Set(["geolocation", "image", "link", "multidate", "daterange", "multidaterange", "media", "preview", "nested"]);
 
 const kindOf = (t: MetadataField["type"]): BulkFieldKind =>
   t === "select" ? "select" : t === "multiselect" ? "multi" : "scalar";
@@ -48,9 +52,19 @@ export function commonFields(entities: Entity[], corpus: Corpus, language: Langu
   const typeIds = [...new Set(entities.map((e) => e.typeId))];
   const perTemplate = typeIds.map((t) => templateFields(t, corpus)[language] ?? []);
   const same = (a: MetadataField, b: MetadataField) =>
-    a.id === b.id && a.type === b.type && (a.thesaurus ?? "") === (b.thesaurus ?? "");
+    a.id === b.id &&
+    a.type === b.type &&
+    (a.propertyType ?? "") === (b.propertyType ?? "") &&
+    (a.thesaurus ?? "") === (b.thesaurus ?? "");
   const scalars: BulkField[] = perTemplate[0]
-    .filter((f) => !EXCLUDED.has(f.type) && !f.list && f.id !== "title" && f.id !== "geolocation")
+    .filter(
+      (f) =>
+        !EXCLUDED.has(f.type) &&
+        !EXCLUDED_PROPERTY_TYPES.has(f.propertyType ?? "") &&
+        !f.list &&
+        f.id !== "title" &&
+        f.id !== "geolocation",
+    )
     .filter((f) => perTemplate.every((list) => list.some((g) => same(f, g))))
     // Read off the template only — never every entity's record: opening the
     // form on a whole corpus built every CEJIL profile in one render. The one

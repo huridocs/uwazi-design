@@ -16,6 +16,19 @@ export interface MetadataField {
    *  multidaterange): the record lists them; `value` joins them for search and
    *  the text editor, until M3b's list editors. */
   displayValues?: string[];
+  /* Typed values for the property types a display string cannot hold
+     (step M4). Each editor writes its own and recomputes `value` from it, so
+     `value` stays what search, cards and the text-only readers print. Dates
+     and numbers need none: `value` holds them. */
+  /** link: Uwazi's `{label, url}`. `value` is the URL. */
+  link?: { label: string; url: string };
+  /** geolocation: Uwazi's `{lat, lon, label?}`. `value` is the place text. */
+  geo?: { lat: number; lon: number; label?: string };
+  /** daterange (one) and multidaterange (several): each end as the record
+   *  writes dates (dd/mm/yyyy), "" when open. */
+  ranges?: { from: string; to: string }[];
+  /** multidate: each date as the record writes dates. */
+  dates?: string[];
   /** `media`: the raw Uwazi media value — a URL, optionally a comma and a JSON
    *  config of chapter timelinks. Read with `parseMediaValue`. */
   type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media" | "select" | "multiselect";

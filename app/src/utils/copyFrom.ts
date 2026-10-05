@@ -54,6 +54,10 @@ export interface CopyMatch {
    *  joins them with ", ", which a label can itself contain. */
   sourceValues?: string[];
   sourceValueIds?: string[];
+  /** The source's typed value where the type has one (link, place, date list,
+   *  ranges): copied with `sourceValue`, so the target holds the same typed
+   *  value and lists, never a stale copy of its own. */
+  sourceTyped?: Partial<MetadataField>;
   sourceConnectedEntityIds?: string[];
   /** What the target holds right now, so a caller can show incoming-vs-current
    *  per row instead of overwriting silently. */
@@ -119,6 +123,11 @@ export function copyUnitsOneToOne(plan: CopyPlan): { units: CopyUnit[]; unstagea
  *  never this entity's. Exported so a UI can explain the exclusion without
  *  repeating the list. */
 export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list", "media"]);
+/** The same rule by template type (Uwazi's own list): media, image, preview,
+ *  nested. */
+const COPY_EXCLUDED_PROPERTY_TYPES = new Set(["media", "image", "preview", "nested"]);
+const excluded = (f: AnyMetadataField) =>
+  COPY_EXCLUDED_TYPES.has(f.type) || (f.type !== "relationship" && COPY_EXCLUDED_PROPERTY_TYPES.has(f.propertyType ?? ""));
 
 const isRelationship = (f: AnyMetadataField): f is RelationshipMetadataField =>
   f.type === "relationship";
@@ -140,6 +149,16 @@ function inheritKey(f: AnyMetadataField): string {
   }
   return f.inheritProperty ? `prop:${f.inheritProperty}` : "";
 }
+
+/** A scalar's typed value, every key present so a copy also clears what the
+ *  target held. */
+const typedPart = (f: MetadataField): Partial<MetadataField> => ({
+  link: f.link,
+  geo: f.geo,
+  dates: f.dates,
+  ranges: f.ranges,
+  displayValues: f.displayValues,
+});
 
 /** A field's own value, as a copy would carry it. */
 const valueOf = (f: AnyMetadataField): string | undefined => (isScalar(f) ? f.value : undefined);
@@ -164,11 +183,15 @@ export interface CopyIndex {
 }
 
 const signatureOf = (f: AnyMetadataField): string =>
-  `${f.type}|${contentKey(f)}|${inheritKey(f)}`;
+  `${typeOf(f)}|${contentKey(f)}|${inheritKey(f)}`;
+
+/** The template's type where the field has one, else the legacy type: two
+ *  date lists match each other, never a date list and a text field. */
+const typeOf = (f: AnyMetadataField): string => (f.type !== "relationship" && f.propertyType) || f.type;
 
 /** Why this target field can never receive a copy, or null if it can. */
 function unusableReason(f: AnyMetadataField): CopySkipReason | null {
-  if (COPY_EXCLUDED_TYPES.has(f.type)) return "excluded-type";
+  if (excluded(f)) return "excluded-type";
   if (isRelationship(f) && f.readOnly) return "read-only-derived";
   return null;
 }
@@ -205,7 +228,7 @@ export function countCopyMatches(
   let n = 0;
   for (const s of sourceFields) {
     if (index.unusable.has(s.id)) continue;
-    if (COPY_EXCLUDED_TYPES.has(s.type)) continue;
+    if (excluded(s)) continue;
     if (isRelationship(s) && s.readOnly) continue;
     if (index.signature.get(s.id) === signatureOf(s)) n++;
   }
@@ -261,12 +284,12 @@ export function planCopy(
       continue;
     }
 
-    if (t.type !== s.type) {
+    if (typeOf(t) !== typeOf(s)) {
       skipped.push({
         id: s.id,
         label: t.label,
         reason: "type-mismatch",
-        detail: `“${t.label}” is ${t.type} here and ${s.type} on the source.`,
+        detail: `“${t.label}” is ${typeOf(t)} here and ${typeOf(s)} on the source.`,
         side: "both",
       });
       continue;
@@ -309,6 +332,7 @@ export function planCopy(
       ...(s.type === "multiselect"
         ? { sourceValues: s.values ?? (s.value ? [s.value] : []), sourceValueIds: s.valueIds }
         : {}),
+      ...(isScalar(s) ? { sourceTyped: typedPart(s) } : {}),
       sourceConnectedEntityIds: sourceIds,
       targetValue,
       targetConnectedEntityIds: targetIds,

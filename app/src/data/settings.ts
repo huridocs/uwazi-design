@@ -73,7 +73,8 @@ export const seedTemplates: SettingsTemplate[] = entityTypes.map((t, i) => ({
   color: t.color,
   propertyCount: [8, 12, 6, 10, 5, 7, 9, 4][i] ?? 6,
   entityCount: [18, 13, 9, 6, 4, 5, 3, 2][i] ?? 1,
-  isDefault: t.id === "court_case",
+  // The template store's default (data/sample/templates.ts): uploads take it.
+  isDefault: t.id === "document",
 }));
 
 export type PropertyType =

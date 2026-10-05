@@ -106,6 +106,8 @@ export function fieldItem(f: MetadataField): MetadataItem {
           <span className="leading-none">{f.flag}</span>
           <span className="font-medium">{f.value}</span>
         </span>
+      ) : f.propertyType === "image" ? (
+        <img src={f.value} alt={f.label} className="max-w-full max-h-64 rounded-md border border-border-soft" />
       ) : f.type === "link" ? (
         // `min-w-0` + `truncate`, for the same reason the pills next door carry
         // them: the value column has a definite width, and a URL is the one
@@ -115,7 +117,10 @@ export function fieldItem(f: MetadataField): MetadataItem {
           className="inline-flex items-center gap-1 max-w-full min-w-0 text-sm text-ink leading-relaxed"
           title={f.value}
         >
-          <span className="font-medium underline truncate">{f.value}</span>
+          {/* Uwazi's link is a label and a URL: the label shows, the URL opens. */}
+          <a href={f.value} target="_blank" rel="noreferrer" className="font-medium underline truncate">
+            {f.link?.label || f.value}
+          </a>
           <ExternalLink size={10} className="text-ink-muted shrink-0" />
         </span>
       ) : long ? (
