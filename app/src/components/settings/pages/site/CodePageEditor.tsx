@@ -274,7 +274,7 @@ export function CodePageEditor({
         <SettingsButton variant="secondary" size="sm" className="whitespace-nowrap" disabled={!unsaved} onClick={() => commit(false)}>
           Save draft
         </SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={state === "published" && !unsaved} onClick={() => commit(true)}>
+        <SettingsButton variant="commit" size="sm" disabled={state === "published" && !unsaved} onClick={() => commit(true)}>
           Publish
         </SettingsButton>
       </SettingsContent.Footer>

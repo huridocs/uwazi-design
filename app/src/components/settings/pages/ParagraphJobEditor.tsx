@@ -248,7 +248,7 @@ export function ParagraphJobEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="primary" size="sm" onClick={save}>
+        <SettingsButton variant="commit" size="sm" onClick={save}>
           {isNew ? "Start extraction" : "Re-run"}
         </SettingsButton>
       </SettingsContent.Footer>

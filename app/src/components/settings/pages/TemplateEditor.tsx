@@ -327,7 +327,7 @@ export function TemplateEditor({
           Cancel
         </SettingsButton>
         <SettingsButton
-          variant="success"
+          variant={isNew ? "commit" : "success"}
           size="sm"
           disabled={!dirty}
           aria-disabled={saveBlocked || undefined}

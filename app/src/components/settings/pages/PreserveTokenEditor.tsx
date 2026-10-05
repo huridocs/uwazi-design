@@ -277,7 +277,7 @@ export function PreserveTokenEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Add source" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

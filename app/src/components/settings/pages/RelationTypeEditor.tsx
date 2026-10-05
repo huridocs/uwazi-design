@@ -65,7 +65,7 @@ export function RelationTypeEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create type" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

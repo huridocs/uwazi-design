@@ -3,6 +3,7 @@ import { useSetAtom } from "jotai";
 import { ChevronLeft, ArrowLeft } from "lucide-react";
 import { settingsMobileDrilledAtom } from "../../atoms/settings";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
+import { SettingsBarContext } from "./SettingsButton";
 
 /** Content-area shell for a settings page, mirroring Uwazi's V2
  *  SettingsContent layout (Header breadcrumb · Body · sticky Footer save bar)
@@ -166,7 +167,7 @@ SettingsContent.Footer = function SettingsFooter({
       style={{ borderTop: "1px solid var(--border-primary)" }}
       data-testid="settings-content-footer"
     >
-      {children}
+      <SettingsBarContext.Provider value={true}>{children}</SettingsBarContext.Provider>
     </footer>
   );
 };

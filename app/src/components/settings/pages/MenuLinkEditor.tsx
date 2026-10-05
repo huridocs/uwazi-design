@@ -146,7 +146,7 @@ export function MenuLinkEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !title.trim()} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !title.trim()} onClick={save}>
           {isNew ? "Add item" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

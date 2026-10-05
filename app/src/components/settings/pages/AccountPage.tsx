@@ -219,7 +219,7 @@ export function AccountPage() {
               </div>
               <div>
                 <SettingsButton
-                  variant="success"
+                  variant="commit"
                   size="sm"
                   disabled={!canSavePassword}
                   onClick={savePassword}
@@ -279,7 +279,7 @@ export function AccountPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <SettingsButton
-                    variant="success"
+                    variant="commit"
                     size="sm"
                     disabled={code.length !== 6}
                     onClick={verifyTwoFactor}

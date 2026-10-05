@@ -127,7 +127,7 @@ export function UserEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !valid} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !valid} onClick={save}>
           {isNew ? "Invite user" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

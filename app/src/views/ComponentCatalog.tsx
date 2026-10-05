@@ -46,7 +46,7 @@ import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { SettingsNav } from "../components/settings/SettingsNav";
 
 // Settings primitives (static demos)
-import { SettingsButton } from "../components/settings/SettingsButton";
+import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
 import { SettingsField, TextInput } from "../components/settings/SettingsField";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -2044,18 +2044,32 @@ const textColor = typeLabelColor(type.color);`}
               <div id="set-button" ref={reg("set-button")}>
                 <CatalogEntry
                   name="SettingsButton"
-                  description="Settings-scoped action button. Warm fill is canonical; seal for danger only."
-                  code={`<SettingsButton variant="primary" size="sm">Save</SettingsButton>
-<SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
-<SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
-<SettingsButton variant="danger" size="sm">Delete</SettingsButton>`}
+                  description="Settings button on the bar ladder. Inside SettingsContent.Footer the variants take their bar rung (lead, ghost, seal text); in a page body primary and secondary keep the warm fill. Ink commits; green only on a Save."
+                  code={`<SettingsBarContext.Provider value={true}>
+  <SettingsButton variant="primary" size="sm">Add template</SettingsButton>
+  <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+  <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
+  <SettingsButton variant="commit" size="sm">Create template</SettingsButton>
+  <SettingsButton variant="success" size="sm">Save</SettingsButton>
+</SettingsBarContext.Provider>
+<SettingsButton variant="secondary" size="sm">Translate</SettingsButton>`}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <SettingsButton variant="primary" size="sm">Save</SettingsButton>
-                    <SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
-                    <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
-                    <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
-                    <SettingsButton variant="primary" size="sm" disabled>Disabled</SettingsButton>
+                  <div className="flex flex-col gap-3">
+                    <SettingsBarContext.Provider value={true}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SettingsButton variant="primary" size="sm">Add template</SettingsButton>
+                        <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+                        <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
+                        <SettingsButton variant="commit" size="sm">Create template</SettingsButton>
+                        <SettingsButton variant="success" size="sm">Save</SettingsButton>
+                        <SettingsButton variant="success" size="sm" disabled>Save</SettingsButton>
+                      </div>
+                    </SettingsBarContext.Provider>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
+                      <SettingsButton variant="danger" size="sm">Disable</SettingsButton>
+                      <SettingsButton variant="secondary" size="sm" disabled>Disabled</SettingsButton>
+                    </div>
                   </div>
                 </CatalogEntry>
               </div>

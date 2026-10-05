@@ -272,7 +272,7 @@ export function ExtractorEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !property.trim()} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !property.trim()} onClick={save}>
           {isNew ? "Create extractor" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>
