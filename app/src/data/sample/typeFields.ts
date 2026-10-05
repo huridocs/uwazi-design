@@ -63,8 +63,11 @@ const RECORD_LABELS: Record<string, Partial<Record<Language, string>>> = (() => 
   return out;
 })();
 
+/** On main a property the field table names reads as main's records always
+ *  have (its translation, else English); one only the case record has reads
+ *  as the case record does in that language. */
 export function lbl(key: string, lang: Language): string {
-  return FIELD_LABELS[key]?.[lang] ?? (lang === "EN" ? ENGLISH_LABELS[key] : undefined) ?? RECORD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? key;
+  return FIELD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? RECORD_LABELS[key]?.[lang] ?? key;
 }
 
 

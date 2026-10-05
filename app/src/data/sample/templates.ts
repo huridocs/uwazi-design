@@ -122,13 +122,9 @@ export const sampleTemplateDefs = (): TemplateDef[] => (built ??= entityTypes.ma
   ...(t.publishedView ? { publishedView: true } : {}),
   commonProperties: commonPropertiesFor(t.id),
   properties: (() => {
+    // In the order main's records read: the field table's, and Court Case's
+    // as declared above.
     const own = t.id === "court_case" ? courtCaseProperties() : nativeProperties(t.id);
-    // Long texts (markdown) last, so the record reads facts, then prose.
-    const long = own.filter((p) => p.type === "markdown");
-    return [
-      ...own.filter((p) => p.type !== "markdown"),
-      ...long,
-      ...(t.id === "court_case" ? caseRelationships() : []),
-    ];
+    return [...own, ...(t.id === "court_case" ? caseRelationships() : [])];
   })(),
 })));

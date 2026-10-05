@@ -20,6 +20,8 @@ import type { DocumentGroup, FileEntry } from "../files";
 import { asset } from "../../utils/asset";
 import { artworks, artworkArtists, ARTWORK_IMAGE_BASE } from "./artworks";
 import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID } from "./typesAdapter";
+import { templateMirror } from "../templates/mirror";
+import { fieldsOverTemplate } from "../../utils/templateProjection";
 import type { Artwork, ArtworkArtist } from "./types";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -160,6 +162,11 @@ function imageFile(w: Artwork): { files: FileEntry[]; groups: DocumentGroup[] } 
   };
 }
 
+/** A record's fields over its template (stage 2b): the template's order and
+ *  blank fields for the form, the values as this corpus builds them. */
+const overTemplate = (typeId: string, fields: AnyMetadataField[]) =>
+  byLang(fieldsOverTemplate("artworks", templateMirror("artworks", typeId), fields, "EN"));
+
 export function buildArtworkProfile(id: string): EntityProfile {
   const { artworkById, artistById } = index();
 
@@ -169,7 +176,7 @@ export function buildArtworkProfile(id: string): EntityProfile {
       id,
       typeId: ARTIST_TYPE_ID,
       hasDocument: false,
-      metadata: byLang(artistFields(artist)),
+      metadata: overTemplate(ARTIST_TYPE_ID, artistFields(artist)),
       documentGroups: [],
       files: [],
       relationships: { kind: "references" },
@@ -182,7 +189,7 @@ export function buildArtworkProfile(id: string): EntityProfile {
     id,
     typeId: ARTWORK_TYPE_ID,
     hasDocument: false,
-    metadata: byLang(artworkFields(w)),
+    metadata: overTemplate(ARTWORK_TYPE_ID, artworkFields(w)),
     // The painting. `EntityProfile.image` is what the record's leading card
     // renders, the same way `files` is what the document card renders.
     image: {

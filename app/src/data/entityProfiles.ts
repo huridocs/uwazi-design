@@ -13,6 +13,8 @@ import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
+import { templateMirror } from "./templates/mirror";
+import { fieldsOverTemplate } from "../utils/templateProjection";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -68,6 +70,7 @@ export function typeHasDocument(typeId: string): boolean {
 }
 
 /** Main entity = the existing Velásquez globals, assembled by reference. */
+let caseMetadata: Record<Language, AnyMetadataField[]> | null = null;
 const mainProfile: EntityProfile = {
   id: MAIN_ENTITY_ID,
   typeId: "court_case",
@@ -76,7 +79,14 @@ const mainProfile: EntityProfile = {
   renditions: renditionsByLanguage,
   documentGroups,
   files,
-  metadata: metadataFieldsByLanguage,
+  // Over the Court Case template, built on first read: the template store
+  // reads `data/entities`, which may still be loading when this module is.
+  get metadata() {
+    return (caseMetadata ??= LANGS.reduce((acc, lang) => {
+      acc[lang] = fieldsOverTemplate("mock", templateMirror("mock", "court_case"), metadataFieldsByLanguage[lang], lang);
+      return acc;
+    }, {} as Record<Language, AnyMetadataField[]>));
+  },
   pdfMetadata: pdfMetadataByLanguage,
   relationships: { kind: "references" },
 };
@@ -259,7 +269,7 @@ function entityDocDate(entity: Entity): string {
 function buildLightweightProfile(entity: Entity): EntityProfile {
   const hasDocument = typeHasDocument(entity.typeId);
   const metadata = LANGS.reduce((acc, lang) => {
-    acc[lang] = synthFields(entity, lang);
+    acc[lang] = fieldsOverTemplate("mock", templateMirror("mock", entity.typeId), synthFields(entity, lang), lang);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

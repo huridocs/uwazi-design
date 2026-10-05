@@ -12,6 +12,8 @@ import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
+import { templateMirror } from "../templates/mirror";
+import { recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
 import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
 import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
@@ -490,12 +492,30 @@ function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMet
     .map((x) => x.field);
 }
 
+const NO_EDITOR_YET = new Set(["media", "image", "geolocation"]);
+
+/** What the record projection needs to know about CEJIL: relationship types
+ *  by their dump name and its templates. */
+const recordCtx: RecordContext = {
+  corpus: "cejil",
+  relationTypeName: (id) => cejilRelationTypes.find((r) => r._id === id)?.name ?? "Relacionado",
+  template: (id) => templateMirror("cejil", id),
+};
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
   const relFields = cejilRelationshipFields(sharedId, es.template);
+  const template = templateMirror("cejil", es.template);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = orderByTemplate(es.template, [...mdFields(doc), ...relFields]);
+    // Scalar properties through the template projection (template-schema
+    // step M3); the relationship fields stay as this corpus builds them.
+    // Media, images and places wait for their editors (stage 2c): the form
+    // would write them back as text.
+    const scalars = recordFieldsFor(template, doc.metadata, recordCtx).filter(
+      (f) => f.type !== "relationship" && !NO_EDITOR_YET.has(f.propertyType ?? ""),
+    );
+    acc[lang] = orderByTemplate(es.template, [...scalars, ...relFields]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

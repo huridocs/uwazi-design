@@ -346,3 +346,36 @@ export function projectRecordFields(
   }
   return out;
 }
+
+/** Main's Sample and Best Artworks records over their templates (stage 2b).
+ *  The template decides which properties there are and their order; every
+ *  value keeps the field its corpus already builds (label, type, flag, items),
+ *  so nothing a record shows changes. A property with no value gets its blank
+ *  field, for the form; a relationship property with no connection is left
+ *  out. Fields no template property describes (the case record's description
+ *  and other files) keep their place: each follows the field it followed. */
+export function fieldsOverTemplate(
+  corpus: Corpus,
+  template: TemplateDef | undefined,
+  fields: AnyMetadataField[],
+  lang: Language,
+): AnyMetadataField[] {
+  if (!template) return fields;
+  const byName = new Map(fields.map((f) => [f.id, f]));
+  const declared = new Set(template.properties.map((p) => p.name));
+  const out: AnyMetadataField[] = [];
+  for (const p of template.properties) {
+    const f = byName.get(p.name);
+    if (f) out.push(f);
+    else if (p.type !== "relationship") {
+      const blank = blankField(corpus, p, lang);
+      if (blank) out.push(blank);
+    }
+  }
+  fields.forEach((f, i) => {
+    if (declared.has(f.id)) return;
+    const before = fields.slice(0, i).reverse().find((g) => out.includes(g));
+    out.splice(before ? out.indexOf(before) + 1 : 0, 0, f);
+  });
+  return out;
+}
