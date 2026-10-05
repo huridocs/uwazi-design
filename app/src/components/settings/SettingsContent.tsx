@@ -2,6 +2,7 @@ import { createContext, useContext, useId, type ReactNode } from "react";
 import { useSetAtom } from "jotai";
 import { ChevronLeft, ArrowLeft } from "lucide-react";
 import { settingsMobileDrilledAtom } from "../../atoms/settings";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
 /** Content-area shell for a settings page, mirroring Uwazi's V2
  *  SettingsContent layout (Header breadcrumb · Body · sticky Footer save bar)
@@ -56,8 +57,13 @@ interface HeaderProps {
 
 // Title/breadcrumb only — actions live in the bottom action bar (Footer), per
 // our convention (we don't put primary actions in a top bar).
-SettingsContent.Header = function SettingsHeader({ path, title, onBack }: HeaderProps) {
+SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave }: HeaderProps) {
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
+  // Every way out of the page asks first while its form is dirty
+  // (`useSettingsDraft` registers it). Cancel in the footer is the explicit
+  // discard and does not come through here.
+  const guard = useDirtyGuard();
+  const onBack = leave ? () => guard(leave) : undefined;
   const titleId = useContext(TitleId);
   return (
     // A `header` inside the page's section, so it heads the page, not the site.
@@ -83,7 +89,7 @@ SettingsContent.Header = function SettingsHeader({ path, title, onBack }: Header
         <button
           type="button"
           data-part="back"
-          onClick={() => setDrilled(false)}
+          onClick={() => guard(() => setDrilled(false))}
           aria-label="Back to settings"
           className="md:hidden -ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
         >

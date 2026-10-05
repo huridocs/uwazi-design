@@ -125,6 +125,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       onNavigate?.("settings");
     });
   };
+  /** Switch collection and open the Library on it. Guarded as one step: an
+   *  open settings or metadata form asks first, and "Keep editing" leaves the
+   *  collection as it was (Settings pages remount on a collection change). */
+  const switchCollection = (source: DataSource) => {
+    guard(() => {
+      selectSource(source);
+      onNavigate?.("library");
+    });
+  };
   /** Phones: open a settings group's list (the rail, full width), not a page.
    *  The rail lists the current section's group, so this sets the section to
    *  the group's entry; without it every group opens on Account's list. */
@@ -265,9 +274,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                           data-part="option"
                           aria-selected={on}
                           onClick={() => {
-                            selectSource(c.id);
                             setCollectionOpen(false);
-                            onNavigate?.("library");
+                            switchCollection(c.id);
                           }}
                           className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${
                             on ? "bg-vellum" : "hover:bg-warm"
@@ -554,9 +562,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               <Select
                 value={dataSource}
                 onChange={(v) => {
-                  selectSource(v as DataSource);
-                  onNavigate?.("library");
                   setMobileMenuOpen(false);
+                  switchCollection(v as DataSource);
                 }}
                 ariaLabel="Collection"
                 align="end"

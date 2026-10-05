@@ -7,6 +7,7 @@ import { dataSourceAtom, travesiaReadyAtom } from "./dataSource";
 import { travesiaSettingsThesauri } from "../data/travesia/load";
 import { cejilValueLabels } from "../data/cejil/profile";
 import type { Language } from "./language";
+import { registerSettingsReset } from "./settingsCollection";
 
 /** The thesauri — ONE store that Settings › Thesauri, the edit form's
  *  thesaurus picker and anything else reading a vocabulary share. Before it,
@@ -39,6 +40,7 @@ interface CorpusThesauri {
 const EMPTY: CorpusThesauri = { created: [], values: {}, renamed: {}, deleted: [], bindings: {} };
 
 const overlayAtom = atom<Record<Corpus, CorpusThesauri>>({ mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY });
+registerSettingsReset((set) => set(overlayAtom, { mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY }));
 
 /** Values a list holds, groups counted beside their children — the count
  *  Settings has always shown ("Groups count as items alongside their
