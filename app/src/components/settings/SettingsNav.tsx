@@ -3,7 +3,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
-  settingsGroupOf,
+  settingsGroups,
   settingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsDocumentation,
@@ -11,8 +11,8 @@ import {
 import type { AppView } from "../../atoms/navigation";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
-/** The settings rail — three grouped sections (User / System / Tools) matching
- *  Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
+/** The settings rail — every group (User / System / Tools) with its task
+ *  shelves, after Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
  *  vellum + semibold (no rounded inset, no left-border accent).
  *
  *  Also the Import CSV rail, so there is one list of tools, not two to keep in
@@ -47,9 +47,9 @@ export function SettingsNav({
       style={{ borderInlineEnd: "1px solid var(--border-primary)" }}
     >
       <div data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
-      {/* One group: the one you came in through (User settings, System settings
-          or the Tools dropdown), not every section under each entry point. */}
-      {[settingsGroupOf(current)].map((group) => (
+      {/* Every group, each with its task shelves (`subgroup`). The navbar's
+          three entries still open their own group's first page. */}
+      {settingsGroups.map((group) => (
         // A flex column, so the items stretch: a stretched item's `bleed`
         // margins widen it to the rail edge. A `w-full` button does not widen,
         // it only moves.
