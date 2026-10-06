@@ -272,7 +272,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 )}
               </div>
             )}
-            <div className="relative" ref={toolsRef}>
+            <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
               <button
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
                 className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
@@ -534,9 +534,11 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             </div>
 
             {/* Tools section */}
-            <SectionLabel className="px-4 pt-4 pb-1">
-              {t("System", "Tools")}
-            </SectionLabel>
+            {toolsItems.length > 0 && (
+              <SectionLabel className="px-4 pt-4 pb-1">
+                {t("System", "Tools")}
+              </SectionLabel>
+            )}
             {toolsItems.map((item, i) => {
               const Icon = item.icon;
               const active =
