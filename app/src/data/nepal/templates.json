@@ -595,6 +595,68 @@
     "prioritySorting": true
    },
    {
+    "id": "nepal_claim:figure",
+    "name": "figure",
+    "label": "Figure",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "nepal_claim:unit",
+    "name": "unit",
+    "label": "Figure unit",
+    "type": "select",
+    "content": "figure_units",
+    "filter": true
+   },
+   {
+    "id": "nepal_claim:unit_detail",
+    "name": "unit_detail",
+    "label": "Unit detail",
+    "type": "text"
+   },
+   {
+    "id": "nepal_claim:qualifier",
+    "name": "qualifier",
+    "label": "Figure qualifier",
+    "type": "select",
+    "content": "figure_qualifiers"
+   },
+   {
+    "id": "nepal_claim:scope",
+    "name": "scope",
+    "label": "Figure scope",
+    "type": "text",
+    "filter": true
+   },
+   {
+    "id": "nepal_claim:as_of",
+    "name": "as_of",
+    "label": "Figure as of",
+    "type": "date",
+    "filter": true
+   },
+   {
+    "id": "nepal_claim:as_of_time",
+    "name": "as_of_time",
+    "label": "Time of day",
+    "type": "text"
+   },
+   {
+    "id": "nepal_claim:as_of_basis",
+    "name": "as_of_basis",
+    "label": "As-of basis",
+    "type": "select",
+    "content": "as_of_bases"
+   },
+   {
+    "id": "nepal_claim:figure_more",
+    "name": "figure_more",
+    "label": "Other figures in the statement",
+    "type": "text",
+    "fullWidth": true
+   },
+   {
     "id": "nepal_claim:verification_note",
     "name": "verification_note",
     "label": "Verification note",
