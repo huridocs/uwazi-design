@@ -370,6 +370,17 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Nepal's Evidence layer. Collections of 500+ records open on community marks. Headless Chromium
   needs `--use-angle=metal --enable-gpu-rasterization` to measure fps; SwiftShader raster runs
   zoomed-in pans at ~7 fps.
+  Interaction: hover lifts a node's one-hop neighbourhood (the rest recede); a selection keeps
+  it until Escape or a click on empty canvas (`onClear`). The tooltip is anchored to its target
+  (above, else below, right, left), never to the pointer. Edges answer hover and click with their
+  types and, for Nepal, quotes and status (`pairEvidence`). With a search, the camera flies to the
+  best match by relevance; Enter / Shift+Enter in the masthead search (`networkFindStepAtom`)
+  and the "N of M" stepper move the find cursor. Labels try four spots and never overlap each
+  other, the always-labelled dots or the controls marked `data-overlay`. The legend hides
+  templates without relayout. Trackpad swipe pans; pinch, ⌘ + wheel and mouse notches zoom.
+  The canvas region is a tab stop (arrows, + / −, 0, Escape) and its keyboard list is the
+  records in view. Settings › Collection can make Network the default view. `window.__network`
+  (dev builds) gives node screen positions for scripted checks.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with
