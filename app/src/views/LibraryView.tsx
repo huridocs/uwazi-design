@@ -81,6 +81,7 @@ import {
   libraryTimeHubAtom,
   libraryTypeFiltersAtom,
   libraryViewModeAtom,
+  libraryHasClaimEvidenceAtom,
   matchTypeFiltersAtom,
   librarySearchScopeAtom,
   librarySearchMatchAtom,
@@ -297,6 +298,7 @@ export function LibraryView() {
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
+  const hasClaimEvidence = useAtomValue(libraryHasClaimEvidenceAtom);
   const cardInfo = useAtomValue(libraryCardInfoAtom);
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
@@ -1261,7 +1263,7 @@ export function LibraryView() {
           )}
           {/* A dropdown like Sort and Language, and narrower than a five-segment
               control; its `steady` trigger keeps the width fixed across views. */}
-          <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
+          <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} evidence={hasClaimEvidence} />
         </div>
         {/* One hairline between what is listed (sort, view) and how it is drawn
             (Display, Language). It folds with Language, since past that point

@@ -25,6 +25,7 @@ import {
   librarySearchMatchAtom,
   libraryCorpusReadyAtom,
   libraryHasQuotesAtom,
+  libraryHasClaimEvidenceAtom,
   libraryDisplayAtom,
   libraryTimelineScopeAtom,
   libraryResultsSheetOpenAtom,
@@ -193,7 +194,10 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   const unoffered = scope === "quotes" && get(libraryCorpusReadyAtom) && !get(libraryHasQuotesAtom);
   set(librarySearchScopeAtom, unoffered ? "all" : scope);
   set(librarySearchMatchAtom, s.query && s.searchMatch === "whole" ? "whole" : "partial");
-  set(L.viewModeChosenAtom, s.viewMode);
+  // Evidence likewise, where the collection has loaded and holds no claim
+  // evidence; before it loads, `libraryViewModeAtom` reads it as the default.
+  const noEvidence = s.viewMode === "evidence" && get(libraryCorpusReadyAtom) && !get(libraryHasClaimEvidenceAtom);
+  set(L.viewModeChosenAtom, noEvidence ? null : s.viewMode);
   set(L.preSearchViewModeAtom, s.query ? s.preSearchView : null);
   set(L.searchModeOverriddenAtom, s.query ? s.searchOverridden : false);
   set(libraryResultsSheetOpenAtom, false);

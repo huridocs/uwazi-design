@@ -19,6 +19,7 @@ import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { networkTypeOptionsAtom } from "./network";
 import { NETWORK_EVIDENCE_TEMPLATES } from "../data/network/graph";
+import { nepalClaimEvidence } from "../data/nepal/claimEvidence";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
@@ -67,6 +68,15 @@ export const librarySearchDraftAtom = atom(
  *  then. A stand-in for `fieldInScope(…, "quotes")` that folds nothing. */
 export const libraryHasQuotesAtom = atom((get) =>
   get(libraryEntitiesAtom).some((e) => !!e.searchFields?.some((f) => !!f.key?.startsWith("quote:"))),
+);
+
+/** Whether the collection holds a claim that a source takes a stance on, so
+ *  the Evidence view has something to show (Nepal only, today). Read over the
+ *  whole collection, not the filtered set, so the View menu does not change
+ *  as filters change; a filtered set with no claims gets the view's empty
+ *  state instead. */
+export const libraryHasClaimEvidenceAtom = atom((get) =>
+  get(libraryEntitiesAtom).some((e) => e.typeId === "nepal_claim" && !!nepalClaimEvidence(e.id)),
 );
 
 /** Whether the collection's entities have loaded, so an empty list means
@@ -497,9 +507,15 @@ const searchModeOverriddenAtom = atom(false);
  *  opens on the collection's default view (Settings › Collection). */
 const viewModeChosenAtom = atom<LibraryViewMode | null>(null);
 const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = { cards: "cards", table: "list", map: "map" };
+/** Evidence reads as the default view in a collection with no claim evidence
+ *  (a saved view or link made in Nepal, or one opened before Nepal loaded). */
 const viewModeStateAtom = atom(
-  (get): LibraryViewMode =>
-    get(viewModeChosenAtom) ?? DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards",
+  (get): LibraryViewMode => {
+    const fallback = DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards";
+    const chosen = get(viewModeChosenAtom);
+    if (chosen === "evidence" && !get(libraryHasClaimEvidenceAtom)) return fallback;
+    return chosen ?? fallback;
+  },
   (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
 );
 /** Forget the reader's pick, so the Library opens on the saved default view
@@ -1053,7 +1069,7 @@ export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
 export const selectDataSourceAtom = atom(null, (get, set, source: DataSource) =>
   // Guard the whole switch, not just the selection clear: otherwise "Keep
   // editing" leaves the new collection showing with the old selection and form.
-  whenBulkClean(get, set, () => switchDataSource(set, source)),
+  whenBulkClean(get, set, () => switchDataSource(get, set, source)),
 );
 
 /** Run `run` now, or, while the bulk form has changes, behind the discard
@@ -1069,10 +1085,13 @@ export function whenBulkClean(get: Getter, set: Setter, run: () => void) {
 /** `whenBulkClean`, for callers outside an atom (the selection's Delete). */
 export const whenBulkCleanAtom = atom(null, (get, set, run: () => void) => whenBulkClean(get, set, run));
 
-function switchDataSource(set: Setter, source: DataSource) {
+function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   set(dataSourceAtom, source);
   // The query carries over to the new collection; a scope it cannot offer does not.
   set(dropUnofferedScopeAtom);
+  // Likewise the Evidence view: the default view where the new collection has
+  // no claim evidence. Before it loads it cannot say, so it is dropped then too.
+  if (get(viewModeChosenAtom) === "evidence" && !get(libraryHasClaimEvidenceAtom)) set(viewModeChosenAtom, null);
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});
@@ -1224,4 +1243,4 @@ export const libraryStateInternals = {
 };
 
 /** Switch collection without the bulk guard, for callers already behind it. */
-export const switchDataSourceAtom = atom(null, (_get, set, source: DataSource) => switchDataSource(set, source));
+export const switchDataSourceAtom = atom(null, (get, set, source: DataSource) => switchDataSource(get, set, source));

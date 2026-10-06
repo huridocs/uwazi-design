@@ -20,7 +20,10 @@ const VIEWS = [
   { value: "list", label: "List" },
   { value: "map", label: "Map" },
   { value: "timeline", label: "Timeline" },
-  // Always listed: with no claims in the set it says what to filter.
+  // Listed only where the collection holds claim evidence (`evidence`, from
+  // `libraryHasClaimEvidenceAtom`). That is read over the whole collection, so
+  // filters never add or remove it; a filtered set with no claims gets the
+  // view's empty state.
   { value: "evidence", label: "Evidence" },
   // The whole collection as a graph; filters dim it in place.
   { value: "network", label: "Network" },
@@ -30,17 +33,22 @@ const VIEWS = [
   { value: "results", label: "Adv. Search" },
 ];
 
+const VIEWS_NO_EVIDENCE = VIEWS.filter((v) => v.value !== "evidence");
+
 export function ViewSwitcher({
   value,
   onChange,
+  evidence = true,
 }: {
   value: string;
   onChange: (id: string) => void;
+  /** Whether to list Evidence. */
+  evidence?: boolean;
 }) {
   return (
     <Select
       value={value}
-      options={VIEWS}
+      options={evidence ? VIEWS : VIEWS_NO_EVIDENCE}
       onChange={onChange}
       ariaLabel="View"
       sheetTitle="View"
