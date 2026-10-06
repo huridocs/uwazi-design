@@ -1317,7 +1317,9 @@ export function LibraryView() {
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.
-        className={`bleed flex-1 min-h-0 py-3 bg-warm ${
+        // The map is a canvas: it fills the lane to the pane edges, no gutter
+        // and no inset.
+        className={`flex-1 min-h-0 bg-warm ${viewMode === "map" ? "bleed-flush" : "bleed py-3"} ${
           viewMode === "map" || viewMode === "timeline" || viewMode === "results"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"

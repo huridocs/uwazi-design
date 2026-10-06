@@ -193,7 +193,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     <div data-component="LibraryMapView" className="relative w-full h-full">
       <div
         data-part="map"
-        className="absolute inset-0 isolate bg-vellum rounded-lg border border-border/60 overflow-hidden"
+        className="absolute inset-0 isolate bg-vellum overflow-hidden"
       >
         <div ref={host} role="region" aria-label="Map of located entities" className="absolute inset-0" />
 
@@ -233,7 +233,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <p data-part="caption" className="absolute top-2 left-2 z-[1000] text-meta text-ink-tertiary bg-paper/80 backdrop-blur-sm rounded px-2 py-0.5">
+        <p data-part="caption" className="absolute top-3 start-3 z-[1000] text-meta text-ink-tertiary bg-paper/80 backdrop-blur-sm rounded px-2 py-0.5">
           {located.length.toLocaleString()} located {located.length === 1 ? "entity" : "entities"}
           {unlocated > 0 && (
             <span className="text-ink-tertiary">
