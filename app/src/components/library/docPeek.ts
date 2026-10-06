@@ -49,10 +49,10 @@ function install() {
   window.addEventListener("wheel", onScroll, { passive: true });
 }
 
-/** How far the sheet may rise and still be seen: the space between its rest
- *  top and the top of the scroll container it sits in, less a small margin.
- *  Read at the REST position, so a re-entry mid-animation measures the same
- *  room. A card at the top of the scroller rises only this far. */
+/** How far the sheet may rise: up to just inside its own card's top edge, so
+ *  it lifts within the card's padding and never over the card above, and never
+ *  past the top of the scroll container. Read at the REST position, so a
+ *  re-entry mid-animation measures the same room. */
 export function measurePeekRoom(card: HTMLElement) {
   const slot = card.querySelector<HTMLElement>('[data-part="preview"]');
   if (!slot) return;
@@ -62,8 +62,8 @@ export function measurePeekRoom(card: HTMLElement) {
   }
   const s = slot.getBoundingClientRect();
   const restTop = s.top + s.height * 0.1;
-  const top = scroller ? scroller.getBoundingClientRect().top : 0;
-  card.style.setProperty("--peek-room", `${Math.max(0, restTop - top - 8)}px`);
+  const top = Math.max(scroller ? scroller.getBoundingClientRect().top : 0, card.getBoundingClientRect().top + 4);
+  card.style.setProperty("--peek-room", `${Math.max(0, restTop - top)}px`);
 }
 
 function fire(card: HTMLElement) {

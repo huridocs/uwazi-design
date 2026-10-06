@@ -263,11 +263,11 @@ body {
    band's bottom: the page comes out of the top, the rest stays in the folder.
    The side and top insets are negative, so the lifted shadow shows.
 
-   `--peek-rise` is 38% of the sheet (about two thirds of the band, at every
-   size), capped by `--peek-room`: the space above the sheet inside the scroll
-   container, measured as the rise starts, so a first-row card rises only as far
-   as it can be seen instead of being cut off. Percentages in both `translate`
-   and `inset()` are of the sheet's own height, so the two stay in step.
+   `--peek-rise` is capped by `--peek-room` (`measurePeekRoom`): the space
+   between the sheet's rest top and just inside its own card's top edge. The
+   page lifts a few pixels within the card's padding and never over the card
+   above. Percentages in both `translate` and `inset()` are of the sheet's own
+   height, so the two stay in step.
 
    Transform and clip only: the band and the card never change size. Still
    under reduced motion. */
@@ -293,28 +293,20 @@ body {
 }
 
 /* A landscape band starts its page just above the first line of text
-   (`PdfPageThumb` with `fromText`). Raised, the page drops that crop and shows
-   from its top edge, so what rises out of the band reads as a page, not as a
-   strip cut through its text. Same 240ms as the lift; the loupe reads the
-   image's rect every frame, so it follows. */
+   (`PdfPageThumb` with `fromText`), raised or not: the sheet and its text move
+   as one, so the text never slides inside the band and the loupe magnifies
+   what is under the pointer. */
 .pdf-from-text {
   margin-top: var(--text-start, 0px);
-  transition: margin-top 240ms ease-out;
-}
-@media (prefers-reduced-motion: no-preference) {
-  [data-peek="up"] .pdf-from-text,
-  .group:has(:focus-visible) .pdf-from-text {
-    margin-top: 0;
-  }
 }
 
-/* The Small card's page lift (`DocPlaceholder` with `lift`): the peek above,
-   rising further.
+/* The Small card's page lift (`DocPlaceholder` with `lift`): the peek above
+   with a taller sheet; the same room caps both.
 
    The sheet is 200% of the band and starts 10% down it, so 55% of the sheet
    hangs below the band (`--hang`). The rise is one registered property,
-   `--lift` (a percentage of the sheet's own height, capped by `--peek-room` so
-   the scroller never cuts the page off), so one transition drives both the
+   `--lift` (a percentage of the sheet's own height, capped by `--peek-room`,
+   which keeps it inside its own card), so one transition drives both the
    translate and the clip's bottom edge. The clip's other edges sit 3rem out,
    so the sheet's shadow is not cut.
 

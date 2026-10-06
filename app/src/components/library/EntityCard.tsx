@@ -500,7 +500,10 @@ export const EntityCard = memo(function EntityCard({
                 frame={thumbFrame}
                 peek={thumbFrame === "landscape"}
                 lift={peekDoc && thumbSize === "s"}
-                loupe={entity.preview === "document" && (thumbFrame === "portrait" || thumbSize === "s")}
+                // Every card frame and size that shows a page gets the loupe. The
+                // list row's chip (above) has none: a 136px lens over a ~2.5rem
+                // chip covers the row, and the drawer preview is one click away.
+                loupe={entity.preview === "document"}
                 tint={getEntityType(entity.typeId)?.color}
                 className={`h-full w-full rounded border border-border/60 ${peekDoc ? "" : "overflow-hidden"}`}
               />

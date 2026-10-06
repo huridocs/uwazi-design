@@ -199,9 +199,8 @@ export function PdfPageThumb({
                 alt=""
                 aria-hidden
                 onLoad={onLoad}
-                // The crop is a variable so the raised page can drop it
-                // (`.pdf-from-text` in index.css): at rest the band starts at
-                // the text, raised the page shows from its top edge.
+                // The crop (`.pdf-from-text` in index.css) holds raised or not,
+                // so the page and its text rise together.
                 className={`w-full block ${fromText ? "pdf-from-text" : ""}`}
                 style={
                   fromText && pageAspect
