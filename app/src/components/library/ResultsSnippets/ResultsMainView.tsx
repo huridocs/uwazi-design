@@ -1,5 +1,6 @@
 import { Children, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { breakpointAtom } from "../../../atoms/viewport";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
@@ -15,12 +16,16 @@ import {
   type EntitySnippets,
   type FullTextSnippet,
   type MetadataSnippet,
+  type SearchScope,
 } from "../../../utils/librarySnippets";
 import {
+  ALL_MATCH_TYPES,
+  libraryHasQuotesAtom,
   matchTypeFiltersAtom,
   libraryResultsLayoutAtom,
+  librarySearchMatchAtom,
+  librarySearchScopeAtom,
   resultsCurrentPageAtom,
-  type MatchTypeFilters,
   type ResultsLayout,
 } from "../../../atoms/library";
 import { entityTime } from "../../../utils/timeline";
@@ -45,10 +50,10 @@ import {
   useSelectionOrder,
 } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
-import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
+import { AdvancedSearchBar } from "./AdvancedSearchBar";
 
 /** The Results view in the main pane. Same data path as the drawer's Results tab
  *  (`buildSnippetsFor`); `libraryResultsLayoutAtom` picks one of four layouts:
@@ -59,13 +64,6 @@ import type { RelevanceBreakdown } from "../../../utils/relevance";
  *  §4.2). Counts use `fullTextTotal`, and any render cap is stated. The header
  *  strip stays mounted so toggling a chip can't shift the results; the count
  *  lives in the toolbar masthead only. */
-
-type MatchType = keyof MatchTypeFilters;
-const MATCH_TYPES: { key: MatchType; label: string }[] = [
-  { key: "title", label: "Title" },
-  { key: "properties", label: "Properties" },
-  { key: "document", label: "Document" },
-];
 
 /** Entities rendered per page. Lower than the drawer's 40 because each card here
  *  is bigger, and every layout pays the same windowing cost per entity. */
@@ -125,7 +123,6 @@ interface Props {
   onClearSearch: () => void;
   hiddenByFilters: number;
   onClearFilters: () => void;
-  matchTypeCounts: Record<MatchType, number>;
   totalMatches: number;
   /** The relevance breakdown LibraryView already computes once per entity per
    *  query. Read for attribution only (`MatchedTerms`); never printed as a score. */
@@ -162,7 +159,6 @@ export function ResultsMainView({
   onClearSearch,
   hiddenByFilters,
   onClearFilters,
-  matchTypeCounts,
   totalMatches,
   relevanceOf,
 }: Props) {
@@ -170,7 +166,15 @@ export function ResultsMainView({
   // A Shift range runs in the ranked order these results are drawn in.
   const rankedIds = useMemo(() => entities.map((e) => e.id), [entities]);
   useSelectionOrder(rankedIds);
-  const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
+  // "Search in" replaces the drawer's match-type chips here, so chips left
+  // narrowed in the drawer must not narrow this view behind a control it lacks.
+  const setMatchTypes = useSetAtom(matchTypeFiltersAtom);
+  useEffect(() => setMatchTypes(ALL_MATCH_TYPES), [setMatchTypes]);
+  const [scope, setScope] = useAtom(librarySearchScopeAtom);
+  const narrow = useAtomValue(breakpointAtom) === "mobile";
+  // Read only to re-snippet when it changes: the matcher reads the mode itself.
+  const match = useAtomValue(librarySearchMatchAtom);
+  const hasQuotes = useAtomValue(libraryHasQuotesAtom);
   const [visible, setVisible] = useState(STEP);
   // The page this view draws, for "select all loaded".
   const drawnIds = useMemo(() => rankedIds.slice(0, visible), [rankedIds, visible]);
@@ -202,10 +206,12 @@ export function ResultsMainView({
           snippets: buildSnippetsFor(e, trimmed, language, source, {
             maxFullText: layout === "passages" ? PASSAGES_PER_ENTITY : MAX_FULLTEXT,
             contextWords: budget.ctx,
+            scope,
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    [measured, entities, visible, trimmed, language, source, layout, budget.ctx],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match`: see above
+    [measured, entities, visible, trimmed, language, source, layout, budget.ctx, scope, match],
   );
 
   // Only the cards the user expanded are re-derived uncapped — the windowing
@@ -220,15 +226,17 @@ export function ResultsMainView({
               snippets: buildSnippetsFor(r.entity, trimmed, language, source, {
                 maxFullText: Infinity,
                 contextWords: budget.ctx,
+                scope,
               }),
             }
           : r,
       ),
-    [cappedResults, showAll, trimmed, language, source, budget.ctx],
+    [cappedResults, showAll, trimmed, language, source, budget.ctx, scope],
   );
 
   if (source === "cejil" && cejilLoading) {
     return (
+      <Frame bar={null}>
       <Centered>
         {cejilError ? (
           <>
@@ -242,91 +250,84 @@ export function ResultsMainView({
           </>
         )}
       </Centered>
+      </Frame>
     );
   }
+
+  const scopeLabel = SCOPE_LABEL[scope];
+  // The toolbar heads every state below, the empty ones included: it can build
+  // a query from nothing, and widening a scope is the way out of "No matches".
+  const bar = (
+    <AdvancedSearchBar
+      query={trimmed}
+      hasQuotes={hasQuotes}
+      layout={narrow ? "stacked" : "wide"}
+      trailing={
+        // Always mounted and hidden when nothing is excluded, so ticking facets
+        // doesn't shift the results.
+        <span
+          data-part="hidden-by-filters"
+          aria-hidden={hiddenByFilters === 0}
+          className={`shrink-0 text-meta text-ink-tertiary ${hiddenByFilters === 0 ? "invisible" : ""}`}
+        >
+          {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
+          hidden by filters
+          <span className="mx-1 text-ink-muted">·</span>
+          <button
+            type="button"
+            onClick={onClearFilters}
+            tabIndex={hiddenByFilters === 0 ? -1 : undefined}
+            className="font-medium text-carbon hover:underline cursor-pointer"
+          >
+            Clear filters
+          </button>
+        </span>
+      }
+    />
+  );
 
   // The switcher keeps this segment whether or not a query exists (removing it
   // would shift every control beside it), so the view owns the no-query state.
   if (!trimmed) {
     return (
-      <Centered>
-        <Search size={22} className="text-ink-muted" aria-hidden="true" />
-        <span className="text-sm text-ink-tertiary">Search to see where terms match</span>
-        <span className="text-xs text-ink-tertiary">
-          Results show the passages behind each hit — the field, the page, the sentence.
-        </span>
-      </Centered>
+      <Frame bar={bar}>
+        <Centered>
+          <Search size={22} className="text-ink-muted" aria-hidden="true" />
+          <span className="text-sm font-medium text-ink-secondary">Search to see where terms match</span>
+          <span className="text-xs text-ink-tertiary">
+            Type in the search box, or add an exact phrase, alternatives or exclusions above.
+          </span>
+        </Centered>
+      </Frame>
     );
   }
 
   if (totalMatches === 0) {
     return (
-      <Centered>
-        <span dir="ltr" className="text-sm text-ink-tertiary">
-          No matches for <span className="font-medium text-ink-secondary">“{trimmed}”</span>
-        </span>
-        <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
-      </Centered>
+      <Frame bar={bar}>
+        <Centered>
+          <span dir="ltr" className="text-sm font-medium text-ink-secondary">
+            No matches for “{trimmed}”{scope === "all" ? "" : ` in ${scopeLabel}`}
+          </span>
+          <span className="flex items-center gap-2">
+            {scope !== "all" && <WarmButton onClick={() => setScope("all")}>Search everywhere</WarmButton>}
+            <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
+          </span>
+        </Centered>
+      </Frame>
     );
   }
 
   const capped = entities.length > results.length + (entities.length - visible);
 
   return (
-    <div data-component="ResultsMainView" data-layout={layout} className="flex flex-col h-full min-h-0">
-      {/* Always mounted; only its contents change. No count here: the toolbar
-          masthead is the one place this surface prints its number. */}
-      <header data-part="header" className="shrink-0">
-        <ListInfoRow
-          count={null}
-          activeFilterCount={0}
-          showFilterChips={false}
-          // `matchTypeCounts` comes from `matchTypeBase`, which the toggles
-          // don't narrow, so toggling a chip never changes this row's width.
-          leadingSlot={
-            <span className="flex items-center gap-1">
-              {MATCH_TYPES.map(({ key, label }) => (
-                <ToggleChip
-                  key={key}
-                  label={label}
-                  count={matchTypeCounts[key]}
-                  active={activeTypes[key]}
-                  onToggle={() => setActiveTypes((t) => ({ ...t, [key]: !t[key] }))}
-                />
-              ))}
-            </span>
-          }
-          // Always mounted and hidden when nothing is excluded, so ticking facets
-          // doesn't shift the results. On the chip row, not its own line, to
-          // keep the gap above the first result at one step.
-          rightSlot={
-            <span
-              data-part="hidden-by-filters"
-              aria-hidden={hiddenByFilters === 0}
-              className={hiddenByFilters === 0 ? "invisible" : ""}
-            >
-              {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
-              hidden by filters
-              <span className="mx-1 text-ink-muted">·</span>
-              <button
-                type="button"
-                onClick={onClearFilters}
-                tabIndex={hiddenByFilters === 0 ? -1 : undefined}
-                className="font-medium text-carbon hover:underline cursor-pointer"
-              >
-                Clear filters
-              </button>
-            </span>
-          }
-        />
-      </header>
-
+    <Frame bar={bar} layout={layout}>
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
           `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
       <div ref={bodyRef} data-part="results" className="@container bleed flex-1 min-h-0 overflow-auto">
         {entities.length === 0 ? (
           <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
-            No results for the selected match types.
+            No results with the current filters.
           </p>
         ) : layout === "grouped" ? (
           <GroupedBody
@@ -382,6 +383,27 @@ export function ResultsMainView({
           </p>
         )}
       </div>
+    </Frame>
+  );
+}
+
+const SCOPE_LABEL: Record<SearchScope, string> = {
+  all: "All",
+  title: "Title",
+  metadata: "Metadata",
+  fulltext: "Full text",
+  quotes: "Quotes",
+};
+
+/** The view's column: the toolbar, then the state below it. No count in the
+ *  toolbar: the masthead is the one place this surface prints its number. */
+function Frame({ bar, layout, children }: { bar: ReactNode; layout?: ResultsLayout; children: ReactNode }) {
+  return (
+    <div data-component="ResultsMainView" data-layout={layout} className="flex flex-col h-full min-h-0">
+      <header data-part="header" className="shrink-0">
+        {bar}
+      </header>
+      {children}
     </div>
   );
 }
@@ -1327,7 +1349,7 @@ function WarmButton({ onClick, children }: { onClick: () => void; children: Reac
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <div data-component="ResultsMainView" data-part="blank" className="flex-1 h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+    <div data-part="blank" className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
       {children}
     </div>
   );

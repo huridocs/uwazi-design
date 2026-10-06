@@ -193,8 +193,37 @@ function shortRegex(term: string): RegExp | null {
   return re;
 }
 
+/** How plain terms match. `partial` is the rule above (substrings, short terms
+ *  at a word start); `whole` makes every plain term and phrase match whole words
+ *  only, as a wildcard term always does. Set by the Adv. Search view's Match
+ *  control through `librarySearchMatchAtom`, read here so the filter, snippets
+ *  and marks change together. */
+export type QueryMatchMode = "partial" | "whole";
+let matchMode: QueryMatchMode = "partial";
+export function setQueryMatchMode(mode: QueryMatchMode): void {
+  matchMode = mode;
+}
+export const queryMatchMode = (): QueryMatchMode => matchMode;
+
+const wordCache = new Map<string, RegExp>();
+function wholeWordRegex(term: string): RegExp | null {
+  if (matchMode !== "whole" || isGlob(term)) return null;
+  let re = wordCache.get(term);
+  if (!re) {
+    const src = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    re = new RegExp(`(?<!${WORD_CHAR})${src}(?!${WORD_CHAR})`, "gu");
+    wordCache.set(term, re);
+  }
+  return re;
+}
+
 /** Does folded `text` contain `term`? */
 export function termIn(text: string, term: string): boolean {
+  const whole = wholeWordRegex(term);
+  if (whole) {
+    whole.lastIndex = 0;
+    return whole.test(text);
+  }
   const short = shortRegex(term);
   if (short) {
     short.lastIndex = 0;
@@ -208,6 +237,12 @@ export function termIn(text: string, term: string): boolean {
 
 /** The first hit of `term` in folded `text` at or after `from`, as [start, end). */
 export function termHit(text: string, term: string, from = 0): [number, number] | null {
+  const whole = wholeWordRegex(term);
+  if (whole) {
+    whole.lastIndex = from;
+    const m = whole.exec(text);
+    return m ? [m.index, m.index + m[0].length] : null;
+  }
   const short = shortRegex(term);
   if (short) {
     short.lastIndex = from;

@@ -8,7 +8,10 @@ import {
   entityFullTextBlob,
   entitySearchFields,
   matchCategoriesWithTerms,
+  bodyInScope,
+  scopedFieldText,
   type MatchCategories,
+  type SearchScope,
 } from "./librarySnippets";
 import { fold, termIn, type SearchQuery } from "./queryTokens";
 import {
@@ -255,6 +258,9 @@ export interface LibraryFilterState {
   searchQuery?: SearchQuery;
   /** Whether to scan document bodies (gated on `q.length ≥ 3` for corpus perf). */
   fullTextSearch: boolean;
+  /** Which text the query is tested against (Adv. Search's "Search in").
+   *  Absent = `all`. */
+  searchScope?: SearchScope;
   /** Which KINDS of match to keep (Results-tab chips). All-true = no narrowing. */
   matchTypes: { title: boolean; properties: boolean; document: boolean };
   /** The Content card: ticked rows per group, and Contains' Any/All. */
@@ -407,6 +413,7 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     searchTerms: s.searchTerms ?? [],
     searchQuery: s.searchQuery ?? { groups: (s.searchTerms ?? []).map((t) => [t]), exclude: [] },
     fullTextSearch: s.fullTextSearch ?? false,
+    searchScope: s.searchScope ?? "all",
     matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
     content: s.content ?? {},
     contentMode: s.contentMode ?? "OR",
@@ -506,7 +513,7 @@ function compile(s: LibraryFilterState): FilterNode[] {
         passesMatchTypes(s.matchTypes, s.q, () =>
           // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
           // would read `not` / `or` as words to match.
-          matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
+          matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source, s.searchScope),
         ),
     });
   const out = [...withGroups(nodes, s.groups), ...tail];
@@ -581,10 +588,15 @@ export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
   if (!s.q) return true;
   const { groups, exclude } = s.searchQuery!;
   if (groups.length === 0 && exclude.length === 0) return true;
-  const meta = s.searchIndex.get(e.id) ?? "";
+  const scope = s.searchScope ?? "all";
+  // Scoped, the fields in scope stand in for the whole index, and the body is
+  // read only by `all` and `fulltext`.
+  const meta =
+    scope === "all" ? (s.searchIndex.get(e.id) ?? "") : scopedFieldText(e, s.language, scope);
+  const body = s.fullTextSearch && bodyInScope(scope);
   const hit = (t: string) =>
-    termIn(meta, t) ||
-    (s.fullTextSearch && termIn(entityFullTextBlob(e, s.language, s.source), t));
+    (!!meta && termIn(meta, t)) ||
+    (body && termIn(entityFullTextBlob(e, s.language, s.source), t));
   return groups.every((g) => g.some(hit)) && !exclude.some(hit);
 }
 

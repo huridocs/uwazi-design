@@ -36,6 +36,8 @@ import {
   libraryActiveFilterCountAtom,
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
+  librarySearchScopeAtom,
+  librarySearchMatchAtom,
 } from "../../atoms/library";
 import { MatchModeToggle } from "../shared/MatchModeToggle";
 import { cejilSettings } from "../../data/cejil/settings";
@@ -128,6 +130,9 @@ export function LibraryFilters() {
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const matchTypes = useAtomValue(matchTypeFiltersAtom);
+  // Adv. Search's modifiers narrow the facet counts as they narrow the results.
+  const searchScope = useAtomValue(librarySearchScopeAtom);
+  const searchMatch = useAtomValue(librarySearchMatchAtom);
 
   // Recomputed when Settings › Templates changes the corpus's templates.
   const templates = useAtomValue(templatesAtom(dataSource));
@@ -246,6 +251,7 @@ export function LibraryFilters() {
       searchTerms: highlightTerms(query), // folded
       searchQuery: parseSearchQuery(query),
       fullTextSearch: query.trim().length >= 3,
+      searchScope,
       matchTypes,
       content: contentSelection,
       contentMode,
@@ -254,7 +260,7 @@ export function LibraryFilters() {
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
     dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, groups, chainDefs, chainFilters, query, matchTypes,
-    contentSelection, contentMode, entities,
+    contentSelection, contentMode, entities, searchScope, searchMatch,
   ]);
 
   const typeCounts = useMemo(() => {

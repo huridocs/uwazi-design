@@ -161,6 +161,57 @@ export function entitySearchFields(
   return out;
 }
 
+/** Where a search looks: everywhere, or one kind of text. Set by the Adv.
+ *  Search view's "Search in" control (`librarySearchScopeAtom`). The filter
+ *  (`matchesSearch`), the snippets, the match categories and the ranking all
+ *  read it, so a scoped search matches, excerpts and ranks the same text.
+ *  `metadata` is every field but the title and the quotes; `quotes` are the
+ *  references' anchored quotes (`quote:` fields, Nepal only). */
+export type SearchScope = "all" | "title" | "metadata" | "fulltext" | "quotes";
+
+const isQuoteField = (fieldKey: string) => fieldKey.startsWith("quote:");
+
+/** Whether a metadata field (title included) is searched under `scope`. */
+export function fieldInScope(fieldKey: string, scope: SearchScope): boolean {
+  switch (scope) {
+    case "all":
+      return true;
+    case "title":
+      return fieldKey === "title";
+    case "metadata":
+      return fieldKey !== "title" && !isQuoteField(fieldKey);
+    case "quotes":
+      return isQuoteField(fieldKey);
+    case "fulltext":
+      return false;
+  }
+}
+
+/** Whether document bodies are searched under `scope`. */
+export const bodyInScope = (scope: SearchScope): boolean => scope === "all" || scope === "fulltext";
+
+/** The folded text of an entity's fields in `scope`, joined: what
+ *  `matchesSearch` tests instead of the full index when a search is scoped.
+ *  Memoised per entity, like `foldedFields`. */
+const scopedTextCache = new WeakMap<Entity, Map<string, string>>();
+export function scopedFieldText(e: Entity, language: Language, scope: SearchScope): string {
+  let byKey = scopedTextCache.get(e);
+  if (!byKey) {
+    byKey = new Map();
+    scopedTextCache.set(e, byKey);
+  }
+  const key = `${language}:${scope}`;
+  let text = byKey.get(key);
+  if (text === undefined) {
+    text = foldedFields(e, language)
+      .filter((f) => fieldInScope(f.fieldKey, scope))
+      .map((f) => f.folded)
+      .join(" ");
+    byKey.set(key, text);
+  }
+  return text;
+}
+
 export interface FoldedField {
   field: string;
   fieldKey: string;
@@ -477,11 +528,14 @@ export function buildSnippetsFor(
     contextWords = CONTEXT_WORDS,
     perPassage = false,
     order = "best",
+    scope = "all",
   }: {
     maxFullText?: number;
     contextWords?: number;
     perPassage?: boolean;
     order?: "best" | "page";
+    /** Only fields and pages in this scope are excerpted and counted. */
+    scope?: SearchScope;
   } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
@@ -518,7 +572,7 @@ export function buildSnippetsFor(
   // `foldedFields`, not `entitySearchFields`: reuses the memoised fold shared with
   // `matchCategoriesWithTerms`.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
-    if (!passes(folded)) continue;
+    if (!fieldInScope(fieldKey, scope) || !passes(folded)) continue;
     let fieldHits = 0;
     const inField = new Set<string>();
     for (const th of termsHit) {
@@ -541,7 +595,11 @@ export function buildSnippetsFor(
     }
   }
 
-  const { pages, paged, borrowedFrom, docKey } = documentPages(entity, language, source);
+  const doc = documentPages(entity, language, source);
+  const { paged, borrowedFrom, docKey } = doc;
+  // Out of scope, the document is read as having no pages: nothing is counted
+  // or excerpted from it, and `borrowedFrom` still names it.
+  const pages = bodyInScope(scope) ? doc.pages : NO_PAGES.pages;
   // No early break at the cap: every page is counted so `fullTextTotal` is exact.
   // The folds are cached and shared with the filter, so this adds no second scan.
   let fullTextHits = 0;
@@ -616,19 +674,21 @@ export function matchCategoriesWithTerms(
   terms: string[],
   language: Language,
   source: DataSource,
+  scope: SearchScope = "all",
 ): MatchCategories {
   if (terms.length === 0) return NO_MATCH;
 
   let title = false;
   let properties = false;
   for (const f of foldedFields(entity, language)) {
+    if (!fieldInScope(f.fieldKey, scope)) continue;
     if (!terms.some((t) => termIn(f.folded, t))) continue;
     if (f.fieldKey === "title") title = true;
     else properties = true;
     if (title && properties) break;
   }
-  const blob = entityFullTextBlob(entity, language, source);
-  const document = terms.some((t) => termIn(blob, t));
+  const document =
+    bodyInScope(scope) && terms.some((t) => termIn(entityFullTextBlob(entity, language, source), t));
 
   return { title, properties, document };
 }
@@ -705,12 +765,15 @@ export function entitySearchParts(
   entity: Entity,
   language: Language,
   source: DataSource,
+  scope: SearchScope = "all",
 ): { fields: FoldedField[]; pages: string[]; blob: string; borrowed: boolean } {
   const doc = documentPages(entity, language, source);
+  const body = bodyInScope(scope);
+  const fields = foldedFields(entity, language);
   return {
-    fields: foldedFields(entity, language),
-    pages: doc.pages,
-    blob: entityFullTextBlob(entity, language, source),
+    fields: scope === "all" ? fields : fields.filter((f) => fieldInScope(f.fieldKey, scope)),
+    pages: body ? doc.pages : NO_PAGES.pages,
+    blob: body ? entityFullTextBlob(entity, language, source) : "",
     borrowed: doc.borrowedFrom != null,
   };
 }

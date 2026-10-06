@@ -21,6 +21,8 @@ import {
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
   matchTypeFiltersAtom,
+  librarySearchScopeAtom,
+  librarySearchMatchAtom,
   libraryDisplayAtom,
   libraryTimelineScopeAtom,
   libraryResultsSheetOpenAtom,
@@ -36,6 +38,8 @@ import {
   type MatchTypeFilters,
   type TimelineScope,
 } from "./library";
+import type { SearchScope } from "../utils/librarySnippets";
+import type { QueryMatchMode } from "../utils/queryTokens";
 import { groupEffective, type FilterGroup, type RangeBounds } from "../utils/libraryFilter";
 
 /* ── The Library's state as one value ──────────────────────────────────────
@@ -78,6 +82,10 @@ export interface LibrarySnapshot {
   content: NestedTicks;
   contentMode: "AND" | "OR";
   matchTypes: MatchTypeFilters;
+  /** Adv. Search's "Search in" and "Match". Missing in older snapshots and
+   *  in ones that kept the defaults (`all`, `partial`). */
+  searchScope?: SearchScope;
+  searchMatch?: QueryMatchMode;
   /** The view the reader picked; null = the collection's default view. */
   viewMode: LibraryViewMode | null;
   /** The view a running search displaced, and whether the reader overruled it. */
@@ -125,6 +133,9 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     content: tickedNested(get(libraryContentFiltersAtom)),
     contentMode: get(libraryContentModeAtom),
     matchTypes: get(matchTypeFiltersAtom),
+    // Written only when set, so a plain search's link stays as short as before.
+    ...(get(librarySearchScopeAtom) !== "all" ? { searchScope: get(librarySearchScopeAtom) } : {}),
+    ...(get(librarySearchMatchAtom) !== "partial" ? { searchMatch: get(librarySearchMatchAtom) } : {}),
     viewMode: get(L.viewModeChosenAtom),
     preSearchView: get(L.preSearchViewModeAtom),
     searchOverridden: get(L.searchModeOverriddenAtom),
@@ -151,6 +162,8 @@ function snapshotMatch(s: LibrarySnapshot): Record<string, LibraryMatch> {
   return match;
 }
 
+const SEARCH_SCOPES: SearchScope[] = ["all", "title", "metadata", "fulltext", "quotes"];
+
 /** Write a snapshot's state, replacing the Library's. Facets the snapshot does
  *  not tick are cleared; nothing is merged. */
 function writeSnapshot(set: Setter, s: LibrarySnapshot) {
@@ -171,6 +184,9 @@ function writeSnapshot(set: Setter, s: LibrarySnapshot) {
   set(matchTypeFiltersAtom, { ...ALL_MATCH_TYPES, ...s.matchTypes });
   set(L.searchDraftStateAtom, s.query);
   set(libraryQueryAtom, s.query);
+  // The modifiers belong to a query; without one they are back at their defaults.
+  set(librarySearchScopeAtom, (s.query && SEARCH_SCOPES.includes(s.searchScope!) && s.searchScope) || "all");
+  set(librarySearchMatchAtom, s.query && s.searchMatch === "whole" ? "whole" : "partial");
   set(L.viewModeChosenAtom, s.viewMode);
   set(L.preSearchViewModeAtom, s.query ? s.preSearchView : null);
   set(L.searchModeOverriddenAtom, s.query ? s.searchOverridden : false);
@@ -245,7 +261,10 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
     rangeNames.size +
     (s.groups ?? []).filter((g) => groupEffective(g, narrows)).length +
     nn(s.chains) +
-    nn(s.content)
+    nn(s.content) +
+    // A scoped or whole-word search narrows like a filter does.
+    (s.query && s.searchScope && s.searchScope !== "all" ? 1 : 0) +
+    (s.query && s.searchMatch === "whole" ? 1 : 0)
   );
 }
 
@@ -253,7 +272,8 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
  *  filters are different searches. */
 const facetKey = (s: LibrarySnapshot) =>
   JSON.stringify([s.types, s.hasDoc, s.status, s.countries, s.descriptors, snapshotMatch(s), s.ranges ?? {},
-    s.groups ?? [], s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode]);
+    s.groups ?? [], s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode,
+    s.searchScope ?? "all", s.searchMatch ?? "partial"]);
 
 /** A snapshot read from storage or a link is untrusted: anything that is not
  *  the shape is dropped rather than half-applied. */

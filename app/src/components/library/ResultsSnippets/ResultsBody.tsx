@@ -4,8 +4,17 @@ import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
 import { buildSnippetsFor, contextWordsFor } from "../../../utils/librarySnippets";
-import { useAtom } from "jotai";
-import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  libraryHasQuotesAtom,
+  librarySearchMatchAtom,
+  librarySearchScopeAtom,
+  matchTypeFiltersAtom,
+  ALL_MATCH_TYPES,
+  type MatchTypeFilters,
+} from "../../../atoms/library";
+import { breakpointAtom } from "../../../atoms/viewport";
+import { AdvancedSearchBar } from "./AdvancedSearchBar";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/CollapseControls";
@@ -96,6 +105,21 @@ export const ResultsBody = memo(function ResultsBody({
   // ride the relationships panel's expand/collapse atoms.
   const [showAllMap, setShowAllMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
+  // The search's scope narrows the passages as it narrows the set; the match
+  // mode is read by the matcher, and only keys the memos here.
+  const scope = useAtomValue(librarySearchScopeAtom);
+  const match = useAtomValue(librarySearchMatchAtom);
+  const hasQuotes = useAtomValue(libraryHasQuotesAtom);
+  // Phones have no Adv. Search pane beside this sheet, so its toolbar comes in,
+  // and the match-type chips it replaces stop narrowing behind it.
+  const phone = useAtomValue(breakpointAtom) === "mobile";
+  useEffect(() => {
+    if (phone) setActiveTypes(ALL_MATCH_TYPES);
+  }, [phone, setActiveTypes]);
+  const bar =
+    phone ? (
+      <AdvancedSearchBar query={trimmed} hasQuotes={hasQuotes} layout="stacked" />
+    ) : null;
   /* The lane's width sets how much context each excerpt carries: about three
      lines of the passage column. Held while the drawer divider is dragged and
      applied once on release (`useSettledWidth`), so a drag doesn't re-snippet
@@ -118,10 +142,11 @@ export const ResultsBody = memo(function ResultsBody({
         .slice(0, visible)
         .map((e) => ({
           entity: e,
-          snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx }),
+          snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx, scope }),
         }))
         .filter((x) => x.snippets.count > 0),
-    [measured, entities, visible, trimmed, language, source, ctx],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match`: see above
+    [measured, entities, visible, trimmed, language, source, ctx, scope, match],
   );
 
   // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
@@ -138,11 +163,12 @@ export const ResultsBody = memo(function ResultsBody({
               snippets: buildSnippetsFor(x.entity, trimmed, language, source, {
                 maxFullText: Infinity,
                 contextWords: ctx,
+                scope,
               }),
             }
           : x,
       ),
-    [capped, showAllMap, trimmed, language, source, ctx],
+    [capped, showAllMap, trimmed, language, source, ctx, scope],
   );
 
   useEffect(() => {
@@ -188,7 +214,7 @@ export const ResultsBody = memo(function ResultsBody({
   // no-search — the tab was opened without a query.
   if (!trimmed) {
     return (
-      <Shell>
+      <Shell bar={bar}>
         <Centered>
           <Search size={20} className="text-ink-muted" aria-hidden="true" />
           <span className="text-sm font-medium text-ink-secondary">Search to see where terms match</span>
@@ -202,7 +228,7 @@ export const ResultsBody = memo(function ResultsBody({
   // a different state: the header + chips still render so they can be re-enabled.)
   if (totalMatches === 0) {
     return (
-      <Shell>
+      <Shell bar={bar}>
         <Centered>
           {/* Whole phrase is English; `dir="ltr"` keeps it from reordering in an
               RTL drawer (isolating only the digit wasn't enough). */}
@@ -225,7 +251,7 @@ export const ResultsBody = memo(function ResultsBody({
   }
 
   return (
-    <Shell>
+    <Shell bar={bar}>
       {/* Hosted by the Library drawer (a gutter host): the header's rule spans the
           panel (`bleed`), and nothing in it carries side padding of its own. */}
       <header data-part="header" className="bleed shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
@@ -239,7 +265,10 @@ export const ResultsBody = memo(function ResultsBody({
           count={null}
           activeFilterCount={0}
           showFilterChips={false}
+          // With the Adv. Search bar above (phones), "Search in" is the one
+          // control for where a query matches; the chips would be a second.
           leadingSlot={
+            bar ? undefined : (
             <span className="flex items-center gap-1">
               {MATCH_TYPES.map(({ key, label }) => (
                 <ToggleChip
@@ -251,6 +280,7 @@ export const ResultsBody = memo(function ResultsBody({
                 />
               ))}
             </span>
+            )
           }
           rightSlot={
             <CollapseControls
@@ -339,9 +369,14 @@ export const ResultsBody = memo(function ResultsBody({
   );
 });
 
-function Shell({ children }: { children: ReactNode }) {
+function Shell({ bar, children }: { bar?: ReactNode; children: ReactNode }) {
   // `data-tap-guard`: a swipe through the results never opens one (useTapGuard).
-  return <div data-component="ResultsBody" data-tap-guard className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
+  return (
+    <div data-component="ResultsBody" data-tap-guard className="flex flex-col h-full min-h-0 bg-warm">
+      {bar}
+      {children}
+    </div>
+  );
 }
 
 function Centered({ children }: { children: ReactNode }) {

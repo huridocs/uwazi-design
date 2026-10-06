@@ -1,8 +1,8 @@
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import type { DataSource } from "./libraryFacets";
-import { entitySearchParts } from "./librarySnippets";
-import { termHit } from "./queryTokens";
+import { entitySearchParts, type SearchScope } from "./librarySnippets";
+import { queryMatchMode, termHit } from "./queryTokens";
 
 /** Relevance for Library results: how well an entity answers the query.
  *
@@ -103,10 +103,12 @@ function bodyHits(pages: string[], blob: string, term: string): Hits {
     byTerm = new Map();
     bodyHitsCache.set(pages, byTerm);
   }
-  let hits = byTerm.get(term);
+  // The match mode changes what a term hits, so it is part of the key.
+  const key = `${queryMatchMode()}:${term}`;
+  let hits = byTerm.get(key);
   if (!hits) {
     hits = countHits(blob, term);
-    byTerm.set(term, hits);
+    byTerm.set(key, hits);
   }
   return hits;
 }
@@ -128,8 +130,9 @@ export function scoreRelevance(
   source: DataSource,
   connections: number,
   maxConnections: number,
+  scope: SearchScope = "all",
 ): RelevanceBreakdown {
-  const { fields, pages, blob, borrowed } = entitySearchParts(entity, language, source);
+  const { fields, pages, blob, borrowed } = entitySearchParts(entity, language, source, scope);
   const title = fields.find((f) => f.fieldKey === "title")?.folded ?? "";
   const terms = [...new Set(query.terms)];
 

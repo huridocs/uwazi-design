@@ -81,6 +81,8 @@ import {
   libraryTypeFiltersAtom,
   libraryViewModeAtom,
   matchTypeFiltersAtom,
+  librarySearchScopeAtom,
+  librarySearchMatchAtom,
   rangeSelectionAtom,
   requestMetadataFocusAtom,
   resultsCurrentPageAtom,
@@ -393,6 +395,10 @@ export function LibraryView() {
   const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
+  // Adv. Search's modifiers. `searchMatch` is read by the matcher itself
+  // (`queryTokens.ts`); here it only keys the memos that ran under the old mode.
+  const searchScope = useAtomValue(librarySearchScopeAtom);
+  const searchMatch = useAtomValue(librarySearchMatchAtom);
   const notify = useNotify();
   const guard = useDirtyGuard();
 
@@ -599,10 +605,12 @@ export function LibraryView() {
   // queries from scanning every CEJIL document body.
   const searchTerms = useMemo(
     () => highlightTerms(query), // already folded
-    [query],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new identity per match mode re-runs every memo keyed on the terms
+    [query, searchMatch],
   );
   // The boolean shape of the same query (AND groups, OR within, NOT excluded).
-  const searchQuery = useMemo(() => parseSearchQuery(query), [query]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- see `searchTerms`
+  const searchQuery = useMemo(() => ({ ...parseSearchQuery(query) }), [query, searchMatch]);
   const fullTextSearch = q.length >= 3;
   const fromMs = dateBoundMs(dateFrom, "from");
   // Inclusive of the whole "to" day, or of the "to" minute when it is timed.
@@ -662,6 +670,7 @@ export function LibraryView() {
       searchTerms,
       searchQuery,
       fullTextSearch,
+      searchScope,
       matchTypes,
       content: contentSelection,
       contentMode,
@@ -690,6 +699,7 @@ export function LibraryView() {
       searchTerms,
       searchQuery,
       fullTextSearch,
+      searchScope,
       matchTypes,
       contentKey,
     ],
@@ -704,14 +714,14 @@ export function LibraryView() {
     return (e: Entity): MatchCategories => {
       let c = cache.get(e.id);
       if (!c) {
-        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource);
+        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource, searchScope);
         cache.set(e.id, c);
       }
       return c;
     };
     // `cejilReady`: blobs go empty→real when the corpus lands, so cached
     // "document: false" answers from before that must not survive it.
-  }, [searchTerms, language, dataSource, cejilReady]);
+  }, [searchTerms, language, dataSource, cejilReady, searchScope]);
 
   // Relevance per entity, at most once per query (same lazy cache as
   // `categoriesOf`), so toggling a chip or facet never re-scores an entity.
@@ -727,13 +737,13 @@ export function LibraryView() {
     return (e: Entity): RelevanceBreakdown => {
       let s = cache.get(e.id);
       if (!s) {
-        s = scoreRelevance(e, relevanceQuery, language, dataSource, countByEntity.get(e.id) ?? 0, maxConnections);
+        s = scoreRelevance(e, relevanceQuery, language, dataSource, countByEntity.get(e.id) ?? 0, maxConnections, searchScope);
         cache.set(e.id, s);
       }
       return s;
     };
     // `cejilReady`: document bodies go empty→real when the corpus lands.
-  }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections]);
+  }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections, searchScope]);
 
   // One full-corpus pass: `matchTypeBase` passes facets and search but not the
   // chips, and the chip-narrowed list is filtered from it rather than from the
@@ -800,7 +810,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes, searchScope, searchMatch]);
 
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -836,7 +846,7 @@ export function LibraryView() {
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
     () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush, searchScope, searchMatch],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
   // doesn't shrink the grid to that single lane.
@@ -845,7 +855,7 @@ export function LibraryView() {
       viewMode === "timeline" && !cejilLoading
         ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
         : [],
-    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
+    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading, searchScope, searchMatch],
   );
 
   /* Thumbnail Auto reads how many of these results can draw a preview. A layout
@@ -1374,7 +1384,6 @@ export function LibraryView() {
               onClearSearch={() => clearSearch()}
               hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
               onClearFilters={() => clearFacets()}
-              matchTypeCounts={matchTypeCounts}
               totalMatches={matchTypeBase.length}
               relevanceOf={scoreOf}
             />

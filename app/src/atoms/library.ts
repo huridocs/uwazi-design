@@ -13,6 +13,8 @@ import { listColumnOptions } from "../components/library/listColumns";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
+import type { SearchScope } from "../utils/librarySnippets";
+import { setQueryMatchMode, type QueryMatchMode } from "../utils/queryTokens";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -51,6 +53,29 @@ export const librarySearchDraftAtom = atom(
   },
 );
 
+/** Adv. Search's "Search in": which text the query is tested against. Part of
+ *  the search, so `clearLibrarySearchAtom` resets it. */
+export const librarySearchScopeAtom = atom<SearchScope>("all");
+
+/** Whether the collection's entities carry reference quotes as search fields
+ *  (`quote:` keys, see `data/nepal/adapt.ts`): "Search in" offers Quotes only
+ *  then. A stand-in for `fieldInScope(…, "quotes")` that folds nothing. */
+export const libraryHasQuotesAtom = atom((get) =>
+  get(libraryEntitiesAtom).some((e) => !!e.searchFields?.some((f) => !!f.key?.startsWith("quote:"))),
+);
+
+/** Adv. Search's "Match": partial (the default rule in `queryTokens.ts`) or
+ *  whole words. The matcher reads it as module state, so the write sets it
+ *  there before anything re-renders; nothing else may call `setQueryMatchMode`. */
+const searchMatchStateAtom = atom<QueryMatchMode>("partial");
+export const librarySearchMatchAtom = atom(
+  (get) => get(searchMatchStateAtom),
+  (_get, set, next: QueryMatchMode) => {
+    setQueryMatchMode(next);
+    set(searchMatchStateAtom, next);
+  },
+);
+
 /** Ends the search: empties the box and the committed query, and restores the
  *  view the search replaced. The only route back to no search; the box's own X
  *  clears just the text. */
@@ -67,6 +92,9 @@ export const clearLibrarySearchAtom = atom(null, (get, set) => {
   // A sort picked during the search applies to that search only (see `librarySortAtom`).
   set(searchSortOverrideAtom, null);
   set(searchSortDirOverrideAtom, null);
+  // So are the Adv. Search modifiers.
+  set(librarySearchScopeAtom, "all");
+  set(librarySearchMatchAtom, "partial");
 });
 
 /** The running search, or `null`. Kept out of `libraryActiveFilterCountAtom`:

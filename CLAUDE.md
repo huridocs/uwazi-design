@@ -328,6 +328,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     it and remembers the previous view; `clearLibrarySearchAtom` restores it. Leaving Adv. Search
     during a query cancels both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
     passages, spine. None repeats the title snippet.
+  - Adv. Search toolbar (`ResultsSnippets/AdvancedSearchBar.tsx`, on phones in the Results
+    sheet): "Search in" (`librarySearchScopeAtom`: all, title, metadata, full text, quotes) is
+    read by `matchesSearch`, `buildSnippetsFor`, `matchCategoriesWithTerms` and the ranking;
+    "Match" (`librarySearchMatchAtom`) sets whole-word matching as module state in
+    `queryTokens.ts`, so memos keyed on the terms also take the mode. The chips are the query
+    parsed by `utils/queryClauses.ts` and write back to the box. Both modifiers are optional
+    `LibrarySnapshot` keys and reset in `clearLibrarySearchAtom`. Quotes is offered only where
+    entities carry `quote:` fields (`libraryHasQuotesAtom`).
   - `TimeSpine`: the one chronology for the timeline and the Adv. Search spine. Callers pass rows,
     `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
     marks share one capsule and brace with no count; the "N later" label sits at the row
