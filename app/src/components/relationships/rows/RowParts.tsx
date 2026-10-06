@@ -1,3 +1,4 @@
+import { PinToggle } from "../../shared/PinToggle";
 import { ChevronRight, Link2 } from "lucide-react";
 import { useSetAtom } from "jotai";
 import { EntityPill } from "../../shared/EntityPill";
@@ -119,7 +120,11 @@ export function RowEntityPill({
   label,
   highlight,
   onOpen,
+  pin = true,
 }: {
+  /** The pin beside the pill. Off where a pill names a record that cannot be
+   *  pinned on its own. */
+  pin?: boolean;
   entityId: string;
   typeId: string;
   label?: string;
@@ -131,6 +136,9 @@ export function RowEntityPill({
 }) {
   const setPreviewEntityId = useSetAtom(previewEntityIdAtom);
   return (
+    // The pill and its pin: the pin shows on the row's hover or focus, and
+    // stays once pinned.
+    <span data-part="entity-cell" className="min-w-0 inline-flex items-center gap-0.5">
     <button
       type="button"
       onClick={(e) => {
@@ -145,5 +153,7 @@ export function RowEntityPill({
     >
       <EntityPill typeId={typeId} label={label} highlight={highlight} />
     </button>
+    {pin && <PinToggle entityId={entityId} title={label} reveal />}
+    </span>
   );
 }

@@ -1,3 +1,4 @@
+import { PinToggle } from "../shared/PinToggle";
 import { Fragment, memo, type ReactNode } from "react";
 import {
   AudioLines,
@@ -711,6 +712,7 @@ export const EntityCard = memo(function EntityCard({
             </span>
           )}
           {connectionBadge}
+          {selectable && <PinToggle entityId={entity.id} title={entity.title} reveal />}
           {viewButton}
         </div>
       </div>
