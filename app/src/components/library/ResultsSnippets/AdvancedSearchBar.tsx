@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Ban, Plus, Quote, Split } from "lucide-react";
 import {
@@ -20,7 +20,7 @@ import {
 import { Select } from "../../shared/Select";
 import { ActiveFilterChip } from "../../shared/ActiveFilterChip";
 import { BarDivider } from "../../shared/BarDivider";
-import { BAR_GHOST, COMMIT_FILL } from "../../shared/warmButton";
+import { COMMIT_FILL } from "../../shared/warmButton";
 
 /** The Adv. Search query toolbar: where the query is tested ("Search in"), how
  *  a term matches ("Match"), and the query itself as chips that can be removed
@@ -29,11 +29,12 @@ import { BAR_GHOST, COMMIT_FILL } from "../../shared/warmButton";
  *  the Library's matcher calls read, so the box, the chips and the results
  *  never disagree. The selects commit in a transition, as the box does.
  *
- *  `wide`: two rows, the selects and the syntax line, then chips and the add
- *  buttons. `stacked` (the phone Results sheet): the selects, the add buttons,
- *  then the chips. Every row is a fixed `h-8`; a long query scrolls its chip
- *  row sideways rather than adding a line, and composing a clause swaps the
- *  chips for an input in the same row, so nothing below ever moves. */
+ *  `wide`: one row, Search in and Match, then the chips and the add buttons
+ *  (two rows in a narrow pane). `stacked` (phones): the selects, the add
+ *  buttons, then the chips. Every row is a fixed `h-8`; a long query scrolls
+ *  its chips sideways rather than adding a line, and composing a clause swaps
+ *  the chips for an input in the same row, so nothing below ever moves. The
+ *  query syntax is in the search box's tips popover, not here. */
 
 const SCOPES = (["all", "title", "metadata", "fulltext", "quotes"] as const).map((value) => ({
   value,
@@ -48,8 +49,13 @@ const ADDS: { kind: ClauseKind; label: string; icon: ReactNode; placeholder: str
   { kind: "not", label: "Exclude", icon: <Ban size={12} aria-hidden />, placeholder: "Words no result may contain" },
 ];
 
-const GHOST = `inline-flex items-center gap-1 h-8 px-2 rounded-md text-xs font-medium cursor-pointer
-  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${BAR_GHOST}`;
+/** The masthead's secondary-control recipe (the Views and Display buttons
+ *  beside Sort and View): paper, edge, `h-8`, so the bar's buttons and its two
+ *  Selects read as the same family as the toolbar above them. */
+const SECONDARY = `inline-flex items-center gap-1 h-8 px-2.5 rounded-md border text-xs font-medium cursor-pointer
+  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35`;
+const SECONDARY_REST = "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink";
+const SECONDARY_ON = "bg-paper text-ink border-ink/40 shadow-sm";
 
 export function AdvancedSearchBar({
   hasQuotes,
@@ -59,7 +65,7 @@ export function AdvancedSearchBar({
   /** Offer "Quotes" only in a collection whose entities carry quote fields. */
   hasQuotes: boolean;
   layout?: "wide" | "stacked";
-  /** Wide only: the end of the first row (the hidden-by-filters line). */
+  /** Wide only: the end of the bar (the hidden-by-filters line). */
   trailing?: ReactNode;
 }) {
   const [scope, setScope] = useAtom(librarySearchScopeInputAtom);
@@ -71,6 +77,20 @@ export function AdvancedSearchBar({
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const [composing, setComposing] = useState<ClauseKind | null>(null);
 
+  // A query longer than its row scrolls; the row's end fades while it does, so
+  // a cut chip reads as "more this way", not as a broken chip.
+  const clausesRef = useRef<HTMLSpanElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  useLayoutEffect(() => {
+    const el = clausesRef.current;
+    if (!el) return;
+    const check = () => setOverflowing(el.scrollWidth > el.clientWidth + 2);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [committed, composing]);
+
   const scopes = hasQuotes ? SCOPES : SCOPES.filter((s) => s.value !== "quotes");
   const clauses = parseClauses(committed);
 
@@ -79,7 +99,7 @@ export function AdvancedSearchBar({
   const write = (next: string) => (next.trim() ? setDraft(next) : clearSearch());
 
   const selects = (
-    <span className="flex items-center gap-2 min-w-0">
+    <span className="flex items-center gap-1.5 min-w-0">
       <Select
         value={scope}
         options={scopes}
@@ -102,13 +122,13 @@ export function AdvancedSearchBar({
   );
 
   const adds = (
-    <span data-part="add-clause" className="flex items-center gap-0.5 shrink-0">
+    <span data-part="add-clause" className="flex items-center gap-1.5 shrink-0">
       {ADDS.map((a) => (
         <button
           key={a.kind}
           type="button"
           data-gutter-align="box"
-          className={`${GHOST} ${composing === a.kind ? "bg-warm text-ink" : ""}`}
+          className={`${SECONDARY} ${composing === a.kind ? SECONDARY_ON : SECONDARY_REST}`}
           aria-pressed={composing === a.kind}
           onClick={() => setComposing((c) => (c === a.kind ? null : a.kind))}
         >
@@ -132,13 +152,17 @@ export function AdvancedSearchBar({
     />
   ) : (
     <span
+      ref={clausesRef}
       data-part="clauses"
+      data-overflow={overflowing || undefined}
       role="list"
       aria-label="Search terms"
-      className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto no-scrollbar"
+      className="min-w-0 flex items-center gap-1 overflow-x-auto no-scrollbar
+        data-[overflow]:[mask-image:linear-gradient(to_right,#000_calc(100%-1.5rem),transparent)]
+        rtl:data-[overflow]:[mask-image:linear-gradient(to_left,#000_calc(100%-1.5rem),transparent)]"
     >
       {clauses.length === 0 ? (
-        <span className="text-xs text-ink-tertiary truncate">No terms yet. Type in the search box or add one here.</span>
+        <span className="text-xs text-ink-tertiary truncate">No terms yet</span>
       ) : (
         clauses.map((c, i) => (
           <span role="listitem" key={`${i}:${clauseLabel(c)}`} className="shrink-0">
@@ -153,15 +177,9 @@ export function AdvancedSearchBar({
     </span>
   );
 
-  const hint = (
-    <span data-part="syntax" className="min-w-0 truncate text-xs text-ink-tertiary" dir="ltr">
-      <Code>"exact phrase"</Code> · <Code>a OR b</Code> · <Code>NOT c</Code> · <Code>juris*</Code> · <Code>198?</Code>
-    </span>
-  );
-
   if (layout === "stacked") {
     return (
-      <div data-component="AdvancedSearchBar" data-layout="stacked" className="shrink-0 flex flex-col gap-1 pt-1 pb-2">
+      <div data-component="AdvancedSearchBar" data-layout="stacked" className="shrink-0 flex flex-col gap-1.5 pb-3">
         <div className="h-8 flex items-center">{selects}</div>
         <div className="h-8 flex items-center">{adds}</div>
         <div className="h-8 flex items-center gap-1 min-w-0">{chips}</div>
@@ -169,24 +187,30 @@ export function AdvancedSearchBar({
     );
   }
 
+  // The pane body's first block: the Library lane's `py-3` above it, as every
+  // view has, and `pb-3` below, the card grid's own gap to the first card.
+  // One row where the pane can hold it: the selects, then the query's chips
+  // with the add buttons right after the last one. In a narrower pane the
+  // chips and add buttons take a second row. The row count follows the pane's
+  // width (a container query), never the query, so typing never moves the
+  // results; a long query scrolls its chips sideways.
   return (
-    <div data-component="AdvancedSearchBar" data-layout="wide" className="shrink-0 flex flex-col gap-1 pt-1 pb-2">
-      <div className="h-8 flex items-center gap-3 min-w-0">
-        {selects}
-        <span className="flex-1 min-w-0 flex">{hint}</span>
-        {trailing}
-      </div>
-      <div className="h-8 flex items-center gap-2 min-w-0">
-        {chips}
-        <BarDivider />
-        {adds}
+    <div data-component="AdvancedSearchBar" data-layout="wide" className="@container shrink-0 pb-3">
+      <div className="flex flex-wrap @min-[56rem]:flex-nowrap items-center gap-x-2 gap-y-1.5 min-w-0">
+        <span className="h-8 shrink-0 flex items-center">{selects}</span>
+        <BarDivider className="hidden @min-[56rem]:block" />
+        <span
+          data-part="query"
+          className="order-last @min-[56rem]:order-none basis-full @min-[56rem]:basis-auto @min-[56rem]:flex-1
+            h-8 min-w-0 flex items-center gap-2"
+        >
+          {chips}
+          {adds}
+        </span>
+        {trailing && <span className="ms-auto shrink-0 flex items-center">{trailing}</span>}
       </div>
     </div>
   );
-}
-
-function Code({ children }: { children: ReactNode }) {
-  return <code className="font-mono text-meta text-ink-secondary">{children}</code>;
 }
 
 /** The input a clause is typed into, in place of the chips. Enter adds,
@@ -241,7 +265,7 @@ function ClauseComposer({
       >
         Add
       </button>
-      <button type="button" onClick={onCancel} className={GHOST}>
+      <button type="button" data-gutter-align="box" onClick={onCancel} className={`${SECONDARY} ${SECONDARY_REST}`}>
         Cancel
       </button>
     </form>

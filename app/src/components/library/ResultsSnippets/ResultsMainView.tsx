@@ -265,15 +265,15 @@ export function ResultsMainView({
       hasQuotes={hasQuotes}
       layout={narrow ? "stacked" : "wide"}
       trailing={
-        // Always mounted and hidden when nothing is excluded, so ticking facets
-        // doesn't shift the results.
+        // Always mounted, so ticking facets never changes the bar's height or
+        // shifts the results. Empty, it takes no width, which the query's chips
+        // use instead; showing it only narrows their scrolling row.
         <span
           data-part="hidden-by-filters"
           aria-hidden={hiddenByFilters === 0}
-          className={`shrink-0 text-meta text-ink-tertiary ${hiddenByFilters === 0 ? "invisible" : ""}`}
+          className={`shrink-0 whitespace-nowrap text-meta text-ink-tertiary ${hiddenByFilters === 0 ? "invisible w-0 overflow-hidden" : ""}`}
         >
-          {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
-          hidden by filters
+          {hiddenByFilters.toLocaleString()} hidden by filters
           <span className="mx-1 text-ink-muted">·</span>
           <button
             type="button"
