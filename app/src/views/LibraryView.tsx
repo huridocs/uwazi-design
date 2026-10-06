@@ -1392,8 +1392,8 @@ export function LibraryView() {
             />
           </div>
         ) : viewMode === "network" ? (
-          // Draws the whole collection and dims what the filters leave out,
-          // so an empty result set is a fully dimmed network, not a message.
+          // Draws the collection with the matches brought forward; an empty
+          // result set says so on the canvas rather than replacing it.
           <div className="flex-1 min-h-0">
             <LibraryNetworkView
               matches={filtered}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { NetworkGraph } from "../../data/network/graph";
 import type { Community, NetworkPlacement } from "../../data/network/layout";
+import type { FocusLayout } from "../../data/network/focus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
 
@@ -9,16 +10,21 @@ import { typeLabelColor } from "../../utils/typeColor";
  *  Canvas 2D, not SVG: CEJIL is 4,398 nodes and 16,585 edges, eight times what
  *  the SVG graph holds. Per frame, edges are bucketed by style and width and
  *  stroked as one path per bucket; nodes are filled as one path per template
- *  and strength. Nothing is laid out here: positions come in `placement`.
+ *  and strength. Nothing is laid out here: positions come in `placement`, and
+ *  in `focus` while a filter's matches are laid out on their own.
  *
  *  Zoomed out, a large collection draws one mark per community (sized by its
  *  record count, coloured by its main template) and the marks open into nodes
- *  as you zoom. Filters dim in place: `strength` is 2 for a match, 1 for its
- *  neighbours, 0 for the rest, and null when nothing is filtered.
+ *  as you zoom. While filtering (`strength`: 2 match, 1 neighbour, 0 rest),
+ *  each mark carries an arc for the share of its records that match, and a
+ *  community with none fades to an outline. At node level matches draw full,
+ *  neighbours small and muted, the rest as faint points; an edge draws only
+ *  with a matching end. When the match set changes (`fitKey`), positions move
+ *  to the new layout and the camera fits the matches in one ≤400 ms move.
  *
  *  Keyboard: the canvas is not a control. A visually hidden list of buttons
- *  (the matches, or the best-connected records) comes after it; focusing one
- *  pans to its node and draws a focus ring there. */
+ *  (matches first, then the best-connected records) comes after it; focusing
+ *  one pans to its node and draws a focus ring there. */
 
 export interface NetworkCanvasProps {
   graph: NetworkGraph;
@@ -39,6 +45,20 @@ export interface NetworkCanvasProps {
   /** Draw community marks when zoomed out. Off for small collections, where
    *  every node fits. */
   overview: boolean;
+  /** The matches' own layout. Non-members fade out while it is shown. */
+  focus?: FocusLayout | null;
+  /** Changes when the match set or the layout changes: positions move and the
+   *  camera fits the matches. Null holds both (a focus layout is on its way). */
+  fitKey?: string | null;
+  /** The Focus / Whole collection switch, shown while filtering. */
+  layoutSwitch?: {
+    focus: boolean;
+    available: boolean;
+    /** Why Focus is unavailable, for its tooltip. */
+    reason: string;
+    pending: boolean;
+    onChange: (focus: boolean) => void;
+  } | null;
   selected: number;
   onSelect: (index: number, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
   /** Accessible name of the drawing and of its keyboard list. */
@@ -51,12 +71,18 @@ const OPEN_TO = 2.8;
 const MIN_REL = 0.5;
 const MAX_REL = 60;
 const KEYBOARD_LIST = 60;
+/** Length of a filter move: positions and camera together. */
+const MOVE_MS = 380;
+/** Pixels kept clear around a fit, for marks, names and the controls. */
+const FIT_PAD = 96;
 
 interface Camera {
   k: number;
   tx: number;
   ty: number;
 }
+
+type Extent = { minX: number; maxX: number; minY: number; maxY: number };
 
 interface Tokens {
   bg: string;
@@ -114,6 +140,25 @@ function useThemeVersion() {
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const truncate = (s: string, n = 34) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
+const reducedMotion = () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/** Bounds of `nodes` in `pos`; from 50 nodes, the 1st to 99th percentile on
+ *  each axis, so a few far-out records do not shrink the rest to a corner. */
+function boundsOf(pos: Float32Array, nodes: number[]): Extent | null {
+  if (!nodes.length) return null;
+  const xs = new Float32Array(nodes.length);
+  const ys = new Float32Array(nodes.length);
+  nodes.forEach((i, k) => {
+    xs[k] = pos[i * 2];
+    ys[k] = pos[i * 2 + 1];
+  });
+  xs.sort();
+  ys.sort();
+  const lo = nodes.length >= 50 ? Math.floor(nodes.length * 0.01) : 0;
+  const hi = nodes.length >= 50 ? Math.ceil(nodes.length * 0.99) - 1 : nodes.length - 1;
+  return { minX: xs[lo], maxX: xs[hi], minY: ys[lo], maxY: ys[hi] };
+}
 
 export function NetworkCanvas({
   graph,
@@ -127,6 +172,9 @@ export function NetworkCanvas({
   hubDegree,
   hubEdges,
   overview,
+  focus = null,
+  fitKey,
+  layoutSwitch,
   selected,
   onSelect,
   label,
@@ -145,8 +193,17 @@ export function NetworkCanvas({
   const themeVersion = useThemeVersion();
 
   const n = graph.ids.length;
-  const { pos, communities, extent } = placement;
-  const quad = useMemo(() => buildQuadtree(pos, n), [pos, n]);
+  const { communities } = placement;
+  /* Where nodes are going (`target`) and where they are drawn now (`shown`),
+     which a move interpolates between. `fade` is 1 while non-members of a
+     focus layout are hidden. */
+  const target = focus?.pos ?? placement.pos;
+  const baseExtent = focus?.extent ?? placement.extent;
+  const shown = useRef<Float32Array>(new Float32Array(target));
+  if (shown.current.length !== target.length) shown.current = new Float32Array(target);
+  const fade = useRef(focus ? 1 : 0);
+  const member = focus?.member ?? null;
+  const quad = useMemo(() => buildQuadtree(target, n), [target, n]);
   /* Colours, re-read on a theme change. Community marks use the label colour
      of their template (`typeLabelColor`); dots keep the raw colour. */
   const colors = useMemo(() => {
@@ -171,10 +228,10 @@ export function NetworkCanvas({
     return order;
   }, [graph, n]);
 
-  /* Label order while filtering: matches first. */
-  const labelOrder = useMemo(
-    () => (strength ? [...byDegree.filter((i) => strength[i] === 2), ...byDegree.filter((i) => strength[i] !== 2)] : byDegree),
-    [byDegree, strength],
+  /* While filtering: the matches, best-connected first. Labels go to them only. */
+  const matchOrder = useMemo(
+    () => (strength ? byDegree.filter((i) => strength[i] === 2 && nodeOn[i]) : null),
+    [byDegree, strength, nodeOn],
   );
 
   /* Per community: how many of its members match, for the overview. */
@@ -183,7 +240,8 @@ export function NetworkCanvas({
     return communities.map((c) => c.members.reduce((s, i) => s + (strength[i] === 2 ? 1 : 0), 0));
   }, [communities, strength]);
 
-  /* Links between communities, counted once per edge drawn, for the overview. */
+  /* Links between communities, counted once per edge drawn, for the overview.
+     While filtering, only edges with a matching end count, as at node level. */
   const communityLinks = useMemo(() => {
     if (!overview) return [];
     const at = new Map<number, number>();
@@ -196,6 +254,7 @@ export function NetworkCanvas({
       const ca = placement.community[graph.a[e]];
       const cb = placement.community[graph.b[e]];
       if (ca === cb || ca < 0 || cb < 0) continue;
+      if (strength && strength[graph.a[e]] !== 2 && strength[graph.b[e]] !== 2) continue;
       if (hubEdges !== "full" && (graph.degree[graph.a[e]] >= hubDegree || graph.degree[graph.b[e]] >= hubDegree)) continue;
       const x = at.get(ca)!;
       const y = at.get(cb)!;
@@ -203,14 +262,20 @@ export function NetworkCanvas({
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts.entries()].map(([key, count]) => ({ x: Math.floor(key / C), y: key % C, count }));
-  }, [overview, communities, graph, edgeOn, placement.community, hubEdges, hubDegree]);
+  }, [overview, communities, graph, edgeOn, placement.community, hubEdges, hubDegree, strength]);
 
-  const mix = (r: number) => (overview ? clamp((r - OPEN_FROM) / (OPEN_TO - OPEN_FROM), 0, 1) : 1);
+  // A focus layout is drawn as nodes at every zoom: its communities are the
+  // global layout's and mean nothing there.
+  const marksOn = overview && !focus;
+  const mix = (r: number) => (marksOn ? Math.max(fade.current, clamp((r - OPEN_FROM) / (OPEN_TO - OPEN_FROM), 0, 1)) : 1);
   // Marks scale with the pane, so a phone's overview is not one overlapping heap.
   const markScale = clamp(Math.min(size.w, size.h) / 760, 0.4, 1);
   const markRadius = (c: Community) => clamp((3 + Math.sqrt(c.members.length) * 1.5) * markScale, 3, 56);
   const nodeRadius = (i: number, r: number) =>
     clamp((1.6 + 0.55 * Math.sqrt(graph.degree[i])) * clamp(Math.sqrt(r / 2), 0.75, 1.8), 1.4, 16);
+  /* Node size and strength while filtering: a neighbour is small, the rest a point. */
+  const radiusAt = (i: number, r: number) =>
+    !strength ? nodeRadius(i, r) : strength[i] === 2 ? Math.max(3, nodeRadius(i, r)) : strength[i] === 1 ? Math.max(1.2, nodeRadius(i, r) * 0.55) : 1.1;
 
   /* ── Drawing ─────────────────────────────────────────────────────────── */
 
@@ -224,8 +289,11 @@ export function NetworkCanvas({
     const { k, tx, ty } = cam.current;
     const r = k / fitK.current;
     const t = colors.tokens;
+    const pos = shown.current;
     const nodesAlpha = mix(r);
     const marksAlpha = 1 - nodesAlpha;
+    // Non-members of a focus layout fade as it comes in.
+    const restAlpha = 1 - fade.current;
     const W = size.w;
     const H = size.h;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -247,29 +315,37 @@ export function NetworkCanvas({
         if (!edgeOn[e]) continue;
         const i = graph.a[e];
         const j = graph.b[e];
+        const incident = selected >= 0 && (i === selected || j === selected);
+        // An edge needs a matching end while filtering.
+        if (!incident && strength && strength[i] !== 2 && strength[j] !== 2) continue;
+        if (member && !incident && (!member[i] || !member[j])) continue;
         const x1 = sx(i), y1 = sy(i), x2 = sx(j), y2 = sy(j);
         if ((x1 < -pad && x2 < -pad) || (x1 > W + pad && x2 > W + pad) || (y1 < -pad && y2 < -pad) || (y1 > H + pad && y2 > H + pad)) continue;
-        const incident = selected >= 0 && (i === selected || j === selected);
         const hub = graph.degree[i] >= hubDegree || graph.degree[j] >= hubDegree;
-        if (!incident) {
-          if (hub && hubEdges === "off") continue;
-          // Dim in place: an edge needs a matching end to be drawn.
-          if (strength && strength[i] !== 2 && strength[j] !== 2) continue;
-        }
+        if (!incident && hub && hubEdges === "off") continue;
         const refs = graph.refs[e];
         const w = refs >= 4 ? 2 : refs >= 2 ? 1.3 : 0.8;
-        const style = incident ? "sel" : hub && hubEdges === "faint" ? "hub" : "base";
+        const style = incident
+          ? "sel"
+          : hub && hubEdges === "faint"
+            ? "hub"
+            : !strength
+              ? "base"
+              : strength[i] === 2 && strength[j] === 2
+                ? "strong"
+                : "light";
         push(`${style}|${w}`, x1, y1, x2, y2);
       }
       ctx.lineCap = "round";
       // A selected hub's thousands of edges would cover the canvas in carbon:
       // they lighten as its degree grows.
       const selAlpha = selected >= 0 ? clamp(0.85 * Math.sqrt(40 / Math.max(1, graph.degree[selected])), 0.12, 0.85) : 0;
+      const styleAlpha: Record<string, number> = { sel: selAlpha, hub: 0.07, base: 0.28, strong: 0.6, light: 0.2 };
       for (const [key, pts] of buckets) {
         const [style, w] = key.split("|");
-        ctx.globalAlpha = nodesAlpha * (style === "sel" ? selAlpha : style === "hub" ? 0.07 : strength ? 0.45 : 0.28);
-        ctx.strokeStyle = style === "sel" ? t.carbon : t.inkTertiary;
-        ctx.lineWidth = Number(w) * (style === "sel" ? 1.3 : 1);
+        ctx.globalAlpha = nodesAlpha * styleAlpha[style];
+        ctx.strokeStyle = style === "sel" ? t.carbon : style === "strong" ? t.inkSecondary : t.inkTertiary;
+        ctx.lineWidth = Number(w) * (style === "sel" ? 1.3 : style === "strong" ? 1.15 : 1);
         ctx.beginPath();
         for (let p = 0; p < pts.length; p += 4) {
           ctx.moveTo(pts[p], pts[p + 1]);
@@ -278,28 +354,29 @@ export function NetworkCanvas({
         ctx.stroke();
       }
 
-      /* Nodes, one fill per (template, strength). Dim before strong, so a
-         match is never under a dimmed dot. */
+      /* Nodes, one fill per (template, strength). The rest first, as faint
+         points in one colour; then neighbours; matches last, on top. */
       const levels = strength ? [0, 1, 2] : [2];
-      const levelAlpha = [0.13, 0.5, 1];
       for (const level of levels) {
+        const alpha = level === 2 ? 1 : level === 1 ? 0.45 : 0.22 * (member ? restAlpha : 1);
+        if (alpha < 0.01) continue;
         const groups = new Map<string, number[]>();
         for (let i = 0; i < n; i++) {
           if (!nodeOn[i]) continue;
           if (strength && strength[i] !== level) continue;
           const x = sx(i), y = sy(i);
           if (x < -pad || x > W + pad || y < -pad || y > H + pad) continue;
-          const tId = graph.typeIds[i];
+          const tId = level === 0 ? "" : graph.typeIds[i];
           let g = groups.get(tId);
           if (!g) groups.set(tId, (g = []));
           g.push(i);
         }
-        ctx.globalAlpha = nodesAlpha * levelAlpha[level];
+        ctx.globalAlpha = nodesAlpha * alpha;
         for (const [tId, list] of groups) {
-          ctx.fillStyle = colors.dot.get(tId) ?? t.inkTertiary;
+          ctx.fillStyle = level === 0 ? t.inkTertiary : colors.dot.get(tId) ?? t.inkTertiary;
           ctx.beginPath();
           for (const i of list) {
-            const rad = nodeRadius(i, r);
+            const rad = radiusAt(i, r);
             const x = sx(i), y = sy(i);
             ctx.moveTo(x + rad, y);
             ctx.arc(x, y, rad, 0, Math.PI * 2);
@@ -320,7 +397,7 @@ export function NetworkCanvas({
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
         ctx.beginPath();
-        ctx.arc(sx(i), sy(i), nodeRadius(i, r) + gap, 0, Math.PI * 2);
+        ctx.arc(sx(i), sy(i), radiusAt(i, r) + gap, 0, Math.PI * 2);
         ctx.stroke();
       };
       ring(selected, t.carbon, 2, 2.5);
@@ -328,7 +405,7 @@ export function NetworkCanvas({
       const hv = hoverRef.current;
       if (hv?.kind === "node") ring(hv.i, t.ink, 1.5, 2);
 
-      /* Labels: best-connected first (matches first while filtering), only
+      /* Labels: best-connected first (only matches while filtering), only
          where they do not collide. The selected node is always labelled. */
       // One label set at a time: node labels once nodes are the stronger layer.
       if (nodesAlpha >= 0.5) {
@@ -341,13 +418,14 @@ export function NetworkCanvas({
         let placed = 0;
         const place = (i: number, force: boolean) => {
           if (!nodeOn[i]) return;
-          if (!force && strength && strength[i] === 0) return;
-          const x = sx(i) + nodeRadius(i, r) + 4;
+          const x = sx(i) + radiusAt(i, r) + 4;
           const y = sy(i);
           if (x < 0 || x > W || y < 0 || y > H) return;
           const text = truncate(titleOf(i));
           const tw = ctx.measureText(text).width;
           const box: [number, number, number, number] = [x - 2, y - 8, x + tw + 2, y + 8];
+          // A label cut by the pane's edge reads as a different name.
+          if (!force && box[2] > W) return;
           if (!force && taken.some((b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3])) return;
           taken.push(box);
           ctx.globalAlpha = nodesAlpha;
@@ -359,7 +437,7 @@ export function NetworkCanvas({
           placed++;
         };
         for (const i of want) place(i, true);
-        for (const i of labelOrder) {
+        for (const i of matchOrder ?? byDegree) {
           if (placed >= budget) break;
           if (want.includes(i)) continue;
           place(i, false);
@@ -387,27 +465,46 @@ export function NetworkCanvas({
         const x = cx(c), y = cy(c);
         const rad = markRadius(c);
         const color = colors.mark.get(c.typeId) ?? t.inkTertiary;
-        const share = communityMatch ? communityMatch[idx] / c.members.length : 1;
-        const dim = communityMatch && communityMatch[idx] === 0;
-        ctx.globalAlpha = marksAlpha * (dim ? 0.25 : 1);
-        ctx.fillStyle = t.bg;
+        const hovered = hoverRef.current?.kind === "community" && hoverRef.current.i === idx;
+        const matched = communityMatch ? communityMatch[idx] : -1;
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
+        ctx.globalAlpha = marksAlpha;
+        ctx.fillStyle = t.bg;
         ctx.fill();
-        ctx.globalAlpha = marksAlpha * (dim ? 0.08 : 0.2);
+        // No match: an outline only.
+        if (matched === 0) {
+          ctx.globalAlpha = marksAlpha * (hovered ? 0.5 : 0.22);
+          ctx.strokeStyle = t.inkTertiary;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          return;
+        }
+        ctx.globalAlpha = marksAlpha * 0.2;
         ctx.fillStyle = color;
         ctx.fill();
-        ctx.globalAlpha = marksAlpha * (dim ? 0.3 : 0.75);
+        ctx.globalAlpha = marksAlpha * 0.75;
         ctx.strokeStyle = color;
-        ctx.lineWidth = hoverRef.current?.kind === "community" && hoverRef.current.i === idx ? 2.5 : 1.25;
+        ctx.lineWidth = hovered ? 2.5 : 1.25;
         ctx.stroke();
-        // While filtering: the matching share as an inner disc.
-        if (communityMatch && share > 0) {
-          ctx.globalAlpha = marksAlpha * 0.85;
-          ctx.fillStyle = color;
+        // While filtering: the matching share as an arc around the mark, from
+        // twelve o'clock, on a faint track. One match still shows.
+        if (matched > 0) {
+          const share = matched / c.members.length;
+          const ar = rad + 4;
+          ctx.lineCap = "butt";
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = marksAlpha * 0.18;
+          ctx.strokeStyle = t.inkTertiary;
           ctx.beginPath();
-          ctx.arc(x, y, Math.max(2, rad * Math.sqrt(share)), 0, Math.PI * 2);
-          ctx.fill();
+          ctx.arc(x, y, ar, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = marksAlpha;
+          ctx.strokeStyle = t.ink;
+          ctx.beginPath();
+          ctx.arc(x, y, ar, -Math.PI / 2, -Math.PI / 2 + Math.max(0.14, share * Math.PI * 2));
+          ctx.stroke();
+          ctx.lineCap = "round";
         }
       });
       // Names: each community's best-connected record, largest first, where
@@ -421,7 +518,7 @@ export function NetworkCanvas({
           if (c.members.length < 8 || (communityMatch && communityMatch[idx] === 0)) return;
           const text = truncate(titleOf(c.top), 28);
           const x = cx(c);
-          const y = cy(c) + markRadius(c) + 9;
+          const y = cy(c) + markRadius(c) + (communityMatch ? 13 : 9);
           const tw = ctx.measureText(text).width;
           const box: [number, number, number, number] = [x - tw / 2 - 2, y - 8, x + tw / 2 + 2, y + 8];
           if (taken.some((b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3])) return;
@@ -437,9 +534,9 @@ export function NetworkCanvas({
       }
     }
     ctx.globalAlpha = 1;
-    // `mix`, `markRadius` and `nodeRadius` close over props only.
+    // `mix`, `markRadius` and `radiusAt` close over props only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, pos, n, edgeOn, nodeOn, strength, hubDegree, hubEdges, selected, focused, labelOrder, titleOf, communities, communityLinks, communityMatch, overview]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, focused, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
 
   const request = useCallback(() => {
     if (!frame.current) frame.current = requestAnimationFrame(draw);
@@ -449,7 +546,7 @@ export function NetworkCanvas({
   }, [request]);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
-  /* ── Size, dpr, first fit ────────────────────────────────────────────── */
+  /* ── Size, dpr, fits ─────────────────────────────────────────────────── */
 
   useLayoutEffect(() => {
     const host = hostRef.current;
@@ -462,18 +559,46 @@ export function NetworkCanvas({
     return () => ro.disconnect();
   }, []);
 
-  const fit = useCallback(() => {
-    const w = extent.maxX - extent.minX || 1;
-    const h = extent.maxY - extent.minY || 1;
-    // Room for the overview marks and their names at the edge.
-    const k = Math.min((size.w - 96) / w, (size.h - 96) / h);
-    fitK.current = k;
-    return { k, tx: size.w / 2 - ((extent.minX + extent.maxX) / 2) * k, ty: size.h / 2 - ((extent.minY + extent.maxY) / 2) * k };
-  }, [extent, size]);
+  /** The camera that frames `ext`. */
+  const frameOf = useCallback(
+    (ext: Extent): Camera => {
+      const w = ext.maxX - ext.minX || 1;
+      const h = ext.maxY - ext.minY || 1;
+      const k = Math.min(Math.max(1, size.w - FIT_PAD) / w, Math.max(1, size.h - FIT_PAD) / h);
+      return { k, tx: size.w / 2 - ((ext.minX + ext.maxX) / 2) * k, ty: size.h / 2 - ((ext.minY + ext.maxY) / 2) * k };
+    },
+    [size],
+  );
 
-  // Fit on first size and whenever the drawing changes; a resize keeps the
+  // The base zoom every relative measure (marks opening, labels, zoom limits)
+  // is taken from: the layout on screen, framed whole. A resize updates it
+  // below, with the camera.
+  useLayoutEffect(() => {
+    if (size.w && size.h) fitK.current = frameOf(baseExtent).k;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseExtent]);
+
+  /** The camera for the Fit button and a filter move: the matches with a
+   *  margin while filtering, the whole layout otherwise. */
+  const fitCamera = useCallback((): Camera => {
+    const base = frameOf(baseExtent);
+    if (!strength) return base;
+    const ext = boundsOf(target, matchOrder ?? []);
+    if (!ext) return base;
+    const mx = (ext.maxX - ext.minX) * 0.08;
+    const my = (ext.maxY - ext.minY) * 0.08;
+    const f = frameOf({ minX: ext.minX - mx, maxX: ext.maxX + mx, minY: ext.minY - my, maxY: ext.maxY + my });
+    // A single match, or a tight few, would zoom to the limit: stop where
+    // nodes are drawn with room around them.
+    const k = clamp(f.k, base.k, base.k * (focus ? 4 : OPEN_TO * 2.5));
+    const wx = (size.w / 2 - f.tx) / f.k;
+    const wy = (size.h / 2 - f.ty) / f.k;
+    return { k, tx: size.w / 2 - wx * k, ty: size.h / 2 - wy * k };
+  }, [frameOf, baseExtent, strength, target, matchOrder, focus, size]);
+
+  // Fit on first size and whenever the collection changes; a resize keeps the
   // centre and the relative zoom.
-  const fitted = useRef<{ extent: typeof extent; w: number; h: number } | null>(null);
+  const fitted = useRef<{ extent: Extent; w: number; h: number } | null>(null);
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !size.w || !size.h) return;
@@ -481,39 +606,62 @@ export function NetworkCanvas({
     canvas.width = Math.round(size.w * dpr);
     canvas.height = Math.round(size.h * dpr);
     const prev = fitted.current;
-    if (!prev || prev.extent !== extent) {
-      cam.current = fit();
+    const relNow = cam.current.k / fitK.current;
+    fitK.current = frameOf(baseExtent).k;
+    if (!prev || prev.extent !== placement.extent) {
+      cam.current = fitCamera();
     } else {
-      const relNow = cam.current.k / fitK.current;
       const cxw = (prev.w / 2 - cam.current.tx) / cam.current.k;
       const cyw = (prev.h / 2 - cam.current.ty) / cam.current.k;
-      const f = fit();
-      const k = f.k * relNow;
+      const k = fitK.current * relNow;
       cam.current = { k, tx: size.w / 2 - cxw * k, ty: size.h / 2 - cyw * k };
     }
-    fitted.current = { extent, w: size.w, h: size.h };
+    fitted.current = { extent: placement.extent, w: size.w, h: size.h };
     setRel(cam.current.k / fitK.current);
     draw();
-  }, [size, extent, fit, draw]);
+    // Only a size or collection change refits here; filter moves are below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size, placement.extent]);
 
-  /* ── Camera moves ────────────────────────────────────────────────────── */
+  /* ── Moves ───────────────────────────────────────────────────────────── */
 
   const anim = useRef(0);
-  const setCamera = useCallback(
-    (next: Camera, animate = false) => {
+  /** Positions and fade of the move in progress, so another move can finish it. */
+  const moving = useRef<{ to: Float32Array; fade: number } | null>(null);
+  const settle = () => {
+    const mv = moving.current;
+    if (!mv) return;
+    shown.current.set(mv.to);
+    fade.current = mv.fade;
+    moving.current = null;
+  };
+
+  /** One move: positions to `to`, non-members to `toFade`, camera to `next`.
+   *  Positions and fade only change when given. */
+  const move = useCallback(
+    (next: Camera, animate: boolean, to?: Float32Array, toFade?: number) => {
       cancelAnimationFrame(anim.current);
-      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      if (!animate || reduce) {
-        cam.current = next;
-        setRel(next.k / fitK.current);
-        request();
-        return;
-      }
+      settle();
       const from = { ...cam.current };
+      const fromPos = to ? new Float32Array(shown.current) : null;
+      const fromFade = fade.current;
+      const endFade = toFade ?? fromFade;
+      const finish = () => {
+        cam.current = next;
+        if (to) shown.current.set(to);
+        fade.current = endFade;
+        moving.current = null;
+        setRel(next.k / fitK.current);
+        draw();
+      };
+      if (!animate || reducedMotion()) return finish();
+      if (to) moving.current = { to, fade: endFade };
       const start = performance.now();
+      let frames = 0;
       const step = (now: number) => {
-        const p = Math.min(1, (now - start) / 320);
-        const e = 1 - (1 - p) ** 3;
+        frames++;
+        const p = Math.min(1, (now - start) / MOVE_MS);
+        const e = ease(p);
         // Interpolate the zoom geometrically so the centre path stays straight.
         const k = from.k * (next.k / from.k) ** e;
         const fx = (size.w / 2 - from.tx) / from.k;
@@ -523,22 +671,52 @@ export function NetworkCanvas({
         const wx = fx + (nx - fx) * e;
         const wy = fy + (ny - fy) * e;
         cam.current = { k, tx: size.w / 2 - wx * k, ty: size.h / 2 - wy * k };
+        if (to && fromPos) {
+          const s = shown.current;
+          for (let q = 0; q < s.length; q++) s[q] = fromPos[q] + (to[q] - fromPos[q]) * e;
+        }
+        fade.current = fromFade + (endFade - fromFade) * e;
         draw();
-        if (p < 1) anim.current = requestAnimationFrame(step);
-        else setRel(k / fitK.current);
+        if (p < 1) {
+          anim.current = requestAnimationFrame(step);
+          return;
+        }
+        finish();
+        if (import.meta.env.DEV && to) {
+          const ms = performance.now() - start;
+          (window as unknown as { __networkMove?: object }).__networkMove = { ms: Math.round(ms), frames, fps: Math.round((frames / ms) * 1000) };
+        }
       };
       anim.current = requestAnimationFrame(step);
     },
-    [draw, request, size],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [draw, size],
   );
+
+  const setCamera = useCallback((next: Camera, animate = false) => move(next, animate), [move]);
+
+  // A new match set or layout: move nodes and camera together. The first one
+  // (the view opening on a filter) jumps.
+  const lastFit = useRef<string | null | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!size.w || !size.h || fitKey === undefined || fitKey === null) return;
+    if (lastFit.current === fitKey) return;
+    const first = lastFit.current === undefined;
+    lastFit.current = fitKey;
+    move(fitCamera(), !first, target, focus ? 1 : 0);
+    // `fitKey` names everything a move depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitKey, size.w > 0 && size.h > 0]);
 
   const zoomAt = useCallback(
     (factor: number, x: number, y: number, animate = false) => {
+      settle();
       const c = cam.current;
       const k = clamp(c.k * factor, fitK.current * MIN_REL, fitK.current * MAX_REL);
       const f = k / c.k;
       setCamera({ k, tx: x - (x - c.tx) * f, ty: y - (y - c.ty) * f }, animate);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setCamera],
   );
 
@@ -584,13 +762,13 @@ export function NetworkCanvas({
         });
         return best >= 0 ? { kind: "community", i: best } : null;
       }
-      const i = quad.nearest(wx, wy, 18 / c.k, (j) => nodeOn[j] === 1);
+      const i = quad.nearest(wx, wy, 18 / c.k, (j) => nodeOn[j] === 1 && (!member || member[j] === 1));
       if (i < 0) return null;
-      const d = Math.hypot(pos[i * 2] * c.k + c.tx - x, pos[i * 2 + 1] * c.k + c.ty - y);
-      return d <= nodeRadius(i, r) + 5 ? { kind: "node", i } : null;
+      const d = Math.hypot(target[i * 2] * c.k + c.tx - x, target[i * 2 + 1] * c.k + c.ty - y);
+      return d <= radiusAt(i, r) + 5 ? { kind: "node", i } : null;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [communities, quad, nodeOn, pos, overview, size],
+    [communities, quad, nodeOn, member, target, marksOn, size, strength],
   );
 
   /* ── Pointer: pan, pinch, hover, click ───────────────────────────────── */
@@ -653,6 +831,11 @@ export function NetworkCanvas({
       return;
     }
     if (!g.moved && Math.hypot(p.x - g.x, p.y - g.y) < 4) return;
+    if (!g.moved) {
+      // A drag takes over from a move in progress.
+      cancelAnimationFrame(anim.current);
+      settle();
+    }
     g.moved = true;
     if (hoverRef.current) {
       hoverRef.current = null;
@@ -700,15 +883,23 @@ export function NetworkCanvas({
 
   /* ── Keyboard list ───────────────────────────────────────────────────── */
 
+  // Matches first, then their neighbours, then the best-connected rest.
   const keyboardNodes = useMemo(() => {
-    const pick = strength ? byDegree.filter((i) => strength[i] === 2 && nodeOn[i]) : byDegree.filter((i) => nodeOn[i]);
-    return pick.slice(0, KEYBOARD_LIST);
-  }, [byDegree, strength, nodeOn]);
+    const on = byDegree.filter((i) => nodeOn[i] && (!member || member[i]));
+    if (!strength) return on.slice(0, KEYBOARD_LIST);
+    const rank = (i: number) => (strength[i] === 2 ? 0 : strength[i] === 1 ? 1 : 2);
+    return on
+      .map((i, k) => [i, rank(i) * n + k] as const)
+      .sort((x, y) => x[1] - y[1])
+      .slice(0, KEYBOARD_LIST)
+      .map(([i]) => i);
+  }, [byDegree, strength, nodeOn, member, n]);
 
   const focusNode = (i: number) => {
     setFocused(i);
-    const k = Math.max(cam.current.k, fitK.current * OPEN_TO * 1.2);
-    centreOn(pos[i * 2], pos[i * 2 + 1], k);
+    settle();
+    const k = Math.max(cam.current.k, fitK.current * (marksOn ? OPEN_TO * 1.2 : 1.5));
+    centreOn(target[i * 2], target[i * 2 + 1], k);
   };
 
   /* ── Tooltip ─────────────────────────────────────────────────────────── */
@@ -716,19 +907,57 @@ export function NetworkCanvas({
   const tip = (() => {
     if (!hover) return null;
     if (hover.kind === "node") {
-      return { title: titleOf(hover.i), sub: typeNameOf(graph.typeIds[hover.i]) };
+      const what = strength ? (strength[hover.i] === 2 ? "Match" : strength[hover.i] === 1 ? "Linked to a match" : "") : "";
+      return { title: titleOf(hover.i), sub: [typeNameOf(graph.typeIds[hover.i]), what].filter(Boolean).join(" · ") };
     }
     const c = communities[hover.i];
     if (!c) return null;
     const count = c.members.length;
-    return {
-      title: titleOf(c.top),
-      sub: `${count.toLocaleString()} ${count === 1 ? "record" : "records"}, mostly ${typeNameOf(c.typeId)}`,
-    };
+    const records = `${count.toLocaleString()} ${count === 1 ? "record" : "records"}`;
+    if (communityMatch) {
+      const m = communityMatch[hover.i];
+      return {
+        title: titleOf(c.top),
+        sub: `${m.toLocaleString()} of ${records} ${m === 1 ? "matches" : "match"}, mostly ${typeNameOf(c.typeId)}`,
+      };
+    }
+    return { title: titleOf(c.top), sub: `${records}, mostly ${typeNameOf(c.typeId)}` };
   })();
+
+  /* Where the matches are, for screen readers: communities by match count. */
+  const matchedCommunities = useMemo(() => {
+    if (!communityMatch) return [];
+    return communities
+      .map((c, idx) => ({ c, m: communityMatch[idx] }))
+      .filter((x) => x.m > 0)
+      .sort((p, q) => q.m - p.m)
+      .slice(0, 20);
+  }, [communities, communityMatch]);
+
+  /* While filtering, the chip counts matches with no relationship (never
+     inside a community mark), or says nothing matches. */
+  const isolatedMatches = useMemo(() => {
+    if (!matchOrder) return 0;
+    let k = 0;
+    for (const i of matchOrder) if (graph.degree[i] === 0) k++;
+    return k;
+  }, [matchOrder, graph]);
+  const chip = !strength
+    ? overview && placement.isolated > 0 && rel < OPEN_TO
+      ? `${placement.isolated.toLocaleString()} ${placement.isolated === 1 ? "record has" : "records have"} no relationships`
+      : null
+    : matchOrder && matchOrder.length === 0
+      ? "No records match"
+      : isolatedMatches > 0 && marksOn && rel < OPEN_TO
+        ? `${isolatedMatches.toLocaleString()} ${isolatedMatches === 1 ? "match has" : "matches have"} no relationships`
+        : null;
 
   const zoomButton =
     "h-6 min-w-6 px-1 text-sm text-ink-secondary hover:text-ink rounded-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40";
+  const switchButton = (on: boolean) =>
+    `h-6 px-1.5 text-meta font-medium rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 ${
+      on ? "bg-parchment text-ink" : "text-ink-secondary hover:text-ink cursor-pointer"
+    }`;
   const centre = () => ({ x: size.w / 2, y: size.h / 2 });
 
   return (
@@ -762,30 +991,77 @@ export function NetworkCanvas({
           <p className="text-meta text-ink-tertiary truncate">{tip.sub}</p>
         </div>
       )}
-      {overview && placement.isolated > 0 && rel < OPEN_TO && (
+      {chip && (
         <p
           data-part="isolated"
           className="absolute left-0 bottom-0 w-fit px-2 h-6 flex items-center rounded-md bg-paper border border-border-soft text-meta text-ink-tertiary"
         >
-          {placement.isolated.toLocaleString()} {placement.isolated === 1 ? "record has" : "records have"} no relationships
+          {chip}
         </p>
       )}
-      <div
-        data-part="zoom"
-        role="group"
-        aria-label="Zoom"
-        className="absolute bottom-0 right-0 flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
-      >
-        <button type="button" aria-label="Zoom out" className={zoomButton} onClick={() => zoomAt(1 / 1.6, centre().x, centre().y, true)}>
-          −
-        </button>
-        <button type="button" aria-label="Zoom in" className={zoomButton} onClick={() => zoomAt(1.6, centre().x, centre().y, true)}>
-          +
-        </button>
-        <button type="button" className={`${zoomButton} text-meta`} onClick={() => setCamera(fit(), true)}>
-          Fit
-        </button>
+      <div className="absolute bottom-0 right-0 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-full">
+        {layoutSwitch && (
+          <div
+            data-part="layout"
+            role="group"
+            aria-label="Layout"
+            className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+          >
+            <span role="status" className="sr-only">
+              {layoutSwitch.pending ? "Arranging the matches" : ""}
+            </span>
+            <button
+              type="button"
+              aria-pressed={layoutSwitch.focus}
+              aria-disabled={!layoutSwitch.available}
+              title={layoutSwitch.available ? "The matches and their links, laid out on their own" : layoutSwitch.reason}
+              className={`${switchButton(layoutSwitch.focus)} ${layoutSwitch.available ? "" : "opacity-50 cursor-not-allowed"}`}
+              onClick={() => layoutSwitch.available && layoutSwitch.onChange(true)}
+            >
+              {layoutSwitch.pending ? "Arranging…" : "Focus"}
+            </button>
+            <button
+              type="button"
+              aria-pressed={!layoutSwitch.focus}
+              title="The matches in place in the whole collection"
+              className={switchButton(!layoutSwitch.focus)}
+              onClick={() => layoutSwitch.onChange(false)}
+            >
+              Whole collection
+            </button>
+          </div>
+        )}
+        <div
+          data-part="zoom"
+          role="group"
+          aria-label="Zoom"
+          className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+        >
+          <button type="button" aria-label="Zoom out" className={zoomButton} onClick={() => zoomAt(1 / 1.6, centre().x, centre().y, true)}>
+            −
+          </button>
+          <button type="button" aria-label="Zoom in" className={zoomButton} onClick={() => zoomAt(1.6, centre().x, centre().y, true)}>
+            +
+          </button>
+          <button
+            type="button"
+            title={strength ? "Fit the matches" : "Fit the collection"}
+            className={`${zoomButton} text-meta`}
+            onClick={() => setCamera(fitCamera(), true)}
+          >
+            Fit
+          </button>
+        </div>
       </div>
+      {matchedCommunities.length > 0 && marksOn && (
+        <ul aria-label="Where the matches are" className="sr-only">
+          {matchedCommunities.map(({ c, m }) => (
+            <li key={c.id}>
+              Group around {titleOf(c.top)}: {m.toLocaleString()} of {c.members.length.toLocaleString()} records match
+            </li>
+          ))}
+        </ul>
+      )}
       <ul aria-label={label} className="sr-only">
         {keyboardNodes.map((i) => (
           <li key={graph.ids[i]}>
@@ -797,6 +1073,7 @@ export function NetworkCanvas({
               onClick={(e) => onSelect(i, e)}
             >
               {titleOf(i)}, {typeNameOf(graph.typeIds[i])}
+              {strength ? (strength[i] === 2 ? ", match" : strength[i] === 1 ? ", linked to a match" : "") : ""}
             </button>
           </li>
         ))}

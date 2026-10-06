@@ -6,6 +6,7 @@ import { libraryNetworkDisplayAtom } from "../../atoms/library";
 import { networkGraphAtom } from "../../atoms/network";
 import { HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF } from "../../data/network/graph";
 import { loadNetworkLayout, placeNetwork, type StoredLayout } from "../../data/network/layout";
+import { cachedFocus, FOCUS_MAX, focusMembers, runFocus, type FocusLayout } from "../../data/network/focus";
 import { NetworkCanvas } from "./NetworkCanvas";
 
 type Select = (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
@@ -14,14 +15,22 @@ type Select = (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: b
  *  whole collection reads as nodes at the first fit. */
 const OVERVIEW_FROM = 500;
 
-/** The Library's Network view: the whole collection, with the Library's
- *  filters, facets, date brush and search dimming it in place.
+/** The Library's Network view: the whole collection, narrowed by the
+ *  Library's filters, facets, date brush and search (Adv. Search's modifiers
+ *  included).
  *
  *  `matches` is the list every other view draws (`filtered` in LibraryView, the
  *  same `matchesAll` set), and `filtering` says whether anything narrows it.
- *  Matches draw at full strength, their neighbours at half, the rest faint;
- *  an edge needs a matching end. No filter, toggle or type change moves a node:
- *  positions come from the collection's stored layout. */
+ *  With no filter, nodes sit at the collection's stored layout. With one:
+ *  - the overview marks each community with the share of its records that
+ *    match, and the camera fits the matches;
+ *  - up to `FOCUS_MAX` matches, Focus (on by default) lays out the matches and
+ *    their neighbours on their own in a worker, hubs pinned at the edge, and
+ *    the nodes move there from their global positions;
+ *  - "Whole collection" keeps the global positions. The choice holds while
+ *    filters change and resets when they are cleared.
+ *  Nothing is laid out again while the match set and the drawn edges stay
+ *  the same. */
 export const LibraryNetworkView = memo(function LibraryNetworkView({
   matches,
   filtering,
@@ -83,14 +92,29 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     return out;
   }, [graph, typeOnKey, nodeOn]);
 
-  /* Dim in place: 2 match, 1 neighbour of a match (over a drawn edge), 0 rest. */
-  const strength = useMemo(() => {
-    if (!filtering) return null;
+  /* The match set as a mask, and a key that changes only when the set does
+     (a re-sort hands a new list with the same records). */
+  const { match, matchCount, matchKey } = useMemo(() => {
+    if (!filtering) return { match: null, matchCount: 0, matchKey: "all" };
     const out = new Uint8Array(graph.ids.length);
+    let count = 0;
     for (const e of matches) {
       const i = graph.index.get(e.id);
-      if (i !== undefined) out[i] = 2;
+      if (i !== undefined && !out[i]) {
+        out[i] = 1;
+        count++;
+      }
     }
+    let h = 2166136261;
+    for (let i = 0; i < out.length; i++) if (out[i]) h = Math.imul(h ^ i, 16777619);
+    return { match: out, matchCount: count, matchKey: `${count}:${(h >>> 0).toString(36)}` };
+  }, [filtering, matches, graph]);
+
+  /* 2 match, 1 neighbour of a match (over a drawn edge), 0 rest. */
+  const strength = useMemo(() => {
+    if (!match) return null;
+    const out = new Uint8Array(graph.ids.length);
+    for (let i = 0; i < out.length; i++) if (match[i] && nodeOn[i]) out[i] = 2;
     const m = graph.a.length;
     for (let e = 0; e < m; e++) {
       if (!edgeOn[e]) continue;
@@ -100,7 +124,52 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
       else if (out[b] === 2 && out[a] === 0) out[a] = 1;
     }
     return out;
-  }, [filtering, matches, graph, edgeOn]);
+  }, [match, nodeOn, graph, edgeOn]);
+
+  /* Focus: on by default, off once the reader picks Whole collection, back on
+     when the filters are cleared. */
+  const [whole, setWhole] = useState(false);
+  useEffect(() => {
+    if (!filtering) setWhole(false);
+  }, [filtering]);
+  const hubDegree = HUB_DEGREE[source];
+  const focusAvailable = filtering && matchCount > 0 && matchCount <= FOCUS_MAX;
+  const wantFocus = focusAvailable && !whole && !!placement;
+  const focusKey = `${source}|${graph.ids.length}|${matchKey}|${typeOnKey}|${evidenceOn ? 1 : 0}`;
+  const [focus, setFocus] = useState<{ key: string; layout: FocusLayout | null } | null>(null);
+  useEffect(() => {
+    if (!wantFocus || !placement || !match) return;
+    const hit = cachedFocus(focusKey);
+    if (hit) {
+      setFocus({ key: focusKey, layout: hit });
+      return;
+    }
+    let alive = true;
+    const t0 = performance.now();
+    const members = focusMembers(graph, placement, match, edgeOn, nodeOn, hubDegree);
+    runFocus(focusKey, placement, members).then((layout) => {
+      if (!alive) return;
+      setFocus({ key: focusKey, layout });
+      if (import.meta.env.DEV && layout) {
+        (window as unknown as { __networkFocus?: object }).__networkFocus = {
+          matches: matchCount,
+          members: members.nodes.length,
+          workerMs: Math.round(layout.ms),
+          ms: Math.round(performance.now() - t0),
+        };
+      }
+    });
+    return () => {
+      alive = false;
+    };
+    // `focusKey` stands for the match set, the drawn edges and the collection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantFocus, focusKey, placement]);
+  const focusReady = wantFocus && focus?.key === focusKey;
+  const focusLayout = focusReady ? focus!.layout : null;
+  const pending = wantFocus && !focusReady;
+  // Held while the focus layout is on its way, so the camera moves once.
+  const fitKey = pending ? null : `${matchKey}|${focusLayout ? focusKey : "global"}`;
 
   const selected = selectedId ? graph.index.get(selectedId) ?? -1 : -1;
   const select = useCallback(
@@ -125,12 +194,31 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         nodeOn={nodeOn}
         edgeOn={edgeOn}
         strength={strength}
-        hubDegree={HUB_DEGREE[source]}
+        hubDegree={hubDegree}
         hubEdges={(display.hubEdges as "faint" | "full" | "off" | undefined) ?? "faint"}
         overview={n >= OVERVIEW_FROM}
+        focus={focusLayout}
+        fitKey={fitKey}
+        layoutSwitch={
+          filtering && matchCount > 0
+            ? {
+                focus: wantFocus,
+                available: focusAvailable,
+                reason: `Focus lays out up to ${FOCUS_MAX.toLocaleString()} matches; there are ${matchCount.toLocaleString()}`,
+                pending,
+                onChange: (on) => setWhole(!on),
+              }
+            : null
+        }
         selected={selected}
         onSelect={select}
-        label={filtering ? "Network of the collection, matches highlighted" : "Network of the collection"}
+        label={
+          !filtering
+            ? "Network of the collection"
+            : focusLayout
+              ? "Network of the matches and their links"
+              : "Network of the collection, matches highlighted"
+        }
       />
     </div>
   );

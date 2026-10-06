@@ -4,8 +4,9 @@ import { NetworkCanvas } from "../components/library/NetworkCanvas";
 import { demoColorOf, demoNetwork, demoTypeNameOf } from "../data/network/demo";
 
 /** A whole collection as one graph on a canvas: the Library's Network view.
- *  Positions come in precomputed; filters dim in place (`strength`), toggles
- *  hide nodes and edges (`nodeOn`, `edgeOn`), and nothing moves a node.
+ *  Positions come in precomputed (`placement`, and `focus` for a filter's own
+ *  layout); `strength` marks matches and their neighbours, toggles hide nodes
+ *  and edges (`nodeOn`, `edgeOn`).
  *  Zoomed out, a large collection reads as one mark per community; zooming
  *  in, or clicking a mark, opens it into nodes. The keyboard list after the
  *  canvas reaches the best-connected records. */
@@ -24,7 +25,7 @@ function Demo({ overview = false, filtered = false }: { overview?: boolean; filt
   const n = graph.ids.length;
   const nodeOn = useMemo(() => new Uint8Array(n).fill(1), [n]);
   const edgeOn = useMemo(() => new Uint8Array(graph.a.length).fill(1), [graph]);
-  // "Filtered": the first two cases' records match; their neighbours are half strength.
+  // "Filtered": the first two cases' records match; their neighbours are strength 1.
   const strength = useMemo(() => {
     if (!filtered) return null;
     const s = new Uint8Array(n);
@@ -66,5 +67,5 @@ export const Default: Story = { args, render: () => <Demo /> };
 /** Community marks at the first fit; zoom or click a mark to open it. */
 export const Minimal: Story = { args, render: () => <Demo overview /> };
 
-/** A filter dims in place: matches full, neighbours half, the rest faint. */
+/** While filtering: matches full, neighbours small, the rest as points. */
 export const AllStates: Story = { args, render: () => <Demo filtered /> };

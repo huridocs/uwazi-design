@@ -352,9 +352,16 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   pair, `networkGraphAtom`, built only in this view). Positions and Louvain communities are
   precomputed by `scripts/build-network-layout.mjs` into `public/<corpus>-data/network.json`
   (the Sample's in `public/sample-data/`); rerun it when a corpus's records or references change.
-  Nothing re-runs a layout at runtime; records the file lacks sit at their neighbours' centre.
-  Filters, facets, brush and search dim in place from the same `filtered` list, and a search does
-  not switch this view to Adv. Search. Display: hub edges (`HUB_DEGREE`), relationship types
+  Records the file lacks sit at their neighbours' centre. Filters, facets, brush and search
+  (Adv. Search's modifiers included) read the same `filtered` list, and a search does not switch
+  this view to Adv. Search. While filtering: community marks carry an arc for their matching
+  share (none: an outline), the camera fits the matches (Fit too), and at node level matches
+  draw full, neighbours small, the rest as points, edges only with a matching end. Up to
+  `FOCUS_MAX` (1,000) matches, Focus is on by default: `data/network/focus.ts` sends the
+  matches, their non-hub neighbours and the hubs they touch to `focusLayout.worker.ts`
+  (ForceAtlas2 seeded from the global positions, hubs fixed on a ring outside), cached by match
+  set and drawn edges. "Whole collection" keeps global positions until the filters are cleared.
+  Display: hub edges (`HUB_DEGREE`), relationship types
   (CEJIL's Mecanismo, País, Paises, "Relacionado a" off by default, `NETWORK_TYPES_OFF`), and
   Nepal's Evidence layer. Collections of 500+ records open on community marks. Headless Chromium
   needs `--use-angle=metal --enable-gpu-rasterization` to measure fps; SwiftShader raster runs

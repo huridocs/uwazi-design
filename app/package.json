@@ -17,6 +17,8 @@
   "dependencies": {
     "@chenglou/pretext": "^0.0.4",
     "@googlemaps/js-api-loader": "^1.16.10",
+    "graphology": "^0.26.0",
+    "graphology-layout-forceatlas2": "^0.10.1",
     "jotai": "^2.12.3",
     "leaflet": "^1.9.4",
     "leaflet.gridlayer.googlemutant": "^0.16.0",
@@ -42,9 +44,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/browser-playwright": "^4.1.10",
     "@vitest/coverage-v8": "^4.1.10",
-    "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
-    "graphology-layout-forceatlas2": "^0.10.1",
     "playwright": "^1.61.1",
     "storybook": "^10.4.6",
     "tailwindcss": "^4.1.3",
