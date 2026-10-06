@@ -150,6 +150,22 @@ export function PageHighlights({ page }: PageHighlightsProps) {
         const isActive = activeRefId === ref.id;
         const isHovered = hoveredId === ref.id;
         const showTag = isActive || isHovered;
+        // A quote located only to its page (no rect: the Nepal OCR PDFs): its
+        // name sits in the gap above the page, where it covers no text.
+        if (!sel.width || !sel.height) {
+          return showTag || isFlashing ? (
+            <span
+              key={ref.id}
+              data-component="PageHighlights"
+              data-part="page-tag"
+              data-ref-id={ref.id}
+              className="absolute start-0 bottom-full mb-1 max-w-full truncate px-1.5 py-[3px] rounded text-meta font-semibold leading-none pointer-events-none"
+              style={{ backgroundColor: color, color: "#fff" }}
+            >
+              {entity?.title ?? sel.text.slice(0, 60)}
+            </span>
+          ) : null;
+        }
         const lineRects = splitIntoLineRects(sel);
 
         let bgAlpha: number;

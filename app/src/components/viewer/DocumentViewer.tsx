@@ -520,12 +520,12 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     // hosts place it without a wrapper. Its page area is a stage (unasserted by
     // `__gutter`); its action bar puts the buttons back on the pane's gutter.
     <div data-component="DocumentViewer" className="bleed-flush flex flex-col h-full min-h-0 bg-paper">
-      {/* Scrollable document area + minimap */}
-      <div data-gutter-bleed data-part="stage" className="flex-1 relative min-h-0">
+      {/* A row of its own above the pages, not over them: laid over the stage
+          it covered the top of the page a reference had just jumped to. */}
         {showLangFallback && (
           <div
             data-part="language-notice"
-            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning-label text-xs font-medium shadow-sm animate-fade-in-up"
+            className="self-center shrink-0 mt-2 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning-label text-xs font-medium shadow-sm animate-fade-in-up"
             role="status"
           >
             {/* `dir="auto"`: an English sentence inside the Arabic (RTL) layout
@@ -546,6 +546,8 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             </button>
           </div>
         )}
+      {/* Scrollable document area + minimap */}
+      <div data-gutter-bleed data-part="stage" className="flex-1 relative min-h-0">
         {/* PDF stays mounted (just hidden) under a rendition so it never has
             to reload + repaint when the user switches back. */}
         <div
@@ -598,7 +600,9 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
                 else pageRefs.current.delete(pageNum);
               }}
               data-part="page"
-              className="relative mb-4"
+              // `scroll-mt-8`: a jump lands with the gap above the page in
+              // view, where a page-level reference's name is drawn.
+              className="relative mb-4 scroll-mt-8"
               data-search-active={activeJumpPage === pageNum ? "" : undefined}
               style={{
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
