@@ -23,11 +23,14 @@ import { signedInUserIdAtom, usersAtom } from "./atoms/users";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
 import { useKeyboardInset } from "./hooks/useKeyboardInset";
 import { useDirtyGuard } from "./hooks/useDirtyGuard";
+import { useViewLink } from "./hooks/useViewLink";
 
 export function App() {
   useBreakpointSync();
   // `--kb`: the on-screen keyboard's height, for bottom-anchored layers.
   useKeyboardInset();
+  // A shared Library view (`#view=…`) opens on load.
+  useViewLink();
   const [appView, setAppView] = useAtom(appViewAtom);
   const guard = useDirtyGuard();
   const users = useAtomValue(usersAtom);

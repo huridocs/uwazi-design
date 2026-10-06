@@ -162,6 +162,17 @@ function writeSnapshot(set: Setter, s: LibrarySnapshot) {
   set(librarySelectedClusterAtom, null);
 }
 
+/** Open a snapshot: its collection (behind the bulk form's guard, as the
+ *  collection picker is), the Library, and its state. */
+export const applyLibrarySnapshotAtom = atom(null, (get, set, s: LibrarySnapshot) => {
+  whenBulkClean(get, set, () => {
+    if (get(dataSourceAtom) !== s.collection) set(switchDataSourceAtom, s.collection);
+    writeSnapshot(set, s);
+    // A link opened before signing in waits behind the login screen.
+    if (get(appViewAtom) !== "login") set(appViewAtom, "library");
+  });
+});
+
 /** How many facet values a snapshot ticks (the search not counted), the same
  *  count as `libraryActiveFilterCountAtom`. */
 export function snapshotFilterCount(s: LibrarySnapshot): number {
@@ -200,6 +211,106 @@ export function isLibrarySnapshot(x: unknown): x is LibrarySnapshot {
     !!s.display && typeof s.display === "object" &&
     !!s.sort && typeof s.sort === "object"
   );
+}
+
+/* ── Saved views ──────────────────────────────────────────────────────────
+   Named snapshots, per collection, in localStorage: they outlast the visit,
+   as a bookmark would. No accounts, so they live in this browser only; a
+   shared link carries the state itself. */
+
+export interface SavedView {
+  id: string;
+  name: string;
+  savedAt: number;
+  snapshot: LibrarySnapshot;
+}
+
+const localJSON = <T,>() => createJSONStorage<T>(() => localStorage);
+
+const savedViewsStoreAtom = atomWithStorage<Partial<Record<DataSource, SavedView[]>>>(
+  "uwazi:savedViews",
+  {},
+  localJSON(),
+  { getOnInit: true },
+);
+
+/** The collection shown's saved views, newest first. */
+export const savedViewsAtom = atom((get) => get(savedViewsStoreAtom)[get(dataSourceAtom)] ?? []);
+
+const writeViews = (get: Getter, set: Setter, fn: (views: SavedView[]) => SavedView[]) => {
+  const corpus = get(dataSourceAtom);
+  const all = get(savedViewsStoreAtom);
+  set(savedViewsStoreAtom, { ...all, [corpus]: fn(all[corpus] ?? []) });
+};
+
+let viewSeq = 0;
+/** Save the Library as it is now, under a name. Returns the new view's id. */
+export const saveCurrentViewAtom = atom(null, (get, set, name: string): string => {
+  const id = `view-${Date.now().toString(36)}-${(viewSeq++).toString(36)}`;
+  const view: SavedView = { id, name: name.trim() || "Untitled view", savedAt: Date.now(), snapshot: captureLibrarySnapshot(get) };
+  writeViews(get, set, (views) => [view, ...views]);
+  return id;
+});
+
+export const renameSavedViewAtom = atom(null, (get, set, { id, name }: { id: string; name: string }) => {
+  const next = name.trim();
+  if (!next) return;
+  writeViews(get, set, (views) => views.map((v) => (v.id === id ? { ...v, name: next } : v)));
+});
+
+export const deleteSavedViewAtom = atom(null, (get, set, id: string) => {
+  writeViews(get, set, (views) => views.filter((v) => v.id !== id));
+});
+
+/** Overwrite a saved view with the Library as it is now. */
+export const updateSavedViewAtom = atom(null, (get, set, id: string) => {
+  const snapshot = captureLibrarySnapshot(get);
+  writeViews(get, set, (views) => views.map((v) => (v.id === id ? { ...v, snapshot, savedAt: Date.now() } : v)));
+});
+
+/** The saved view the Library shows right now, if one matches it exactly. */
+export const currentSavedViewIdAtom = atom((get) => {
+  const views = get(savedViewsAtom);
+  if (!views.length) return null;
+  const now = JSON.stringify(captureLibrarySnapshot(get));
+  return views.find((v) => JSON.stringify(v.snapshot) === now)?.id ?? null;
+});
+
+/* ── Shared links ─────────────────────────────────────────────────────────
+   `#view=<base64url JSON>`: the snapshot and its name. Uwazi V2 keeps its
+   filter state in the URL; here the hash carries it, so a link restores the
+   Library on load with no server. */
+
+const HASH_KEY = "view";
+
+function toBase64Url(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function fromBase64Url(code: string): string {
+  const bin = atob(code.replace(/-/g, "+").replace(/_/g, "/"));
+  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
+}
+
+export function viewLink(snapshot: LibrarySnapshot, name?: string): string {
+  const code = toBase64Url(JSON.stringify({ name, snapshot }));
+  const { origin, pathname, search } = window.location;
+  return `${origin}${pathname}${search}#${HASH_KEY}=${code}`;
+}
+
+/** The view a link's hash carries, or null. */
+export function readViewHash(hash: string): { name?: string; snapshot: LibrarySnapshot } | null {
+  const m = new RegExp(`(?:^#|&)${HASH_KEY}=([A-Za-z0-9_-]+)`).exec(hash);
+  if (!m) return null;
+  try {
+    const parsed = JSON.parse(fromBase64Url(m[1])) as { name?: unknown; snapshot?: unknown };
+    if (!isLibrarySnapshot(parsed.snapshot)) return null;
+    return { name: typeof parsed.name === "string" ? parsed.name : undefined, snapshot: parsed.snapshot };
+  } catch {
+    return null;
+  }
 }
 
 /* ── Search history ───────────────────────────────────────────────────────
@@ -295,6 +406,7 @@ export const clearSearchHistoryAtom = atom(null, (get, set) => {
    The Dev panel's switch and Reset demo data clear saved views and search
    history in every collection (the case clears through `caseFile.ts`). */
 export const clearSavedViewsAndHistoryAtom = atom(null, (_get, set) => {
+  set(savedViewsStoreAtom, {});
   set(historyStoreAtom, []);
 });
 registerSettingsReset((set) => set(clearSavedViewsAndHistoryAtom));

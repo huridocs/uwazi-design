@@ -133,6 +133,7 @@ import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { RecentSearches } from "../components/library/RecentSearches";
 import { logSearchAtom } from "../atoms/savedViews";
 import { LibraryDisplayMenu } from "../components/library/LibraryDisplayMenu";
+import { SavedViewsMenu } from "../components/library/SavedViewsMenu";
 import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
@@ -494,18 +495,19 @@ export function LibraryView() {
   // before paint.
   const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
   const SEARCH_FLOOR = 256; // 16rem
-  const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 32, LANG = 56, READOUT = 240;
+  // DISPLAY is Views and Display, two 2rem squares 6px apart.
+  const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 70, LANG = 56, READOUT = 240;
   const rowWithout = (...gone: number[]) =>
     // +5: the hairline (1 + its 8px gap) less the two 6px gaps inside the groups.
     SEARCH_FLOOR + 5 + [READOUT, SORT, VIEW, DISPLAY, LANG]
       .filter((w) => !gone.includes(w))
       .reduce((sum, w) => sum + GAP + w, 0);
   // Sort folds first: it has a place in the Display menu, and dropping it keeps
-  // the readout on the row down to a 705px pane instead of 826. A folded part
+  // the readout on the row down to a 743px pane instead of 864. A folded part
   // stays folded as the row narrows further.
-  const sortInline = fits(rowWithout()); // 826
-  const readoutInline = fits(rowWithout(SORT)); // 705
-  const langInline = fits(rowWithout(READOUT, SORT)); // 457
+  const sortInline = fits(rowWithout()); // 864
+  const readoutInline = fits(rowWithout(SORT)); // 743
+  const langInline = fits(rowWithout(READOUT, SORT)); // 495
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
   const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
   useEffect(() => {
@@ -1251,6 +1253,7 @@ export function LibraryView() {
         <div data-part="display" className="flex items-center gap-1.5">
           {/* Display is icon-only and always mounted; view-specific options live
               in its popover, so changing view never shifts this row. */}
+          <SavedViewsMenu />
           <LibraryDisplayMenu />
           {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
               label would resize the trigger and shift the row again). */}
