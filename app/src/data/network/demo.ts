@@ -55,3 +55,10 @@ export function demoNetwork(clusters = 8, perCluster = 24): DemoNetwork {
 
 export const demoColorOf = (typeId: string) => entityTypes.find((t) => t.id === typeId)?.color ?? "#6B7280";
 export const demoTypeNameOf = (typeId: string) => entityTypes.find((t) => t.id === typeId)?.name ?? typeId;
+
+/** An edge's tooltip content for a demo graph: its types and reference count. */
+export const demoEdgeInfo = (graph: NetworkGraph) => (e: number) => ({
+  types: graph.types.filter((_, t) => graph.mask[e] & (1 << Math.min(t, 31))),
+  refs: graph.refs[e],
+  evidence: [],
+});

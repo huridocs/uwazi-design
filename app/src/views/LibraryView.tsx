@@ -1032,6 +1032,7 @@ export function LibraryView() {
     },
     [selectFrom, setPassageFile],
   );
+  const clearNetworkSelection = useCallback(() => setSelectedId(null), [setSelectedId]);
   useTouchSelection(toggleSelection);
   useTapGuard();
 
@@ -1402,6 +1403,7 @@ export function LibraryView() {
               filtering={filtered.length !== entities.length}
               selectedId={selectedId}
               onSelect={handleSelect}
+              onClear={clearNetworkSelection}
             />
           </div>
         ) : viewMode === "evidence" ? (

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { NetworkGraph } from "../../data/network/graph";
+import { otherEnd, type NetworkGraph } from "../../data/network/graph";
 import type { Community, NetworkPlacement } from "../../data/network/layout";
 import type { FocusLayout } from "../../data/network/focus";
+import type { PairEvidence } from "../../data/network/graph";
+import { RefStatus } from "../relationships/rows/RefStatus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
 
@@ -61,8 +63,19 @@ export interface NetworkCanvasProps {
   } | null;
   selected: number;
   onSelect: (index: number, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
+  /** Escape or a click on empty canvas: the selection ends. */
+  onClear: () => void;
+  /** What an edge carries, for its tooltip: relationship types, reference
+   *  count, and (Nepal) quotes with their status. */
+  edgeInfo: (edge: number) => EdgeInfo;
   /** Accessible name of the drawing and of its keyboard list. */
   label: string;
+}
+
+export interface EdgeInfo {
+  types: string[];
+  refs: number;
+  evidence: PairEvidence[];
 }
 
 /** Zoom, relative to the first fit, over which community marks give way to nodes. */
@@ -77,6 +90,18 @@ const MOVE_MS = 380;
 const DOUBLE_TAP_MS = 320;
 /** Pixels kept clear around a fit, for marks, names and the controls. */
 const FIT_PAD = 96;
+
+/** What the pointer is over. An edge keeps the world point it was hovered
+ *  at, which its tooltip is anchored to. */
+interface Hover {
+  kind: "node" | "community" | "edge";
+  i: number;
+  wx: number;
+  wy: number;
+}
+
+/** Length of the lift fading in or out. */
+const LIFT_MS = 140;
 
 interface Camera {
   k: number;
@@ -179,6 +204,8 @@ export function NetworkCanvas({
   layoutSwitch,
   selected,
   onSelect,
+  onClear,
+  edgeInfo,
   label,
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -187,9 +214,17 @@ export function NetworkCanvas({
   const cam = useRef<Camera>({ k: 1, tx: 0, ty: 0 });
   const fitK = useRef(1);
   const frame = useRef(0);
-  const [hover, setHover] = useState<{ kind: "node" | "community"; i: number; x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<Hover | null>(null);
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
+  /* An edge clicked open: its tooltip stays until Escape or another click. */
+  const [pinned, setPinned] = useState<Hover | null>(null);
+  const pinnedRef = useRef(pinned);
+  pinnedRef.current = pinned;
+  /* The neighbourhood drawn lifted, and how far it has come in (0–1). */
+  const liftNode = useRef(-1);
+  const liftAmt = useRef(0);
+  const liftAt = useRef(0);
   const [focused, setFocused] = useState(-1);
   const [focusedCommunity, setFocusedCommunity] = useState(-1);
   const [rel, setRel] = useState(1);
@@ -280,6 +315,64 @@ export function NetworkCanvas({
   const radiusAt = (i: number, r: number) =>
     !strength ? nodeRadius(i, r) : strength[i] === 2 ? Math.max(3, nodeRadius(i, r)) : strength[i] === 1 ? Math.max(1.2, nodeRadius(i, r) * 0.55) : 1.1;
 
+  /* One-hop neighbourhood of a node over drawn edges, best-connected first.
+     Kept for the last node asked about. */
+  const hoodCache = useRef<{ i: number; key: unknown[]; node: Uint8Array; list: number[] } | null>(null);
+  const hoodOf = (i: number) => {
+    const c = hoodCache.current;
+    if (c && c.i === i && c.key[0] === edgeOn && c.key[1] === nodeOn && c.key[2] === member) return c;
+    const node = new Uint8Array(n);
+    const list = [i];
+    node[i] = 1;
+    for (let j = graph.adjStart[i]; j < graph.adjStart[i + 1]; j++) {
+      const e = graph.adjEdge[j];
+      if (!edgeOn[e]) continue;
+      const o = otherEnd(graph, e, i);
+      if (node[o] || !nodeOn[o] || (member && !member[o])) continue;
+      node[o] = 1;
+      list.push(o);
+    }
+    list.sort((x, y) => (x === i ? -1 : y === i ? 1 : graph.degree[y] - graph.degree[x]));
+    hoodCache.current = { i, key: [edgeOn, nodeOn, member], node, list };
+    return hoodCache.current;
+  };
+
+  /** The node to lift: the hovered one, else the selected one. */
+  const liftWanted = () => {
+    const hv = hoverRef.current;
+    if (hv?.kind === "node") return hv.i;
+    return selected >= 0 && nodeOn[selected] ? selected : -1;
+  };
+
+  /** Moves the lift one frame toward what is wanted; true while it moves. */
+  const stepLift = () => {
+    const want = liftWanted();
+    const now = performance.now();
+    const dt = liftAt.current ? now - liftAt.current : 16;
+    liftAt.current = now;
+    if (want >= 0 && want !== liftNode.current) {
+      // From one lifted node straight to another: no fade between them.
+      if (liftAmt.current < 0.05) liftAmt.current = 0;
+      liftNode.current = want;
+    }
+    const goal = want >= 0 ? 1 : 0;
+    if (reducedMotion()) liftAmt.current = goal;
+    else if (goal > liftAmt.current) liftAmt.current = Math.min(goal, liftAmt.current + dt / LIFT_MS);
+    else if (goal < liftAmt.current) liftAmt.current = Math.max(goal, liftAmt.current - dt / LIFT_MS);
+    if (liftAmt.current === 0) liftNode.current = -1;
+    const moving = liftAmt.current !== goal;
+    if (!moving) liftAt.current = 0;
+    return moving;
+  };
+
+  /** The edge drawn highlighted: hovered, else pinned. */
+  const edgeTarget = () => {
+    const hv = hoverRef.current;
+    if (hv?.kind === "edge") return hv.i;
+    if (hv) return -1;
+    return pinnedRef.current?.kind === "edge" ? pinnedRef.current.i : -1;
+  };
+
   /* ── Drawing ─────────────────────────────────────────────────────────── */
 
   const draw = useCallback(() => {
@@ -299,11 +392,27 @@ export function NetworkCanvas({
     const restAlpha = 1 - fade.current;
     const W = size.w;
     const H = size.h;
+    const lifting = stepLift();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     const sx = (i: number) => pos[i * 2] * k + tx;
     const sy = (i: number) => pos[i * 2 + 1] * k + ty;
     const pad = 40;
+
+    /* The lifted neighbourhood (hover, else selection, else the find cursor):
+       it and its links draw full, the rest recede by `recede`. */
+    const liftI = liftNode.current;
+    const la = liftI >= 0 ? liftAmt.current : 0;
+    const hood = la > 0 ? hoodOf(liftI) : null;
+    const recede = 1 - 0.8 * la;
+    const lifted = (i: number) => !!hood && hood.node[i] === 1;
+    const rad = (i: number) => {
+      const base = radiusAt(i, r);
+      if (!lifted(i)) return base;
+      const full = Math.max(2.5, nodeRadius(i, r));
+      return full > base ? base + (full - base) * la : base;
+    };
+    const edgeHi = edgeTarget();
 
     /* Edges, one stroke per (style, width) bucket. */
     if (nodesAlpha > 0.01) {
@@ -318,7 +427,9 @@ export function NetworkCanvas({
         if (!edgeOn[e]) continue;
         const i = graph.a[e];
         const j = graph.b[e];
-        const incident = selected >= 0 && (i === selected || j === selected);
+        const sel = selected >= 0 && (i === selected || j === selected);
+        const lift = !!hood && liftI !== selected && (i === liftI || j === liftI);
+        const incident = sel || lift;
         // An edge needs a matching end while filtering.
         if (!incident && strength && strength[i] !== 2 && strength[j] !== 2) continue;
         if (member && !incident && (!member[i] || !member[j])) continue;
@@ -328,27 +439,38 @@ export function NetworkCanvas({
         if (!incident && hub && hubEdges === "off") continue;
         const refs = graph.refs[e];
         const w = refs >= 4 ? 2 : refs >= 2 ? 1.3 : 0.8;
-        const style = incident
+        const style = sel
           ? "sel"
-          : hub && hubEdges === "faint"
-            ? "hub"
-            : !strength
-              ? "base"
-              : strength[i] === 2 && strength[j] === 2
-                ? "strong"
-                : "light";
+          : lift
+            ? "lift"
+            : hub && hubEdges === "faint"
+              ? "hub"
+              : !strength
+                ? "base"
+                : strength[i] === 2 && strength[j] === 2
+                  ? "strong"
+                  : "light";
         push(`${style}|${w}`, x1, y1, x2, y2);
       }
       ctx.lineCap = "round";
-      // A selected hub's thousands of edges would cover the canvas in carbon:
+      // A selected or lifted hub's thousands of edges would cover the canvas:
       // they lighten as its degree grows.
-      const selAlpha = selected >= 0 ? clamp(0.85 * Math.sqrt(40 / Math.max(1, graph.degree[selected])), 0.12, 0.85) : 0;
-      const styleAlpha: Record<string, number> = { sel: selAlpha, hub: 0.07, base: 0.28, strong: 0.6, light: 0.2 };
+      const thin = (i: number, top: number) => clamp(top * Math.sqrt(40 / Math.max(1, graph.degree[i])), 0.12, top);
+      const selAlpha = selected >= 0 ? thin(selected, 0.85) * (hood && liftI !== selected ? recede : 1) : 0;
+      const liftAlpha = hood ? thin(liftI, 0.8) * la : 0;
+      const styleAlpha: Record<string, number> = {
+        sel: selAlpha,
+        lift: liftAlpha,
+        hub: 0.07 * recede,
+        base: 0.28 * recede,
+        strong: 0.6 * recede,
+        light: 0.2 * recede,
+      };
       for (const [key, pts] of buckets) {
         const [style, w] = key.split("|");
         ctx.globalAlpha = nodesAlpha * styleAlpha[style];
-        ctx.strokeStyle = style === "sel" ? t.carbon : style === "strong" ? t.inkSecondary : t.inkTertiary;
-        ctx.lineWidth = Number(w) * (style === "sel" ? 1.3 : style === "strong" ? 1.15 : 1);
+        ctx.strokeStyle = style === "sel" ? t.carbon : style === "strong" || style === "lift" ? t.inkSecondary : t.inkTertiary;
+        ctx.lineWidth = Number(w) * (style === "sel" || style === "lift" ? 1.3 : style === "strong" ? 1.15 : 1);
         ctx.beginPath();
         for (let p = 0; p < pts.length; p += 4) {
           ctx.moveTo(pts[p], pts[p + 1]);
@@ -358,14 +480,16 @@ export function NetworkCanvas({
       }
 
       /* Nodes, one fill per (template, strength). The rest first, as faint
-         points in one colour; then neighbours; matches last, on top. */
+         points in one colour; then neighbours; matches last, on top; the
+         lifted neighbourhood over all of them. */
+      const baseAlpha = (level: number) => (level === 2 ? 1 : level === 1 ? 0.45 : 0.22 * (member ? restAlpha : 1));
       const levels = strength ? [0, 1, 2] : [2];
       for (const level of levels) {
-        const alpha = level === 2 ? 1 : level === 1 ? 0.45 : 0.22 * (member ? restAlpha : 1);
+        const alpha = baseAlpha(level) * recede;
         if (alpha < 0.01) continue;
         const groups = new Map<string, number[]>();
         for (let i = 0; i < n; i++) {
-          if (!nodeOn[i]) continue;
+          if (!nodeOn[i] || lifted(i)) continue;
           if (strength && strength[i] !== level) continue;
           const x = sx(i), y = sy(i);
           if (x < -pad || x > W + pad || y < -pad || y > H + pad) continue;
@@ -379,10 +503,10 @@ export function NetworkCanvas({
           ctx.fillStyle = level === 0 ? t.inkTertiary : colors.dot.get(tId) ?? t.inkTertiary;
           ctx.beginPath();
           for (const i of list) {
-            const rad = radiusAt(i, r);
+            const rd = radiusAt(i, r);
             const x = sx(i), y = sy(i);
-            ctx.moveTo(x + rad, y);
-            ctx.arc(x, y, rad, 0, Math.PI * 2);
+            ctx.moveTo(x + rd, y);
+            ctx.arc(x, y, rd, 0, Math.PI * 2);
           }
           ctx.fill();
           if (level === 2 && r > 1.5) {
@@ -392,6 +516,48 @@ export function NetworkCanvas({
           }
         }
       }
+      if (hood) {
+        const groups = new Map<string, number[]>();
+        for (const i of hood.list) {
+          const x = sx(i), y = sy(i);
+          if (x < -pad || x > W + pad || y < -pad || y > H + pad) continue;
+          const level = strength ? strength[i] : 2;
+          const key = `${graph.typeIds[i]}|${level}`;
+          let g = groups.get(key);
+          if (!g) groups.set(key, (g = []));
+          g.push(i);
+        }
+        for (const [key, list] of groups) {
+          const [tId, level] = key.split("|");
+          const a0 = baseAlpha(Number(level));
+          ctx.globalAlpha = nodesAlpha * (a0 + (1 - a0) * la);
+          ctx.fillStyle = colors.dot.get(tId) ?? t.inkTertiary;
+          ctx.beginPath();
+          for (const i of list) {
+            const rd = rad(i);
+            const x = sx(i), y = sy(i);
+            ctx.moveTo(x + rd, y);
+            ctx.arc(x, y, rd, 0, Math.PI * 2);
+          }
+          ctx.fill();
+          ctx.strokeStyle = t.bg;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      /* The hovered or pinned edge: carbon, over the nodes it joins. */
+      if (edgeHi >= 0) {
+        const i = graph.a[edgeHi];
+        const j = graph.b[edgeHi];
+        ctx.globalAlpha = nodesAlpha;
+        ctx.strokeStyle = t.carbon;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx(i), sy(i));
+        ctx.lineTo(sx(j), sy(j));
+        ctx.stroke();
+      }
 
       /* Rings: selected (carbon), keyboard focus (carbon, wider), hover (ink). */
       const ring = (i: number, color: string, width: number, gap: number) => {
@@ -400,16 +566,21 @@ export function NetworkCanvas({
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
         ctx.beginPath();
-        ctx.arc(sx(i), sy(i), radiusAt(i, r) + gap, 0, Math.PI * 2);
+        ctx.arc(sx(i), sy(i), rad(i) + gap, 0, Math.PI * 2);
         ctx.stroke();
       };
       ring(selected, t.carbon, 2, 2.5);
       ring(focused, t.carbon, 2.5, 5);
       const hv = hoverRef.current;
       if (hv?.kind === "node") ring(hv.i, t.ink, 1.5, 2);
+      if (edgeHi >= 0) {
+        ring(graph.a[edgeHi], t.carbon, 1.5, 2);
+        ring(graph.b[edgeHi], t.carbon, 1.5, 2);
+      }
 
       /* Labels: best-connected first (only matches while filtering), only
-         where they do not collide. The selected node is always labelled. */
+         where they do not collide. The selected, hovered and lifted nodes
+         are always labelled; the lifted neighbourhood comes next. */
       // One label set at a time: node labels once nodes are the stronger layer.
       if (nodesAlpha >= 0.5) {
         ctx.font = `500 11px ${t.font}`;
@@ -417,11 +588,17 @@ export function NetworkCanvas({
         ctx.lineJoin = "round";
         const taken: [number, number, number, number][] = [];
         const budget = Math.round(clamp(10 + 14 * Math.log2(Math.max(1, r)), 10, 70));
-        const want = [selected, focused, ...(hv?.kind === "node" ? [hv.i] : [])].filter((i) => i >= 0);
+        const want = [
+          selected,
+          focused,
+          ...(hv?.kind === "node" ? [hv.i] : []),
+          ...(hood ? [liftI] : []),
+          ...(edgeHi >= 0 ? [graph.a[edgeHi], graph.b[edgeHi]] : []),
+        ].filter((i, k, all) => i >= 0 && all.indexOf(i) === k);
         let placed = 0;
         const place = (i: number, force: boolean) => {
           if (!nodeOn[i]) return;
-          const x = sx(i) + radiusAt(i, r) + 4;
+          const x = sx(i) + rad(i) + 4;
           const y = sy(i);
           if (x < 0 || x > W || y < 0 || y > H) return;
           const text = truncate(titleOf(i));
@@ -431,7 +608,7 @@ export function NetworkCanvas({
           if (!force && box[2] > W) return;
           if (!force && taken.some((b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3])) return;
           taken.push(box);
-          ctx.globalAlpha = nodesAlpha;
+          ctx.globalAlpha = nodesAlpha * (force || lifted(i) ? 1 : recede);
           ctx.strokeStyle = t.bg;
           ctx.lineWidth = 3;
           ctx.strokeText(text, x, y);
@@ -440,9 +617,15 @@ export function NetworkCanvas({
           placed++;
         };
         for (const i of want) place(i, true);
+        if (hood && la > 0.5) {
+          for (const i of hood.list) {
+            if (placed >= budget) break;
+            if (!want.includes(i)) place(i, false);
+          }
+        }
         for (const i of matchOrder ?? byDegree) {
           if (placed >= budget) break;
-          if (want.includes(i)) continue;
+          if (want.includes(i) || lifted(i)) continue;
           place(i, false);
         }
       }
@@ -547,13 +730,65 @@ export function NetworkCanvas({
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+    placeTip();
+    if (lifting) frame.current = requestAnimationFrame(() => drawRef.current());
     // `mix`, `markRadius` and `radiusAt` close over props only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
 
+  const drawRef = useRef(draw);
+  drawRef.current = draw;
   const request = useCallback(() => {
     if (!frame.current) frame.current = requestAnimationFrame(draw);
   }, [draw]);
+
+  /* ── Tooltip placement ───────────────────────────────────────────────── */
+
+  const tipRef = useRef<HTMLDivElement>(null);
+  /** Where a tooltip's target is on screen, and the radius it must keep clear. */
+  const anchorOf = (h: Hover) => {
+    const { k, tx, ty } = cam.current;
+    const r = k / fitK.current;
+    if (h.kind === "node") {
+      const pos = shown.current;
+      return { x: pos[h.i * 2] * k + tx, y: pos[h.i * 2 + 1] * k + ty, r: Math.max(radiusAt(h.i, r), nodeRadius(h.i, r)) + 4 };
+    }
+    if (h.kind === "community") {
+      const c = communities[h.i];
+      return c ? { x: c.x * k + tx, y: c.y * k + ty, r: markRadius(c) + (communityMatch ? 7 : 3) } : null;
+    }
+    return { x: h.wx * k + tx, y: h.wy * k + ty, r: 6 };
+  };
+  /** Next to its target, never over it or its label (which sits to its
+   *  right): above it, else below, else right, else left, kept inside the
+   *  canvas. Set on the element, not in state, so a zoom or pan under a hover
+   *  moves it with the frame. */
+  const placeTip = () => {
+    const el = tipRef.current;
+    if (!el) return;
+    const target = hoverRef.current ?? pinnedRef.current;
+    const a = target ? anchorOf(target) : null;
+    const W = size.w;
+    const H = size.h;
+    if (!a || a.x < 0 || a.y < 0 || a.x > W || a.y > H) {
+      el.style.visibility = "hidden";
+      return;
+    }
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const gap = 8;
+    const edge = 4;
+    let x = clamp(a.x - w / 2, edge, Math.max(edge, W - w - edge));
+    let y = a.y - a.r - gap - h;
+    if (y < edge) y = a.y + a.r + gap;
+    if (y + h > H - edge) {
+      y = clamp(a.y - h / 2, edge, Math.max(edge, H - h - edge));
+      x = a.x + a.r + gap;
+      if (x + w > W - edge) x = Math.max(edge, a.x - a.r - gap - w);
+    }
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    el.style.visibility = "visible";
+  };
   useEffect(() => {
     request();
   }, [request]);
@@ -716,10 +951,62 @@ export function NetworkCanvas({
     if (lastFit.current === fitKey) return;
     const first = lastFit.current === undefined;
     lastFit.current = fitKey;
-    move(fitCamera(), !first, target, focus ? 1 : 0);
+    // Opening on a record selected in another view: centred on it, at node level.
+    move(first && selected >= 0 && nodeOn[selected] ? nodeCamera(selected) : fitCamera(), !first, target, focus ? 1 : 0);
     // `fitKey` names everything a move depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitKey, size.w > 0 && size.h > 0]);
+
+  /** A camera centred on node `i`, close enough to draw it as a node. */
+  const nodeCamera = (i: number, from: Camera | null = null): Camera => {
+    const k = Math.max(from?.k ?? 0, fitK.current * (marksOn ? OPEN_TO * 1.25 : 2));
+    return { k, tx: size.w / 2 - target[i * 2] * k, ty: size.h / 2 - target[i * 2 + 1] * k };
+  };
+
+  // A record selected elsewhere (the drawer's links, a list behind it) is
+  // brought into view when it is off screen or inside a community mark. A
+  // node selected here stays where it is.
+  const selfSelect = useRef(false);
+  useEffect(() => {
+    if (selfSelect.current) {
+      selfSelect.current = false;
+      return;
+    }
+    if (selected < 0 || !nodeOn[selected] || !size.w || lastFit.current === undefined) return;
+    const c = cam.current;
+    const x = target[selected * 2] * c.k + c.tx;
+    const y = target[selected * 2 + 1] * c.k + c.ty;
+    const inView = x > FIT_PAD / 2 && x < size.w - FIT_PAD / 2 && y > FIT_PAD / 2 && y < size.h - FIT_PAD / 2;
+    if (!inView || mix(c.k / fitK.current) < 0.5) setCamera(nodeCamera(selected, c), true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
+  // Dev only: screen positions for the scripted checks in dev/results.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as unknown as { __network?: object }).__network = {
+      /** Visible nodes at node level, best-connected first: [index, x, y, id]. */
+      visible: (limit = 20) => {
+        const c = cam.current;
+        const out: [number, number, number, string][] = [];
+        for (const i of byDegree) {
+          if (!nodeOn[i] || (member && !member[i])) continue;
+          const x = shown.current[i * 2] * c.k + c.tx;
+          const y = shown.current[i * 2 + 1] * c.k + c.ty;
+          if (x > 60 && x < size.w - 60 && y > 60 && y < size.h - 60) out.push([i, x, y, graph.ids[i]]);
+          if (out.length >= limit) break;
+        }
+        return out;
+      },
+      rel: () => cam.current.k / fitK.current,
+      lift: () => [liftNode.current, liftAmt.current],
+    };
+  });
+
+  // An open edge belongs to the edges drawn when it was opened.
+  useEffect(() => {
+    setPinned(null);
+  }, [edgeOn]);
 
   const zoomAt = useCallback(
     (factor: number, x: number, y: number, animate = false) => {
@@ -784,6 +1071,53 @@ export function NetworkCanvas({
     [communities, quad, nodeOn, member, target, marksOn, size, strength],
   );
 
+  /** The drawn edge within 5px of a point, at node level. While a node is
+   *  lifted, only its own edges answer; faint hub edges never do. */
+  const edgeAt = (x: number, y: number): number => {
+    const c = cam.current;
+    if (mix(c.k / fitK.current) < 0.5) return -1;
+    const pos = shown.current;
+    const liftI = liftNode.current >= 0 && liftAmt.current > 0.5 ? liftNode.current : -1;
+    let best = -1;
+    let bestD = 5;
+    const m = graph.a.length;
+    for (let e = 0; e < m; e++) {
+      if (!edgeOn[e]) continue;
+      const i = graph.a[e];
+      const j = graph.b[e];
+      const incident = (selected >= 0 && (i === selected || j === selected)) || (liftI >= 0 && (i === liftI || j === liftI));
+      if (liftI >= 0 && !incident) continue;
+      if (!incident && strength && strength[i] !== 2 && strength[j] !== 2) continue;
+      if (member && !incident && (!member[i] || !member[j])) continue;
+      if (!incident && hubEdges !== "full" && (graph.degree[i] >= hubDegree || graph.degree[j] >= hubDegree)) continue;
+      const x1 = pos[i * 2] * c.k + c.tx;
+      const y1 = pos[i * 2 + 1] * c.k + c.ty;
+      const x2 = pos[j * 2] * c.k + c.tx;
+      const y2 = pos[j * 2 + 1] * c.k + c.ty;
+      if (x < Math.min(x1, x2) - bestD || x > Math.max(x1, x2) + bestD || y < Math.min(y1, y2) - bestD || y > Math.max(y1, y2) + bestD) continue;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = dx * dx + dy * dy || 1;
+      const u = clamp(((x - x1) * dx + (y - y1) * dy) / len, 0, 1);
+      const d = Math.hypot(x - (x1 + u * dx), y - (y1 + u * dy));
+      if (d < bestD) {
+        bestD = d;
+        best = e;
+      }
+    }
+    return best;
+  };
+
+  /** Escape, or a click on empty canvas: no selection, no open edge. */
+  const clearAll = () => {
+    if (pinnedRef.current) {
+      pinnedRef.current = null;
+      setPinned(null);
+    }
+    if (selected >= 0) onClear();
+    request();
+  };
+
   /* ── Pointer: pan, pinch, hover, click ───────────────────────────────── */
 
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -817,11 +1151,16 @@ export function NetworkCanvas({
     const g = gesture.current;
     if (!g || !pointers.current.has(e.pointerId)) {
       if (e.pointerType !== "mouse") return;
-      const hit = hitAt(p.x, p.y);
+      const c = cam.current;
+      const wx = (p.x - c.tx) / c.k;
+      const wy = (p.y - c.ty) / c.k;
+      const node = hitAt(p.x, p.y);
+      const edge = node ? -1 : edgeAt(p.x, p.y);
+      const hit: Hover | null = node ? { ...node, wx, wy } : edge >= 0 ? { kind: "edge", i: edge, wx, wy } : null;
       const prev = hoverRef.current;
       if (hit?.kind !== prev?.kind || hit?.i !== prev?.i) {
-        setHover(hit ? { ...hit, x: p.x, y: p.y } : null);
-        hoverRef.current = hit ? { ...hit, x: p.x, y: p.y } : null;
+        hoverRef.current = hit;
+        setHover(hit);
         request();
       }
       return;
@@ -876,6 +1215,9 @@ export function NetworkCanvas({
     }
     if (!g || g.moved || pointers.current.size) return;
     const p = local(e);
+    const c = cam.current;
+    const wx = (p.x - c.tx) / c.k;
+    const wy = (p.y - c.ty) / c.k;
     // A second tap close in time and place is a double-click (or a phone's
     // double-tap): it centres the community under it. The first tap has
     // already done its own thing (selected a node, began opening a mark);
@@ -890,8 +1232,21 @@ export function NetworkCanvas({
       return;
     }
     const hit = hitAt(p.x, p.y);
-    if (!hit) return;
+    if (!hit) {
+      // An edge opens its tooltip and keeps it; empty canvas ends the
+      // selection and any open edge.
+      const edge = edgeAt(p.x, p.y);
+      if (edge >= 0) {
+        setPinned({ kind: "edge", i: edge, wx, wy });
+        request();
+        return;
+      }
+      clearAll();
+      return;
+    }
+    if (pinnedRef.current) setPinned(null);
     if (hit.kind === "node") {
+      selfSelect.current = true;
       onSelect(hit.i, e);
       return;
     }
@@ -972,18 +1327,32 @@ export function NetworkCanvas({
 
   /* ── Tooltip ─────────────────────────────────────────────────────────── */
 
-  const tip = (() => {
-    if (!hover) return null;
-    if (hover.kind === "node") {
-      const what = strength ? (strength[hover.i] === 2 ? "Match" : strength[hover.i] === 1 ? "Linked to a match" : "") : "";
-      return { title: titleOf(hover.i), sub: [typeNameOf(graph.typeIds[hover.i]), what].filter(Boolean).join(" · ") };
+  const tipOf = hover ?? pinned;
+  const tip = useMemo(() => {
+    if (!tipOf) return null;
+    if (tipOf.kind === "node") {
+      const i = tipOf.i;
+      const d = graph.degree[i];
+      const what = strength ? (strength[i] === 2 ? "Match" : strength[i] === 1 ? "Linked to a match" : "") : "";
+      const links = `${d.toLocaleString()} ${d === 1 ? "link" : "links"}`;
+      return { title: titleOf(i), sub: [typeNameOf(graph.typeIds[i]), links, what].filter(Boolean).join(" · ") };
     }
-    const c = communities[hover.i];
+    if (tipOf.kind === "edge") {
+      const info = edgeInfo(tipOf.i);
+      return {
+        title: info.types.join(", ") || "Related",
+        ends: [titleOf(graph.a[tipOf.i]), titleOf(graph.b[tipOf.i])] as const,
+        sub: `${info.refs.toLocaleString()} ${info.refs === 1 ? "reference" : "references"}`,
+        evidence: info.evidence,
+        hint: tipOf === hover && !pinned ? "Click to keep open" : undefined,
+      };
+    }
+    const c = communities[tipOf.i];
     if (!c) return null;
     const count = c.members.length;
     const records = `${count.toLocaleString()} ${count === 1 ? "record" : "records"}`;
     if (communityMatch) {
-      const m = communityMatch[hover.i];
+      const m = communityMatch[tipOf.i];
       return {
         title: titleOf(c.top),
         sub: `${m.toLocaleString()} of ${records} ${m === 1 ? "matches" : "match"}, mostly ${typeNameOf(c.typeId)}`,
@@ -991,7 +1360,10 @@ export function NetworkCanvas({
       };
     }
     return { title: titleOf(c.top), sub: `${records}, mostly ${typeNameOf(c.typeId)}`, hint: "Double-click to centre" };
-  })();
+  }, [tipOf, hover, pinned, graph, strength, titleOf, typeNameOf, edgeInfo, communities, communityMatch]);
+  useLayoutEffect(() => {
+    placeTip();
+  });
 
   /* Communities for the keyboard: by match count while filtering (those with
      a match only), by size otherwise. Enter centres one. */
@@ -1031,7 +1403,17 @@ export function NetworkCanvas({
   const centre = () => ({ x: size.w / 2, y: size.h / 2 });
 
   return (
-    <div ref={hostRef} data-component="NetworkCanvas" className="relative w-full h-full min-h-0 overflow-hidden">
+    <div
+      ref={hostRef}
+      data-component="NetworkCanvas"
+      className="relative w-full h-full min-h-0 overflow-hidden"
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && (selected >= 0 || pinnedRef.current)) {
+          e.preventDefault();
+          clearAll();
+        }
+      }}
+    >
       <canvas
         ref={canvasRef}
         role="img"
@@ -1047,19 +1429,30 @@ export function NetworkCanvas({
         style={{ width: size.w, height: size.h, touchAction: "none" }}
         className={`block ${hover ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}`}
       />
-      {tip && hover && (
+      {tip && (
         <div
+          ref={tipRef}
           role="presentation"
           data-part="tooltip"
-          className="pointer-events-none absolute z-10 max-w-[18rem] px-2 py-1.5 rounded-md bg-paper shadow-md border border-border-soft"
-          style={{
-            left: Math.min(hover.x + 12, Math.max(0, size.w - 290)),
-            top: Math.max(0, hover.y + 14),
-          }}
+          className="pointer-events-none absolute left-0 top-0 z-10 w-max max-w-[18rem] px-2 py-1.5 rounded-md bg-paper shadow-md border border-border-soft"
+          style={{ visibility: "hidden" }}
         >
           <p className="text-xs font-medium text-ink truncate">{tip.title}</p>
+          {"ends" in tip && tip.ends && (
+            <>
+              <p className="text-meta text-ink-secondary truncate">Between {tip.ends[0]}</p>
+              <p className="text-meta text-ink-secondary truncate">and {tip.ends[1]}</p>
+            </>
+          )}
           <p className="text-meta text-ink-tertiary truncate">{tip.sub}</p>
-          {"hint" in tip && <p className="text-meta text-ink-tertiary">{tip.hint}</p>}
+          {"evidence" in tip &&
+            tip.evidence?.map((ev, k) => (
+              <div key={k} className="mt-1.5 flex flex-col items-start gap-0.5">
+                <RefStatus verification={ev.verification} />
+                {ev.quote && <p className="text-xs text-ink-secondary line-clamp-3">“{ev.quote}”</p>}
+              </div>
+            ))}
+          {"hint" in tip && tip.hint && <p className="text-meta text-ink-tertiary">{tip.hint}</p>}
         </div>
       )}
       {chip && (

@@ -56,7 +56,7 @@ import { groupConnections, resolveRelationshipField } from "../../utils/inherita
 import { relationshipFieldsByLanguage } from "../../data/metadata";
 import { ViewSwitcher } from "../../components/library/ViewSwitcher";
 import { NetworkCanvas } from "../../components/library/NetworkCanvas";
-import { demoColorOf, demoNetwork, demoTypeNameOf } from "../../data/network/demo";
+import { demoColorOf, demoNetwork, demoEdgeInfo, demoTypeNameOf } from "../../data/network/demo";
 import { CopyFromPicker } from "../../components/metadata/CopyFromPicker";
 import { copyUnitsOneToOne } from "../../utils/copyFrom";
 import { entities } from "../../data/entities";
@@ -903,6 +903,7 @@ export function ViewSwitcherDemo() {
  *  click a community mark to open it, click a node to select it. */
 export function NetworkCanvasDemo() {
   const { graph, placement, titles } = useMemo(() => demoNetwork(), []);
+  const edgeInfo = useMemo(() => demoEdgeInfo(graph), [graph]);
   const [selected, setSelected] = useState(-1);
   const nodeOn = useMemo(() => new Uint8Array(graph.ids.length).fill(1), [graph]);
   const edgeOn = useMemo(() => new Uint8Array(graph.a.length).fill(1), [graph]);
@@ -922,6 +923,8 @@ export function NetworkCanvasDemo() {
         overview
         selected={selected}
         onSelect={setSelected}
+        onClear={() => setSelected(-1)}
+        edgeInfo={edgeInfo}
         label="Network of the demo collection"
       />
     </div>

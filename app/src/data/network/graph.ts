@@ -10,7 +10,7 @@
 // Positions come from `data/network/layout.ts`; this file is structure only.
 import type { DataSource } from "../../atoms/dataSource";
 import type { Entity } from "../entities";
-import type { Reference } from "../references";
+import type { Reference, Verification } from "../references";
 import { cejilCorpus } from "../cejil/load";
 import { nepalCorpus } from "../nepal/load";
 import { nepalRelTypeName } from "../nepal/schema";
@@ -178,3 +178,28 @@ export function graphFromLinks(source: DataSource, ids: string[], typeIds: strin
 
 /** The other end of edge `e` from node `i`. */
 export const otherEnd = (g: NetworkGraph, e: number, i: number) => (g.a[e] === i ? g.b[e] : g.a[e]);
+
+export interface PairEvidence {
+  type: string;
+  quote?: string;
+  verification?: Verification;
+}
+
+/** The references between two records that carry a quote or a status, for an
+ *  edge's tooltip. Only Nepal's do; every other collection returns none. Read
+ *  on hover, one scan of the collection's references. */
+export function pairEvidence(source: DataSource, idA: string, idB: string, limit = 3): PairEvidence[] {
+  if (source !== "nepal") return [];
+  const out: PairEvidence[] = [];
+  for (const r of nepalCorpus()?.references ?? []) {
+    if (!((r.from === idA && r.to === idB) || (r.from === idB && r.to === idA))) continue;
+    if (!r.quote && !r.verification) continue;
+    out.push({
+      type: relationDisplayLabel(nepalRelTypeName.get(r.type) ?? r.type),
+      quote: r.quote,
+      verification: r.verification,
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}

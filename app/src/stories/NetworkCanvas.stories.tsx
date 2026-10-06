@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NetworkCanvas } from "../components/library/NetworkCanvas";
-import { demoColorOf, demoNetwork, demoTypeNameOf } from "../data/network/demo";
+import { demoColorOf, demoNetwork, demoEdgeInfo, demoTypeNameOf } from "../data/network/demo";
 
 /** A whole collection as one graph on a canvas: the Library's Network view.
  *  Positions come in precomputed (`placement`, and `focus` for a filter's own
@@ -21,6 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 function Demo({ overview = false, filtered = false }: { overview?: boolean; filtered?: boolean }) {
   const { graph, placement, titles } = useMemo(() => demoNetwork(), []);
+  const edgeInfo = useMemo(() => demoEdgeInfo(graph), [graph]);
   const [selected, setSelected] = useState(-1);
   const n = graph.ids.length;
   const nodeOn = useMemo(() => new Uint8Array(n).fill(1), [n]);
@@ -54,6 +55,8 @@ function Demo({ overview = false, filtered = false }: { overview?: boolean; filt
         overview={overview}
         selected={selected}
         onSelect={setSelected}
+        onClear={() => setSelected(-1)}
+        edgeInfo={edgeInfo}
         label="Network of the demo collection"
       />
     </div>

@@ -4,7 +4,7 @@ import type { Entity } from "../../data/entities";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryNetworkDisplayAtom } from "../../atoms/library";
 import { networkGraphAtom } from "../../atoms/network";
-import { HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF } from "../../data/network/graph";
+import { HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
 import { loadNetworkLayout, placeNetwork, type StoredLayout } from "../../data/network/layout";
 import { cachedFocus, FOCUS_MAX, focusMembers, runFocus, type FocusLayout } from "../../data/network/focus";
 import { NetworkCanvas } from "./NetworkCanvas";
@@ -36,11 +36,14 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   filtering,
   selectedId,
   onSelect,
+  onClear,
 }: {
   matches: Entity[];
   filtering: boolean;
   selectedId: string | null;
   onSelect: Select;
+  /** Ends the selection (Escape, a click on empty canvas). */
+  onClear: () => void;
 }) {
   const source = useAtomValue(dataSourceAtom);
   const entities = useAtomValue(libraryEntitiesAtom);
@@ -171,6 +174,17 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   // Held while the focus layout is on its way, so the camera moves once.
   const fitKey = pending ? null : `${matchKey}|${focusLayout ? focusKey : "global"}`;
 
+  /* An edge's tooltip: its types (the bits of its mask), how many references
+     back it, and Nepal's quotes with their status. */
+  const edgeInfo = useCallback(
+    (e: number) => ({
+      types: graph.types.filter((_, t) => graph.mask[e] & (1 << Math.min(t, 31))),
+      refs: graph.refs[e],
+      evidence: pairEvidence(source, graph.ids[graph.a[e]], graph.ids[graph.b[e]]),
+    }),
+    [graph, source],
+  );
+
   const selected = selectedId ? graph.index.get(selectedId) ?? -1 : -1;
   const select = useCallback(
     (i: number, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => onSelect(graph.ids[i], e),
@@ -212,6 +226,8 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         }
         selected={selected}
         onSelect={select}
+        onClear={onClear}
+        edgeInfo={edgeInfo}
         label={
           !filtering
             ? "Network of the collection"
