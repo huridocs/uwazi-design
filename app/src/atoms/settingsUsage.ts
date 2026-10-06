@@ -9,11 +9,12 @@ import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { templatesAtom } from "./templates";
 import { entityPropertyValues } from "../utils/propertyValues";
-import { cejilUsageByRelationType } from "../data/cejil/aggregates";
-import type { ThesaurusValue } from "../data/settings";
+import { cejilStats, cejilUsageByRelationType } from "../data/cejil/aggregates";
+import type { SettingsLanguage, ThesaurusValue } from "../data/settings";
 import {
   boundProperties,
   groupUsage,
+  languageUsage,
   propertyUsage,
   relationTypeUsage,
   schemaFromTemplates,
@@ -37,7 +38,7 @@ import { groupsAtom, signedInUserAtom, userDeleteBlock, usersAtom } from "./user
  *  the page shows, which is not always the Library's: Templates and
  *  Relationship types show CEJIL's configuration on CEJIL and the Sample's
  *  everywhere else; Thesauri show each corpus's own, with artworks showing the
- *  Sample's (`atoms/thesauri.ts`). Languages join with their page. */
+ *  Sample's (`atoms/thesauri.ts`). Languages: entities with a version in a language. */
 export const templatesCorpus = (source: DataSource): Corpus => (source === "cejil" ? "cejil" : "mock");
 
 /** A corpus's template properties and template names, from the template
@@ -249,3 +250,22 @@ export const userUsageAtom = atomFamily((userId: string) =>
     });
   }),
 );
+
+/* ── Languages ─────────────────────────────────────────────────────────── */
+
+/** Entities with a version in a language: in Uwazi every entity has one per
+ *  installed language. The Sample keeps metadata in EN/ES/FR/AR; CEJIL's
+ *  count is the importer's. */
+const languageUsageFamily = atomFamily((key: string) => {
+  const [lkey, isDefault, translationsCount] = JSON.parse(key) as [string, boolean, number];
+  const l = { key: lkey, default: isDefault, translationsCount };
+  return atom((get) => {
+    const corpus = templatesCorpus(get(dataSourceAtom));
+    const key = l.key.toUpperCase() as Language;
+    const entities =
+      corpus === "cejil" ? cejilStats.entities : Object.keys(get(entityMetadataAtom)[key] ?? {}).length;
+    return languageUsage({ isDefault: l.default, entities, translated: l.translationsCount });
+  });
+});
+export const languageUsageAtom = (l: Pick<SettingsLanguage, "key" | "default" | "translationsCount">) =>
+  languageUsageFamily(JSON.stringify([l.key, l.default, l.translationsCount]));

@@ -166,6 +166,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-section", label: "SettingsSection" },
       { id: "set-editor", label: "SettingsEditor" },
       { id: "set-alpha-jump", label: "AlphaJump" },
+      { id: "set-translation-progress", label: "TranslationProgress" },
       { id: "set-bulk-pick", label: "BulkPickModal" },
     ],
   },

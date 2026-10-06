@@ -23,11 +23,14 @@ interface MobileActionMenuProps {
 
 const MENU_MIN_WIDTH = 180;
 
-export function MobileActionMenu({ items, floating = false, label = "More options", icon }: MobileActionMenuProps & {
+export function MobileActionMenu({ items, floating = false, fixed = false, label = "More options", icon }: MobileActionMenuProps & {
   /** Floating over content, not hosted in a bar. Only then does the trigger
    *  draw a border: a bar button carries none, but a bare kebab over a page
    *  would have nothing to separate it from what is under it. */
   floating?: boolean;
+  /** Position the menu against the viewport, for a trigger inside a box that
+   *  clips (a table row). The menu closes when anything scrolls. */
+  fixed?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // Which edge of the trigger the menu hangs from. Picked on open so the menu
@@ -38,6 +41,8 @@ export function MobileActionMenu({ items, floating = false, label = "More option
   // at the TOP, so the menu opened straight up behind the chrome and was
   // invisible. Same rule as the edge: grow into the viewport, not out of it.
   const [side, setSide] = useState<"top" | "bottom">("top");
+  /** The trigger's box at open, for `fixed`. */
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,8 +53,16 @@ export function MobileActionMenu({ items, floating = false, label = "More option
       }
     };
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
+    // A fixed menu would stay put while its row scrolls away.
+    const onScroll = (e: Event) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    if (fixed) window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open, fixed]);
 
   const toggle = () => {
     setOpen((o) => {
@@ -61,6 +74,7 @@ export function MobileActionMenu({ items, floating = false, label = "More option
         // up when it can't. Rough height is enough — a row is ~36px.
         const needed = items.length * 36 + 8;
         setSide(window.innerHeight - rect.bottom >= needed ? "bottom" : "top");
+        setAnchor(rect);
       }
       return !o;
     });
@@ -86,8 +100,13 @@ export function MobileActionMenu({ items, floating = false, label = "More option
           aria-label={label}
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
-            [side === "bottom" ? "top" : "bottom"]: "calc(100% + 6px)",
-            [align]: 0,
+            ...(fixed && anchor
+              ? {
+                  position: "fixed" as const,
+                  ...(side === "bottom" ? { top: anchor.bottom + 6 } : { bottom: window.innerHeight - anchor.top + 6 }),
+                  ...(align === "left" ? { left: anchor.left } : { right: window.innerWidth - anchor.right }),
+                }
+              : { [side === "bottom" ? "top" : "bottom"]: "calc(100% + 6px)", [align]: 0 }),
             minWidth: MENU_MIN_WIDTH,
             border: "1px solid var(--border-primary)",
             boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
