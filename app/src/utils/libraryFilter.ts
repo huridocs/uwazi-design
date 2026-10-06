@@ -16,7 +16,10 @@ import {
   entityInheritedValues,
   type DataSource,
   type LibraryInheritedDef,
+  type LibraryRangeDef,
 } from "./libraryFacets";
+import { entityPropertyIntervals, type ValueInterval } from "./propertyValues";
+import { dateBoundMs } from "./timeline";
 
 /** How a facet's ticked values select records. `any` and `all` are Uwazi's OR
  *  and AND; `none` keeps records that carry none of them; `missing` keeps
@@ -75,6 +78,72 @@ export function carrierTypes(
     byKey.set(key, out);
   }
   return out;
+}
+
+/** An active range facet: bounds (ms for dates, the number itself for
+ *  numerics; null = open), the mode, and the templates that carry it. */
+export interface ActiveRange {
+  def: LibraryRangeDef;
+  lo: number | null;
+  hi: number | null;
+  mode: LibraryMatch;
+  carriers: ReadonlySet<string>;
+}
+
+/** The facet key a range facet's mode and bounds are stored and excepted
+ *  under. */
+export const rangeKey = (name: string) => `range:${name}`;
+
+/** A range facet's bounds as typed: a number or a "yyyy-mm-dd" day. */
+export interface RangeBounds {
+  from: string;
+  to: string;
+}
+
+/** Typed bounds as numbers: a date's "to" covers its whole day. */
+export function rangeBoundsOf(def: LibraryRangeDef, b: RangeBounds | undefined): { lo: number | null; hi: number | null } {
+  if (!b) return { lo: null, hi: null };
+  if (def.kind === "date") return { lo: dateBoundMs(b.from, "from"), hi: dateBoundMs(b.to, "to") };
+  const num = (v: string) => (v.trim() === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+  return { lo: num(b.from), hi: num(b.to) };
+}
+
+/** The range facets that narrow: bounds set, or `missing`. */
+export function activeRangesOf(
+  bounds: Record<string, RangeBounds>,
+  match: Record<string, LibraryMatch>,
+  defs: readonly LibraryRangeDef[],
+): ActiveRange[] {
+  const out: ActiveRange[] = [];
+  for (const def of defs) {
+    const mode = match[rangeKey(def.name)] ?? "any";
+    const { lo, hi } = rangeBoundsOf(def, bounds[def.name]);
+    if (mode !== "missing" && lo === null && hi === null) continue;
+    out.push({ def, lo, hi, mode, carriers: new Set(def.templateIds) });
+  }
+  return out;
+}
+
+/** One range facet's test on one record's intervals. A value matches when it
+ *  touches [lo, hi]: a date range overlapping the window counts. */
+export function matchInterval(
+  ivs: readonly ValueInterval[],
+  lo: number | null,
+  hi: number | null,
+  mode: LibraryMatch,
+  carrier: boolean,
+): boolean {
+  const touches = (iv: ValueInterval) => (lo === null || iv[1] >= lo) && (hi === null || iv[0] <= hi);
+  switch (mode) {
+    case "all":
+      return ivs.length > 0 && ivs.every(touches);
+    case "none":
+      return carrier && !ivs.some(touches);
+    case "missing":
+      return carrier && ivs.length === 0;
+    default:
+      return ivs.some(touches);
+  }
 }
 
 /** The types that carry a country, and a descriptor: the fixed facets'
@@ -165,6 +234,8 @@ export interface LibraryFilterState {
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
+  /** Active numeric and date range facets. */
+  ranges: ActiveRange[];
   /** Active relationship-chain filters (collections whose templates declare
    *  chains; empty otherwise). */
   chains: ActiveChain[];
@@ -279,6 +350,7 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   fromMs: null,
   toMs: null,
   inherited: [],
+  ranges: [],
   chains: [],
   q: "",
   searchIndex: EMPTY_SEARCH_INDEX,
@@ -324,6 +396,7 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     fromMs: s.fromMs ?? null,
     toMs: s.toMs ?? null,
     inherited: s.inherited ?? [],
+    ranges: s.ranges ?? [],
     chains: s.chains ?? [],
     q: s.q ?? "",
     searchIndex: s.searchIndex ?? EMPTY_SEARCH_INDEX,
@@ -383,6 +456,16 @@ function compile(s: LibraryFilterState): FilterNode[] {
   for (const f of s.inherited)
     leaf(inheritedKey(f.def.propId), (e) =>
       matchValues(entityInheritedValues(e, f.def, s.language, s.source), f.values, f.mode, f.carriers.has(e.typeId)),
+    );
+  for (const r of s.ranges)
+    leaf(rangeKey(r.def.name), (e) =>
+      matchInterval(
+        entityPropertyIntervals(e, r.def.name, s.language, r.def.kind),
+        r.lo,
+        r.hi,
+        r.mode,
+        r.carriers.has(e.typeId),
+      ),
     );
   // Match every query token (AND) somewhere in the entity's metadata index OR —
   // when the query is long enough to be worth the corpus scan — its document

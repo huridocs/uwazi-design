@@ -5,8 +5,8 @@ import { templateStore, templatesAtom } from "./templates";
 import { filterSettings } from "./settingsSingletons";
 import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, nepalReadyAtom, travesiaReadyAtom } from "./dataSource";
 import { cejilEntityCountByTemplate } from "../data/cejil/aggregates";
-import { DEFAULT_LIBRARY_SORT, libraryInheritedFiltersAtom, librarySortAtom, libraryTypeFiltersAtom } from "./library";
-import { libraryInheritedDefs } from "../utils/libraryFacets";
+import { DEFAULT_LIBRARY_SORT, libraryInheritedFiltersAtom, libraryRangeFiltersAtom, librarySortAtom, libraryTypeFiltersAtom } from "./library";
+import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
 import { templatesMirror } from "../data/templates/mirror";
 import { inheritedRefusal, inheritorsOf } from "../utils/templateRules";
 
@@ -25,6 +25,11 @@ const reconcileLibraryAtom = atom(null, (get, set, corpus: Corpus) => {
   const facets = new Set(libraryInheritedDefs(corpus, "EN").map((d) => d.propId));
   set(libraryInheritedFiltersAtom, (prev) => {
     const kept = Object.entries(prev).filter(([k]) => facets.has(k));
+    return kept.length === Object.keys(prev).length ? prev : Object.fromEntries(kept);
+  });
+  const ranged = new Set(libraryRangeDefs(corpus).map((d) => d.name));
+  set(libraryRangeFiltersAtom, (prev) => {
+    const kept = Object.entries(prev).filter(([k]) => ranged.has(k));
     return kept.length === Object.keys(prev).length ? prev : Object.fromEntries(kept);
   });
   const ids = new Set(templatesMirror(corpus).map((t) => t.id));

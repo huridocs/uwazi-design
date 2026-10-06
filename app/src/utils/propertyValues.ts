@@ -67,3 +67,70 @@ function read(e: Entity, name: string, lang: Language): string[] {
   if (f.displayValues?.length) return f.displayValues;
   return f.value ? [f.value] : [];
 }
+
+/** A value as a closed interval in ms (dates, a day wide; date ranges, from
+ *  the first day to the last) or as a number twice (numeric). */
+export type ValueInterval = readonly [number, number];
+
+const DAY = 86_400_000;
+const utcDay = (y: number, m: number, d: number): ValueInterval => {
+  const t = Date.UTC(y, m - 1, d);
+  return [t, t + DAY - 1];
+};
+
+/** One display date as the days it covers: "dd/mm/yyyy" (the projection's
+ *  format), ISO "yyyy-mm-dd", "yyyy-mm", a bare year (the Sample's filing
+ *  years), else whatever `Date.parse` reads. */
+function dateInterval(s: string): ValueInterval | null {
+  const v = s.trim();
+  let m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);
+  if (m) return utcDay(+m[3], +m[2], +m[1]);
+  m = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/.exec(v);
+  if (m) return utcDay(+m[1], +m[2], +m[3]);
+  m = /^(\d{4})[-/](\d{1,2})$/.exec(v);
+  if (m) return [Date.UTC(+m[1], +m[2] - 1, 1), Date.UTC(+m[1], +m[2], 1) - 1];
+  m = /^(\d{4})$/.exec(v);
+  if (m) return [Date.UTC(+m[1], 0, 1), Date.UTC(+m[1] + 1, 0, 1) - 1];
+  const t = Date.parse(v);
+  return Number.isNaN(t) ? null : [t, t + DAY - 1];
+}
+
+/** A display value as an interval: a number, a date, or a date range
+ *  ("a – b", either end open). */
+function toInterval(s: string, kind: "number" | "date"): ValueInterval | null {
+  if (kind === "number") {
+    const n = Number(s.replace(/[,\s]/g, ""));
+    return Number.isFinite(n) ? [n, n] : null;
+  }
+  const parts = s.split(/\s[–-]\s?|\s?[–-]\s/);
+  if (parts.length === 2) {
+    const a = parts[0].trim() ? dateInterval(parts[0]) : null;
+    const b = parts[1].trim() ? dateInterval(parts[1]) : null;
+    if (!a && !b) return null;
+    return [a ? a[0] : -Infinity, b ? b[1] : Infinity];
+  }
+  return dateInterval(s);
+}
+
+/** An entity's values for a numeric or date property as intervals, read from
+ *  the same display strings the facets list, so a range and a value list
+ *  never disagree about a record. Cached per value list. */
+const intervalCache = new WeakMap<readonly string[], ValueInterval[]>();
+export function entityPropertyIntervals(
+  e: Entity,
+  name: string,
+  lang: Language,
+  kind: "number" | "date",
+): ValueInterval[] {
+  const vals = entityPropertyValues(e, name, lang);
+  let hit = intervalCache.get(vals);
+  if (!hit) {
+    hit = [];
+    for (const v of vals) {
+      const iv = toInterval(v, kind);
+      if (iv) hit.push(iv);
+    }
+    intervalCache.set(vals, hit);
+  }
+  return hit;
+}

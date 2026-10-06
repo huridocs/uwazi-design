@@ -27,6 +27,7 @@ import {
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
+  libraryRangeFiltersAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
@@ -40,8 +41,11 @@ import { cejilSettings } from "../../data/cejil/settings";
 import {
   entityCountries,
   libraryInheritedDefs,
+  libraryRangeDefs,
   entityInheritedValues,
+  type LibraryRangeDef,
 } from "../../utils/libraryFacets";
+import { entityPropertyIntervals } from "../../utils/propertyValues";
 import {
   chainFacetDefsFor,
   buildActiveChains,
@@ -57,10 +61,15 @@ import {
   activeInheritedOf,
   inheritedCarriers,
   inheritedKey,
+  rangeKey,
+  activeRangesOf,
+  matchInterval,
+  rangeBoundsOf,
   countryCarriersOf,
   descriptorCarriersOf,
   type LibraryFilterState,
   type LibraryMatch,
+  type RangeBounds,
 } from "../../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
@@ -86,6 +95,7 @@ export function LibraryFilters() {
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
+  const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
   const countryMode = facetMatch.country ?? "any";
   const descriptorMode = facetMatch.descriptor ?? "any";
   const setMatch = (key: string, mode: LibraryMatch) =>
@@ -124,6 +134,22 @@ export function LibraryFilters() {
         !!facetMatch[inheritedKey(d.propId)],
     );
   }, [inheritedDefs, typeFilters, inheritedFilters, facetMatch]);
+  // Numeric and date range facets, shown by the same rule as property facets.
+  const rangeDefs = useMemo(
+    () => libraryRangeDefs(dataSource),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `templates` is the store the defs are read from
+    [dataSource, templates],
+  );
+  const shownRanges = useMemo(() => {
+    const typeIds = Object.keys(typeFilters).filter((k) => typeFilters[k]);
+    return rangeDefs.filter(
+      (d) =>
+        (typeIds.length ? typeIds.every((id) => d.templateIds.includes(id)) : !!d.defaultFilter) ||
+        !!rangeFilters[d.name]?.from ||
+        !!rangeFilters[d.name]?.to ||
+        !!facetMatch[rangeKey(d.name)],
+    );
+  }, [rangeDefs, typeFilters, rangeFilters, facetMatch]);
   // Relationship chains the templates declare. A chain shows by the same rule
   // as a property facet: `defaultFilter` with no Type selected, or when every
   // selected Type is its template; and while it holds a selection.
@@ -161,6 +187,7 @@ export function LibraryFilters() {
       fromMs: dateBoundMs(dateFrom, "from"),
       toMs: dateBoundMs(dateTo, "to"),
       inherited,
+      ranges: activeRangesOf(rangeFilters, facetMatch, rangeDefs),
       chains: buildActiveChains(chainFilters, chainDefs, chainGraphFor(dataSource)),
       q: query.trim().toLowerCase(),
       searchIndex,
@@ -174,7 +201,7 @@ export function LibraryFilters() {
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, facetMatch, chainDefs, chainFilters, query, matchTypes,
+    dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, chainDefs, chainFilters, query, matchTypes,
     contentSelection, contentMode, entities,
   ]);
 
@@ -247,17 +274,31 @@ export function LibraryFilters() {
       }
     return { values: m, missing };
   }, [entities, filterState, dataSource]);
-  // Every shown property facet in one pass: a record counts towards a facet
-  // when it passes all the other facets, so ticking a value in one narrows the
-  // counts of the rest but never its own.
-  const inheritedCounts = useMemo(() => {
-    const m: Record<string, { values: Map<string, number>; missing: number }> = {};
+  // Every shown property and range facet in one pass: a record counts towards
+  // a facet when it passes all the other facets, so ticking a value in one
+  // narrows the counts of the rest but never its own. A range keeps how many
+  // records its own bounds keep, and the lowest and highest value (the number
+  // boxes' placeholders).
+  const { inheritedCounts, rangeStats } = useMemo(() => {
+    const inheritedCounts: Record<string, { values: Map<string, number>; missing: number }> = {};
+    const rangeStats: Record<string, RangeStats> = {};
     const facets = shownDefs.map((def) => ({
       def,
       key: inheritedKey(def.propId),
       carriers: inheritedCarriers(def, entities, language, dataSource),
-      out: (m[def.propId] = { values: new Map<string, number>(), missing: 0 }),
+      out: (inheritedCounts[def.propId] = { values: new Map<string, number>(), missing: 0 }),
     }));
+    const ranges = shownRanges.map((def) => {
+      const mode = facetMatch[rangeKey(def.name)] ?? "any";
+      return {
+        def,
+        key: rangeKey(def.name),
+        mode,
+        ...rangeBoundsOf(def, rangeFilters[def.name]),
+        carriers: new Set(def.templateIds),
+        out: (rangeStats[def.name] = { kept: 0, missing: 0, min: Infinity, max: -Infinity }),
+      };
+    });
     forEachFacetBase(entities, filterState, (e, failed) => {
       for (const f of facets) {
         if (failed && !failed.includes(f.key)) continue;
@@ -265,9 +306,20 @@ export function LibraryFilters() {
         if (!vals.length && f.carriers.has(e.typeId)) f.out.missing++;
         for (const v of vals) f.out.values.set(v, (f.out.values.get(v) ?? 0) + 1);
       }
+      for (const r of ranges) {
+        if (failed && !failed.includes(r.key)) continue;
+        const carrier = r.carriers.has(e.typeId);
+        const ivs = entityPropertyIntervals(e, r.def.name, language, r.def.kind);
+        if (!ivs.length && carrier) r.out.missing++;
+        if (matchInterval(ivs, r.lo, r.hi, r.mode, carrier)) r.out.kept++;
+        for (const [a, b] of ivs) {
+          if (Number.isFinite(a) && a < r.out.min) r.out.min = a;
+          if (Number.isFinite(b) && b > r.out.max) r.out.max = b;
+        }
+      }
     });
-    return m;
-  }, [entities, filterState, shownDefs, language, dataSource]);
+    return { inheritedCounts, rangeStats };
+  }, [entities, filterState, shownDefs, shownRanges, facetMatch, rangeFilters, language, dataSource]);
   // Relationship-chain facet counts (path-coupled), for the chains on show.
   const chainCounts = useMemo(() => {
     const graph = chainGraphFor(dataSource);
@@ -536,6 +588,26 @@ export function LibraryFilters() {
             }}
             sort="count"
             hideWhenEmpty
+          />
+        ))}
+
+        {shownRanges.map((def) => (
+          <RangeFacetCard
+            key={def.name}
+            def={def}
+            bounds={rangeFilters[def.name] ?? { from: "", to: "" }}
+            stats={rangeStats[def.name]}
+            onChange={(b) => setRangeFilters((s) => ({ ...s, [def.name]: b }))}
+            onClear={() => {
+              setRangeFilters((s) => {
+                const next = { ...s };
+                delete next[def.name];
+                return next;
+              });
+              setMatch(rangeKey(def.name), "any");
+            }}
+            mode={facetMatch[rangeKey(def.name)] ?? "any"}
+            onMode={(m) => setMatch(rangeKey(def.name), m)}
           />
         ))}
 
@@ -1018,7 +1090,13 @@ function KeywordFacetCard({
         </span>
       </header>
 
-      {match && <FacetMatchRow title={title} match={match} />}
+      {match && (
+        <FacetMatchRow
+          title={title}
+          match={match}
+          note={missingMode ? `${match.missing.toLocaleString()} without` : ""}
+        />
+      )}
 
       {/* In `missing` the list stays in place, dimmed and inert: the ticks are
           kept for the way back and do not take part. */}
@@ -1117,9 +1195,10 @@ interface FacetMatch {
 const MATCH_LABEL: Record<LibraryMatch, string> = { any: "any", all: "all", none: "none", missing: "missing" };
 
 /** One quiet line under a facet's title: how its ticks select records. Text
- *  segments, not a toolbar; the current one takes the warm fill. In `missing`
- *  the line ends with how many records have no value. */
-function FacetMatchRow({ title, match }: { title: string; match: FacetMatch }) {
+ *  segments, not a toolbar; the current one takes the warm fill. `note` ends
+ *  the line (how many records have no value, or how many a range keeps); the
+ *  slot is always there, so the row never changes height. */
+function FacetMatchRow({ title, match, note }: { title: string; match: Pick<FacetMatch, "mode" | "onChange" | "multi">; note: string }) {
   const modes: LibraryMatch[] = match.multi ? ["any", "all", "none", "missing"] : ["any", "none", "missing"];
   return (
     <div data-component="FacetMatchRow" className="flex items-center gap-0.5 h-5 px-2">
@@ -1141,9 +1220,116 @@ function FacetMatchRow({ title, match }: { title: string; match: FacetMatch }) {
         ))}
       </div>
       <span data-part="missing" aria-live="polite" className="ms-auto text-meta tabular-nums text-ink-tertiary">
-        {match.mode === "missing" ? `${match.missing.toLocaleString()} without` : ""}
+        {note}
       </span>
     </div>
+  );
+}
+
+/** What a range facet's card reads from the counting pass. */
+interface RangeStats {
+  /** Records its own bounds and mode keep, over the other facets. */
+  kept: number;
+  missing: number;
+  min: number;
+  max: number;
+}
+
+/* ── Range facet card — a numeric or date property flagged for filtering
+   (Uwazi's numeric and date filters), with the same Match row. ── */
+
+function RangeFacetCard({
+  def,
+  bounds,
+  stats,
+  onChange,
+  onClear,
+  mode,
+  onMode,
+}: {
+  def: LibraryRangeDef;
+  bounds: RangeBounds;
+  stats: RangeStats | undefined;
+  onChange: (b: RangeBounds) => void;
+  onClear: () => void;
+  mode: LibraryMatch;
+  onMode: (m: LibraryMatch) => void;
+}) {
+  const bounded = !!bounds.from || !!bounds.to;
+  const narrowing = bounded || mode !== "any";
+  const note =
+    mode === "missing"
+      ? `${(stats?.missing ?? 0).toLocaleString()} without`
+      : bounded
+        ? `${(stats?.kept ?? 0).toLocaleString()} match`
+        : "";
+  // Lowest and highest value over the other facets, as the boxes' hints.
+  const hint = (n: number | undefined) =>
+    n === undefined || !Number.isFinite(n) ? "" : def.kind === "number" ? n.toLocaleString() : "";
+  const missingMode = mode === "missing";
+  return (
+    <section data-component="RangeFacetCard" className={`${FACET_CARD} space-y-1.5`}>
+      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
+        <h2 data-part="title" className="text-tab font-semibold text-ink truncate">{def.label}</h2>
+        {narrowing && (
+          <button
+            type="button"
+            data-part="clear"
+            aria-label={`Clear ${def.label}`}
+            onClick={onClear}
+            className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+          >
+            <X size={11} aria-hidden />
+            Clear
+          </button>
+        )}
+      </header>
+      <FacetMatchRow title={def.label} match={{ mode, onChange: onMode, multi: def.multi }} note={note} />
+      <div
+        data-part="range"
+        className={`px-1 pb-0.5 flex items-center gap-1.5 transition-opacity ${missingMode ? "opacity-40" : ""}`}
+        ref={(el) => el?.toggleAttribute("inert", missingMode)}
+      >
+        {def.kind === "date" ? (
+          <>
+            <DateBox value={bounds.from} onChange={(v) => onChange({ ...bounds, from: v })} ariaLabel={`${def.label} from`} />
+            <span aria-hidden className="text-ink-tertiary text-xs shrink-0">→</span>
+            <DateBox value={bounds.to} onChange={(v) => onChange({ ...bounds, to: v })} ariaLabel={`${def.label} to`} />
+          </>
+        ) : (
+          <>
+            <NumberBox value={bounds.from} placeholder={hint(stats?.min)} onChange={(v) => onChange({ ...bounds, from: v })} ariaLabel={`${def.label} from`} />
+            <span aria-hidden className="text-ink-tertiary text-xs shrink-0">→</span>
+            <NumberBox value={bounds.to} placeholder={hint(stats?.max)} onChange={(v) => onChange({ ...bounds, to: v })} ariaLabel={`${def.label} to`} />
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function NumberBox({
+  value,
+  onChange,
+  ariaLabel,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel: string;
+  placeholder: string;
+}) {
+  return (
+    <input
+      type="number"
+      inputMode="decimal"
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel}
+      className="flex-1 min-w-0 w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary tabular-nums placeholder:text-ink-muted
+        focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
+    />
   );
 }
 

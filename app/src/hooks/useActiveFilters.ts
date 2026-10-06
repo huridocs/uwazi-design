@@ -15,13 +15,14 @@ import {
   libraryChainFiltersAtom,
   libraryContentFiltersAtom,
   libraryFacetMatchAtom,
+  libraryRangeFiltersAtom,
   type LibraryMatch,
 } from "../atoms/library";
-import { inheritedKey } from "../utils/libraryFilter";
+import { inheritedKey, rangeKey } from "../utils/libraryFilter";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
 import { getEntityType } from "../data/entities";
-import { libraryInheritedDefs } from "../utils/libraryFacets";
+import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
 
 export interface ActiveFilter {
   id: string;
@@ -57,6 +58,7 @@ export function useActiveFilters(): ActiveFilter[] {
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const [contentFilters, setContentFilters] = useAtom(libraryContentFiltersAtom);
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
+  const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -175,6 +177,33 @@ export function useActiveFilters(): ActiveFilter[] {
       );
     }
 
+    // A range is one chip: its bounds, read through its mode.
+    for (const def of libraryRangeDefs(dataSource)) {
+      const key = rangeKey(def.name);
+      const mode: LibraryMatch = facetMatch[key] ?? "any";
+      const b = rangeFilters[def.name];
+      const clear = () => {
+        setRangeFilters((s) => {
+          const next = { ...s };
+          delete next[def.name];
+          return next;
+        });
+        resetMatch(key)();
+      };
+      if (mode === "missing") {
+        out.push({ id: `range-${def.name}`, group: def.label, label: `No ${def.label.toLowerCase()}`, remove: clear });
+        continue;
+      }
+      if (!b?.from && !b?.to) continue;
+      const span = `${b.from || "…"} → ${b.to || "…"}`;
+      out.push({
+        id: `range-${def.name}`,
+        group: mode === "any" ? def.label : `${def.label} · ${mode}`,
+        label: mode === "none" ? `${def.label} not ${span}` : `${def.label} ${span}`,
+        remove: clear,
+      });
+    }
+
     for (const [key, vals] of Object.entries(chainFilters))
       for (const [v, on] of Object.entries(vals))
         if (on)
@@ -205,6 +234,7 @@ export function useActiveFilters(): ActiveFilter[] {
     contentFilters,
     setContentFilters,
     facetMatch,
+    rangeFilters,
     dataSource,
     language,
     clearSearch,
@@ -218,5 +248,6 @@ export function useActiveFilters(): ActiveFilter[] {
     setInheritedFilters,
     setChainFilters,
     setFacetMatch,
+    setRangeFilters,
   ]);
 }

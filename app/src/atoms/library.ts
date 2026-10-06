@@ -10,7 +10,7 @@ import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
-import { inheritedKey, type LibraryMatch } from "../utils/libraryFilter";
+import { inheritedKey, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -355,6 +355,10 @@ export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
  *  "descriptor" or `inheritedKey(propId)`. Absent = any. */
 export type { LibraryMatch };
 export const libraryFacetMatchAtom = atom<Record<string, LibraryMatch>>({});
+
+/** Range facets' bounds as typed, by property name: numbers, or "yyyy-mm-dd"
+ *  days for date properties. "" = open on that side. */
+export const libraryRangeFiltersAtom = atom<Record<string, RangeBounds>>({});
 
 /** Date-range filter on the entity's representative date (e.g. CEJIL `Fecha`).
  *  ISO `yyyy-mm-dd`; "" = open-ended on that side. */
@@ -948,6 +952,7 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(libraryDescriptorFiltersAtom, {});
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
+  set(libraryRangeFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -971,6 +976,7 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
+  set(libraryRangeFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -990,6 +996,7 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
+  set(libraryRangeFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -1015,6 +1022,13 @@ export const libraryActiveFilterCountAtom = atom((get) => {
     ...Object.keys(match).filter((k) => k.startsWith("inh:")).map((k) => k.slice(4)),
   ]);
   for (const propId of keys) n += ticks(inheritedKey(propId), inherited[propId] ?? {});
+  // A range counts once: bounds set, or `missing`.
+  const ranges = get(libraryRangeFiltersAtom);
+  const names = new Set([
+    ...Object.entries(ranges).filter(([, b]) => b.from || b.to).map(([k]) => k),
+    ...Object.keys(match).filter((k) => k.startsWith("range:") && match[k] === "missing").map((k) => k.slice(6)),
+  ]);
+  n += names.size;
   for (const vals of Object.values(get(libraryChainFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   for (const vals of Object.values(get(libraryContentFiltersAtom)))

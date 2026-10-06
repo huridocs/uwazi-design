@@ -49,6 +49,7 @@ import {
   libraryDateToAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
+  libraryRangeFiltersAtom,
   libraryDrawnIdsAtom,
   libraryFieldColumnsAtom,
   libraryPropertySortsAtom,
@@ -99,10 +100,10 @@ import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDr
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryEvidenceView } from "../components/library/LibraryEvidenceView";
 import { passageFileIdAtom } from "../atoms/files";
-import { libraryInheritedDefs } from "../utils/libraryFacets";
+import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
 import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
 import { templatesAtom } from "../atoms/templates";
-import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
+import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, activeRangesOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
 import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from "../utils/librarySnippets";
@@ -281,6 +282,7 @@ export function LibraryView() {
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const facetMatch = useAtomValue(libraryFacetMatchAtom);
+  const rangeFilters = useAtomValue(libraryRangeFiltersAtom);
   const countryMode = facetMatch.country ?? "any";
   const descriptorMode = facetMatch.descriptor ?? "any";
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
@@ -610,6 +612,8 @@ export function LibraryView() {
   const inheritedKey = activeInherited
     .map((f) => `${f.def.propId}:${f.mode}:${[...f.values].join("|")}`)
     .join(";");
+  const activeRanges = activeRangesOf(rangeFilters, facetMatch, libraryRangeDefs(dataSource));
+  const rangesKey = activeRanges.map((r) => `${r.def.name}:${r.mode}:${r.lo}:${r.hi}`).join(";");
   // Relationship-chain filters: the chains the templates declare, over the
   // collection's graph (null until its corpus has loaded).
   const chainTemplates = useAtomValue(templatesAtom(dataSource));
@@ -648,6 +652,7 @@ export function LibraryView() {
       fromMs,
       toMs,
       inherited: activeInherited,
+      ranges: activeRanges,
       chains: activeChains,
       q,
       searchIndex,
@@ -674,6 +679,7 @@ export function LibraryView() {
       fromMs,
       toMs,
       inheritedKey,
+      rangesKey,
       activeChains,
       q,
       searchIndex,
@@ -790,7 +796,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -826,7 +832,7 @@ export function LibraryView() {
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
     () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
   // doesn't shrink the grid to that single lane.
@@ -835,7 +841,7 @@ export function LibraryView() {
       viewMode === "timeline" && !cejilLoading
         ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
         : [],
-    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
+    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
   );
 
   /* Thumbnail Auto reads how many of these results have an image. A layout

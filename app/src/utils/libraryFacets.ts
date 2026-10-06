@@ -130,6 +130,58 @@ function withPropertyFacets(
   return out;
 }
 
+/** A range facet: a template property flagged `filter` that holds numbers or
+ *  dates (numeric, date, multidate, daterange, multidaterange). Properties
+ *  sharing a name are one facet, as with value facets. */
+export interface LibraryRangeDef {
+  name: string;
+  label: string;
+  kind: "number" | "date";
+  templateIds: string[];
+  defaultFilter?: boolean;
+  /** multidate / multidaterange: a record can hold several, so `all` applies. */
+  multi: boolean;
+}
+
+const RANGED: Record<string, "number" | "date"> = {
+  numeric: "number",
+  date: "date",
+  multidate: "date",
+  daterange: "date",
+  multidaterange: "date",
+};
+
+const rangeCache = new WeakMap<object, LibraryRangeDef[]>();
+/** The range facets of a collection's templates, `defaultfilter` first.
+ *  Cached per template list. */
+export function libraryRangeDefs(source: DataSource): LibraryRangeDef[] {
+  const templates = templatesMirror(source);
+  const hit = rangeCache.get(templates);
+  if (hit) return hit;
+  const byName = new Map<string, LibraryRangeDef>();
+  for (const t of templates)
+    for (const p of t.properties) {
+      const kind = RANGED[p.type];
+      if (!p.filter || !kind) continue;
+      const multi = p.type === "multidate" || p.type === "multidaterange";
+      const seen = byName.get(p.name);
+      if (seen) {
+        // A name typed as a number in one template and a date in another
+        // cannot share one range; the first template's kind holds.
+        if (seen.kind !== kind) continue;
+        seen.templateIds.push(t.id);
+        if (p.defaultfilter) seen.defaultFilter = true;
+        if (multi) seen.multi = true;
+        continue;
+      }
+      byName.set(p.name, { name: p.name, label: p.label, kind, templateIds: [t.id], multi, ...(p.defaultfilter ? { defaultFilter: true } : {}) });
+    }
+  const all = [...byName.values()];
+  const out = [...all.filter((d) => d.defaultFilter), ...all.filter((d) => !d.defaultFilter)];
+  rangeCache.set(templates, out);
+  return out;
+}
+
 /** An entity's value(s) for an inherited facet — read from the adapter-supplied
  *  `inherited` map (CEJIL) or the mock entityMetadata (type-restricted); a
  *  property facet reads the template property. */
