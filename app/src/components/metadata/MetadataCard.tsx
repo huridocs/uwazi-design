@@ -1,4 +1,5 @@
 import { ReactNode, useId } from "react";
+import { FieldEvidence } from "./FieldEvidence";
 
 interface MetadataCardProps {
   title: string;
@@ -15,6 +16,9 @@ interface MetadataCardProps {
   /** The `data-component` the card stamps — the wrapping component's name
    *  (DocumentCard, ConnectionGroupCard…) where there is one. */
   component?: string;
+  /** The template property the card draws. Where the collection records
+   *  per-property evidence, the head carries "Why we believe this". */
+  fieldId?: string;
 }
 
 /** The card head NAMES the thing in the card — a metadata field, a connection,
@@ -45,6 +49,7 @@ export function MetadataCard({
   className = "",
   headingLevel = 3,
   component = "MetadataCard",
+  fieldId,
 }: MetadataCardProps) {
   const Heading = headingLevel === 4 ? "h4" : "h3";
   const titleId = useId();
@@ -65,6 +70,7 @@ export function MetadataCard({
           >
             {title}
           </Heading>
+          {fieldId && <FieldEvidence fieldId={fieldId} label={title} />}
         </header>
         {children}
       </div>

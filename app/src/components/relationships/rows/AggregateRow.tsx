@@ -8,6 +8,7 @@ import { Relationship } from "../../../utils/relationships";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { DirectionGlyph } from "../DirectionGlyph";
+import { RefStatus } from "./RefStatus";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
@@ -174,7 +175,10 @@ export function AggregateRow({
           </>
         )}
       </div>
-      {countBadge}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <RefStatus verification={rel.verification} />
+        {countBadge}
+      </div>
     </div>
   );
 
@@ -225,7 +229,10 @@ export function AggregateRow({
               </>
             )}
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <RefStatus verification={rel.verification} />
+            {countBadge}
+          </div>
         </div>
         {!hidePill && !hideRelLabel && (
           <div data-part="caption" className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">

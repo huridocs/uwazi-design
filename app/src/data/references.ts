@@ -12,6 +12,17 @@ export const NO_LABEL_RELATION_TYPE = "no_label";
 
 export type Direction = "outgoing" | "incoming";
 
+/** How well a link is sourced, where a collection records it (the Nepal
+ *  corpus): two independent publishers, one, or sources that conflict. */
+export type Verification = "confirmed" | "single-source" | "disputed";
+
+/** When a link held (an office, a membership): epoch seconds, either end
+ *  open. */
+export interface RefPeriod {
+  from: number | null;
+  to: number | null;
+}
+
 export interface TextSelection {
   text: string;
   /** 1-based. 0 for a passage of a source with no pages (a web article in the
@@ -49,6 +60,12 @@ export interface Reference {
    *  sharing a hubId belong to the same hub (Uwazi's n-ary relationship
    *  container — see deriveHubs). */
   hubId?: string;
+  /** The link's own status, where the collection records one. Absent in the
+   *  Sample and CEJIL, which say nothing about a link's sourcing. */
+  verification?: Verification;
+  /** When the link held, where the collection dates it. Absent = not
+   *  time-bound. */
+  period?: RefPeriod;
   createdAt: string;
 }
 

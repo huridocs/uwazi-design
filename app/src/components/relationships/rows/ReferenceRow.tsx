@@ -15,6 +15,7 @@ import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { RowEntityPill } from "./RowParts";
+import { RefStatus } from "./RefStatus";
 import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 export interface ReferenceRowProps {
@@ -63,6 +64,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   }, [scrollToRef, reference.id, setScrollToRef, setActiveRefId]);
 
   const selection = reference.sourceSelection;
+  const status = <RefStatus verification={reference.verification} period={reference.period} />;
   // A web source's quote has no page: no tag, nothing to jump to.
   const page = selectionPage(selection);
 
@@ -128,7 +130,10 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
           </span>
         )}
       </div>
-      {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+      <div className="flex items-center gap-1.5 shrink-0">
+        {status}
+        {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+      </div>
     </div>
   );
 
@@ -158,6 +163,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {hideRelLabel && deleteButton}
+            {status}
             <span data-part="type" className="text-meta text-ink-tertiary">
               {type?.name ?? ""}
             </span>
@@ -182,11 +188,10 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
               className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
               fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
             />
-            {page !== undefined && (
-              <span className="shrink-0">
-                <PageTag page={page} onClick={jumpToPassage} />
-              </span>
-            )}
+            <span className="shrink-0 flex items-center gap-1.5">
+              {status}
+              {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+            </span>
           </div>
         ) : (
           <FadeTruncate

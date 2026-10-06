@@ -97,6 +97,14 @@ export const relAnchoringFiltersAtom = atom<Record<string, boolean>>({});
  *  type with references in each direction). See `directionClassifier`. */
 export const relDirectionFiltersAtom = atom<Record<string, boolean>>({});
 
+/** Verification facet: a link's own status (`Reference.verification`). Shown
+ *  only where references carry one. */
+export const relVerificationFiltersAtom = atom<Record<string, boolean>>({});
+
+/** "As of": an ISO day (yyyy-mm-dd) or "" for none. With a day set, a dated
+ *  link shows only if it held on that day (`refHoldsAt`); undated links stay. */
+export const relAsOfAtom = atom<string>("");
+
 /* ── Scoped panel state ───────────────────────────────────────────────────────
    Two Relationships panels can be on screen at once (the host's and a connected
    entity's in the overlay or Library drawer preview), and they must not share
@@ -148,6 +156,8 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relInheritedFiltersAtom, scope), {});
   set(relAtomFor(relAnchoringFiltersAtom, scope), {});
   set(relAtomFor(relDirectionFiltersAtom, scope), {});
+  set(relAtomFor(relVerificationFiltersAtom, scope), {});
+  set(relAtomFor(relAsOfAtom, scope), "");
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
   set(relAtomFor(relWhenYearsAtom, scope), null);
 });
@@ -218,6 +228,8 @@ function countFilters(get: <T>(base: Scopable<T>) => T): number {
   n += Object.values(get(relTargetDescriptorFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relAnchoringFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relDirectionFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relVerificationFiltersAtom)).filter(Boolean).length;
+  if (get(relAsOfAtom)) n++;
   for (const vals of Object.values(get(relInheritedFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   if (get(activeClusterRefIdsAtom)) n++;

@@ -15,8 +15,10 @@ import {
   relInheritedFiltersAtom,
   relAnchoringFiltersAtom,
   relDirectionFiltersAtom,
+  relVerificationFiltersAtom,
+  relAsOfAtom,
 } from "../../atoms/filters";
-import { anchoringOf, directionClassifier } from "../../utils/relationships";
+import { anchoringOf, asOfSeconds, directionClassifier, refHoldsAt } from "../../utils/relationships";
 import { languageAtom } from "../../atoms/language";
 import { getEntity } from "../../data/entities";
 import { getEntityProp } from "../../data/entityMetadata";
@@ -44,6 +46,8 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
   const inheritedFilters = useRelAtomValue(relInheritedFiltersAtom);
   const anchoringFilters = useRelAtomValue(relAnchoringFiltersAtom);
   const directionFilters = useRelAtomValue(relDirectionFiltersAtom);
+  const verificationFilters = useRelAtomValue(relVerificationFiltersAtom);
+  const asOf = useRelAtomValue(relAsOfAtom);
   const language = useAtomValue(languageAtom);
 
   return useMemo<Reference[]>(() => {
@@ -66,6 +70,15 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
       const set = new Set(activeAnchoring);
       result = result.filter((r) => set.has(anchoringOf(r)));
     }
+    const activeVerification = Object.entries(verificationFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activeVerification.length > 0) {
+      const set = new Set(activeVerification);
+      result = result.filter((r) => !!r.verification && set.has(r.verification));
+    }
+    const asOfAt = asOfSeconds(asOf);
+    if (asOfAt !== null) result = result.filter((r) => refHoldsAt(r, asOfAt));
     const activeDirections = Object.entries(directionFilters)
       .filter(([, v]) => v)
       .map(([k]) => k);
@@ -184,6 +197,8 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     inheritedFilters,
     anchoringFilters,
     directionFilters,
+    verificationFilters,
+    asOf,
     language,
   ]);
 }

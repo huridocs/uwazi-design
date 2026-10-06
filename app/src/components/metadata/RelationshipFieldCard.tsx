@@ -69,6 +69,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
 
   return (
     <MetadataCard
+      fieldId={field.id}
       title={field.label}
       component="RelationshipFieldCard"
       icon={<Link2 size={11} className="text-carbon" aria-hidden />}

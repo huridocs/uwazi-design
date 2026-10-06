@@ -57,6 +57,11 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
 - A selection on page 0 is a quote from a source with no pages (the Nepal corpus's web
   articles): read pages through `selectionPage()`, which returns undefined for it, so no page
   tag or jump is drawn.
+- `Reference.verification` (confirmed / single-source / disputed) and `Reference.period` (when a
+  link held) are optional; only Nepal fills them. Rows show them through `RefStatus`; the panel's
+  Verification facet and "As of" day self-hide where no reference carries them. Per-property
+  evidence is `data/fieldEvidence.ts` (a provider per corpus; Nepal's `evidence.json` loads on
+  first use, not with the collection) and shows as "Why we believe this" in the card head.
 - The list view renders references; the tree and graph render relationships.
 - Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
 

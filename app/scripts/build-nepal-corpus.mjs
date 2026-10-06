@@ -12,6 +12,7 @@
 //   public/nepal-data/entities.json     records in Uwazi's metadata shape
 //   public/nepal-data/relationships.json  references, with anchor quotes
 //   public/nepal-data/thesauri.json     select vocabularies
+//   public/nepal-data/evidence.json     per-property evidence, by record id
 //   public/nepal-data/docs.json         the bundled documents: issuer, source,
 //                                       licence basis and per-page OCR text
 //   public/nepal-data/media/            the bundled Commons images, as copied
@@ -34,7 +35,10 @@
 //   type; it is "targets" here.
 // - A source whose title is its id gets one built from the record (see
 //   `titleFor`).
-// - Per-property evidence and reference notes are not shipped. The reference's
+// - Per-property evidence ships in its own file, evidence.json, keyed by record
+//   id: the properties a set of sources backs, those sources, a verification
+//   status and Research's note. It is fetched when a record first shows it,
+//   not with the collection. Reference notes are not shipped; the reference's
 //   verification status and its date range are.
 //
 // - Media items: the `file` image property holds the bundled copy's public
@@ -412,6 +416,31 @@ writeFileSync(join(srcOut, "relationTypes.json"), pretty(relationTypes));
 writeFileSync(join(pubOut, "entities.json"), JSON.stringify(entities));
 writeFileSync(join(pubOut, "relationships.json"), JSON.stringify(relationships));
 writeFileSync(join(pubOut, "thesauri.json"), JSON.stringify(thesauri));
+// Evidence: `property` is one name, a comma-joined list or an array; it ships
+// as an array of names. A source that is not a record of the collection is
+// an error, as for references.
+const evidence = {};
+let evidenceRows = 0;
+for (const e of seedEntities) {
+  if (!e.evidence?.length) continue;
+  evidence[e.id] = e.evidence.map((x) => {
+    if (!VERIFICATION.has(x.verification)) throw new Error(`${e.id}: evidence verification ${x.verification}`);
+    for (const s of x.sources) if (!titleOf.has(s)) throw new Error(`${e.id}: evidence source ${s} is not a record`);
+    evidenceRows++;
+    const props = (Array.isArray(x.property) ? x.property : String(x.property).split(","))
+      .map((p) => p.trim())
+      .filter(Boolean);
+    return {
+      props,
+      sources: x.sources,
+      verification: x.verification,
+      ...(x.note ? { note: x.note } : {}),
+      ...(x.inferred ? { inferred: true } : {}),
+    };
+  });
+}
+writeFileSync(join(pubOut, "evidence.json"), JSON.stringify(evidence));
+console.log(`evidence: ${evidenceRows} rows on ${Object.keys(evidence).length} records`);
 const attached = new Set(entities.flatMap((e) => e.docs ?? []));
 writeFileSync(join(pubOut, "docs.json"), JSON.stringify([...docMeta.values()].filter((d) => attached.has(d.id))));
 

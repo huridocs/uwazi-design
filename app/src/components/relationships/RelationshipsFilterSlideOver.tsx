@@ -10,12 +10,17 @@ import {
   relInheritedFiltersAtom,
   relAnchoringFiltersAtom,
   relDirectionFiltersAtom,
+  relVerificationFiltersAtom,
+  relAsOfAtom,
 } from "../../atoms/filters";
 import {
   ANCHORING_LABEL,
   DIRECTION_LABEL,
+  VERIFICATION_LABEL,
   anchoringOf,
+  asOfSeconds,
   directionClassifier,
+  refHoldsAt,
   type Anchoring,
   type DirectionFacet,
 } from "../../utils/relationships";
@@ -28,6 +33,9 @@ import { thesaurusParentOf } from "../../utils/thesauri";
 import { relationLabel } from "../../utils/inheritance";
 import { entityCountries } from "../../utils/libraryFacets";
 import { FacetSection } from "../shared/FacetSection";
+import { DateInput } from "../shared/DateInput";
+import { VerificationDot } from "./rows/RefStatus";
+import { X } from "lucide-react";
 import { t } from "../../utils/i18n";
 
 /**
@@ -72,6 +80,8 @@ export function RelationshipsFilterSlideOver() {
   );
   const [anchoringFilters, setAnchoringFilters] = useRelAtom(relAnchoringFiltersAtom);
   const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
+  const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
+  const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
   // Against the unfiltered set, like the pipeline: see `directionClassifier`.
   const directionOf = useMemo(() => directionClassifier(references), [references]);
 
@@ -102,7 +112,7 @@ export function RelationshipsFilterSlideOver() {
   // Faceted counts: each facet's numbers reflect the OTHER active facets, so the
   // counts stay trustworthy as you narrow (a facet never counts against its own
   // selection, so its options don't vanish). Mirrors the Library's faceted counts.
-  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, totalRels } =
+  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, byVerification, totalRels } =
     useMemo(() => {
       const ids = (rec: Record<string, boolean>) =>
         new Set(Object.entries(rec).filter(([, v]) => v).map(([k]) => k));
@@ -112,10 +122,16 @@ export function RelationshipsFilterSlideOver() {
       const selDsc = ids(descriptorFilters);
       const selAnc = ids(anchoringFilters);
       const selDir = ids(directionFilters);
+      const selVer = ids(verificationFilters);
+      const asOfAt = asOfSeconds(asOf);
       const ancOk = (r: (typeof references)[number]) =>
         selAnc.size === 0 || selAnc.has(anchoringOf(r));
       const dirOk = (r: (typeof references)[number]) =>
         selDir.size === 0 || selDir.has(directionOf(r));
+      const verOk = (r: (typeof references)[number]) =>
+        selVer.size === 0 || (!!r.verification && selVer.has(r.verification));
+      // "As of" is not a facet with counts of its own: it narrows every count.
+      const asOk = (r: (typeof references)[number]) => asOfAt === null || refHoldsAt(r, asOfAt);
 
       const relOk = (r: (typeof references)[number]) =>
         selRel.size === 0 || selRel.has(r.relationType);
@@ -147,19 +163,24 @@ export function RelationshipsFilterSlideOver() {
       const seenD = new Set<string>();
       const anchoring = new Map<string, number>();
       const direction = new Map<string, number>();
+      const verification = new Map<string, number>();
       for (const ref of references) {
+        if (!asOk(ref)) continue;
         const entity = getEntity(ref.targetEntityId);
         const rest = relOk(ref) && entOk(ref) && ctyOk(ref) && dscOk(ref);
-        if (rest && dirOk(ref)) {
+        if (rest && dirOk(ref) && verOk(ref)) {
           const a = anchoringOf(ref);
           anchoring.set(a, (anchoring.get(a) ?? 0) + 1);
         }
-        if (rest && ancOk(ref)) {
+        if (rest && ancOk(ref) && verOk(ref)) {
           const d = directionOf(ref);
           direction.set(d, (direction.get(d) ?? 0) + 1);
         }
-        // The two reference-shape facets narrow every count below.
-        if (!ancOk(ref) || !dirOk(ref)) continue;
+        if (rest && ancOk(ref) && dirOk(ref) && ref.verification) {
+          verification.set(ref.verification, (verification.get(ref.verification) ?? 0) + 1);
+        }
+        // The reference-shape facets narrow every count below.
+        if (!ancOk(ref) || !dirOk(ref) || !verOk(ref)) continue;
         // Per-facet: count over refs passing every OTHER facet.
         if (entOk(ref) && ctyOk(ref) && dscOk(ref))
           rel.set(ref.relationType, (rel.get(ref.relationType) ?? 0) + 1);
@@ -187,9 +208,11 @@ export function RelationshipsFilterSlideOver() {
       for (const id of selDsc) if (!descriptor.has(id)) descriptor.set(id, 0);
       for (const id of selAnc) if (!anchoring.has(id)) anchoring.set(id, 0);
       for (const id of selDir) if (!direction.has(id)) direction.set(id, 0);
+      for (const id of selVer) if (!verification.has(id)) verification.set(id, 0);
       return {
         byAnchoring: anchoring,
         byDirection: direction,
+        byVerification: verification,
         byRelType: rel,
         byEntityType: ent,
         byCountry: country,
@@ -206,6 +229,8 @@ export function RelationshipsFilterSlideOver() {
       descriptorMode,
       anchoringFilters,
       directionFilters,
+      verificationFilters,
+      asOf,
       directionOf,
     ]);
 
@@ -217,6 +242,13 @@ export function RelationshipsFilterSlideOver() {
     () => new Set(references.map(directionOf)).size,
     [references, directionOf],
   );
+  // Only where links carry a status or a period (Nepal); the Sample and CEJIL
+  // record neither, so their panel is unchanged.
+  const showVerification =
+    useMemo(() => references.some((r) => r.verification), [references]) ||
+    Object.values(verificationFilters).some(Boolean);
+  const datedCount = useMemo(() => references.filter((r) => r.period).length, [references]);
+  const showAsOf = datedCount > 0 || !!asOf;
   const showAnchoring = anchoringKinds > 1 || Object.values(anchoringFilters).some(Boolean);
   const showDirection = directionKinds > 1 || Object.values(directionFilters).some(Boolean);
 
@@ -241,6 +273,20 @@ export function RelationshipsFilterSlideOver() {
 
   return (
     <>
+      {showVerification && (
+        <FacetSection
+          title={t("System", "Verification")}
+          total={totalRels}
+          entries={facetEntries(VERIFICATION_LABEL, byVerification, verificationFilters)}
+          selected={verificationFilters}
+          onToggle={(id) => setVerificationFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => setVerificationFilters({})}
+          label={(id) => VERIFICATION_LABEL[id as keyof typeof VERIFICATION_LABEL] ?? id}
+          renderMarker={(id) => <VerificationDot status={id as keyof typeof VERIFICATION_LABEL} />}
+          defaultExpanded
+        />
+      )}
+      {showAsOf && <AsOfSection value={asOf} onChange={setAsOf} dated={datedCount} />}
       {showAnchoring && (
         <FacetSection
           title={t("System", "Anchoring")}
@@ -371,5 +417,44 @@ export function RelationshipsFilterSlideOver() {
         );
       })}
     </>
+  );
+}
+
+/** "As of": one day. A link with a period (an office, a membership) shows only
+ *  if it held that day; a link with no period is not time-bound and stays. Not
+ *  a facet, so no checkbox rows: a date field under the same header as one. */
+function AsOfSection({ value, onChange, dated }: { value: string; onChange: (iso: string) => void; dated: number }) {
+  return (
+    <div data-component="AsOfSection" className="bleed" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+      <div data-part="header" className="flex items-center gap-2 py-2.5">
+        <span data-part="title" className="flex-1 text-tab font-semibold text-ink">
+          {t("System", "As of")}
+        </span>
+        {value ? (
+          <button
+            type="button"
+            data-part="clear"
+            onClick={() => onChange("")}
+            className="shrink-0 inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+          >
+            <X size={11} />
+            Clear
+          </button>
+        ) : (
+          <span data-part="total" className="shrink-0 text-meta text-ink-tertiary tabular-nums">
+            {dated} dated
+          </span>
+        )}
+      </div>
+      <div data-part="body" className="pb-3 space-y-1.5">
+        <DateInput
+          value={value}
+          onChange={onChange}
+          aria-label="Show links that held on"
+          className="w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
+        />
+        <p className="text-meta text-ink-tertiary">Dated links show only if they held that day. Undated links stay.</p>
+      </div>
+    </div>
   );
 }

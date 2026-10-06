@@ -6,6 +6,7 @@
 import { asset } from "../../utils/asset";
 import type { NepalDoc, NepalEntity, NepalReference, NepalThesaurus } from "./types";
 import type * as ProfileParts from "./profileParts";
+import type { FieldEvidence } from "../fieldEvidence";
 
 export interface NepalCorpus {
   entities: NepalEntity[];
@@ -63,6 +64,30 @@ export function loadNepalData(): Promise<NepalCorpus> {
   }
   return promise;
 }
+
+/** Per-property evidence (evidence.json, about 1.1 MB): not part of the
+ *  collection load. Fetched the first time a record shows its sources. */
+let evidence: Record<string, FieldEvidence[]> | null = null;
+let evidencePromise: Promise<Record<string, FieldEvidence[]>> | null = null;
+export function loadNepalEvidence(): Promise<Record<string, FieldEvidence[]>> {
+  if (evidence) return Promise.resolve(evidence);
+  if (!evidencePromise) {
+    evidencePromise = fetch(asset("/nepal-data/evidence.json"))
+      .then((r) => {
+        if (!r.ok) throw new Error(`Nepal: failed to load evidence.json (${r.status})`);
+        return r.json();
+      })
+      .then((x: Record<string, FieldEvidence[]>) => (evidence = x))
+      .catch((err) => {
+        evidencePromise = null;
+        throw err;
+      });
+  }
+  return evidencePromise;
+}
+/** A record's evidence rows: undefined until loaded, [] when it has none. */
+export const nepalEvidence = (id: string): FieldEvidence[] | undefined =>
+  evidence ? (evidence[id] ?? []) : undefined;
 
 export const nepalLoaded = () => corpus !== null;
 export const nepalCorpus = () => corpus;

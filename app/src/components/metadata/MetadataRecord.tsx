@@ -8,6 +8,7 @@ import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
+import { EvidenceEntityContext } from "./FieldEvidence";
 import { ImageCard } from "./ImageCard";
 import { LazyMediaItemCard } from "./lazyMediaItemCard";
 import { ImageLightbox } from "../shared/ImageLightbox";
@@ -59,7 +60,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
          card, and one field can answer to several property names. */
       data-field-keys={item.keyAliases?.join(" ")}
     >
-      <MetadataCard title={item.label} hideTitle={item.noLabel} component="MetadataFieldBlock">
+      <MetadataCard title={item.label} hideTitle={item.noLabel} component="MetadataFieldBlock" fieldId={item.id}>
         <FillableValue item={item} />
       </MetadataCard>
     </div>
@@ -245,6 +246,7 @@ export function MetadataRecord({
 
   return (
     <>
+    <EvidenceEntityContext.Provider value={profile.id}>
     <MasonryGrid containerRef={rootRef} component="MetadataRecord">
       {profile.mediaItem && (
         // Full width, so nothing sits in a hole beside it; the card caps its
@@ -321,6 +323,7 @@ export function MetadataRecord({
           </MasonryItem>
         ))}
     </MasonryGrid>
+    </EvidenceEntityContext.Provider>
     {/* Outside the grid on purpose — see RecordFooter. */}
     <RecordFooter entityId={profile.id} />
     <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />

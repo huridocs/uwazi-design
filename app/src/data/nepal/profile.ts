@@ -7,10 +7,11 @@ import type { AnyMetadataField } from "../metadata";
 import type { EntityProfile } from "../entityProfiles";
 import type { Reference } from "../references";
 import { registerEntityPropReader } from "../entityMetadata";
+import { registerEvidenceProvider } from "../fieldEvidence";
 import { recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
 import { templateMirror } from "../templates/mirror";
 import { nepalRelTypeName, nepalTemplateById } from "./schema";
-import { nepalEntity, nepalPrimaryDoc, nepalProfileParts, nepalRefsByEntity } from "./load";
+import { loadNepalEvidence, nepalEvidence, nepalEntity, nepalPrimaryDoc, nepalProfileParts, nepalRefsByEntity } from "./load";
 import { displayValues } from "./adapt";
 
 export { isNepalEntity } from "./load";
@@ -67,6 +68,12 @@ registerEntityPropReader((entityId, propName) => {
   return values.length ? values.join(", ") : undefined;
 });
 
+registerEvidenceProvider({
+  covers: (id) => !!nepalEntity(id),
+  rows: nepalEvidence,
+  load: loadNepalEvidence,
+});
+
 const refCache = new Map<string, Reference[]>();
 
 /** This record's references — both directions — as the Relationships tab's
@@ -90,6 +97,8 @@ export function nepalReferencesFor(id: string): Reference[] {
       relationType: nepalRelTypeName.get(r.type) ?? r.type,
       direction: outgoing ? "outgoing" : "incoming",
       ...(r.quote ? { sourceSelection: { text: r.quote, page: pageOf(r), top: 0, left: 0, width: 0, height: 0 } } : {}),
+      verification: r.verification,
+      ...(r.date ? { period: r.date } : {}),
       createdAt: "",
     };
   });

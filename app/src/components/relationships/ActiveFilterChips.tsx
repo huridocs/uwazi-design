@@ -1,3 +1,4 @@
+import { formatAtPrecision } from "../../utils/dateFormat";
 import { useRelAtom } from "../../hooks/useEntityScope";
 import {
   relSearchQueryAtom,
@@ -9,9 +10,11 @@ import {
   relInheritedFiltersAtom,
   activeClusterRefIdsAtom,
   relAnchoringFiltersAtom,
+  relVerificationFiltersAtom,
+  relAsOfAtom,
   relDirectionFiltersAtom,
 } from "../../atoms/filters";
-import { ANCHORING_LABEL, DIRECTION_LABEL, type Anchoring, type DirectionFacet } from "../../utils/relationships";
+import { ANCHORING_LABEL, DIRECTION_LABEL, VERIFICATION_LABEL, asOfSeconds, type Anchoring, type DirectionFacet } from "../../utils/relationships";
 import { getEntityType } from "../../data/entities";
 import { relationLabel } from "../../utils/inheritance";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
@@ -36,6 +39,8 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const [cluster, setCluster] = useRelAtom(activeClusterRefIdsAtom);
   const [anchoringFilters, setAnchoringFilters] = useRelAtom(relAnchoringFiltersAtom);
   const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
+  const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
+  const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
@@ -43,6 +48,8 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const activeDescriptors = Object.entries(descriptorFilters).filter(([, v]) => v).map(([k]) => k);
   const activeAnchoring = Object.entries(anchoringFilters).filter(([, v]) => v).map(([k]) => k);
   const activeDirections = Object.entries(directionFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeVerification = Object.entries(verificationFilters).filter(([, v]) => v).map(([k]) => k);
+  const asOfAt = asOfSeconds(asOf);
   const activeInherited = Object.entries(inheritedFilters).flatMap(([propId, vals]) =>
     Object.entries(vals).filter(([, v]) => v).map(([value]) => ({ propId, value })),
   );
@@ -71,6 +78,8 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
     activeInherited.length > 0 ||
     activeAnchoring.length > 0 ||
     activeDirections.length > 0 ||
+    activeVerification.length > 0 ||
+    asOfAt !== null ||
     !!cluster;
 
   if (!hasAny) return null;
@@ -87,6 +96,19 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
         <ActiveFilterChip
           label={sort === "asc" ? "A → Z" : "Z → A"}
           onRemove={() => setSort(null)}
+        />
+      )}
+      {activeVerification.map((id) => (
+        <ActiveFilterChip
+          key={`ver-${id}`}
+          label={VERIFICATION_LABEL[id as keyof typeof VERIFICATION_LABEL] ?? id}
+          onRemove={() => setVerificationFilters(dropKey(id))}
+        />
+      ))}
+      {asOfAt !== null && (
+        <ActiveFilterChip
+          label={`As of ${formatAtPrecision(new Date(asOfAt * 1000), "day")}`}
+          onRemove={() => setAsOf("")}
         />
       )}
       {activeAnchoring.map((id) => (

@@ -1,4 +1,4 @@
-import { Direction, Reference, RelationType, selectionPage } from "../data/references";
+import { Direction, Reference, RelationType, selectionPage, type RefPeriod, type Verification } from "../data/references";
 
 export interface Relationship {
   id: string;
@@ -20,6 +20,9 @@ export interface Relationship {
    *  sourceSelection). */
   firstPage?: number;
   refIds: string[];
+  /** The backing references' status: one value when they agree, `mixed` when
+   *  they do not. Undefined when none carries a status (Sample, CEJIL). */
+  verification?: Verification | "mixed";
 }
 
 /** Hub ids that have two or more distinct member entities in `refs`. A hub
@@ -64,6 +67,7 @@ function computeRelationships(
       if (!existing.directions.includes(direction)) {
         existing.directions.push(direction);
       }
+      if (existing.verification !== ref.verification) existing.verification = "mixed";
       if (
         page !== undefined &&
         (existing.firstPage === undefined || page < existing.firstPage)
@@ -80,6 +84,7 @@ function computeRelationships(
         evidenceCount: 1,
         firstPage: page,
         refIds: [ref.id],
+        ...(ref.verification ? { verification: ref.verification } : {}),
       });
     }
   }
@@ -212,6 +217,41 @@ export const ANCHORING_LABEL: Record<Anchoring, string> = {
   anchored: "Anchored in text",
   entity: "Entity-level",
 };
+
+/** Facet, chip and row labels for a link's status, in facet order (the
+ *  Library's Verification facet uses the same words). */
+export const VERIFICATION_LABEL: Record<Verification, string> = {
+  confirmed: "Confirmed",
+  "single-source": "Single source",
+  disputed: "Disputed",
+};
+
+/** Does the link hold on `asOf` (epoch seconds)? A link with no period is not
+ *  time-bound and always holds; an open end runs to the edge of time. */
+export function refHoldsAt(ref: Reference, asOf: number): boolean {
+  const p = ref.period;
+  if (!p) return true;
+  return (p.from === null || p.from <= asOf) && (p.to === null || asOf <= p.to);
+}
+
+/** The "As of" day (yyyy-mm-dd) as epoch seconds at its UTC start, the grain
+ *  periods are stored at; null for none or an unreadable day. */
+export function asOfSeconds(iso: string): number | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? null : t / 1000;
+}
+
+/** A period as the row prints it: "2024 – 2025", "since 2025", "until 2016",
+ *  in years, because tenure is read at that grain. Ends in UTC: the build
+ *  stores Nepal wall-clock dates as UTC. */
+export function periodLabel(p: RefPeriod): string {
+  const y = (t: number) => new Date(t * 1000).getUTCFullYear();
+  if (p.from !== null && p.to !== null) return y(p.from) === y(p.to) ? String(y(p.from)) : `${y(p.from)}\u2009–\u2009${y(p.to)}`;
+  if (p.from !== null) return `since ${y(p.from)}`;
+  if (p.to !== null) return `until ${y(p.to)}`;
+  return "";
+}
 
 export type DirectionFacet = Direction | "both";
 export const DIRECTION_LABEL: Record<DirectionFacet, string> = {
