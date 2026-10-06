@@ -129,6 +129,7 @@ import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
 import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
 import { Wordmark } from "../components/shared/Wordmark";
+import { PlayMark } from "../components/shared/PlayMark";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
@@ -409,6 +410,28 @@ export function ComponentCatalog({ onReturn }: Props) {
                     <PageTag page={3} />
                     <PageTag page={12} />
                     <PageTag page={42} />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="el-play-mark" ref={reg("el-play-mark")}>
+                <CatalogEntry
+                  name="PlayMark"
+                  description="The play mark over a video's still or plain tile: a translucent paper disc with a backdrop blur and an ink triangle. Library thumbnails size it off the box height; the record's player gives it a fixed size."
+                  code={`<PlayMark className="h-[24%] min-h-5 max-h-10" />
+<PlayMark className="h-8" />`}
+                  tailwind="rounded-full bg-paper/80 backdrop-blur-sm ring-1 ring-inset ring-ink/10 text-ink/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center w-40 h-24 rounded-md bg-warm">
+                      <PlayMark className="h-8" />
+                    </span>
+                    <span className="flex items-center justify-center w-40 h-24 rounded-md bg-ink">
+                      <PlayMark className="h-8" />
+                    </span>
+                    <span className="flex items-center justify-center w-16 h-9 rounded-md bg-warm">
+                      <PlayMark className="h-5" />
+                    </span>
                   </div>
                 </CatalogEntry>
               </div>

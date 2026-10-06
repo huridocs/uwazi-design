@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Image as ImageIcon, Play, AudioLines } from "lucide-react";
+import { Image as ImageIcon, AudioLines } from "lucide-react";
+import { PlayMark } from "../shared/PlayMark";
 import type { EntityImage, PreviewKind } from "../../data/entities";
 import type { ThumbFit, ThumbFrame } from "../../atoms/library";
 import { getEntityProfile } from "../../data/entityProfiles";
@@ -101,7 +102,7 @@ export function EntityThumbnail({
  *
  *  The still covers the landscape band and the square list chip. The portrait
  *  slot is the wrong way round for a 16:9 picture, so the still is matted there
- *  in a 16:9 box on vellum, by the same rule `ImageThumb` applies. The puck is
+ *  in a 16:9 box on vellum, by the same rule `ImageThumb` applies. The play mark is
  *  sized off the box's height, not its width: the slots differ by ratio, not
  *  scale. A warm ground, not ink: an ink ground turned a list of CEJIL hearings
  *  into a column of black bars. */
@@ -134,9 +135,7 @@ function VideoThumb({
         ) : (
           <YouTubeStill id={still} onMissing={() => setMissing(true)} className="absolute inset-0 w-full h-full" />
         ))}
-      <span data-part="puck" className="relative flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper shadow-sm">
-        <Play aria-hidden className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
-      </span>
+      <PlayMark className="h-[24%] min-h-5 max-h-10" />
     </div>
   );
 }

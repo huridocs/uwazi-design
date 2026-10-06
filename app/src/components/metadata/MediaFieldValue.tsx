@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AudioLines, CirclePlay, Clapperboard, ExternalLink, Play } from "lucide-react";
+import { AudioLines, CirclePlay, Clapperboard, ExternalLink } from "lucide-react";
 import { mediaUrlAt, parseMediaValue, youtubeId, type MediaValue } from "../../utils/mediaValue";
 import { YouTubeStill } from "../shared/YouTubeStill";
+import { PlayMark } from "../shared/PlayMark";
 
 /** A `media` property in the record.
  *
@@ -356,13 +357,7 @@ function YouTubeMedia({
             className="group absolute inset-0 flex flex-col items-center justify-center gap-3 cursor-pointer
               focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
           >
-            <span
-              aria-hidden
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-ink text-paper
-                group-hover:scale-105 group-focus-visible:scale-105 transition-transform"
-            >
-              <Play size={18} className="translate-x-px" fill="currentColor" />
-            </span>
+            <PlayMark className="h-8 group-hover:scale-105 group-focus-visible:scale-105 transition-transform" />
             {/* Over a still the line would sit on the picture (and on any title
                 burned into it); the still already says what will play. */}
             {!still && (
