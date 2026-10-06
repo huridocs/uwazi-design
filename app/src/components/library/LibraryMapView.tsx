@@ -17,8 +17,10 @@ import { entityCountries } from "../../utils/libraryFacets";
 import { getEntity, getEntityType, type Entity } from "../../data/entities";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 
-/** Zoom a fit to the pins stops at, so one pin does not open at street level. */
-const FIT_MAX_ZOOM = 6;
+/** Zoom a fit to the pins stops at, so one pin (or pins on one building)
+ *  does not open at street level. At 6 the map stayed at country scale for
+ *  every filter: Kathmandu District opened on all of northern India. */
+const FIT_MAX_ZOOM = 12;
 const PIN = 14;
 
 interface PinOptions extends L.MarkerOptions {

@@ -1,10 +1,11 @@
 import { getEntityType, type Entity } from "../data/entities";
+import { formatMoment as formatMomentIn } from "./dateFormat";
 
 /** Time bucketing for the Library timeline surfaces (the brush strip and the
  *  timeline view bodies). One scale, shared — so the histogram, the vertical
  *  rail and the spine can never disagree about where a year sits. */
 
-export type TimeUnit = "decade" | "year" | "quarter" | "month";
+export type TimeUnit = "decade" | "year" | "quarter" | "month" | "day" | "hour";
 
 export interface TimeBucket {
   key: string;
@@ -52,12 +53,29 @@ export function pickUnit(spanMs: number): TimeUnit {
   return "month";
 }
 
+/** The brush zoomed in on a range: days for a few months, hours for a few
+ *  days, so a 30-hour window is drawn across the strip and not as a sliver. */
+export function pickFineUnit(spanMs: number): TimeUnit {
+  const days = spanMs / 86_400_000;
+  if (days <= 4) return "hour";
+  if (days <= 120) return "day";
+  return pickUnit(spanMs);
+}
+
 /** The bucket a timestamp falls in, for a unit. */
 export function bucketOf(t: number, unit: TimeUnit): Omit<TimeBucket, "entities"> {
   const d = new Date(t);
   const y = d.getUTCFullYear();
   const m = d.getUTCMonth();
   switch (unit) {
+    case "hour": {
+      const start = Date.UTC(y, m, d.getUTCDate(), d.getUTCHours());
+      return { key: `${start}`, label: formatMoment(start, true), start, end: start + 3_600_000 };
+    }
+    case "day": {
+      const start = Date.UTC(y, m, d.getUTCDate());
+      return { key: `${start}`, label: formatDay(start), start, end: start + 86_400_000 };
+    }
     case "decade": {
       const dy = Math.floor(y / 10) * 10;
       return { key: `${dy}s`, label: `${dy}s`, start: Date.UTC(dy, 0, 1), end: Date.UTC(dy + 10, 0, 1) };
@@ -85,7 +103,12 @@ export function bucketOf(t: number, unit: TimeUnit): Omit<TimeBucket, "entities"
 
 /** Contiguous buckets across the extent — INCLUDING empty ones, so a quiet
  *  decade reads as a gap rather than being silently closed up. */
-export function bucketSeries(entities: Entity[], unit: TimeUnit, extent: Extent): TimeBucket[] {
+export function bucketSeries(
+  entities: Entity[],
+  unit: TimeUnit,
+  extent: Extent,
+  timeOf: (e: Entity) => number | null = entityTime,
+): TimeBucket[] {
   const series: TimeBucket[] = [];
   const byKey = new Map<string, TimeBucket>();
   let cursor = bucketOf(extent.min, unit).start;
@@ -97,7 +120,7 @@ export function bucketSeries(entities: Entity[], unit: TimeUnit, extent: Extent)
     cursor = b.end;
   }
   for (const e of entities) {
-    const t = entityTime(e);
+    const t = timeOf(e);
     if (t === null) continue;
     byKey.get(bucketOf(t, unit).key)?.entities.push(e);
   }
@@ -184,6 +207,10 @@ export function colorSpread(entities: Entity[], cap = 4): string[] {
 
 export const toISODate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
+/** The start of a record's time to the minute: a timed event's span start,
+ *  else its date. What the zoomed brush buckets by. */
+export const preciseTime = (e: Entity): number | null => e.span?.from ?? entityTime(e);
+
 /* ── Date bounds and spans ─────────────────────────────────────────────────
    The Library's date filter holds a day ("2025-09-08") or a day and a time
    ("2025-09-08T12:30"). Both are read as UTC: the corpora store wall-clock
@@ -222,19 +249,11 @@ export function entityInRange(e: Entity, from: number | null, to: number | null)
   return (from === null || hi >= from) && (to === null || lo <= to);
 }
 
-/** "8 Sep 2025, 12:30" when `withTime`, else the day. */
-export function formatMoment(ms: number, withTime: boolean): string {
-  if (!withTime) return formatDay(ms);
-  const d = new Date(ms);
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${formatDay(ms)}, ${hh}:${mm}`;
-}
+/** A moment in the collection's date format, with ", 12:30" when `withTime`
+ *  (`utils/dateFormat`, so the brush, the chip and the fields agree). */
+export const formatMoment = (ms: number, withTime: boolean): string => formatMomentIn(ms, withTime);
 
-export function formatDay(ms: number): string {
-  const d = new Date(ms);
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
+export const formatDay = (ms: number): string => formatMomentIn(ms, false);
 
 /** "8 months", "3 years" — the size of a stretch of nothing, for the break
  *  markers a proportional axis draws where it elides one. Shared by both spines

@@ -16,12 +16,14 @@ import {
   toISODate,
   dateBoundMs,
   entityInRange,
-  formatMoment,
+  pickFineUnit,
+  preciseTime,
   toBound,
   typeOrder,
   type TimeBucket,
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
+import { formatMomentSpan, formatTime } from "../../utils/dateFormat";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import type { Entity } from "../../data/entities";
 
@@ -62,10 +64,38 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const extent = useMemo(() => timeExtent(entities), [entities]);
-  const unit = useMemo(() => (extent ? pickUnit(extent.max - extent.min) : "year"), [extent]);
+  const fullUnit = useMemo(() => (extent ? pickUnit(extent.max - extent.min) : "year"), [extent]);
+  const fullBuckets = useMemo(
+    () => (extent ? bucketSeries(entities, fullUnit, extent) : []),
+    [entities, fullUnit, extent],
+  );
+  const fullAxis = fullBuckets.length
+    ? { min: fullBuckets[0].start, max: fullBuckets[fullBuckets.length - 1].end }
+    : null;
+
+  const fromMs = dateBoundMs(dateFrom, "from");
+  const timedBounds = dateFrom.includes("T") || dateTo.includes("T");
+  // The window's right edge: a timed bound's minute, or the END of the day a
+  // day bound names (the filter runs to that day's end).
+  const toMs = dateTo ? (timedBounds ? dateBoundMs(dateTo, "from") : (dateBoundMs(dateTo, "to") ?? 0) + 1) : null;
+
+  // A committed range narrower than a twelfth of the strip zooms the scale to
+  // it, with its own width again on each side as context, in days or hours.
+  // The scale follows the committed range, not a drag in progress, so the
+  // strip does not move under the pointer.
+  const zoom = useMemo(() => {
+    if (!fullAxis || fromMs === null || toMs === null) return null;
+    const w = toMs - fromMs;
+    if (w <= 0 || w >= (fullAxis.max - fullAxis.min) / 12) return null;
+    const min = Math.max(fullAxis.min, fromMs - w);
+    const max = Math.min(fullAxis.max, toMs + w);
+    return { min, max: max - 1, unit: pickFineUnit(max - min) };
+  }, [fullAxis?.min, fullAxis?.max, fromMs, toMs]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const unit = zoom?.unit ?? fullUnit;
   const buckets = useMemo(
-    () => (extent ? bucketSeries(entities, unit, extent) : []),
-    [entities, unit, extent],
+    () => (zoom ? bucketSeries(entities, zoom.unit, zoom, preciseTime) : fullBuckets),
+    [entities, zoom, fullBuckets],
   );
   // The shape carries no colour, so the ONLY place a period's composition shows
   // is the hover tooltip — hence the stable order still matters here.
@@ -81,11 +111,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     return { min: buckets[0].start, max: buckets[buckets.length - 1].end };
   }, [buckets]);
 
-  const fromMs = dateBoundMs(dateFrom, "from");
-  // The window's right edge is the START of the "to" bound (the strip draws
-  // the day it names); the filter itself runs to that day's end.
-  const toMs = dateTo ? dateBoundMs(dateTo, "from") : null;
-  const timed = dateFrom.includes("T") || dateTo.includes("T");
+  // At an hour scale a drag sets hours.
+  const timed = timedBounds || unit === "hour";
   const winFrom = drag ? drag.from : fromMs ?? axis?.min ?? 0;
   const winTo = drag ? drag.to : toMs ?? axis?.max ?? 0;
 
@@ -103,9 +130,10 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         setDateTo("");
       } else {
         // Days, or day and minute when the window edge is not on a midnight
-        // (a range typed with a time keeps it through a nudge).
+        // (a range typed with a time keeps it through a nudge). A day range's
+        // right edge is the end of its last day, so that day is `to - 1`.
         setDateFrom(timed ? toBound(from) : toISODate(from));
-        setDateTo(timed ? toBound(to) : toISODate(to));
+        setDateTo(timed ? toBound(to) : toISODate(to - 1));
       }
     },
     [setDateFrom, setDateTo, timed],
@@ -167,13 +195,14 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     if (!d.moved) {
       const hit = bucketsRef.current.find((b) => d.origin >= b.start && d.origin < b.end);
       if (!hit) return;
-      const alreadyOn =
-        fromMs !== null && toMs !== null && hit.start >= fromMs && hit.end - 1 <= toMs + 86_399_999;
+      const alreadyOn = fromMs !== null && toMs !== null && hit.start >= fromMs && hit.end <= toMs;
       if (alreadyOn) commit(axis.min, axis.max, true);
-      else commit(hit.start, hit.end - 86_400_000, false);
+      else commit(hit.start, hit.end, false);
       return;
     }
-    commit(d.from, d.to, d.from <= axis.min && d.to >= axis.max);
+    // Dragged out to both ends: the whole strip, unless the strip is zoomed,
+    // where the ends are only the context around the range.
+    commit(d.from, d.to, !zoom && d.from <= axis.min && d.to >= axis.max);
   };
 
   // Nothing dated to chart. Hold the strip's place and SAY so, rather than
@@ -260,8 +289,18 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   // 11px labels are ~22% wider than the 9px ones this axis was tuned for,
   // so the axis carries fewer of them rather than a smaller size (11px floor).
   // A phone takes three: at 360–390 more of them ran together ("Jan 2023Apr 2023").
-  const tickEvery = Math.max(1, Math.ceil(buckets.length / (isMobile ? 3 : 7)));
-  const ticks = buckets.filter((_, i) => i % tickEvery === 0);
+  // Hour labels ("12:00") are short, so an hour scale carries more of them.
+  const maxTicks = isMobile ? 3 : unit === "hour" ? 12 : 7;
+  const tickEvery = Math.max(1, Math.ceil(buckets.length / maxTicks));
+  // Hours tick on round hours (every 1, 2, 3, 6, 12 or 24), and midnight
+  // prints the day, so a 30-hour range reads "2025/09/08 · 06:00 · 12:00 …".
+  const hourStep = [1, 2, 3, 6, 12, 24].find((h) => buckets.length / h <= maxTicks) ?? 24;
+  const ticks =
+    unit === "hour"
+      ? buckets.filter((b) => new Date(b.start).getUTCHours() % hourStep === 0)
+      : buckets.filter((_, i) => i % tickEvery === 0);
+  const tickLabel = (b: TimeBucket) =>
+    unit !== "hour" ? b.label : new Date(b.start).getUTCHours() === 0 ? formatDay(b.start) : formatTime(b.start);
 
   const startDrag = (mode: DragState["mode"]) => (ev: React.PointerEvent) => {
     ev.preventDefault();
@@ -302,11 +341,9 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           <span className="font-semibold text-ink-secondary">{inRange.toLocaleString()}</span>
           {" dated · "}
           <span className="text-ink-secondary">
-            {isMobile ? new Date(winFrom).getUTCFullYear() : formatMoment(winFrom, timed)}
-          </span>
-          {" → "}
-          <span className="text-ink-secondary">
-            {isMobile ? new Date(winTo).getUTCFullYear() : formatMoment(winTo, timed)}
+            {isMobile
+              ? `${new Date(winFrom).getUTCFullYear()} – ${new Date(winTo - 1).getUTCFullYear()}`
+              : formatMomentSpan(winFrom, timed ? winTo : winTo - 1, timed)}
           </span>
         </span>
         <div className="flex-1" />
@@ -321,7 +358,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               type="button"
               key={p.label}
               data-part="preset"
-              onClick={() => commit(axis.max - p.ms, axis.max, false)}
+              onClick={() => commit(fullAxis!.max - p.ms, fullAxis!.max, false)}
               className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
               {p.label}
@@ -330,7 +367,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         <button
           type="button"
           data-part="all"
-          onClick={() => commit(axis.min, axis.max, true)}
+          onClick={() => commit(0, 0, true)}
           disabled={isFull}
           className={`px-2 h-5 text-meta font-medium rounded-md transition-colors ${
             isFull
@@ -529,7 +566,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               className="absolute top-0 text-meta leading-none tabular-nums whitespace-nowrap"
               style={{ left: `${p}%`, transform: shift, color: "var(--text-muted)" }}
             >
-              {b.label}
+              {tickLabel(b)}
             </span>
           );
         })}
