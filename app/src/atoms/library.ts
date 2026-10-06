@@ -16,7 +16,7 @@ import { breakpointAtom } from "./viewport";
 import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
-import { listColumnOptions } from "../components/library/listColumns";
+import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
@@ -900,7 +900,14 @@ export const libraryListColumnsAtom = atom((get) => {
   const defaults = new Map(
     get(libraryDisplayContextAtom).listColumns.map((o) => [o.id, o.default]),
   );
-  return (id: string) => ((bag?.[id] as boolean | undefined) ?? defaults.get(id) ?? false) === true;
+  // A property column chosen before choices were kept per collection is read
+  // under its old id, so an older saved view keeps its columns.
+  const legacy = (id: string) => {
+    const old = legacyMetaColumnId(id);
+    return old ? (bag?.[old] as boolean | undefined) : undefined;
+  };
+  return (id: string) =>
+    ((bag?.[id] as boolean | undefined) ?? legacy(id) ?? defaults.get(id) ?? false) === true;
 });
 
 /** Does any option the menu shows for this mode sit off its default? Reads the

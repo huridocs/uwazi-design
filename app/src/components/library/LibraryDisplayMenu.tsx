@@ -123,11 +123,11 @@ export function LibraryDisplayMenu() {
     // A long toggle list (a corpus's property columns) gets a search.
     const searchable = options.length > SEARCH_FROM;
     const q = searchable ? toggleQuery.trim().toLowerCase() : "";
-    const shown = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
-    const body =
-      section.kind === "choice"
-        ? renderChoice(section, live)
-        : shown.map((o) => {
+    // A template's name finds all of its columns.
+    const shown = q
+      ? options.filter((o) => o.label.toLowerCase().includes(q) || !!o.group?.toLowerCase().includes(q))
+      : options;
+    const renderToggle = (o: (typeof options)[number]) => {
             const scope = o.scope ?? "mode";
             if (o.choices) {
               const current = String(valueOf(o.id, scope, o.default));
@@ -154,7 +154,30 @@ export function LibraryDisplayMenu() {
                 onClick={() => write(o.id, scope, !on)}
               />
             );
-          });
+          };
+    // Options with a `group` (a template's own columns) sit under its name, in
+    // runs; the ungrouped ones (the built-ins) come first.
+    const runs: { group?: string; options: typeof options }[] = [];
+    for (const o of shown) {
+      const last = runs[runs.length - 1];
+      if (last && last.group === o.group) last.options.push(o);
+      else runs.push({ group: o.group, options: [o] });
+    }
+    const body =
+      section.kind === "choice"
+        ? renderChoice(section, live)
+        : runs.map((run, i) =>
+            run.group ? (
+              <div key={`${run.group}:${i}`} data-part="option-group" role="group" aria-label={run.group}>
+                <p aria-hidden title={run.group} className={`px-2 pt-2 pb-0.5 text-meta font-semibold text-ink-secondary truncate ${live ? "" : "opacity-40"}`}>
+                  {run.group}
+                </p>
+                {run.options.map(renderToggle)}
+              </div>
+            ) : (
+              run.options.map(renderToggle)
+            ),
+          );
 
     return (
       <div key={section.id} data-part="section" data-section={section.id} role="group" aria-label={section.label}>
@@ -170,7 +193,8 @@ export function LibraryDisplayMenu() {
               value={toggleQuery}
               onChange={setToggleQuery}
               ariaLabel={`Search ${section.label.toLowerCase()}`}
-              placeholder={`Search ${options.length} ${section.label.toLowerCase()}`}
+              // A column listed under several templates counts once.
+              placeholder={`Search ${new Set(options.map((o) => o.id)).size} ${section.label.toLowerCase()}`}
             />
           </div>
         )}

@@ -171,6 +171,9 @@ export interface PropertyColumn {
   label: string;
   /** Uwazi's `prioritySorting`: the column sorts. */
   sortable: boolean;
+  /** The templates that carry it, in template order: where the Display
+   *  menu lists it. One column, however many templates share the name. */
+  templates: string[];
 }
 
 /** Types that share a column under one name (Uwazi's combine rule). */
@@ -199,10 +202,14 @@ export function propertyColumns(templates: TemplateDef[]): PropertyColumn[] {
       const seen = byName.get(p.name);
       if (seen && seen.family === family(p.type)) {
         if (p.prioritySorting) seen.col.sortable = true;
+        if (!seen.col.templates.includes(t.name)) seen.col.templates.push(t.name);
         continue;
       }
       if (seen) continue; // same name, another type: the first one keeps the column
-      byName.set(p.name, { col: { name: p.name, label: p.label, sortable: !!p.prioritySorting }, family: family(p.type) });
+      byName.set(p.name, {
+        col: { name: p.name, label: p.label, sortable: !!p.prioritySorting, templates: [t.name] },
+        family: family(p.type),
+      });
     }
   const out = [...byName.values()].map((x) => x.col);
   columnsCache.set(templates, out);

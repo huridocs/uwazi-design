@@ -187,10 +187,17 @@ const COLLECTION_COLUMNS: Partial<
   },
 };
 
-/** The id a metadata column takes: the property's name. Prefixed so a
- *  property called "date" can never collide with the built-in track. A label
- *  renamed in Settings keeps the id, so a saved column choice survives. */
-export const metaColumnId = (name: string) => `meta:${name}`;
+/** The id a metadata column takes: the collection and the property's name.
+ *  Prefixed so a property called "date" can never collide with the built-in
+ *  track, and per collection so a choice in one corpus does not turn on a
+ *  same-named property in another. A label renamed in Settings keeps the id,
+ *  so a saved column choice survives. */
+export const metaColumnId = (name: string, source: DataSource) => `meta:${source}:${name}`;
+/** The id before choices were kept per collection (snapshots from then). */
+export const legacyMetaColumnId = (id: string) => {
+  const m = /^meta:[^:]+:(.*)$/.exec(id);
+  return m ? `meta:${m[1]}` : null;
+};
 
 /** One of the corpus's own properties as a column.
  *
@@ -198,9 +205,9 @@ export const metaColumnId = (name: string) => `meta:${name}`;
  *  corpus that carries a dozen properties would otherwise open as a spreadsheet
  *  nobody asked for. Values are addressed by LABEL — see `entityFieldValue` for
  *  why that is the only key the corpora share. */
-export function metaColumn(col: PropertyColumn): ListColumnSpec {
+export function metaColumn(col: PropertyColumn, source: DataSource): ListColumnSpec {
   return {
-    id: metaColumnId(col.name),
+    id: metaColumnId(col.name, source),
     label: col.label,
     default: false,
     width: "10rem",
@@ -238,22 +245,32 @@ export function listColumnSpecs(ctx: {
         (!c.only || c.only.includes(ctx.source)) &&
         own[c.id]?.offered !== false,
     ).map((c) => (own[c.id] ? { ...c, ...own[c.id] } : c)),
-    ...ctx.fieldColumns.map(metaColumn),
+    ...ctx.fieldColumns.map((col) => metaColumn(col, ctx.source)),
   ];
 }
 
 /** The same list as the Display menu's toggles. One derivation, so a column can
- *  never be drawable-but-unlistable (or the reverse). */
+ *  never be drawable-but-unlistable (or the reverse). The built-ins come first;
+ *  then each template's own properties under the template's name, in template
+ *  order. A property several templates share is ONE column listed under each
+ *  of them, so ticking it in one place ticks it everywhere. */
 export function listColumnOptions(ctx: {
   hasQuery: boolean;
   fieldColumns: PropertyColumn[];
   source: DataSource;
 }): ToggleOption[] {
-  return listColumnSpecs(ctx).map((c) => ({
-    id: c.id,
-    label: c.label,
-    default: c.default,
-  }));
+  const specs = listColumnSpecs(ctx);
+  const builtIns = specs.slice(0, specs.length - ctx.fieldColumns.length);
+  const order: string[] = [];
+  for (const col of ctx.fieldColumns) for (const t of col.templates) if (!order.includes(t)) order.push(t);
+  return [
+    ...builtIns.map((c) => ({ id: c.id, label: c.label, default: c.default })),
+    ...order.flatMap((template) =>
+      ctx.fieldColumns
+        .filter((col) => col.templates.includes(template))
+        .map((col) => ({ id: metaColumnId(col.name, ctx.source), label: col.label, default: false, group: template })),
+    ),
+  ];
 }
 
 /** The specs the user has left on, turned into `DataTable` columns. */

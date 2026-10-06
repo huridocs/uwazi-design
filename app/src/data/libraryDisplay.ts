@@ -57,6 +57,9 @@ export interface ToggleOption {
   /** Draw the row as a label with a small segmented control instead of a
    *  check: a switch that also has an Auto answer. */
   choices?: Choice[];
+  /** Listed under this sub-heading (a list column under each template that
+   *  carries it). The same id may appear under several; it is one value. */
+  group?: string;
 }
 
 export interface Choice {
