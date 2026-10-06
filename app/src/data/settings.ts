@@ -68,68 +68,18 @@ export interface SettingsTemplate {
   isDefault: boolean;
 }
 
+/** The Sample's templates as the Filters and extraction pages list them, until
+ *  those pages read the template store (`atoms/templates.ts`). Settings ›
+ *  Templates and every other reader use the store. */
 export const seedTemplates: SettingsTemplate[] = entityTypes.map((t, i) => ({
   id: t.id,
   name: t.name,
   color: t.color,
   propertyCount: [8, 12, 6, 10, 5, 7, 9, 4][i] ?? 6,
   entityCount: [18, 13, 9, 6, 4, 5, 3, 2][i] ?? 1,
-  isDefault: t.id === "court_case",
+  // The template store's default (data/sample/templates.ts): uploads take it.
+  isDefault: t.id === "document",
 }));
-
-export type PropertyType =
-  | "text"
-  | "select"
-  | "relationship"
-  | "date"
-  | "numeric"
-  | "markdown"
-  | "geolocation"
-  | "image";
-
-export interface TemplateProperty {
-  id: string;
-  label: string;
-  type: PropertyType;
-  required: boolean;
-  filterable: boolean;
-}
-
-/** Per-template property lists for the Template editor. Court Case is fleshed
- *  out; others fall back to a small default set. */
-export const templatePropertiesByTemplate: Record<string, TemplateProperty[]> = {
-  court_case: [
-    { id: "cp1", label: "Case number", type: "text", required: true, filterable: true },
-    { id: "cp2", label: "Date filed", type: "date", required: true, filterable: true },
-    { id: "cp3", label: "Respondent state", type: "relationship", required: true, filterable: true },
-    { id: "cp4", label: "Status", type: "select", required: false, filterable: true },
-    { id: "cp5", label: "Summary", type: "markdown", required: false, filterable: false },
-    { id: "cp6", label: "Location", type: "geolocation", required: false, filterable: false },
-  ],
-  person: [
-    { id: "pp1", label: "Full name", type: "text", required: true, filterable: true },
-    { id: "pp2", label: "Date of birth", type: "date", required: false, filterable: true },
-    { id: "pp3", label: "Nationality", type: "relationship", required: false, filterable: true },
-    { id: "pp4", label: "Photo", type: "image", required: false, filterable: false },
-  ],
-};
-
-export const defaultTemplateProperties: TemplateProperty[] = [
-  { id: "dp1", label: "Title", type: "text", required: true, filterable: true },
-  { id: "dp2", label: "Date", type: "date", required: false, filterable: true },
-  { id: "dp3", label: "Description", type: "markdown", required: false, filterable: false },
-];
-
-export const propertyTypeLabels: Record<PropertyType, string> = {
-  text: "Text",
-  select: "Select",
-  relationship: "Relationship",
-  date: "Date",
-  numeric: "Number",
-  markdown: "Rich text",
-  geolocation: "Geolocation",
-  image: "Image",
-};
 
 // ── Thesauri (dictionaries) ─────────────────────────────────────────────────
 export interface SettingsThesaurus {
