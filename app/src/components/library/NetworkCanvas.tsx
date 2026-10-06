@@ -3,6 +3,7 @@ import { otherEnd, type NetworkGraph } from "../../data/network/graph";
 import type { Community, NetworkPlacement } from "../../data/network/layout";
 import type { FocusLayout } from "../../data/network/focus";
 import type { PairEvidence } from "../../data/network/graph";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { RefStatus } from "../relationships/rows/RefStatus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
@@ -63,6 +64,15 @@ export interface NetworkCanvasProps {
   } | null;
   selected: number;
   onSelect: (index: number, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
+  /** The search's find cursor: the node it is on, a key that changes with
+   *  every step, and the stepper's position. Null without a search. */
+  find?: {
+    node: number;
+    key: string;
+    index: number;
+    count: number;
+    onStep: (dir: 1 | -1) => void;
+  } | null;
   /** Escape or a click on empty canvas: the selection ends. */
   onClear: () => void;
   /** What an edge carries, for its tooltip: relationship types, reference
@@ -90,6 +100,34 @@ const MOVE_MS = 380;
 const DOUBLE_TAP_MS = 320;
 /** Pixels kept clear around a fit, for marks, names and the controls. */
 const FIT_PAD = 96;
+
+type Box = [number, number, number, number];
+
+/** Label boxes on screen, hashed into 64px cells so a collision check reads
+ *  a few cells rather than every label placed. */
+class LabelBoxes {
+  private cells = new Map<number, Box[]>();
+  private static readonly CELL = 64;
+  private keys(b: Box, fn: (key: number) => boolean | void) {
+    const c = LabelBoxes.CELL;
+    for (let cx = Math.floor(b[0] / c); cx <= Math.floor(b[2] / c); cx++)
+      for (let cy = Math.floor(b[1] / c); cy <= Math.floor(b[3] / c); cy++) if (fn(cx * 4096 + cy)) return true;
+    return false;
+  }
+  /** Whether `b` overlaps a box already placed, other than `ignore`. */
+  hits(b: Box, ignore?: Box) {
+    return this.keys(b, (key) =>
+      this.cells.get(key)?.some((o) => o !== ignore && o[0] < b[2] && b[0] < o[2] && o[1] < b[3] && b[1] < o[3]),
+    );
+  }
+  add(b: Box) {
+    this.keys(b, (key) => {
+      const list = this.cells.get(key);
+      if (list) list.push(b);
+      else this.cells.set(key, [b]);
+    });
+  }
+}
 
 /** What the pointer is over. An edge keeps the world point it was hovered
  *  at, which its tooltip is anchored to. */
@@ -206,6 +244,7 @@ export function NetworkCanvas({
   onSelect,
   onClear,
   edgeInfo,
+  find = null,
   label,
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -337,11 +376,16 @@ export function NetworkCanvas({
     return hoodCache.current;
   };
 
-  /** The node to lift: the hovered one, else the selected one. */
+  /** The find cursor was moved more recently than the selection. */
+  const findWins = useRef(true);
+  /** The node to lift: the hovered one, else the selection or the find
+   *  cursor, whichever moved last. */
   const liftWanted = () => {
     const hv = hoverRef.current;
     if (hv?.kind === "node") return hv.i;
-    return selected >= 0 && nodeOn[selected] ? selected : -1;
+    const sel = selected >= 0 && nodeOn[selected] ? selected : -1;
+    const cur = find && nodeOn[find.node] ? find.node : -1;
+    return findWins.current ? (cur >= 0 ? cur : sel) : sel >= 0 ? sel : cur;
   };
 
   /** Moves the lift one frame toward what is wanted; true while it moves. */
@@ -404,7 +448,7 @@ export function NetworkCanvas({
     const liftI = liftNode.current;
     const la = liftI >= 0 ? liftAmt.current : 0;
     const hood = la > 0 ? hoodOf(liftI) : null;
-    const recede = 1 - 0.8 * la;
+    const recede = 1 - 0.7 * la;
     const lifted = (i: number) => !!hood && hood.node[i] === 1;
     const rad = (i: number) => {
       const base = radiusAt(i, r);
@@ -569,6 +613,7 @@ export function NetworkCanvas({
         ctx.arc(sx(i), sy(i), rad(i) + gap, 0, Math.PI * 2);
         ctx.stroke();
       };
+      if (find && find.node !== selected) ring(find.node, t.ink, 2, 3);
       ring(selected, t.carbon, 2, 2.5);
       ring(focused, t.carbon, 2.5, 5);
       const hv = hoverRef.current;
@@ -578,42 +623,70 @@ export function NetworkCanvas({
         ring(graph.b[edgeHi], t.carbon, 1.5, 2);
       }
 
-      /* Labels: best-connected first (only matches while filtering), only
-         where they do not collide. The selected, hovered and lifted nodes
-         are always labelled; the lifted neighbourhood comes next. */
+      /* Labels: the selected, hovered, lifted and find nodes always; then the
+         lifted neighbourhood; then the best-connected (only matches while
+         filtering). Each tries right, left, above and below its node and is
+         drawn only where it overlaps no other label and no always-labelled
+         node. How many depends on the canvas area and the zoom. Text is the
+         template's label colour (`typeLabelColor`). */
       // One label set at a time: node labels once nodes are the stronger layer.
       if (nodesAlpha >= 0.5) {
-        ctx.font = `500 11px ${t.font}`;
         ctx.textBaseline = "middle";
         ctx.lineJoin = "round";
-        const taken: [number, number, number, number][] = [];
-        const budget = Math.round(clamp(10 + 14 * Math.log2(Math.max(1, r)), 10, 70));
+        const boxes = new LabelBoxes();
+        const density = clamp(0.15 + 0.25 * Math.log2(Math.max(1, r)), 0.15, 1);
+        const budget = Math.round(clamp(((W * H) / 16000) * density, 8, 120));
         const want = [
           selected,
           focused,
           ...(hv?.kind === "node" ? [hv.i] : []),
           ...(hood ? [liftI] : []),
+          ...(find ? [find.node] : []),
           ...(edgeHi >= 0 ? [graph.a[edgeHi], graph.b[edgeHi]] : []),
-        ].filter((i, k, all) => i >= 0 && all.indexOf(i) === k);
+        ].filter((i, k, all) => i >= 0 && nodeOn[i] && all.indexOf(i) === k);
+        // Their dots are kept clear of other labels.
+        for (const i of want) {
+          const rd = rad(i) + 2;
+          boxes.add([sx(i) - rd, sy(i) - rd, sx(i) + rd, sy(i) + rd]);
+        }
         let placed = 0;
         const place = (i: number, force: boolean) => {
           if (!nodeOn[i]) return;
-          const x = sx(i) + rad(i) + 4;
+          const x = sx(i);
           const y = sy(i);
           if (x < 0 || x > W || y < 0 || y > H) return;
           const text = truncate(titleOf(i));
+          ctx.font = `${force ? 600 : 500} 11px ${t.font}`;
           const tw = ctx.measureText(text).width;
-          const box: [number, number, number, number] = [x - 2, y - 8, x + tw + 2, y + 8];
-          // A label cut by the pane's edge reads as a different name.
-          if (!force && box[2] > W) return;
-          if (!force && taken.some((b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3])) return;
-          taken.push(box);
+          const rd = rad(i);
+          const spots: [number, number][] = [
+            [x + rd + 4, y],
+            [x - rd - 4 - tw, y],
+            [x - tw / 2, y - rd - 9],
+            [x - tw / 2, y + rd + 9],
+          ];
+          let at: [number, number] | null = null;
+          for (const [lx, ly] of spots) {
+            const box: Box = [lx - 2, ly - 7, lx + tw + 2, ly + 7];
+            // A label cut by the pane's edge reads as a different name.
+            if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H) continue;
+            if (boxes.hits(box)) continue;
+            at = [lx, ly];
+            boxes.add(box);
+            break;
+          }
+          if (!at) {
+            if (!force) return;
+            // Always labelled: on its right, even where it overlaps.
+            at = spots[0];
+            boxes.add([at[0] - 2, at[1] - 7, at[0] + tw + 2, at[1] + 7]);
+          }
           ctx.globalAlpha = nodesAlpha * (force || lifted(i) ? 1 : recede);
           ctx.strokeStyle = t.bg;
           ctx.lineWidth = 3;
-          ctx.strokeText(text, x, y);
-          ctx.fillStyle = force ? t.ink : t.inkSecondary;
-          ctx.fillText(text, x, y);
+          ctx.strokeText(text, at[0], at[1]);
+          ctx.fillStyle = colors.mark.get(graph.typeIds[i]) ?? t.inkSecondary;
+          ctx.fillText(text, at[0], at[1]);
           placed++;
         };
         for (const i of want) place(i, true);
@@ -694,26 +767,35 @@ export function NetworkCanvas({
         }
       });
       // Names: each community's best-connected record, largest first, where
-      // they fit; only while the marks are the stronger layer.
+      // they fit inside the canvas and clear of other names and marks; only
+      // while the marks are the stronger layer.
       if (marksAlpha > 0.5) {
         ctx.font = `500 11px ${t.font}`;
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
-        const taken: [number, number, number, number][] = [];
+        const boxes = new LabelBoxes();
+        const markBox = communities.map((c): Box => {
+          const rd = markRadius(c) + (communityMatch ? 7 : 1);
+          return [cx(c) - rd, cy(c) - rd, cx(c) + rd, cy(c) + rd];
+        });
+        markBox.forEach((b) => boxes.add(b));
+        const own = new LabelBoxes();
         communities.forEach((c, idx) => {
           if (c.members.length < 8 || (communityMatch && communityMatch[idx] === 0)) return;
           const text = truncate(titleOf(c.top), 28);
           const x = cx(c);
           const y = cy(c) + markRadius(c) + (communityMatch ? 13 : 9);
           const tw = ctx.measureText(text).width;
-          const box: [number, number, number, number] = [x - tw / 2 - 2, y - 8, x + tw / 2 + 2, y + 8];
-          if (taken.some((b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3])) return;
-          taken.push(box);
+          const box: Box = [x - tw / 2 - 2, y - 7, x + tw / 2 + 2, y + 7];
+          if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H) return;
+          // Clear of other names and of every mark but its own.
+          if (own.hits(box) || boxes.hits(box, markBox[idx])) return;
+          own.add(box);
           ctx.globalAlpha = marksAlpha;
           ctx.strokeStyle = t.bg;
           ctx.lineWidth = 3;
           ctx.strokeText(text, x, y);
-          ctx.fillStyle = t.inkSecondary;
+          ctx.fillStyle = colors.mark.get(c.typeId) ?? t.inkSecondary;
           ctx.fillText(text, x, y);
         });
         ctx.textAlign = "start";
@@ -734,7 +816,7 @@ export function NetworkCanvas({
     if (lifting) frame.current = requestAnimationFrame(() => drawRef.current());
     // `mix`, `markRadius` and `radiusAt` close over props only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
 
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -792,9 +874,33 @@ export function NetworkCanvas({
   useEffect(() => {
     request();
   }, [request]);
-  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(frame.current);
+      cancelAnimationFrame(anim.current);
+    },
+    [],
+  );
 
   /* ── Size, dpr, fits ─────────────────────────────────────────────────── */
+
+  // A move to a screen with another pixel ratio, or a browser zoom, leaves
+  // the CSS size alone: the backing store is resized on the ratio's change.
+  const [dprVersion, setDprVersion] = useState(0);
+  useEffect(() => {
+    let mq: MediaQueryList | null = null;
+    const onChange = () => {
+      setDprVersion((v) => v + 1);
+      watch();
+    };
+    const watch = () => {
+      mq?.removeEventListener("change", onChange);
+      mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      mq.addEventListener("change", onChange);
+    };
+    watch();
+    return () => mq?.removeEventListener("change", onChange);
+  }, []);
 
   useLayoutEffect(() => {
     const host = hostRef.current;
@@ -869,11 +975,13 @@ export function NetworkCanvas({
     draw();
     // Only a size or collection change refits here; filter moves are below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, placement.extent]);
+  }, [size, placement.extent, dprVersion]);
 
   /* ── Moves ───────────────────────────────────────────────────────────── */
 
   const anim = useRef(0);
+  /** Tests hover again at the pointer (set below, once hit testing exists). */
+  const rehover = useRef<() => void>(() => {});
   /** Positions and fade of the move in progress, so another move can finish it. */
   const moving = useRef<{ to: Float32Array; fade: number } | null>(null);
   const settle = () => {
@@ -901,6 +1009,7 @@ export function NetworkCanvas({
         moving.current = null;
         setRel(next.k / fitK.current);
         draw();
+        rehover.current();
       };
       if (!animate || reducedMotion()) return finish();
       if (to) moving.current = { to, fade: endFade };
@@ -943,19 +1052,36 @@ export function NetworkCanvas({
 
   const setCamera = useCallback((next: Camera, animate = false) => move(next, animate), [move]);
 
-  // A new match set or layout: move nodes and camera together. The first one
-  // (the view opening on a filter) jumps.
+  // A new match set or layout: move nodes and camera together, to the
+  // matches (or, with a search, to its best match). The first one (the view
+  // opening on a filter) jumps. A find step alone flies to the next match.
   const lastFit = useRef<string | null | undefined>(undefined);
+  const lastFind = useRef<string | null>(null);
   useLayoutEffect(() => {
     if (!size.w || !size.h || fitKey === undefined || fitKey === null) return;
-    if (lastFit.current === fitKey) return;
-    const first = lastFit.current === undefined;
-    lastFit.current = fitKey;
-    // Opening on a record selected in another view: centred on it, at node level.
-    move(first && selected >= 0 && nodeOn[selected] ? nodeCamera(selected) : fitCamera(), !first, target, focus ? 1 : 0);
-    // `fitKey` names everything a move depends on.
+    const findKey = find?.key ?? null;
+    if (lastFit.current !== fitKey) {
+      const first = lastFit.current === undefined;
+      lastFit.current = fitKey;
+      lastFind.current = findKey;
+      if (find) findWins.current = true;
+      // Opening on a record selected in another view: centred on it, at node level.
+      const next = find
+        ? nodeCamera(find.node)
+        : first && selected >= 0 && nodeOn[selected]
+          ? nodeCamera(selected)
+          : fitCamera();
+      move(next, !first, target, focus ? 1 : 0);
+      return;
+    }
+    if (findKey === lastFind.current) return;
+    lastFind.current = findKey;
+    if (!find) return;
+    findWins.current = true;
+    setCamera(nodeCamera(find.node, cam.current), true);
+    // `fitKey` and the find key name everything a move depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitKey, size.w > 0 && size.h > 0]);
+  }, [fitKey, find?.key, size.w > 0 && size.h > 0]);
 
   /** A camera centred on node `i`, close enough to draw it as a node. */
   const nodeCamera = (i: number, from: Camera | null = null): Camera => {
@@ -968,6 +1094,7 @@ export function NetworkCanvas({
   // node selected here stays where it is.
   const selfSelect = useRef(false);
   useEffect(() => {
+    if (selected >= 0) findWins.current = false;
     if (selfSelect.current) {
       selfSelect.current = false;
       return;
@@ -1108,6 +1235,28 @@ export function NetworkCanvas({
     return best;
   };
 
+  /** The mouse's last position over the canvas, for testing hover again
+   *  when the drawing moves under it. */
+  const pointerAt = useRef<{ x: number; y: number } | null>(null);
+  const hoverAt = (x: number, y: number) => {
+    const c = cam.current;
+    const wx = (x - c.tx) / c.k;
+    const wy = (y - c.ty) / c.k;
+    const node = hitAt(x, y);
+    const edge = node ? -1 : edgeAt(x, y);
+    const hit: Hover | null = node ? { ...node, wx, wy } : edge >= 0 ? { kind: "edge", i: edge, wx, wy } : null;
+    const prev = hoverRef.current;
+    if (hit?.kind !== prev?.kind || hit?.i !== prev?.i) {
+      hoverRef.current = hit;
+      setHover(hit);
+      request();
+    }
+  };
+  rehover.current = () => {
+    const p = pointerAt.current;
+    if (p && !gesture.current) hoverAt(p.x, p.y);
+  };
+
   /** Escape, or a click on empty canvas: no selection, no open edge. */
   const clearAll = () => {
     if (pinnedRef.current) {
@@ -1151,18 +1300,8 @@ export function NetworkCanvas({
     const g = gesture.current;
     if (!g || !pointers.current.has(e.pointerId)) {
       if (e.pointerType !== "mouse") return;
-      const c = cam.current;
-      const wx = (p.x - c.tx) / c.k;
-      const wy = (p.y - c.ty) / c.k;
-      const node = hitAt(p.x, p.y);
-      const edge = node ? -1 : edgeAt(p.x, p.y);
-      const hit: Hover | null = node ? { ...node, wx, wy } : edge >= 0 ? { kind: "edge", i: edge, wx, wy } : null;
-      const prev = hoverRef.current;
-      if (hit?.kind !== prev?.kind || hit?.i !== prev?.i) {
-        hoverRef.current = hit;
-        setHover(hit);
-        request();
-      }
+      pointerAt.current = p;
+      hoverAt(p.x, p.y);
       return;
     }
     const before = pointers.current.get(e.pointerId)!;
@@ -1297,6 +1436,7 @@ export function NetworkCanvas({
   };
 
   const onPointerLeave = () => {
+    pointerAt.current = null;
     if (hoverRef.current) {
       hoverRef.current = null;
       setHover(null);
@@ -1453,6 +1593,37 @@ export function NetworkCanvas({
               </div>
             ))}
           {"hint" in tip && tip.hint && <p className="text-meta text-ink-tertiary">{tip.hint}</p>}
+        </div>
+      )}
+      {find && (
+        <div
+          data-part="find"
+          role="group"
+          aria-label="Matches"
+          className="absolute top-0 right-0 flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+        >
+          <button
+            type="button"
+            aria-label="Previous match"
+            title="Previous match (Shift+Enter in the search)"
+            className={zoomButton}
+            onClick={() => find.onStep(-1)}
+          >
+            <ChevronUp size={14} aria-hidden className="mx-auto" />
+          </button>
+          <span role="status" className="px-1 text-meta text-ink-secondary tabular-nums whitespace-nowrap">
+            {find.index + 1} of {find.count.toLocaleString()}
+            <span className="sr-only">: {titleOf(find.node)}</span>
+          </span>
+          <button
+            type="button"
+            aria-label="Next match"
+            title="Next match (Enter in the search)"
+            className={zoomButton}
+            onClick={() => find.onStep(1)}
+          >
+            <ChevronDown size={14} aria-hidden className="mx-auto" />
+          </button>
         </div>
       )}
       {chip && (

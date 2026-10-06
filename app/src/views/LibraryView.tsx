@@ -104,6 +104,7 @@ import { ActionsSheet, LibrarySelectionBar } from "../components/library/Library
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
+import { networkFindStepAtom } from "../atoms/network";
 import { LibraryEvidenceView } from "../components/library/LibraryEvidenceView";
 import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
@@ -262,6 +263,7 @@ export function LibraryView() {
   // Filtering, ranking, match categories and highlighting read `query` (the
   // committed search). Only the input binds to the draft.
   const committedQuery = useAtomValue(libraryQueryAtom);
+  const setNetworkFindStep = useSetAtom(networkFindStepAtom);
   // `query` is deferred: while a new query's results compute, React keeps
   // rendering the previous result set, so the pane stays interactive instead of
   // blocking the keystroke on a re-rank of the whole corpus.
@@ -1167,6 +1169,14 @@ export function LibraryView() {
               submitSearch();
             }}
             onKeyDown={(e) => {
+              if (e.key === "Enter" && viewMode === "network" && searchDraft.trim() && searchDraft.trim() === committedQuery.trim()) {
+                // The Network view's find: the query is searched, so Enter
+                // and Shift+Enter step through its matches.
+                e.preventDefault();
+                setSearchFocused(false);
+                setNetworkFindStep((s) => ({ dir: e.shiftKey ? -1 : 1, n: s.n + 1 }));
+                return;
+              }
               if (e.key === "Enter") {
                 // Claimed: the Results sheet can open on this key and take
                 // focus, and the same Enter's keypress would then press the
@@ -1404,6 +1414,8 @@ export function LibraryView() {
               selectedId={selectedId}
               onSelect={handleSelect}
               onClear={clearNetworkSelection}
+              query={query}
+              relevanceOf={scoreOf}
             />
           </div>
         ) : viewMode === "evidence" ? (

@@ -7,6 +7,11 @@ import type { ToggleOption } from "../data/libraryDisplay";
 
 const NO_REFS: Reference[] = [];
 
+/** Enter and Shift+Enter in the masthead search, while the Network view is
+ *  open and the query is the one already searched: step the find cursor. `n`
+ *  changes on every press. */
+export const networkFindStepAtom = atom<{ dir: 1 | -1; n: number }>({ dir: 1, n: 0 });
+
 /** The Library collection as one graph (`data/network/graph.ts`). Read only by
  *  the Network view and its Display options, so no other view builds it. */
 export const networkGraphAtom = atom((get) => {

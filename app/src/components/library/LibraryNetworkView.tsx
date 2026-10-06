@@ -1,9 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
 import type { Entity } from "../../data/entities";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryNetworkDisplayAtom } from "../../atoms/library";
-import { networkGraphAtom } from "../../atoms/network";
+import { networkFindStepAtom, networkGraphAtom } from "../../atoms/network";
 import { HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
 import { loadNetworkLayout, placeNetwork, type StoredLayout } from "../../data/network/layout";
 import { cachedFocus, FOCUS_MAX, focusMembers, runFocus, type FocusLayout } from "../../data/network/focus";
@@ -37,6 +37,8 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   selectedId,
   onSelect,
   onClear,
+  query,
+  relevanceOf,
 }: {
   matches: Entity[];
   filtering: boolean;
@@ -44,6 +46,10 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   onSelect: Select;
   /** Ends the selection (Escape, a click on empty canvas). */
   onClear: () => void;
+  /** The committed search. While there is one, the view finds its matches
+   *  one at a time, best first by `relevanceOf`. */
+  query: string;
+  relevanceOf: (e: Entity) => { score: number };
 }) {
   const source = useAtomValue(dataSourceAtom);
   const entities = useAtomValue(libraryEntitiesAtom);
@@ -185,6 +191,49 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     [graph, source],
   );
 
+  /* Find: the search's matches, most relevant first. The cursor starts on the
+     best one whenever the query or the match set changes, and Enter /
+     Shift+Enter in the masthead search (or the stepper) move it. */
+  const findOrder = useMemo(() => {
+    if (!filtering || !query.trim()) return null;
+    const scored: { i: number; s: number }[] = [];
+    for (const e of matches) {
+      const i = graph.index.get(e.id);
+      if (i !== undefined && nodeOn[i]) scored.push({ i, s: relevanceOf(e).score });
+    }
+    scored.sort((x, y) => y.s - x.s);
+    return scored.map((x) => x.i);
+    // `matchKey` stands for the match set; a re-sort of the same set changes nothing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtering, query, matchKey, relevanceOf, graph, nodeOn]);
+  const findKey = findOrder ? `${query}|${matchKey}` : null;
+  const [cursor, setCursor] = useState<{ key: string | null; at: number }>({ key: null, at: 0 });
+  const at = cursor.key === findKey ? cursor.at : 0;
+  const findCount = findOrder?.length ?? 0;
+  const stepFind = useCallback(
+    (dir: 1 | -1) => {
+      if (!findCount) return;
+      setCursor({ key: findKey, at: (at + dir + findCount) % findCount });
+    },
+    [findKey, at, findCount],
+  );
+  const step = useAtomValue(networkFindStepAtom);
+  const lastStep = useRef(step.n);
+  useEffect(() => {
+    if (step.n === lastStep.current) return;
+    lastStep.current = step.n;
+    stepFind(step.dir);
+    // Only a new press steps; `stepFind` changes with the cursor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+  const find = useMemo(
+    () =>
+      findOrder && findCount
+        ? { node: findOrder[at], key: `${findKey}|${at}`, index: at, count: findCount, onStep: stepFind }
+        : null,
+    [findOrder, findCount, at, findKey, stepFind],
+  );
+
   const selected = selectedId ? graph.index.get(selectedId) ?? -1 : -1;
   const select = useCallback(
     (i: number, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => onSelect(graph.ids[i], e),
@@ -227,6 +276,7 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         selected={selected}
         onSelect={select}
         onClear={onClear}
+        find={find}
         edgeInfo={edgeInfo}
         label={
           !filtering
