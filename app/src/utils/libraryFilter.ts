@@ -513,7 +513,7 @@ function compile(s: LibraryFilterState): FilterNode[] {
         passesMatchTypes(s.matchTypes, s.q, () =>
           // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
           // would read `not` / `or` as words to match.
-          matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source, s.searchScope),
+          matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source, s.searchScope, s.searchQuery?.match),
         ),
     });
   const out = [...withGroups(nodes, s.groups), ...tail];
@@ -586,7 +586,7 @@ export function passesMatchTypes(
 export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
   const s = withDefaults(state);
   if (!s.q) return true;
-  const { groups, exclude } = s.searchQuery!;
+  const { groups, exclude, match = "partial" } = s.searchQuery!;
   if (groups.length === 0 && exclude.length === 0) return true;
   const scope = s.searchScope ?? "all";
   // Scoped, the fields in scope stand in for the whole index, and the body is
@@ -595,8 +595,8 @@ export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
     scope === "all" ? (s.searchIndex.get(e.id) ?? "") : scopedFieldText(e, s.language, scope);
   const body = s.fullTextSearch && bodyInScope(scope);
   const hit = (t: string) =>
-    (!!meta && termIn(meta, t)) ||
-    (body && termIn(entityFullTextBlob(e, s.language, s.source), t));
+    (!!meta && termIn(meta, t, match)) ||
+    (body && termIn(entityFullTextBlob(e, s.language, s.source), t, match));
   return groups.every((g) => g.some(hit)) && !exclude.some(hit);
 }
 

@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Ban, Plus, Quote, Split } from "lucide-react";
 import {
   clearLibrarySearchAtom,
+  libraryQueryAtom,
   librarySearchDraftAtom,
-  librarySearchMatchAtom,
-  librarySearchScopeAtom,
+  librarySearchMatchInputAtom,
+  librarySearchScopeInputAtom,
 } from "../../../atoms/library";
-import type { SearchScope } from "../../../utils/librarySnippets";
-import type { QueryMatchMode } from "../../../utils/queryTokens";
+import { SEARCH_SCOPE_LABEL, type SearchScope } from "../../../utils/searchScope";
+import { MATCH_LABEL, type QueryMatchMode } from "../../../utils/queryTokens";
 import {
   appendClause,
   clauseLabel,
@@ -24,8 +25,9 @@ import { BAR_GHOST, COMMIT_FILL } from "../../shared/warmButton";
 /** The Adv. Search query toolbar: where the query is tested ("Search in"), how
  *  a term matches ("Match"), and the query itself as chips that can be removed
  *  or added to without typing the syntax. Every control writes the one query
- *  the masthead box holds (`librarySearchDraftAtom`), or the two atoms the
- *  matcher reads, so the box, the chips and the results never disagree.
+ *  the masthead box holds (`librarySearchDraftAtom`), or the two modifiers
+ *  the Library's matcher calls read, so the box, the chips and the results
+ *  never disagree. The selects commit in a transition, as the box does.
  *
  *  `wide`: two rows, the selects and the syntax line, then chips and the add
  *  buttons. `stacked` (the phone Results sheet): the selects, the add buttons,
@@ -33,18 +35,12 @@ import { BAR_GHOST, COMMIT_FILL } from "../../shared/warmButton";
  *  row sideways rather than adding a line, and composing a clause swaps the
  *  chips for an input in the same row, so nothing below ever moves. */
 
-const SCOPES: { value: SearchScope; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "title", label: "Title" },
-  { value: "metadata", label: "Metadata" },
-  { value: "fulltext", label: "Full text" },
-  { value: "quotes", label: "Quotes" },
-];
+const SCOPES = (["all", "title", "metadata", "fulltext", "quotes"] as const).map((value) => ({
+  value,
+  label: SEARCH_SCOPE_LABEL[value],
+}));
 
-const MATCHES: { value: QueryMatchMode; label: string }[] = [
-  { value: "partial", label: "Partial words" },
-  { value: "whole", label: "Whole words" },
-];
+const MATCHES = (["partial", "whole"] as const).map((value) => ({ value, label: MATCH_LABEL[value] }));
 
 const ADDS: { kind: ClauseKind; label: string; icon: ReactNode; placeholder: string }[] = [
   { kind: "phrase", label: "Exact phrase", icon: <Quote size={12} aria-hidden />, placeholder: "Words in this order" },
@@ -56,27 +52,27 @@ const GHOST = `inline-flex items-center gap-1 h-8 px-2 rounded-md text-xs font-m
   transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${BAR_GHOST}`;
 
 export function AdvancedSearchBar({
-  query,
   hasQuotes,
   layout = "wide",
   trailing,
 }: {
-  /** The committed query. */
-  query: string;
   /** Offer "Quotes" only in a collection whose entities carry quote fields. */
   hasQuotes: boolean;
   layout?: "wide" | "stacked";
   /** Wide only: the end of the first row (the hidden-by-filters line). */
   trailing?: ReactNode;
 }) {
-  const [scope, setScope] = useAtom(librarySearchScopeAtom);
-  const [match, setMatch] = useAtom(librarySearchMatchAtom);
+  const [scope, setScope] = useAtom(librarySearchScopeInputAtom);
+  const [match, setMatch] = useAtom(librarySearchMatchInputAtom);
+  // The committed query, not the deferred one the results render with: two
+  // quick edits must each build on the last, or the second drops the first.
+  const committed = useAtomValue(libraryQueryAtom);
   const setDraft = useSetAtom(librarySearchDraftAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const [composing, setComposing] = useState<ClauseKind | null>(null);
 
   const scopes = hasQuotes ? SCOPES : SCOPES.filter((s) => s.value !== "quotes");
-  const clauses = parseClauses(query);
+  const clauses = parseClauses(committed);
 
   // An emptied query ends the search, as the masthead chip's × does: an empty
   // draft alone commits nothing (see `librarySearchDraftAtom`).
@@ -111,6 +107,7 @@ export function AdvancedSearchBar({
         <button
           key={a.kind}
           type="button"
+          data-gutter-align="box"
           className={`${GHOST} ${composing === a.kind ? "bg-warm text-ink" : ""}`}
           aria-pressed={composing === a.kind}
           onClick={() => setComposing((c) => (c === a.kind ? null : a.kind))}
@@ -127,8 +124,8 @@ export function AdvancedSearchBar({
       key={composing}
       kind={composing}
       onAdd={(input) => {
-        const next = appendClause(query, composing, input);
-        if (next !== query) write(next);
+        const next = appendClause(committed, composing, input);
+        if (next !== committed) write(next);
         setComposing(null);
       }}
       onCancel={() => setComposing(null)}
@@ -148,7 +145,7 @@ export function AdvancedSearchBar({
             <ActiveFilterChip
               label={clauseLabel(c)}
               removeLabel={`Remove from search: ${clauseLabel(c)}`}
-              onRemove={() => write(withoutClause(query, i))}
+              onRemove={() => write(withoutClause(committed, i))}
             />
           </span>
         ))
@@ -166,7 +163,7 @@ export function AdvancedSearchBar({
     return (
       <div data-component="AdvancedSearchBar" data-layout="stacked" className="shrink-0 flex flex-col gap-1 pt-1 pb-2">
         <div className="h-8 flex items-center">{selects}</div>
-        <div className="h-8 flex items-center -ms-2">{adds}</div>
+        <div className="h-8 flex items-center">{adds}</div>
         <div className="h-8 flex items-center gap-1 min-w-0">{chips}</div>
       </div>
     );

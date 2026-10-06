@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
@@ -140,7 +141,7 @@ import { SavedViewsMenu } from "../components/library/SavedViewsMenu";
 import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
-import { HighlightedText } from "../components/shared/HighlightedText";
+import { HighlightedText, SearchMarkProvider } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { MobileEntityList } from "../components/library/MobileEntityList";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
@@ -395,8 +396,7 @@ export function LibraryView() {
   const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
-  // Adv. Search's modifiers. `searchMatch` is read by the matcher itself
-  // (`queryTokens.ts`); here it only keys the memos that ran under the old mode.
+  // Adv. Search's modifiers, passed to every matcher call below.
   const searchScope = useAtomValue(librarySearchScopeAtom);
   const searchMatch = useAtomValue(librarySearchMatchAtom);
   const notify = useNotify();
@@ -603,15 +603,14 @@ export function LibraryView() {
   // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
   // Full-text body scanning needs `q.length ≥ 3`, to keep one- and two-character
   // queries from scanning every CEJIL document body.
-  const searchTerms = useMemo(
-    () => highlightTerms(query), // already folded
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new identity per match mode re-runs every memo keyed on the terms
-    [query, searchMatch],
-  );
-  // The boolean shape of the same query (AND groups, OR within, NOT excluded).
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- see `searchTerms`
-  const searchQuery = useMemo(() => ({ ...parseSearchQuery(query) }), [query, searchMatch]);
-  const fullTextSearch = q.length >= 3;
+  const searchTerms = useMemo(() => highlightTerms(query), [query]); // already folded
+  // The boolean shape of the same query (AND groups, OR within, NOT excluded),
+  // carrying the match mode the filter tests its terms with.
+  const searchQuery = useMemo(() => parseSearchQuery(query, { match: searchMatch }), [query, searchMatch]);
+  // The same two rules for the marks in the Library's own panes (the entity
+  // preview is left out: its Search tab and panels always match partially).
+  const searchMarks = useMemo(() => ({ match: searchMatch, scope: searchScope }), [searchMatch, searchScope]);
+  const fullTextSearch = q.length >= FULL_TEXT_MIN;
   const fromMs = dateBoundMs(dateFrom, "from");
   // Inclusive of the whole "to" day, or of the "to" minute when it is timed.
   const toMs = dateBoundMs(dateTo, "to");
@@ -714,14 +713,14 @@ export function LibraryView() {
     return (e: Entity): MatchCategories => {
       let c = cache.get(e.id);
       if (!c) {
-        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource, searchScope);
+        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource, searchScope, searchMatch);
         cache.set(e.id, c);
       }
       return c;
     };
     // `cejilReady`: blobs go empty→real when the corpus lands, so cached
     // "document: false" answers from before that must not survive it.
-  }, [searchTerms, language, dataSource, cejilReady, searchScope]);
+  }, [searchTerms, language, dataSource, cejilReady, searchScope, searchMatch]);
 
   // Relevance per entity, at most once per query (same lazy cache as
   // `categoriesOf`), so toggling a chip or facet never re-scores an entity.
@@ -733,7 +732,7 @@ export function LibraryView() {
   }, [countByEntity]);
   const scoreOf = useMemo(() => {
     const cache = new Map<string, RelevanceBreakdown>();
-    const relevanceQuery = { terms: searchTerms, phrase: searchTerms.join(" ") };
+    const relevanceQuery = { terms: searchTerms, phrase: searchTerms.join(" "), match: searchMatch };
     return (e: Entity): RelevanceBreakdown => {
       let s = cache.get(e.id);
       if (!s) {
@@ -743,7 +742,7 @@ export function LibraryView() {
       return s;
     };
     // `cejilReady`: document bodies go empty→real when the corpus lands.
-  }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections, searchScope]);
+  }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections, searchScope, searchMatch]);
 
   // One full-corpus pass: `matchTypeBase` passes facets and search but not the
   // chips, and the chip-narrowed list is filtered from it rather than from the
@@ -1132,6 +1131,7 @@ export function LibraryView() {
     // The narrow-tier gutter host (12px). The toolbar, the view lane, the time
     // brush and the footer are `bleed` bands: their grounds and rules reach the
     // pane edge and their content sits on the gutter.
+    <SearchMarkProvider value={searchMarks}>
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       {/* Toolbar — a row of controls, and under it (when the row can't hold
           it) the readout's own line. See "Masthead fold" above. */}
@@ -1637,10 +1637,12 @@ export function LibraryView() {
         )}
       </div>
     </div>
+    </SearchMarkProvider>
   );
 
   // Results tab body — the per-entity evidence view (where each term hit).
   const resultsBody = (
+    <SearchMarkProvider value={searchMarks}>
     <ResultsBody
       query={query}
       entities={filtered}
@@ -1661,6 +1663,7 @@ export function LibraryView() {
       totalMatches={matchTypeBase.length}
       relevanceOf={scoreOf}
     />
+    </SearchMarkProvider>
   );
 
   const filtersDrawer = (
@@ -1697,9 +1700,13 @@ export function LibraryView() {
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectionActive && selectionDrawerOpen ? (
-    <LibrarySelectionDrawer onSelect={handleDrawerSelect} query={query} />
+    <SearchMarkProvider value={searchMarks}>
+      <LibrarySelectionDrawer onSelect={handleDrawerSelect} query={query} />
+    </SearchMarkProvider>
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer onSelect={handleDrawerSelect} query={query} />
+    <SearchMarkProvider value={searchMarks}>
+      <LibraryClusterDrawer onSelect={handleDrawerSelect} query={query} />
+    </SearchMarkProvider>
   ) : (
     filtersDrawer
   );

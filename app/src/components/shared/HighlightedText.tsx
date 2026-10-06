@@ -1,5 +1,17 @@
-import { Fragment, type ReactNode } from "react";
-import { highlightTerms, highlightRanges } from "../../utils/queryTokens";
+import { createContext, Fragment, useContext, type ReactNode } from "react";
+import { highlightTerms, highlightRanges, type QueryMatchMode } from "../../utils/queryTokens";
+import { fieldInScope, type SearchScope } from "../../utils/searchScope";
+
+/** How the marks below match, and which fields they mark. Partial and every
+ *  field by default; the Library provides its search's Match and Search in
+ *  around its own panes (not the entity preview), so marks there agree with
+ *  what the filter matched and marks everywhere else stay partial. */
+export interface SearchMarkRules {
+  match: QueryMatchMode;
+  scope: SearchScope;
+}
+const SearchMarkContext = createContext<SearchMarkRules>({ match: "partial", scope: "all" });
+export const SearchMarkProvider = SearchMarkContext.Provider;
 
 /** The search-match mark. Reuses the app's highlight family — the *active*
  *  highlight token (`--highlight-yellow-active`) at 70%, a cleaner marigold than
@@ -41,13 +53,25 @@ const MARK_CLASS =
  *  safe on arbitrary content. Overlapping term hits are merged into one mark. An
  *  empty query (or no match) renders the text unchanged, with no extra wrapper,
  *  so it's a drop-in for a bare `{text}`. */
-export function HighlightedText({ text, query }: { text: string; query: string }) {
+export function HighlightedText({
+  text,
+  query,
+  fieldKey,
+}: {
+  text: string;
+  query: string;
+  /** The search field this text is (`title`, `country`, a property key). A
+   *  field outside the provided scope is not marked. Omit for text that is
+   *  not one field (an excerpt, a label). */
+  fieldKey?: string;
+}) {
+  const { match, scope } = useContext(SearchMarkContext);
   const terms = highlightTerms(query);
-  if (terms.length === 0) return <>{text}</>;
+  if (terms.length === 0 || (fieldKey && !fieldInScope(fieldKey, scope))) return <>{text}</>;
 
   // Ranges come from the SHARED matcher, so these marks and the ones painted
   // into the PDF text layer always agree about what a hit is.
-  const merged = highlightRanges(text, terms);
+  const merged = highlightRanges(text, terms, match);
   if (merged.length === 0) return <>{text}</>;
 
   const parts: ReactNode[] = [];

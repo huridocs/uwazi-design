@@ -105,8 +105,7 @@ export const ResultsBody = memo(function ResultsBody({
   // ride the relationships panel's expand/collapse atoms.
   const [showAllMap, setShowAllMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
-  // The search's scope narrows the passages as it narrows the set; the match
-  // mode is read by the matcher, and only keys the memos here.
+  // The search's scope and match mode narrow the passages as they narrow the set.
   const scope = useAtomValue(librarySearchScopeAtom);
   const match = useAtomValue(librarySearchMatchAtom);
   const hasQuotes = useAtomValue(libraryHasQuotesAtom);
@@ -118,7 +117,7 @@ export const ResultsBody = memo(function ResultsBody({
   }, [phone, setActiveTypes]);
   const bar =
     phone ? (
-      <AdvancedSearchBar query={trimmed} hasQuotes={hasQuotes} layout="stacked" />
+      <AdvancedSearchBar hasQuotes={hasQuotes} layout="stacked" />
     ) : null;
   /* The lane's width sets how much context each excerpt carries: about three
      lines of the passage column. Held while the drawer divider is dragged and
@@ -142,10 +141,9 @@ export const ResultsBody = memo(function ResultsBody({
         .slice(0, visible)
         .map((e) => ({
           entity: e,
-          snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx, scope }),
+          snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx, scope, match }),
         }))
         .filter((x) => x.snippets.count > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match`: see above
     [measured, entities, visible, trimmed, language, source, ctx, scope, match],
   );
 
@@ -164,11 +162,12 @@ export const ResultsBody = memo(function ResultsBody({
                 maxFullText: Infinity,
                 contextWords: ctx,
                 scope,
+                match,
               }),
             }
           : x,
       ),
-    [capped, showAllMap, trimmed, language, source, ctx, scope],
+    [capped, showAllMap, trimmed, language, source, ctx, scope, match],
   );
 
   useEffect(() => {

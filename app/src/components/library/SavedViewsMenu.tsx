@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Bookmark, Check, Clock, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
-import { quotedQuery } from "../../utils/queryTokens";
+import { MATCH_LABEL, quotedQuery } from "../../utils/queryTokens";
+import { SEARCH_SCOPE_LABEL } from "../../utils/searchScope";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 import { SheetDone } from "../layout/SheetDone";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -33,13 +34,17 @@ const VIEW_LABEL: Record<string, string> = {
 };
 
 /** One line saying what a snapshot holds: its view, its filter count and its
- *  search. No count when nothing is ticked, so a plain view reads as one word. */
+ *  search with the Search in and Match it ran with (named, as the masthead's
+ *  search chip names them, not counted as filters). No count when nothing is
+ *  ticked, so a plain view reads as one word. */
 export function snapshotSummary(s: LibrarySnapshot, { withQuery = true } = {}): string {
   const n = snapshotFilterCount(s);
   return [
     s.viewMode ? VIEW_LABEL[s.viewMode] : "Default view",
     n ? `${n} ${n === 1 ? "filter" : "filters"}` : null,
     withQuery && s.query ? quotedQuery(s.query) : null,
+    s.query && s.searchScope && s.searchScope !== "all" ? SEARCH_SCOPE_LABEL[s.searchScope] : null,
+    s.query && s.searchMatch === "whole" ? MATCH_LABEL.whole : null,
   ]
     .filter(Boolean)
     .join(" · ");

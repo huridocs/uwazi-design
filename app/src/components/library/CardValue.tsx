@@ -33,7 +33,7 @@ export function CardValue({
 }) {
   const marked = (text: string) => (
     <ThesaurusValueLabel value={text}>
-      <HighlightedText text={text} query={query} />
+      <HighlightedText text={text} query={query} fieldKey={field.key ?? field.id} />
     </ThesaurusValueLabel>
   );
 

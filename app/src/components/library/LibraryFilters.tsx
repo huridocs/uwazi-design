@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { FULL_TEXT_MIN } from "../../utils/searchScope";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
 import type { Entity } from "../../data/entities";
 import {
@@ -249,8 +250,8 @@ export function LibraryFilters() {
       q: query.trim().toLowerCase(),
       searchIndex,
       searchTerms: highlightTerms(query), // folded
-      searchQuery: parseSearchQuery(query),
-      fullTextSearch: query.trim().length >= 3,
+      searchQuery: parseSearchQuery(query, { match: searchMatch }),
+      fullTextSearch: query.trim().length >= FULL_TEXT_MIN,
       searchScope,
       matchTypes,
       content: contentSelection,

@@ -7,16 +7,22 @@ interface ActiveFilterChipProps {
   /** Accessible name for the × when "Remove filter: …" is the wrong sentence —
    *  the search chip drops a search, not a facet. */
   removeLabel?: string;
+  /** Printed after the label in tertiary ink (the search chip's Search in and
+   *  Match). In a tight slot both shorten: the label keeps its first few
+   *  characters, the detail takes the rest, and the chip's tooltip has both
+   *  in full. */
+  detail?: string;
   /** Extra classes on the chip itself — the masthead readout passes `min-w-0`
    *  so the chip yields width (its label already truncates) inside a slot that
    *  is fixed so the controls beside it never move. */
   className?: string;
 }
 
-export function ActiveFilterChip({ label, color, onRemove, removeLabel, className }: ActiveFilterChipProps) {
+export function ActiveFilterChip({ label, color, onRemove, removeLabel, detail, className }: ActiveFilterChipProps) {
   return (
     <span
       data-component="ActiveFilterChip"
+      title={detail ? `${label} · ${detail}` : undefined}
       className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-meta font-medium text-ink-secondary ${className ?? ""}`}
       style={{
         backgroundColor: "color-mix(in srgb, var(--text-primary) 6%, var(--bg-surface))",
@@ -31,9 +37,14 @@ export function ActiveFilterChip({ label, color, onRemove, removeLabel, classNam
           style={{ backgroundColor: color }}
         />
       )}
-      <span data-part="label" className="truncate max-w-40">
+      <span data-part="label" className={`truncate max-w-40 ${detail ? "shrink-0 min-w-0 max-w-[5rem]" : ""}`}>
         {label}
       </span>
+      {detail && (
+        <span data-part="detail" className="min-w-0 truncate text-ink-tertiary">
+          · {detail}
+        </span>
+      )}
       {/* The × is the only focusable thing here (the chip itself is a span), and it
           took the browser default. Same carbon halo as `ToggleChip` — solid carbon
           outline, 1px gap, no layout cost. At 3px of extension it clears the chip's

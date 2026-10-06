@@ -735,7 +735,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 <span
                   className={`flex-1 min-w-0 truncate text-xs ${sel ? "text-ink font-medium" : "text-ink-secondary"}`}
                 >
-                  <HighlightedText text={e.title} query={query} />
+                  <HighlightedText text={e.title} query={query} fieldKey="title" />
                 </span>
                 <span className="shrink-0 text-meta text-ink-tertiary hidden md:block">
                   {getEntityType(e.typeId)?.name ?? e.typeId}

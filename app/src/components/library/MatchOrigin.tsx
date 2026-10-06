@@ -9,6 +9,8 @@ import { dataSourceAtom } from "../../atoms/dataSource";
 import {
   requestMetadataFocusAtom,
   resultsCurrentPageAtom,
+  librarySearchMatchAtom,
+  librarySearchScopeAtom,
 } from "../../atoms/library";
 import { scrollToPageAtom } from "../../atoms/selection";
 import { passageFileIdAtom } from "../../atoms/files";
@@ -95,12 +97,16 @@ export const MatchOrigin = memo(function MatchOrigin({
   const setPassageFile = useSetAtom(passageFileIdAtom);
   const setResultsActivePage = useSetAtom(resultsCurrentPageAtom);
   const q = query.trim();
+  // The search's Search in and Match: a field out of scope is never named as
+  // where the query matched.
+  const scope = useAtomValue(librarySearchScopeAtom);
+  const match = useAtomValue(librarySearchMatchAtom);
 
   const visibleKey = visibleFieldKeys.join(",");
   const origin = useMemo(
-    () => hiddenMatchOrigin(entity, q, language, source, visibleFieldKeys),
+    () => hiddenMatchOrigin(entity, q, language, source, visibleFieldKeys, { scope, match }),
     // `visibleKey` stands in for the array so a fresh literal doesn't re-scan.
-    [entity, q, language, source, visibleKey],
+    [entity, q, language, source, visibleKey, scope, match],
   );
   // Own or borrowed, asked only when the document matched: the two get
   // different glyphs, because a borrowed hit is a stand-in judgment's text and
@@ -117,8 +123,8 @@ export const MatchOrigin = memo(function MatchOrigin({
 
   // One entity, one excerpt each — built only while the popover is open.
   const snippets = useMemo(
-    () => (open ? buildSnippetsFor(entity, q, language, source, { maxFullText: 1 }) : null),
-    [open, entity, q, language, source],
+    () => (open ? buildSnippetsFor(entity, q, language, source, { maxFullText: 1, scope, match }) : null),
+    [open, entity, q, language, source, scope, match],
   );
 
   const show = (kind: Kind, el: HTMLElement, immediate = false) => {
@@ -185,7 +191,7 @@ export const MatchOrigin = memo(function MatchOrigin({
     // Reuse the popover's build when there is one — a tap on touch (no hover, no
     // focus) is the only path that has to pay for it here.
     const page = (
-      snippets ?? buildSnippetsFor(entity, q, language, source, { maxFullText: 1 })
+      snippets ?? buildSnippetsFor(entity, q, language, source, { maxFullText: 1, scope, match })
     ).fullText[0]?.page;
     if (page != null) {
       setPassageFile(passageFileId(entity, language, source));

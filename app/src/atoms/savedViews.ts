@@ -23,6 +23,8 @@ import {
   matchTypeFiltersAtom,
   librarySearchScopeAtom,
   librarySearchMatchAtom,
+  libraryCorpusReadyAtom,
+  libraryHasQuotesAtom,
   libraryDisplayAtom,
   libraryTimelineScopeAtom,
   libraryResultsSheetOpenAtom,
@@ -166,7 +168,7 @@ const SEARCH_SCOPES: SearchScope[] = ["all", "title", "metadata", "fulltext", "q
 
 /** Write a snapshot's state, replacing the Library's. Facets the snapshot does
  *  not tick are cleared; nothing is merged. */
-function writeSnapshot(set: Setter, s: LibrarySnapshot) {
+function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   set(libraryTypeFiltersAtom, { ...s.types });
   set(libraryHasDocAtom, s.hasDoc);
   set(libraryStatusFiltersAtom, { ...s.status });
@@ -185,7 +187,11 @@ function writeSnapshot(set: Setter, s: LibrarySnapshot) {
   set(L.searchDraftStateAtom, s.query);
   set(libraryQueryAtom, s.query);
   // The modifiers belong to a query; without one they are back at their defaults.
-  set(librarySearchScopeAtom, (s.query && SEARCH_SCOPES.includes(s.searchScope!) && s.searchScope) || "all");
+  // Quotes is dropped where the collection has loaded and carries none; before
+  // it loads, `librarySearchScopeAtom` reads it as All.
+  const scope = (s.query && SEARCH_SCOPES.includes(s.searchScope!) && s.searchScope) || "all";
+  const unoffered = scope === "quotes" && get(libraryCorpusReadyAtom) && !get(libraryHasQuotesAtom);
+  set(librarySearchScopeAtom, unoffered ? "all" : scope);
   set(librarySearchMatchAtom, s.query && s.searchMatch === "whole" ? "whole" : "partial");
   set(L.viewModeChosenAtom, s.viewMode);
   set(L.preSearchViewModeAtom, s.query ? s.preSearchView : null);
@@ -207,7 +213,7 @@ function writeSnapshot(set: Setter, s: LibrarySnapshot) {
 export const applyLibrarySnapshotAtom = atom(null, (get, set, s: LibrarySnapshot) => {
   whenBulkClean(get, set, () => {
     if (get(dataSourceAtom) !== s.collection) set(switchDataSourceAtom, s.collection);
-    writeSnapshot(set, s);
+    writeSnapshot(get, set, s);
     // A link opened before signing in waits behind the login screen.
     if (get(appViewAtom) !== "login") set(appViewAtom, "library");
   });
@@ -261,10 +267,7 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
     rangeNames.size +
     (s.groups ?? []).filter((g) => groupEffective(g, narrows)).length +
     nn(s.chains) +
-    nn(s.content) +
-    // A scoped or whole-word search narrows like a filter does.
-    (s.query && s.searchScope && s.searchScope !== "all" ? 1 : 0) +
-    (s.query && s.searchMatch === "whole" ? 1 : 0)
+    nn(s.content)
   );
 }
 

@@ -1,4 +1,5 @@
 import { Children, useEffect, useMemo, useState, type ReactNode } from "react";
+import { FULL_TEXT_MIN, SEARCH_SCOPE_LABEL } from "../../../utils/searchScope";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { breakpointAtom } from "../../../atoms/viewport";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
@@ -25,6 +26,7 @@ import {
   libraryResultsLayoutAtom,
   librarySearchMatchAtom,
   librarySearchScopeAtom,
+  librarySearchScopeInputAtom,
   resultsCurrentPageAtom,
   type ResultsLayout,
 } from "../../../atoms/library";
@@ -170,9 +172,9 @@ export function ResultsMainView({
   // narrowed in the drawer must not narrow this view behind a control it lacks.
   const setMatchTypes = useSetAtom(matchTypeFiltersAtom);
   useEffect(() => setMatchTypes(ALL_MATCH_TYPES), [setMatchTypes]);
-  const [scope, setScope] = useAtom(librarySearchScopeAtom);
+  const scope = useAtomValue(librarySearchScopeAtom);
+  const setScope = useSetAtom(librarySearchScopeInputAtom);
   const narrow = useAtomValue(breakpointAtom) === "mobile";
-  // Read only to re-snippet when it changes: the matcher reads the mode itself.
   const match = useAtomValue(librarySearchMatchAtom);
   const hasQuotes = useAtomValue(libraryHasQuotesAtom);
   const [visible, setVisible] = useState(STEP);
@@ -207,10 +209,10 @@ export function ResultsMainView({
             maxFullText: layout === "passages" ? PASSAGES_PER_ENTITY : MAX_FULLTEXT,
             contextWords: budget.ctx,
             scope,
+            match,
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match`: see above
     [measured, entities, visible, trimmed, language, source, layout, budget.ctx, scope, match],
   );
 
@@ -227,11 +229,12 @@ export function ResultsMainView({
                 maxFullText: Infinity,
                 contextWords: budget.ctx,
                 scope,
+                match,
               }),
             }
           : r,
       ),
-    [cappedResults, showAll, trimmed, language, source, budget.ctx, scope],
+    [cappedResults, showAll, trimmed, language, source, budget.ctx, scope, match],
   );
 
   if (source === "cejil" && cejilLoading) {
@@ -254,12 +257,11 @@ export function ResultsMainView({
     );
   }
 
-  const scopeLabel = SCOPE_LABEL[scope];
+  const scopeLabel = SEARCH_SCOPE_LABEL[scope];
   // The toolbar heads every state below, the empty ones included: it can build
   // a query from nothing, and widening a scope is the way out of "No matches".
   const bar = (
     <AdvancedSearchBar
-      query={trimmed}
       hasQuotes={hasQuotes}
       layout={narrow ? "stacked" : "wide"}
       trailing={
@@ -309,6 +311,13 @@ export function ResultsMainView({
           <span dir="ltr" className="text-sm font-medium text-ink-secondary">
             No matches for “{trimmed}”{scope === "all" ? "" : ` in ${scopeLabel}`}
           </span>
+          {/* Document bodies are scanned from three characters (`fullTextSearch`),
+              so a shorter query in Full text can only come back empty. */}
+          {scope === "fulltext" && trimmed.length < FULL_TEXT_MIN && (
+            <span className="text-xs text-ink-tertiary">
+              Full text search needs at least {FULL_TEXT_MIN}&nbsp;characters.
+            </span>
+          )}
           <span className="flex items-center gap-2">
             {scope !== "all" && <WarmButton onClick={() => setScope("all")}>Search everywhere</WarmButton>}
             <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
@@ -387,13 +396,6 @@ export function ResultsMainView({
   );
 }
 
-const SCOPE_LABEL: Record<SearchScope, string> = {
-  all: "All",
-  title: "Title",
-  metadata: "Metadata",
-  fulltext: "Full text",
-  quotes: "Quotes",
-};
 
 /** The view's column: the toolbar, then the state below it. No count in the
  *  toolbar: the masthead is the one place this surface prints its number. */
@@ -473,7 +475,7 @@ function GroupedBody({
                   cursor-pointer focus-visible:outline-none focus-visible:ring-1
                   focus-visible:ring-carbon/40 rounded-sm"
               >
-                <HighlightedText text={entity.title} query={query} />
+                <HighlightedText text={entity.title} query={query} fieldKey="title" />
               </button>
               </h2>
               <CountBadge {...evidenceBadge(snippets)} />
@@ -969,7 +971,7 @@ function PassagesBody({
                         style={{ backgroundColor: color }}
                       />
                       <span className="truncate">
-                        <HighlightedText text={row.entity.title} query={query} />
+                        <HighlightedText text={row.entity.title} query={query} fieldKey="title" />
                       </span>
                     </button>
                   )}
@@ -1146,7 +1148,7 @@ function SpineBody({
               <SpineDate t={t} />
               {/* Bounded so a long title can't take the whole line. */}
               <span className="shrink-0 max-w-[18rem] truncate text-xs font-medium text-ink">
-                <HighlightedText text={entity.title} query={query} />
+                <HighlightedText text={entity.title} query={query} fieldKey="title" />
               </span>
               <CountBadge {...evidenceBadge(snippets)} />
               <span className="flex-1" />

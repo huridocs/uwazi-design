@@ -1,7 +1,13 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { libraryActiveSearchAtom, clearLibrarySearchAtom } from "../../atoms/library";
+import {
+  libraryActiveSearchAtom,
+  clearLibrarySearchAtom,
+  librarySearchMatchAtom,
+  librarySearchScopeAtom,
+} from "../../atoms/library";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
-import { quotedQuery } from "../../utils/queryTokens";
+import { MATCH_LABEL, quotedQuery } from "../../utils/queryTokens";
+import { SEARCH_SCOPE_LABEL } from "../../utils/searchScope";
 
 /** The committed search, shown where its results are, with the one affordance
  *  that ends it.
@@ -34,6 +40,13 @@ export function ActiveSearchChip({ className }: { className?: string } = {}) {
   // and the Filters tab's count to answer that question separately.
   const q = useAtomValue(libraryActiveSearchAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
+  // Adv. Search's modifiers are part of the search and apply in every view, so
+  // the chip names them when they are not the defaults; its × resets them too.
+  const scope = useAtomValue(librarySearchScopeAtom);
+  const match = useAtomValue(librarySearchMatchAtom);
+  const detail = [scope !== "all" && SEARCH_SCOPE_LABEL[scope], match !== "partial" && MATCH_LABEL[match]]
+    .filter(Boolean)
+    .join(" · ");
 
   // The masthead only asks for this while a query exists, so this never renders
   // empty in practice — but it stays defensive rather than assuming its host's
@@ -43,8 +56,9 @@ export function ActiveSearchChip({ className }: { className?: string } = {}) {
   return (
     <ActiveFilterChip
       label={quotedQuery(q)}
+      detail={detail || undefined}
       onRemove={() => clearSearch()}
-      removeLabel={`Clear search: ${q}`}
+      removeLabel={`Clear search: ${q}${detail ? ` (${detail})` : ""}`}
       className={className}
     />
   );

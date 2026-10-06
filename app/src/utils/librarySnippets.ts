@@ -6,8 +6,17 @@ import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
+import { bodyInScope, fieldInScope, FULL_TEXT_MIN, type SearchScope } from "./searchScope";
 import { nepalDocFileId, nepalLoaded, nepalPrimaryDoc } from "../data/nepal/load";
-import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } from "./queryTokens";
+import {
+  highlightTerms,
+  fold,
+  foldWithMap,
+  parseSearchQuery,
+  termHit,
+  termIn,
+  type QueryMatchMode,
+} from "./queryTokens";
 
 /** Builds Uwazi's per-entity search-snippets shape (`SnippetsSearchResponse`:
  *  `{ count, metadata: [{ field, texts[] }], fullText: [{ page, text }] }`) from local data.
@@ -161,34 +170,7 @@ export function entitySearchFields(
   return out;
 }
 
-/** Where a search looks: everywhere, or one kind of text. Set by the Adv.
- *  Search view's "Search in" control (`librarySearchScopeAtom`). The filter
- *  (`matchesSearch`), the snippets, the match categories and the ranking all
- *  read it, so a scoped search matches, excerpts and ranks the same text.
- *  `metadata` is every field but the title and the quotes; `quotes` are the
- *  references' anchored quotes (`quote:` fields, Nepal only). */
-export type SearchScope = "all" | "title" | "metadata" | "fulltext" | "quotes";
-
-const isQuoteField = (fieldKey: string) => fieldKey.startsWith("quote:");
-
-/** Whether a metadata field (title included) is searched under `scope`. */
-export function fieldInScope(fieldKey: string, scope: SearchScope): boolean {
-  switch (scope) {
-    case "all":
-      return true;
-    case "title":
-      return fieldKey === "title";
-    case "metadata":
-      return fieldKey !== "title" && !isQuoteField(fieldKey);
-    case "quotes":
-      return isQuoteField(fieldKey);
-    case "fulltext":
-      return false;
-  }
-}
-
-/** Whether document bodies are searched under `scope`. */
-export const bodyInScope = (scope: SearchScope): boolean => scope === "all" || scope === "fulltext";
+export { bodyInScope, fieldInScope, type SearchScope } from "./searchScope";
 
 /** The folded text of an entity's fields in `scope`, joined: what
  *  `matchesSearch` tests instead of the full index when a search is scoped.
@@ -241,11 +223,11 @@ function foldedFields(e: Entity, language: Language): FoldedField[] {
 }
 
 /** How many times `needle` (already folded, possibly a glob) occurs in `lowerText`. */
-function countOccurrences(lowerText: string, needle: string): number {
+function countOccurrences(lowerText: string, needle: string, match: QueryMatchMode): number {
   let n = 0;
   let from = 0;
   for (;;) {
-    const hit = termHit(lowerText, needle, from);
+    const hit = termHit(lowerText, needle, from, match);
     if (!hit) break;
     n++;
     from = hit[1];
@@ -313,12 +295,13 @@ function excerptAroundTerms(
   /** A cached `foldWithMap(text)` (see `pageFoldWithMap`). Must be the fold of
    *  `text` itself, or the window is cut at another string's indices. */
   pre?: { folded: string; map: ArrayLike<number> },
+  match: QueryMatchMode = "partial",
 ): string | null {
   const { folded, map } = pre ?? foldWithMap(text);
   let best = -1;
   let bestEnd = 0;
   for (const t of terms) {
-    const hit = termHit(folded, t);
+    const hit = termHit(folded, t, 0, match);
     if (hit && (best < 0 || hit[0] < best)) {
       [best, bestEnd] = hit;
     }
@@ -529,6 +512,7 @@ export function buildSnippetsFor(
     perPassage = false,
     order = "best",
     scope = "all",
+    match = "partial",
   }: {
     maxFullText?: number;
     contextWords?: number;
@@ -536,6 +520,8 @@ export function buildSnippetsFor(
     order?: "best" | "page";
     /** Only fields and pages in this scope are excerpted and counted. */
     scope?: SearchScope;
+    /** How terms match; only the Library passes `whole`. */
+    match?: QueryMatchMode;
   } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
@@ -543,9 +529,9 @@ export function buildSnippetsFor(
   /** Does this (folded) passage belong in the results? */
   const passes = perPassage
     ? (text: string) =>
-        groups.every((g) => g.some((t) => termIn(text, t))) &&
-        !exclude.some((t) => termIn(text, t))
-    : (text: string) => terms.some((t) => termIn(text, t));
+        groups.every((g) => g.some((t) => termIn(text, t, match))) &&
+        !exclude.some((t) => termIn(text, t, match))
+    : (text: string) => terms.some((t) => termIn(text, t, match));
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) {
@@ -576,14 +562,14 @@ export function buildSnippetsFor(
     let fieldHits = 0;
     const inField = new Set<string>();
     for (const th of termsHit) {
-      const n = countOccurrences(folded, th.term);
+      const n = countOccurrences(folded, th.term, match);
       if (n === 0) continue;
       fieldHits += n;
       inField.add(th.term);
       if (fieldKey === "title") th.title = true;
       else th.properties = true;
     }
-    const excerpt = excerptAroundTerms(text, terms, contextWords);
+    const excerpt = excerptAroundTerms(text, terms, contextWords, undefined, match);
     if (excerpt) {
       metadata.push({
         field,
@@ -613,7 +599,7 @@ export function buildSnippetsFor(
     let hits = 0;
     onPage.clear();
     for (const th of termsHit) {
-      const n = countOccurrences(lower, th.term);
+      const n = countOccurrences(lower, th.term, match);
       if (n === 0) continue;
       hits += n;
       onPage.add(th.term);
@@ -631,7 +617,7 @@ export function buildSnippetsFor(
   }
   for (const m of matched) {
     if (fullText.length >= maxFullText) break;
-    const excerpt = excerptAroundTerms(pages[m.i], terms, contextWords, pageFoldWithMap(pages, m.i));
+    const excerpt = excerptAroundTerms(pages[m.i], terms, contextWords, pageFoldWithMap(pages, m.i), match);
     if (excerpt) {
       fullText.push({
         page: paged ? m.i + 1 : null,
@@ -675,6 +661,7 @@ export function matchCategoriesWithTerms(
   language: Language,
   source: DataSource,
   scope: SearchScope = "all",
+  match: QueryMatchMode = "partial",
 ): MatchCategories {
   if (terms.length === 0) return NO_MATCH;
 
@@ -682,13 +669,13 @@ export function matchCategoriesWithTerms(
   let properties = false;
   for (const f of foldedFields(entity, language)) {
     if (!fieldInScope(f.fieldKey, scope)) continue;
-    if (!terms.some((t) => termIn(f.folded, t))) continue;
+    if (!terms.some((t) => termIn(f.folded, t, match))) continue;
     if (f.fieldKey === "title") title = true;
     else properties = true;
     if (title && properties) break;
   }
   const document =
-    bodyInScope(scope) && terms.some((t) => termIn(entityFullTextBlob(entity, language, source), t));
+    bodyInScope(scope) && terms.some((t) => termIn(entityFullTextBlob(entity, language, source), t, match));
 
   return { title, properties, document };
 }
@@ -725,6 +712,9 @@ export function hiddenMatchOrigin(
   language: Language,
   source: DataSource,
   visibleFieldKeys: readonly string[],
+  /** The Library search's Search in and Match: a field or body out of scope
+   *  is never named as where the query matched. */
+  { scope = "all", match = "partial" }: { scope?: SearchScope; match?: QueryMatchMode } = {},
 ): HiddenMatchOrigin {
   const empty: HiddenMatchOrigin = { property: null, moreProperties: 0, document: false };
   const terms = highlightTerms(q); // already folded
@@ -736,17 +726,18 @@ export function hiddenMatchOrigin(
   // `foldedFields`, not `entitySearchFields` + `fold`: this runs for every
   // rendered row on every keystroke.
   for (const f of foldedFields(entity, language)) {
-    if (visible.has(f.fieldKey)) continue;
-    if (!terms.some((t) => termIn(f.folded, t))) continue;
+    if (visible.has(f.fieldKey) || !fieldInScope(f.fieldKey, scope)) continue;
+    if (!terms.some((t) => termIn(f.folded, t, match))) continue;
     if (property) moreProperties++;
     else property = { field: f.field, fieldKey: f.fieldKey };
   }
 
   const document =
-    q.trim().length >= 3 &&
+    q.trim().length >= FULL_TEXT_MIN &&
+    bodyInScope(scope) &&
     (() => {
       const blob = entityFullTextBlob(entity, language, source);
-      return terms.some((t) => termIn(blob, t));
+      return terms.some((t) => termIn(blob, t, match));
     })();
 
   return { property, moreProperties, document };

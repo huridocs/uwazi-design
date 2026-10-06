@@ -325,7 +325,7 @@ export const EntityCard = memo(function EntityCard({
             ))}
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-ink truncate leading-snug">
-              <HighlightedText text={entity.title} query={query} />
+              <HighlightedText text={entity.title} query={query} fieldKey="title" />
             </div>
             <div className="flex items-center gap-1.5 text-meta text-ink-tertiary min-w-0">
               {!showPreview && (
@@ -526,7 +526,7 @@ export const EntityCard = memo(function EntityCard({
           className={sortMark(sort === "title")}
           title={sort === "title" ? sortedNote : undefined}
         >
-          <HighlightedText text={entity.title} query={query} />
+          <HighlightedText text={entity.title} query={query} fieldKey="title" />
         </span>
       </span>
 

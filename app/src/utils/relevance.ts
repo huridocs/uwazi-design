@@ -2,7 +2,7 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import type { DataSource } from "./libraryFacets";
 import { entitySearchParts, type SearchScope } from "./librarySnippets";
-import { queryMatchMode, termHit } from "./queryTokens";
+import { termHit, type QueryMatchMode } from "./queryTokens";
 
 /** Relevance for Library results: how well an entity answers the query.
  *
@@ -80,12 +80,12 @@ const WORD = /[\p{L}\p{N}]/u;
 const isWordChar = (ch: string | undefined) => !!ch && WORD.test(ch);
 
 /** Occurrences of `term` in folded `text` (capped), and whether any is a whole word. */
-function countHits(text: string, term: string): Hits {
+function countHits(text: string, term: string, match: QueryMatchMode): Hits {
   let count = 0;
   let whole = false;
   let from = 0;
   while (count < COUNT_CAP) {
-    const hit = termHit(text, term, from);
+    const hit = termHit(text, term, from, match);
     if (!hit) break;
     count++;
     if (!whole && !isWordChar(text[hit[0] - 1]) && !isWordChar(text[hit[1]])) whole = true;
@@ -97,17 +97,17 @@ function countHits(text: string, term: string): Hits {
 /** Body hits per document per term. Keyed by the page array, which is shared by
  *  every entity reading that document and dropped with it. */
 const bodyHitsCache = new WeakMap<string[], Map<string, Hits>>();
-function bodyHits(pages: string[], blob: string, term: string): Hits {
+function bodyHits(pages: string[], blob: string, term: string, match: QueryMatchMode): Hits {
   let byTerm = bodyHitsCache.get(pages);
   if (!byTerm) {
     byTerm = new Map();
     bodyHitsCache.set(pages, byTerm);
   }
   // The match mode changes what a term hits, so it is part of the key.
-  const key = `${queryMatchMode()}:${term}`;
+  const key = `${match}:${term}`;
   let hits = byTerm.get(key);
   if (!hits) {
-    hits = countHits(blob, term);
+    hits = countHits(blob, term, match);
     byTerm.set(key, hits);
   }
   return hits;
@@ -121,6 +121,8 @@ export interface RelevanceQuery {
   terms: string[];
   /** The query's terms as one run, folded — what an exact title equals. */
   phrase: string;
+  /** Adv. Search's Match. Absent = `partial`. */
+  match?: QueryMatchMode;
 }
 
 export function scoreRelevance(
@@ -135,6 +137,7 @@ export function scoreRelevance(
   const { fields, pages, blob, borrowed } = entitySearchParts(entity, language, source, scope);
   const title = fields.find((f) => f.fieldKey === "title")?.folded ?? "";
   const terms = [...new Set(query.terms)];
+  const match = query.match ?? "partial";
 
   let score = 0;
   const exactTitle = !!query.phrase && title === query.phrase;
@@ -146,20 +149,20 @@ export function scoreRelevance(
   const best: string[] = [];
   const perTerm: TermAttribution[] = [];
   for (const term of terms) {
-    const inTitle = fieldScore(WEIGHT.title, countHits(title, term));
+    const inTitle = fieldScore(WEIGHT.title, countHits(title, term, match));
     let propHits: Hits = { count: 0, whole: false };
     // The single property that answers the term best, for attribution only —
     // the SCORE still sums every property's hits, as before.
     let bestProp: { key: string; label: string; score: number } | null = null;
     for (const f of fields) {
       if (f.fieldKey === "title") continue;
-      const h = countHits(f.folded, term);
+      const h = countHits(f.folded, term, match);
       propHits = { count: propHits.count + h.count, whole: propHits.whole || h.whole };
       const s = fieldScore(WEIGHT.property, h);
       if (s > 0 && (!bestProp || s > bestProp.score)) bestProp = { key: f.fieldKey, label: f.field, score: s };
     }
     const inProps = fieldScore(WEIGHT.property, propHits);
-    const docHits = blob ? bodyHits(pages, blob, term) : null;
+    const docHits = blob ? bodyHits(pages, blob, term, match) : null;
     const inBody = docHits
       ? fieldScore(borrowed ? WEIGHT.borrowedBody : WEIGHT.body, docHits)
       : 0;

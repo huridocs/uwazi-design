@@ -2,7 +2,14 @@ import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
 import { atomFamily } from "jotai/utils";
-import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
+import {
+  cejilReadyAtom,
+  dataSourceAtom,
+  libraryEntitiesAtom,
+  nepalReadyAtom,
+  travesiaReadyAtom,
+  type DataSource,
+} from "./dataSource";
 import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
@@ -14,7 +21,7 @@ import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
 import type { SearchScope } from "../utils/librarySnippets";
-import { setQueryMatchMode, type QueryMatchMode } from "../utils/queryTokens";
+import type { QueryMatchMode } from "../utils/queryTokens";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -53,10 +60,6 @@ export const librarySearchDraftAtom = atom(
   },
 );
 
-/** Adv. Search's "Search in": which text the query is tested against. Part of
- *  the search, so `clearLibrarySearchAtom` resets it. */
-export const librarySearchScopeAtom = atom<SearchScope>("all");
-
 /** Whether the collection's entities carry reference quotes as search fields
  *  (`quote:` keys, see `data/nepal/adapt.ts`): "Search in" offers Quotes only
  *  then. A stand-in for `fieldInScope(…, "quotes")` that folds nothing. */
@@ -64,15 +67,80 @@ export const libraryHasQuotesAtom = atom((get) =>
   get(libraryEntitiesAtom).some((e) => !!e.searchFields?.some((f) => !!f.key?.startsWith("quote:"))),
 );
 
-/** Adv. Search's "Match": partial (the default rule in `queryTokens.ts`) or
- *  whole words. The matcher reads it as module state, so the write sets it
- *  there before anything re-renders; nothing else may call `setQueryMatchMode`. */
+/** Whether the collection's entities have loaded, so an empty list means
+ *  empty. The lazily loaded corpora are not known before then. */
+export const libraryCorpusReadyAtom = atom((get) => {
+  switch (get(dataSourceAtom)) {
+    case "cejil":
+      return get(cejilReadyAtom);
+    case "travesia":
+      return get(travesiaReadyAtom);
+    case "nepal":
+      return get(nepalReadyAtom);
+    default:
+      return true;
+  }
+});
+
+/* Adv. Search's two modifiers, "Search in" and "Match". They are part of the
+   search, not filters: they apply in every view while a query runs, the
+   masthead's search chip names them, and `clearLibrarySearchAtom` resets them.
+   Each has a committed value (what the filter, snippets, ranking and marks
+   read) and a shown value (what its control displays). The control's write
+   sets the shown value at once and commits in a transition, as the search box
+   does, because the commit re-runs the whole-corpus filter. Every other write
+   (clear, snapshot, collection switch) sets both. */
+
+const searchScopeShownAtom = atom<SearchScope>("all");
+const searchScopeStateAtom = atom<SearchScope>("all");
+/** Which text the query is tested against. Quotes reads as All in a
+ *  collection with no quote fields (a snapshot made elsewhere, or one opened
+ *  before its corpus loaded). */
+export const librarySearchScopeAtom = atom(
+  (get) => {
+    const scope = get(searchScopeStateAtom);
+    return scope === "quotes" && !get(libraryHasQuotesAtom) ? "all" : scope;
+  },
+  (_get, set, next: SearchScope) => {
+    set(searchScopeShownAtom, next);
+    set(searchScopeStateAtom, next);
+  },
+);
+/** Back to All when the collection cannot offer Quotes. A corpus that has not
+ *  loaded yet cannot say, so it is treated as having none. */
+const dropUnofferedScopeAtom = atom(null, (get, set) => {
+  if (get(searchScopeStateAtom) === "quotes" && !get(libraryHasQuotesAtom)) set(librarySearchScopeAtom, "all");
+});
+/** The Search in control: shown at once, committed in a transition. */
+export const librarySearchScopeInputAtom = atom(
+  (get) => {
+    const scope = get(searchScopeShownAtom);
+    return scope === "quotes" && !get(libraryHasQuotesAtom) ? "all" : scope;
+  },
+  (_get, set, next: SearchScope) => {
+    set(searchScopeShownAtom, next);
+    startTransition(() => set(searchScopeStateAtom, next));
+  },
+);
+
+const searchMatchShownAtom = atom<QueryMatchMode>("partial");
 const searchMatchStateAtom = atom<QueryMatchMode>("partial");
+/** Partial (the default rule in `queryTokens.ts`) or whole words. Passed as an
+ *  argument to the matcher by the Library's own calls only; nothing outside
+ *  the Library reads it. */
 export const librarySearchMatchAtom = atom(
   (get) => get(searchMatchStateAtom),
   (_get, set, next: QueryMatchMode) => {
-    setQueryMatchMode(next);
+    set(searchMatchShownAtom, next);
     set(searchMatchStateAtom, next);
+  },
+);
+/** The Match control: shown at once, committed in a transition. */
+export const librarySearchMatchInputAtom = atom(
+  (get) => get(searchMatchShownAtom),
+  (_get, set, next: QueryMatchMode) => {
+    set(searchMatchShownAtom, next);
+    startTransition(() => set(searchMatchStateAtom, next));
   },
 );
 
@@ -987,6 +1055,8 @@ export const whenBulkCleanAtom = atom(null, (get, set, run: () => void) => whenB
 
 function switchDataSource(set: Setter, source: DataSource) {
   set(dataSourceAtom, source);
+  // The query carries over to the new collection; a scope it cannot offer does not.
+  set(dropUnofferedScopeAtom);
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});

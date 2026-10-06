@@ -73,7 +73,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
       <span data-part="title-cell" className="flex items-center gap-2 min-w-0">
         <EntityTypeTag variant="swatch" typeId={e.typeId} />
         <span data-part="title" className="font-medium text-ink truncate">
-          <HighlightedText text={e.title} query={ctx.query} />
+          <HighlightedText text={e.title} query={ctx.query} fieldKey="title" />
         </span>
       </span>
     ),
@@ -110,7 +110,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     sortKey: "country",
     cell: (e, ctx) => (
       <span data-part="country" className="text-ink-secondary truncate">
-        {e.country ? <HighlightedText text={e.country} query={ctx.query} /> : "—"}
+        {e.country ? <HighlightedText text={e.country} query={ctx.query} fieldKey="country" /> : "—"}
       </span>
     ),
   },
@@ -168,7 +168,7 @@ function listCell(e: Entity, id: string, query = "") {
   const value = e.listCells?.[id];
   return (
     <span data-part={id} className="text-ink-secondary truncate">
-      {value ? <HighlightedText text={value} query={query} /> : "—"}
+      {value ? <HighlightedText text={value} query={query} fieldKey={id} /> : "—"}
     </span>
   );
 }
@@ -209,7 +209,7 @@ export function metaColumn(col: PropertyColumn): ListColumnSpec {
       return (
         <span data-part="meta" className="flex items-baseline gap-1 min-w-0 text-ink-secondary">
           <span className="truncate">
-            <HighlightedText text={field.value} query={ctx.query} />
+            <HighlightedText text={field.value} query={ctx.query} fieldKey={col.name} />
           </span>
           {field.more ? (
             <span data-part="more" className="shrink-0 text-meta text-ink-tertiary tabular-nums">
@@ -276,7 +276,7 @@ export function buildListColumns(
       c.id === "title" && typeColumn
         ? (e: Entity) => (
             <span data-part="title" className="font-medium text-ink truncate">
-              <HighlightedText text={e.title} query={cellCtx.query} />
+              <HighlightedText text={e.title} query={cellCtx.query} fieldKey="title" />
             </span>
           )
         : (e: Entity) => c.cell(e, cellCtx),

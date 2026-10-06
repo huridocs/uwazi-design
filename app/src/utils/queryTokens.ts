@@ -55,22 +55,47 @@ export interface QueryToken {
   kind: "phrase" | "word" | "op";
   /** phrase → inner text (quotes stripped); word/op → the token verbatim. */
   value: string;
+  /** A phrase whose closing quote has not been typed yet. */
+  open?: boolean;
+  /** Where the token sits in the query, as [start, end). */
+  start: number;
+  end: number;
 }
 
-const QUERY_TOKEN_RE = /"[^"]*"|\S+/g;
+/** A closed `"phrase"`, an unclosed `"phrase` running to the end of the
+ *  query, or a bare run of non-space. The unclosed form keeps what the user is
+ *  still typing (`"velasq`, `"human rights`) as one phrase instead of cutting
+ *  its last letter and splitting it into words. */
+const QUERY_TOKEN_RE = /"[^"]*"|"[^"]*$|\S+/g;
 const OPERATORS = new Set(["AND", "OR", "NOT"]);
+
+/** Parentheses are not grouping (see `SearchQuery`). A word that opens one it
+ *  does not close, or closes one it did not open, is a stab at grouping, so
+ *  that paren is dropped: `(a OR b)` reads as `a OR b`. A balanced pair inside a
+ *  word (`8(1)`) is text and stays. */
+function stripGroupingParens(word: string): string {
+  let w = word;
+  const count = (ch: string) => w.split(ch).length - 1;
+  while (w.startsWith("(") && count("(") > count(")")) w = w.slice(1);
+  while (w.endsWith(")") && count(")") > count("(")) w = w.slice(0, -1);
+  return w;
+}
 
 export function tokenizeQuery(query: string): QueryToken[] {
   const out: QueryToken[] = [];
   for (const m of query.matchAll(QUERY_TOKEN_RE)) {
     const tok = m[0];
+    const start = m.index ?? 0;
+    const end = start + tok.length;
     if (OPERATORS.has(tok)) {
-      out.push({ kind: "op", value: tok });
+      out.push({ kind: "op", value: tok, start, end });
     } else if (tok.startsWith('"')) {
-      const inner = tok.slice(1, -1).trim();
-      if (inner) out.push({ kind: "phrase", value: inner });
+      const closed = tok.length > 1 && tok.endsWith('"');
+      const inner = tok.slice(1, closed ? -1 : undefined).trim();
+      if (inner) out.push({ kind: "phrase", value: inner, start, end, ...(closed ? {} : { open: true }) });
     } else {
-      out.push({ kind: "word", value: tok });
+      const word = stripGroupingParens(tok);
+      if (word) out.push({ kind: "word", value: word, start, end });
     }
   }
   return out;
@@ -86,14 +111,17 @@ export function tokenizeQuery(query: string): QueryToken[] {
  *     and a chain `a OR b OR c` is one group;
  *   - `NOT` binds the ONE term after it: `a NOT b` = `a` without `b`. An `OR`
  *     beside a `NOT` term has nothing to join and reads as `AND`;
- *   - no parentheses; they are ordinary characters in a term. */
+ *   - no parentheses: a grouping paren at a word's edge is dropped, and the
+ *     words read by the rules above (`stripGroupingParens`). */
 export interface SearchQuery {
   groups: string[][];
   exclude: string[];
+  /** How its terms match (see `QueryMatchMode`). Absent = `partial`. */
+  match?: QueryMatchMode;
 }
 
 /** Folded term, or "" when there is nothing to match (a lone `*`). */
-function foldTerm(raw: string): string {
+export function foldTerm(raw: string): string {
   const t = fold(raw.trim());
   return /[^*?]/.test(t) ? t : "";
 }
@@ -103,8 +131,14 @@ let lastParsed: SearchQuery = { groups: [], exclude: [] };
 
 /** Parse a RAW query (case intact — the operators are uppercase). Cached on the
  *  last query string, since the highlighter, snippets and filter all ask for the
- *  same one within a keystroke. */
-export function parseSearchQuery(query: string): SearchQuery {
+ *  same one within a keystroke. `match` is carried on the result for callers
+ *  that test its terms (`termIn(text, t, q.match)`); only the Library passes it. */
+export function parseSearchQuery(query: string, { match = "partial" }: { match?: QueryMatchMode } = {}): SearchQuery {
+  const parsed = parseTerms(query);
+  return match === "partial" ? parsed : { ...parsed, match };
+}
+
+function parseTerms(query: string): SearchQuery {
   if (query === lastQuery) return lastParsed;
   const groups: string[][] = [];
   const exclude: string[] = [];
@@ -195,19 +229,16 @@ function shortRegex(term: string): RegExp | null {
 
 /** How plain terms match. `partial` is the rule above (substrings, short terms
  *  at a word start); `whole` makes every plain term and phrase match whole words
- *  only, as a wildcard term always does. Set by the Adv. Search view's Match
- *  control through `librarySearchMatchAtom`, read here so the filter, snippets
- *  and marks change together. */
+ *  only, as a wildcard term always does. An argument, never shared state: only
+ *  the Library's search passes `whole` (Adv. Search's Match), so the entity
+ *  drawer's Search tab, the PDF marks, the relationships panel and Settings
+ *  always match partially. */
 export type QueryMatchMode = "partial" | "whole";
-let matchMode: QueryMatchMode = "partial";
-export function setQueryMatchMode(mode: QueryMatchMode): void {
-  matchMode = mode;
-}
-export const queryMatchMode = (): QueryMatchMode => matchMode;
+export const MATCH_LABEL: Record<QueryMatchMode, string> = { partial: "Partial words", whole: "Whole words" };
 
 const wordCache = new Map<string, RegExp>();
-function wholeWordRegex(term: string): RegExp | null {
-  if (matchMode !== "whole" || isGlob(term)) return null;
+function wholeWordRegex(term: string, match: QueryMatchMode): RegExp | null {
+  if (match !== "whole" || isGlob(term)) return null;
   let re = wordCache.get(term);
   if (!re) {
     const src = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -218,8 +249,8 @@ function wholeWordRegex(term: string): RegExp | null {
 }
 
 /** Does folded `text` contain `term`? */
-export function termIn(text: string, term: string): boolean {
-  const whole = wholeWordRegex(term);
+export function termIn(text: string, term: string, match: QueryMatchMode = "partial"): boolean {
+  const whole = wholeWordRegex(term, match);
   if (whole) {
     whole.lastIndex = 0;
     return whole.test(text);
@@ -236,8 +267,13 @@ export function termIn(text: string, term: string): boolean {
 }
 
 /** The first hit of `term` in folded `text` at or after `from`, as [start, end). */
-export function termHit(text: string, term: string, from = 0): [number, number] | null {
-  const whole = wholeWordRegex(term);
+export function termHit(
+  text: string,
+  term: string,
+  from = 0,
+  match: QueryMatchMode = "partial",
+): [number, number] | null {
+  const whole = wholeWordRegex(term, match);
   if (whole) {
     whole.lastIndex = from;
     const m = whole.exec(text);
@@ -268,7 +304,11 @@ export function termHit(text: string, term: string, from = 0): [number, number] 
  *  marks (`HighlightedText`) and the marks painted into the PDF text layer, so
  *  the two can never disagree about what counts as a match (diacritics
  *  included: matching is folded, the ranges point back at the original glyphs). */
-export function highlightRanges(text: string, terms: string[]): [number, number][] {
+export function highlightRanges(
+  text: string,
+  terms: string[],
+  match: QueryMatchMode = "partial",
+): [number, number][] {
   if (terms.length === 0) return [];
   const { folded, map } = foldWithMap(text);
   const ranges: [number, number][] = [];
@@ -276,7 +316,7 @@ export function highlightRanges(text: string, terms: string[]): [number, number]
     if (!needle) continue;
     let from = 0;
     for (;;) {
-      const found = termHit(folded, needle, from);
+      const found = termHit(folded, needle, from, match);
       if (!found) break;
       const [hit, stop] = found;
       const start = map[hit] ?? 0;

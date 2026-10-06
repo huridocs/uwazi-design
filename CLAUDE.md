@@ -329,13 +329,20 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     during a query cancels both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
     passages, spine. None repeats the title snippet.
   - Adv. Search toolbar (`ResultsSnippets/AdvancedSearchBar.tsx`, on phones in the Results
-    sheet): "Search in" (`librarySearchScopeAtom`: all, title, metadata, full text, quotes) is
-    read by `matchesSearch`, `buildSnippetsFor`, `matchCategoriesWithTerms` and the ranking;
-    "Match" (`librarySearchMatchAtom`) sets whole-word matching as module state in
-    `queryTokens.ts`, so memos keyed on the terms also take the mode. The chips are the query
-    parsed by `utils/queryClauses.ts` and write back to the box. Both modifiers are optional
-    `LibrarySnapshot` keys and reset in `clearLibrarySearchAtom`. Quotes is offered only where
-    entities carry `quote:` fields (`libraryHasQuotesAtom`).
+    sheet): "Search in" (`librarySearchScopeAtom`: all, title, metadata, full text, quotes) and
+    "Match" (`librarySearchMatchAtom`: partial, whole) are part of the search, not filters: they
+    apply in every view while a query runs, the masthead `ActiveSearchChip` names them when not
+    default, its × resets them, and no filter count includes them. The match mode is an argument
+    (`termIn`/`termHit`/`highlightRanges`, `parseSearchQuery(q, { match })`, `buildSnippetsFor`
+    options), passed only by Library calls; marks in the Library's panes read it, with the scope,
+    from `SearchMarkProvider` (`HighlightedText`'s `fieldKey` skips out-of-scope fields). The
+    entity preview, PDF marks, relationships and Settings always match partially. The controls
+    write `…InputAtom`s, which show at once and commit in a transition. The chips are the
+    committed query parsed by `utils/queryClauses.ts`; a chip's × cuts only its clause's text.
+    Quotes is offered only where entities carry `quote:` fields (`libraryHasQuotesAtom`) and
+    falls back to All elsewhere (collection switch, snapshot).
+    Whole words scans CEJIL's full text in 1–5 ms per keystroke against 0–1 ms for partial
+    (measured 2026-10-06); the per-keystroke cost is still the re-render.
   - `TimeSpine`: the one chronology for the timeline and the Adv. Search spine. Callers pass rows,
     `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
     marks share one capsule and brace with no count; the "N later" label sits at the row

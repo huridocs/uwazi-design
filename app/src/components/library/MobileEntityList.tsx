@@ -56,7 +56,7 @@ export const MobileEntityList = memo(function MobileEntityList({
               </span>
               <div className="min-w-0 flex flex-col gap-0.5">
                 <span className="text-sm font-medium text-ink leading-snug line-clamp-2 break-words">
-                  <HighlightedText text={e.title} query={query} />
+                  <HighlightedText text={e.title} query={query} fieldKey="title" />
                 </span>
                 {meta.length ? <span className="text-xs text-ink-tertiary truncate">{meta.join(" · ")}</span> : null}
               </div>
