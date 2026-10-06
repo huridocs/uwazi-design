@@ -90,8 +90,8 @@ export function NotebookPanel({ rtl = false }: { rtl?: boolean }) {
         data-state={open ? "open" : "closed"}
         data-gutter-host
         className={`fixed top-0 bottom-0 ${side} z-[61] w-[26rem] max-w-[calc(100vw-2.5rem)]
-          gutter-host-main bg-paper border-border flex flex-col beacon-spring
-          transition-transform duration-300 ${open ? "translate-x-0 shadow-xl" : closedTransform}`}
+          gutter-host-main bg-paper border-border flex flex-col
+          transition-transform duration-250 ease-out motion-reduce:transition-none ${open ? "translate-x-0 shadow-xl" : closedTransform}`}
       >
         {/* Mounted only while open: the entries read every pinned record's
             references, which a closed panel has no reason to do. */}
