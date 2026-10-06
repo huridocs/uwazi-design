@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactNode } from "react";
+import { useState, useEffect, useRef, ReactNode, type KeyboardEvent } from "react";
 import { MoreHorizontal } from "lucide-react";
 
 export interface MobileMenuItem {
@@ -44,6 +44,10 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
   /** The trigger's box at open, for `fixed`. */
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  /** The item that holds the roving tab stop and has focus while open. */
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -64,6 +68,59 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
     };
   }, [open, fixed]);
 
+  /* THE MENU CONTRACT. `role="menu"` promises it, so it is kept: focus moves to
+     an item on open, Up/Down move (and wrap), Home/End jump, Escape closes and
+     returns to the trigger, Tab closes. Items carry a roving tab stop. Before
+     this the role was all there was — a menu a keyboard could open and then not
+     enter. */
+  useEffect(() => {
+    if (open) itemRefs.current[active]?.focus();
+  }, [open, active]);
+
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) triggerRef.current?.focus();
+  };
+
+  const onMenuKeyDown = (e: KeyboardEvent) => {
+    const last = items.length - 1;
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActive((i) => (i >= last ? 0 : i + 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActive((i) => (i <= 0 ? last : i - 1));
+        break;
+      case "Home":
+        e.preventDefault();
+        setActive(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setActive(last);
+        break;
+      case "Escape":
+        e.preventDefault();
+        e.stopPropagation();
+        close(true);
+        break;
+      case "Tab":
+        close(false);
+        break;
+    }
+  };
+
+  const onTriggerKeyDown = (e: KeyboardEvent) => {
+    // Arrow keys open onto the first or the last item, as a menu button does.
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!open) toggle();
+      setActive(e.key === "ArrowDown" ? 0 : items.length - 1);
+    }
+  };
+
   const toggle = () => {
     setOpen((o) => {
       if (!o && containerRef.current) {
@@ -75,15 +132,21 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
         const needed = items.length * 36 + 8;
         setSide(window.innerHeight - rect.bottom >= needed ? "bottom" : "top");
         setAnchor(rect);
+        setActive(0);
       }
       return !o;
     });
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} data-component="MobileActionMenu" className="relative">
       <button
+        ref={triggerRef}
+        type="button"
         onClick={toggle}
+        onKeyDown={onTriggerKeyDown}
+        data-part="trigger"
+        aria-haspopup="menu"
         className={`flex items-center justify-center rounded-md hover:bg-warm aria-expanded:bg-warm transition-colors w-9 h-9 ${
           floating ? "border border-border bg-paper" : ""
         }`}
@@ -91,13 +154,15 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
         aria-label={label}
         aria-expanded={open}
       >
-        {icon ?? <MoreHorizontal size={16} />}
+        {icon ?? <MoreHorizontal size={16} aria-hidden />}
       </button>
 
       {open && (
         <div
           role="menu"
           aria-label={label}
+          data-part="menu"
+          onKeyDown={onMenuKeyDown}
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
             ...(fixed && anchor
@@ -113,16 +178,23 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
             zIndex: 80,
           }}
         >
-          {items.map((item) => (
+          {items.map((item, i) => (
             <button
               key={item.id}
+              ref={(el) => {
+                itemRefs.current[i] = el;
+              }}
+              type="button"
               role="menuitem"
-              // aria-disabled, not disabled: the item stays in the menu, greyed.
+              tabIndex={i === active ? 0 : -1}
+              data-part="item"
+              // aria-disabled, not disabled: a disabled button can't take the
+              // roving focus, so arrowing onto it would stall the menu.
               aria-disabled={item.disabled || undefined}
               onClick={() => {
                 if (item.disabled) return;
                 item.onSelect();
-                setOpen(false);
+                close(true);
               }}
               className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors aria-disabled:text-ink-muted aria-disabled:hover:bg-transparent aria-disabled:cursor-default"
             >
@@ -131,7 +203,7 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
                 {item.label}
               </div>
               {item.count !== undefined && (
-                <span className="text-meta font-semibold text-ink-tertiary">
+                <span data-part="count" className="text-meta font-semibold text-ink-tertiary">
                   {item.count}
                 </span>
               )}
