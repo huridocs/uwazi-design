@@ -62,16 +62,22 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
         data-view="when"
         className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}
       >
+        {lead}
         <WhenBody />
       </div>
     );
   }
   if (view === "graph") {
     return (
-      // The canvas runs edge to edge on purpose.
-      <div data-component="RelationshipsPanelBody" data-view="graph" data-gutter-bleed className="bleed-flush flex-1 flex flex-col min-h-0">
-        <RelationshipsGraphView />
-      </div>
+      <>
+        {/* A claim's evidence leads every view. Above the canvas it scrolls in
+            its own band, so the graph keeps most of the pane. */}
+        {lead && <div data-part="lead" className="shrink-0 max-h-[40%] overflow-auto pb-stack">{lead}</div>}
+        {/* The canvas runs edge to edge on purpose. */}
+        <div data-component="RelationshipsPanelBody" data-view="graph" data-gutter-bleed className="bleed-flush flex-1 flex flex-col min-h-0">
+          <RelationshipsGraphView />
+        </div>
+      </>
     );
   }
 

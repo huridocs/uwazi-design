@@ -6,7 +6,7 @@ import {
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
 } from "./files";
-import { resetRelFacetsAtom } from "./filters";
+import { relViewAtom, resetRelFacetsAtom } from "./filters";
 import { guardNavigationAtom } from "./dirtyGuard";
 
 /** The entity currently open in EntityView. Defaults to the canonical main
@@ -32,7 +32,12 @@ function seedFilesFor(entityId: string, set: Setter) {
  *  {@link resetRelFacetsAtom}), then re-seed files. No-op guard on same id so
  *  re-focusing doesn't clobber live filter state. */
 function focusEntity(entityId: string, get: Getter, set: Setter) {
-  if (get(focusedEntityIdAtom) !== entityId) set(resetRelFacetsAtom);
+  if (get(focusedEntityIdAtom) !== entityId) {
+    set(resetRelFacetsAtom);
+    // A new record opens its Relationships in List: a graph chosen on one
+    // record hid the next one's claim evidence and opened at the old zoom.
+    set(relViewAtom, "list");
+  }
   set(focusedEntityIdAtom, entityId);
   seedFilesFor(entityId, set);
 }
