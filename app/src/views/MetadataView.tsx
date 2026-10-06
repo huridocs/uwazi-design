@@ -56,6 +56,7 @@ import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom, recentTemplatesAtom } from "../atoms/entityOverlay";
 import { breakpointAtom } from "../atoms/viewport";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
+import { templateMirror } from "../data/templates/mirror";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
 import { typeLabelColor } from "../utils/typeColor";
@@ -342,6 +343,9 @@ function EntityEditBody({
       Nothing is saved. On an existing entity it is still presentational —
       changing a saved entity's template is the Library's Change template. */
   const [templateId, setTemplateId] = useState(profile.typeId);
+  // The template's own name for its title (Settings › Templates may rename it).
+  const titleLabel =
+    templateMirror(entityCorpusOf(focusedId), templateId)?.commonProperties.find((p) => p.name === "title")?.label || "Title";
   const draftId = useAtomValue(draftEntityIdAtom);
   const retypeDraft = useSetAtom(retypeDraftAtom);
   /** The form is a new entity's draft: Template leads it, and a change that
@@ -410,7 +414,7 @@ function EntityEditBody({
    *  for an untouched value: stored data does not block a save. */
   const mediaIssues = useRef<Record<string, ValidationIssue | null>>({});
   const issueFor = (id: string, value: string): ValidationIssue | null => {
-    if (id === "title") return validateValue("text", value, { required: true, label: "Title" });
+    if (id === "title") return validateValue("text", value, { required: true, label: titleLabel });
     if (id === "description")
       return validateValue("multiline", value, { required: true, label: "Description" });
     const f = fields.find((x) => x.id === id);
@@ -947,7 +951,7 @@ function EntityEditBody({
 
         {/* Title */}
         <EditSection
-          label="Title*"
+          label={`${titleLabel}*`}
           htmlFor="field-title"
           listening={fillTarget?.fieldId === "title"}
           onStopListening={() => setFillTarget(null)}
@@ -966,7 +970,7 @@ function EntityEditBody({
             id={inputId("title")}
             data-fill-id="title"
             value={title}
-            {...armProps("title", "Title")}
+            {...armProps("title", titleLabel)}
             onChange={(e) => {
               setTitle(e.target.value);
               reflag("title", e.target.value);
@@ -984,7 +988,7 @@ function EntityEditBody({
               both. */}
           <MultiLanguageField
             messageSlot={<FieldMessage id={msgId("title")} issue={issues.title} />}
-            label="Title"
+            label={titleLabel}
             idPrefix={inputId("title")}
             languages={LANGUAGES}
             current={language}

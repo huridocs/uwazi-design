@@ -12,6 +12,8 @@ import { RecordFooter } from "./RecordFooter";
 import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
+import { templateMirror } from "../../data/templates/mirror";
+import { entityCorpusOf } from "../../data/entities";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
 import { flashElement } from "../../utils/flash";
 import { groupConnections, specInherits, type ConnectionGroup } from "../../utils/inheritance";
@@ -43,7 +45,7 @@ type RecordEntry =
 export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
     <div data-field-key={item.id}>
-      <MetadataCard title={item.label}>
+      <MetadataCard title={item.label} hideTitle={item.noLabel}>
         <FillableValue item={item} />
       </MetadataCard>
     </div>
@@ -135,6 +137,11 @@ export function MetadataRecord({
      ONE connection, so its table renders ONCE, at the template position of its
      FIRST member field; the later members are skipped where they are declared. */
   const { fields } = deriveTemplateStructure(profile, language);
+  // The template's display flags, by property name (Hide label, Full width,
+  // an image's Fill or Fit).
+  const templateProps = new Map(
+    (templateMirror(entityCorpusOf(profile.id), profile.typeId)?.properties ?? []).map((p) => [p.name, p]),
+  );
   const relFields = fields.filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
@@ -143,6 +150,9 @@ export function MetadataRecord({
   const placedGroups = new Set<string>();
   const entries: RecordEntry[] = [];
   for (const f of fields) {
+    // A connection with nothing connected (a property added in Settings, not
+    // filled yet) is the form's to fill; the record has nothing to show.
+    if (f.type === "relationship" && f.connectedEntityIds.length === 0 && !f.totalConnected) continue;
     if (f.type === "relationship") {
       const group = f.connectionKey ? groupByKey.get(f.connectionKey) : undefined;
       if (group) {
@@ -155,7 +165,8 @@ export function MetadataRecord({
         entries.push({ kind: "item", item: connectionItem(f) });
       }
     } else if (f.value?.trim()) {
-      entries.push({ kind: "item", item: fieldItem(f) });
+      const p = templateProps.get(f.id);
+      entries.push({ kind: "item", item: { ...fieldItem(f, p?.style), noLabel: p?.noLabel, fullWidth: p?.fullWidth } });
     }
   }
 
@@ -187,7 +198,7 @@ export function MetadataRecord({
           columns. Full width keeps the table while the record can carry one. */}
       {entries.map((entry) =>
         entry.kind === "item" ? (
-          <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"}>
+          <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"} full={entry.item.fullWidth}>
             <MetadataFieldBlock item={entry.item} />
           </MasonryItem>
         ) : entry.kind === "group" ? (

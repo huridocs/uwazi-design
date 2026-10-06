@@ -310,12 +310,16 @@ export function blankRelationship(corpus: Corpus, p: PropertyDef, lang: Language
 }
 
 /** A saved record (an entity created or edited in this session) laid over
- *  its template as it is now: the template decides which fields there are,
- *  their order and their labels; the record gives the values, by property
- *  name. A property added since gets its blank field; one removed since
- *  (a name the template's seed had, or a template-typed field) is dropped;
- *  fields no template property describes (the Sample's description, derived
- *  connections) stay after the template's. */
+ *  its template as it is now: the template decides which fields there are and
+ *  their order; the record gives the values, by property name. A property
+ *  renamed since takes the template's label (the others keep the record's,
+ *  which main's Sample takes from its field table). A property added since
+ *  gets its blank field, a connection included; the seed's own relationship
+ *  properties are left out when the record has none, as main's Sample
+ *  records leave them. One removed since (a name the template's seed had, or
+ *  a template-typed field) is dropped; fields no template property describes
+ *  (the Sample's description, derived connections) keep their place after
+ *  the field they followed. */
 export function projectRecordFields(
   corpus: Corpus,
   template: TemplateDef | undefined,
@@ -327,22 +331,30 @@ export function projectRecordFields(
   if (!template) return fields;
   const byName = new Map(fields.map((f) => [f.id, f]));
   const current = new Set(template.properties.map((p) => p.name));
-  const seeded = new Set((seed?.properties ?? []).map((p) => p.name));
+  const seedByName = new Map((seed?.properties ?? []).map((p) => [p.name, p]));
+  const seeded = new Set(seedByName.keys());
   const out: AnyMetadataField[] = [];
   for (const p of template.properties) {
     const f = byName.get(p.name);
-    if (f) out.push({ ...f, label: propertyLabel(corpus, p, lang) });
-    else if (p.type === "relationship") out.push(blankRelationship(corpus, p, lang, p.content ? targetOf(p.content) : undefined));
+    if (f) out.push(seedByName.get(p.name)?.label === p.label ? f : { ...f, label: propertyLabel(corpus, p, lang) });
+    else if (p.type === "relationship") {
+      if (!seeded.has(p.name)) out.push(blankRelationship(corpus, p, lang, p.content ? targetOf(p.content) : undefined));
+    }
     else {
       const blank = blankField(corpus, p, lang);
       if (blank) out.push(blank);
     }
   }
-  for (const f of fields) {
-    if (current.has(f.id)) continue;
+  // Each kept field follows the field it followed (as `fieldsOverTemplate`
+  // places them), or leads when nothing kept came before it.
+  fields.forEach((f, i) => {
+    if (current.has(f.id)) return;
     const removed = seeded.has(f.id) || (f.type !== "relationship" && !!(f as MetadataField).propertyType);
-    if (!removed) out.push(f);
-  }
+    if (removed) return;
+    const before = fields.slice(0, i).reverse().find((g) => out.some((o) => o.id === g.id));
+    const at = before ? out.findIndex((o) => o.id === before.id) : -1;
+    out.splice(at + 1, 0, f);
+  });
   return out;
 }
 
@@ -351,13 +363,16 @@ export function projectRecordFields(
  *  value keeps the field its corpus already builds (label, type, flag, items),
  *  so nothing a record shows changes. A property with no value gets its blank
  *  field, for the form; a relationship property with no connection is left
- *  out. Fields no template property describes (the case record's description
- *  and other files) keep their place: each follows the field it followed. */
+ *  out, unless `added` says Settings added it since the seed (then it is the
+ *  blank connection the form fills). Fields no template property describes
+ *  (the case record's description and other files) keep their place: each
+ *  follows the field it followed. */
 export function fieldsOverTemplate(
   corpus: Corpus,
   template: TemplateDef | undefined,
   fields: AnyMetadataField[],
   lang: Language,
+  added?: (p: PropertyDef) => boolean,
 ): AnyMetadataField[] {
   if (!template) return fields;
   const byName = new Map(fields.map((f) => [f.id, f]));
@@ -371,7 +386,7 @@ export function fieldsOverTemplate(
     else if (p.type !== "relationship") {
       const blank = blankField(corpus, p, lang);
       if (blank) out.push(blank);
-    }
+    } else if (added?.(p)) out.push(blankRelationship(corpus, p, lang));
   }
   fields.forEach((f, i) => {
     if (declared.has(f.id)) return;

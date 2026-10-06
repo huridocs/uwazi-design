@@ -7,13 +7,16 @@ import type { DocRendition } from "./documentRenditions";
 import { renditionsByLanguage } from "./documentRenditions";
 import type { FileEntry, DocumentGroup } from "./files";
 import { files, documentGroups, entityDocument } from "./files";
-import { getEntity, type Entity } from "./entities";
+import { entityCorpusOf, getEntity, type Entity } from "./entities";
 import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
 import { sampleRecordFields } from "./sample/values";
+import { TEMPLATE_SEEDS, templatesMirror } from "./templates/mirror";
+import { projectRecordFields } from "../utils/templateProjection";
+import type { TemplateDef } from "./templates/types";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -69,6 +72,7 @@ export function typeHasDocument(typeId: string): boolean {
 }
 
 /** Main entity = the existing Velásquez globals, assembled by reference. */
+let caseMetadataTemplates: TemplateDef[] | null = null;
 let caseMetadata: Record<Language, AnyMetadataField[]> | null = null;
 const mainProfile: EntityProfile = {
   id: MAIN_ENTITY_ID,
@@ -79,13 +83,19 @@ const mainProfile: EntityProfile = {
   documentGroups,
   files,
   // Court Case's projection over the case record (step M4), built on first
-  // read: the template store reads `data/entities`, which may still be
-  // loading when this module is.
+  // read (the template store reads `data/entities`, which may still be
+  // loading when this module is) and again after a template change, like
+  // every other profile.
   get metadata() {
-    return (caseMetadata ??= LANGS.reduce((acc, lang) => {
-      acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
-      return acc;
-    }, {} as Record<Language, AnyMetadataField[]>));
+    const templates = templatesMirror("mock");
+    if (!caseMetadata || caseMetadataTemplates !== templates) {
+      caseMetadataTemplates = templates;
+      caseMetadata = LANGS.reduce((acc, lang) => {
+        acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
+        return acc;
+      }, {} as Record<Language, AnyMetadataField[]>);
+    }
+    return caseMetadata;
   },
   pdfMetadata: pdfMetadataByLanguage,
   relationships: { kind: "references" },
@@ -184,12 +194,15 @@ export function getEntityProfile(id: string): EntityProfile {
   return baseProfile(id);
 }
 
-/** Record-built profiles, per record object — records are immutable, so a new
- *  write is a new key and a stale profile is never found again. */
-const recordProfiles = new WeakMap<EntityRecord, EntityProfile>();
+/** Record-built profiles, per record object and template list — records are
+ *  immutable, so a new write is a new key, and a template edit (a new list)
+ *  re-projects every saved record. */
+const recordProfiles = new WeakMap<EntityRecord, { templates: TemplateDef[]; profile: EntityProfile }>();
 function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
+  const corpus = entityCorpusOf(id);
+  const templates = templatesMirror(corpus);
   const hit = recordProfiles.get(record);
-  if (hit) return hit;
+  if (hit && hit.templates === templates) return hit.profile;
   // A created entity has no corpus profile underneath; an edited one does,
   // and keeps whatever the record doesn't replace (its document, relationships).
   const base = overlayCreated(id) ? undefined : baseProfile(id);
@@ -199,17 +212,44 @@ function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
     id,
     typeId: record.typeId,
     hasDocument: files.length > 0 || !!base?.hasDocument,
-    metadata: record.metadata as Record<Language, AnyMetadataField[]>,
+    // The record's values through the template as it is now (spec M8).
+    metadata: Object.fromEntries(
+      Object.entries(record.metadata as Record<Language, AnyMetadataField[]>).map(([lang, fields]) => [
+        lang,
+        projectRecordFields(
+          corpus,
+          templates.find((t) => t.id === record.typeId),
+          TEMPLATE_SEEDS[corpus]?.().find((t) => t.id === record.typeId),
+          fields,
+          lang as Language,
+          (tid) => templates.find((t) => t.id === tid),
+        ),
+      ]),
+    ) as Record<Language, AnyMetadataField[]>,
     documentGroups: record.documentGroups ?? base?.documentGroups ?? [],
     files,
   };
-  recordProfiles.set(record, profile);
+  recordProfiles.set(record, { templates, profile });
   return profile;
+}
+
+/** Profiles are projections of their corpus's templates, so a template
+ *  change (Settings › Templates writes the store from step M8) must rebuild
+ *  them. The mirror returns the same array until the store changes; a new
+ *  array for any corpus clears the cache. */
+let seenTemplates: TemplateDef[][] = [];
+function invalidateOnTemplateChange() {
+  const now = (["mock", "cejil", "artworks"] as const).map((c) => templatesMirror(c));
+  if (now.some((list, i) => list !== seenTemplates[i])) {
+    if (seenTemplates.length) lightweightCache.clear();
+    seenTemplates = now;
+  }
 }
 
 function baseProfile(id: string): EntityProfile {
   const authored = PROFILES[id];
   if (authored) return authored;
+  invalidateOnTemplateChange();
   const cached = lightweightCache.get(id);
   if (cached) return cached;
   // A corpus with real records builds a real profile (metadata / files /

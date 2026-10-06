@@ -2,6 +2,9 @@ import { ReactNode } from "react";
 
 interface MetadataCardProps {
   title: string;
+  /** The property's Hide label (Uwazi's `noLabel`): the heading is kept for
+   *  screen readers and not drawn. */
+  hideTitle?: boolean;
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -27,11 +30,11 @@ interface MetadataCardProps {
  *  would otherwise be the same text. One colour step, no second size.
  *
  *  Icons in this row belong at 11px to match; the callers pass them. */
-export function MetadataCard({ title, icon, children, className = "" }: MetadataCardProps) {
+export function MetadataCard({ title, hideTitle = false, icon, children, className = "" }: MetadataCardProps) {
   return (
     <div className={`bg-paper border border-border/40 rounded-md overflow-hidden ${className}`}>
       <div className="flex flex-col gap-2 px-4 py-3">
-        <div className="flex items-center gap-1.5">
+        <div className={hideTitle ? "sr-only" : "flex items-center gap-1.5"}>
           {icon}
           <h4 className="text-meta font-semibold uppercase tracking-wider text-ink-secondary">
             {title}

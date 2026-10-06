@@ -23,6 +23,8 @@ import {
   type EditResult,
 } from "../utils/createEntity";
 import type { Language } from "./language";
+import { templateMirror } from "../data/templates/mirror";
+import { generatedId } from "../utils/templateProjection";
 import type { MetadataField } from "../data/metadata";
 
 /** The session's changes to the library — see `data/entityOverlay.ts` for the
@@ -480,7 +482,10 @@ export const startDraftAtom = atom(
   null,
   (_get, set, { typeId, corpus }: { typeId: string; corpus: Corpus }): string => {
     const id = newEntityId();
-    const entity: Entity = { id, title: "", typeId, createdAt: today(), published: false };
+    // A template whose Title has "Generated ID" starts its entities with one,
+    // editable (Uwazi: "A generated ID will be the default title").
+    const generated = templateMirror(corpus, typeId)?.commonProperties.some((p) => p.name === "title" && p.generatedId);
+    const entity: Entity = { id, title: generated ? generatedId() : "", typeId, createdAt: today(), published: false };
     setDraftMirror({ entity, corpus, record: buildRecord({ id, typeId, fieldsByLang: templateFields(typeId, corpus) }) });
     set(draftEntityIdAtom, id);
     return id;
