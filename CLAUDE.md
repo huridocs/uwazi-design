@@ -351,7 +351,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   atom that decides what the Library lists and how it draws it (`captureLibrarySnapshot`,
   `applyLibrarySnapshotAtom`); a new filter atom joins both and `snapshotFilterCount`. Views are
   per collection in localStorage; "Copy link" puts the snapshot in `#view=…`, which `useViewLink`
-  applies on load and then removes.
+  applies on load and then removes. Match modes, range bounds and groups are optional snapshot
+  keys (`match`, `ranges`, `groups`): a view or link saved before them opens with the defaults, and
+  an old Country/Descriptor "AND" opens as `all`.
 - Case: one per collection (`atoms/caseFile.ts`, localStorage): pinned records and markdown
   notes. `PinToggle` pins from a card footer, the entity header (`DocMeta`) and a relationship
   pill. `CasePanel` (navbar Case button; a sheet on phones) lists the pins, the notes and the

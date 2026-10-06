@@ -12,9 +12,10 @@ import {
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
   libraryCountryFiltersAtom,
-  libraryCountryModeAtom,
   libraryDescriptorFiltersAtom,
-  libraryDescriptorModeAtom,
+  libraryFacetMatchAtom,
+  libraryRangeFiltersAtom,
+  libraryFilterGroupsAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
@@ -27,14 +28,15 @@ import {
   switchDataSourceAtom,
   whenBulkClean,
   ALL_MATCH_TYPES,
-  type FacetMode,
   type LibraryDisplayState,
+  type LibraryMatch,
   type LibrarySort,
   type LibrarySortDir,
   type LibraryViewMode,
   type MatchTypeFilters,
   type TimelineScope,
 } from "./library";
+import { groupEffective, type FilterGroup, type RangeBounds } from "../utils/libraryFilter";
 
 /* ── The Library's state as one value ──────────────────────────────────────
    Every atom that decides what the Library lists and how it draws it, listed
@@ -54,9 +56,18 @@ export interface LibrarySnapshot {
   hasDoc: boolean;
   status: Ticks;
   countries: Ticks;
-  countryMode: FacetMode;
   descriptors: Ticks;
-  descriptorMode: FacetMode;
+  /** Each facet's Match mode (any / all / none / missing) by facet key; absent
+   *  = any. Missing in snapshots saved before Match modes. */
+  match?: Record<string, LibraryMatch>;
+  /** Range facets' bounds by property name. Missing in older snapshots. */
+  ranges?: Record<string, RangeBounds>;
+  /** OR and NOT groups over the facets. Missing in older snapshots. */
+  groups?: FilterGroup[];
+  /** The AND/OR switch Country and Descriptor had before Match modes; read
+   *  only from old snapshots ("AND" opens as `all`). */
+  countryMode?: "AND" | "OR";
+  descriptorMode?: "AND" | "OR";
   /** Day or "day HH:MM", read as UTC (`dateBoundMs`). */
   dateFrom: string;
   dateTo: string;
@@ -103,9 +114,10 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     hasDoc: get(libraryHasDocAtom),
     status: ticked(get(libraryStatusFiltersAtom)),
     countries: ticked(get(libraryCountryFiltersAtom)),
-    countryMode: get(libraryCountryModeAtom),
     descriptors: ticked(get(libraryDescriptorFiltersAtom)),
-    descriptorMode: get(libraryDescriptorModeAtom),
+    match: get(libraryFacetMatchAtom),
+    ranges: Object.fromEntries(Object.entries(get(libraryRangeFiltersAtom)).filter(([, b]) => b.from || b.to)),
+    groups: get(libraryFilterGroupsAtom),
     dateFrom: get(libraryDateFromAtom),
     dateTo: get(libraryDateToAtom),
     inherited: tickedNested(get(libraryInheritedFiltersAtom)),
@@ -128,6 +140,17 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
   };
 }
 
+/** A snapshot's Match modes; an old one's AND switch on Country or
+ *  Descriptor reads as `all`. */
+function snapshotMatch(s: LibrarySnapshot): Record<string, LibraryMatch> {
+  const match: Record<string, LibraryMatch> = { ...(s.match ?? {}) };
+  if (!s.match) {
+    if (s.countryMode === "AND") match.country = "all";
+    if (s.descriptorMode === "AND") match.descriptor = "all";
+  }
+  return match;
+}
+
 /** Write a snapshot's state, replacing the Library's. Facets the snapshot does
  *  not tick are cleared; nothing is merged. */
 function writeSnapshot(set: Setter, s: LibrarySnapshot) {
@@ -135,9 +158,10 @@ function writeSnapshot(set: Setter, s: LibrarySnapshot) {
   set(libraryHasDocAtom, s.hasDoc);
   set(libraryStatusFiltersAtom, { ...s.status });
   set(libraryCountryFiltersAtom, { ...s.countries });
-  set(libraryCountryModeAtom, s.countryMode);
   set(libraryDescriptorFiltersAtom, { ...s.descriptors });
-  set(libraryDescriptorModeAtom, s.descriptorMode);
+  set(libraryFacetMatchAtom, snapshotMatch(s));
+  set(libraryRangeFiltersAtom, { ...(s.ranges ?? {}) });
+  set(libraryFilterGroupsAtom, (s.groups ?? []).map((g) => ({ ...g, keys: [...g.keys] })));
   set(libraryDateFromAtom, s.dateFrom);
   set(libraryDateToAtom, s.dateTo);
   set(libraryInheritedFiltersAtom, { ...s.inherited });
@@ -176,16 +200,50 @@ export const applyLibrarySnapshotAtom = atom(null, (get, set, s: LibrarySnapshot
 /** How many facet values a snapshot ticks (the search not counted), the same
  *  count as `libraryActiveFilterCountAtom`. */
 export function snapshotFilterCount(s: LibrarySnapshot): number {
-  const n = (r: Ticks) => Object.values(r).filter(Boolean).length;
+  const match = snapshotMatch(s);
+  const ranges = s.ranges ?? {};
+  const n = (r: Ticks | undefined) => Object.values(r ?? {}).filter(Boolean).length;
   const nn = (r: NestedTicks) => Object.values(r).reduce((sum, v) => sum + n(v), 0);
+  // A facet in `missing` ignores its ticks and counts once.
+  const ticks = (key: string, r: Ticks | undefined) => (match[key] === "missing" ? 1 : n(r));
+  const inheritedIds = new Set([
+    ...Object.keys(s.inherited),
+    ...Object.keys(match).filter((k) => k.startsWith("inh:")).map((k) => k.slice(4)),
+  ]);
+  let inherited = 0;
+  for (const id of inheritedIds) inherited += ticks(`inh:${id}`, s.inherited[id]);
+  // A range counts once: bounds set, or `missing`.
+  const rangeNames = new Set([
+    ...Object.entries(ranges).filter(([, b]) => b.from || b.to).map(([k]) => k),
+    ...Object.keys(match).filter((k) => k.startsWith("range:") && match[k] === "missing").map((k) => k.slice(6)),
+  ]);
+  const narrows = (key: string): boolean => {
+    if (match[key] === "missing") return true;
+    switch (key) {
+      case "type": return n(s.types) > 0;
+      case "doc": return s.hasDoc;
+      case "status": return n(s.status) > 0;
+      case "country": return n(s.countries) > 0;
+      case "descriptor": return n(s.descriptors) > 0;
+      case "date": return !!s.dateFrom || !!s.dateTo;
+    }
+    if (key.startsWith("inh:")) return n(s.inherited[key.slice(4)]) > 0;
+    if (key.startsWith("range:")) {
+      const b = ranges[key.slice(6)];
+      return !!b?.from || !!b?.to;
+    }
+    return false;
+  };
   return (
     n(s.types) +
     (s.hasDoc ? 1 : 0) +
     n(s.status) +
-    n(s.countries) +
-    n(s.descriptors) +
+    ticks("country", s.countries) +
+    ticks("descriptor", s.descriptors) +
     (s.dateFrom || s.dateTo ? 1 : 0) +
-    nn(s.inherited) +
+    inherited +
+    rangeNames.size +
+    (s.groups ?? []).filter((g) => groupEffective(g, narrows)).length +
     nn(s.chains) +
     nn(s.content)
   );
@@ -194,8 +252,8 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
 /** A filter signature: two searches for the same words under different
  *  filters are different searches. */
 const facetKey = (s: LibrarySnapshot) =>
-  JSON.stringify([s.types, s.hasDoc, s.status, s.countries, s.countryMode, s.descriptors, s.descriptorMode,
-    s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode]);
+  JSON.stringify([s.types, s.hasDoc, s.status, s.countries, s.descriptors, snapshotMatch(s), s.ranges ?? {},
+    s.groups ?? [], s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode]);
 
 /** A snapshot read from storage or a link is untrusted: anything that is not
  *  the shape is dropped rather than half-applied. */
@@ -209,7 +267,16 @@ export function isLibrarySnapshot(x: unknown): x is LibrarySnapshot {
     typeof s.query === "string" &&
     !!s.types && typeof s.types === "object" &&
     !!s.display && typeof s.display === "object" &&
-    !!s.sort && typeof s.sort === "object"
+    !!s.sort && typeof s.sort === "object" &&
+    (s.match === undefined || (!!s.match && typeof s.match === "object" && !Array.isArray(s.match))) &&
+    (s.ranges === undefined || (!!s.ranges && typeof s.ranges === "object" && !Array.isArray(s.ranges))) &&
+    (s.groups === undefined ||
+      (Array.isArray(s.groups) &&
+        s.groups.every(
+          (g) =>
+            !!g && typeof g.id === "string" && (g.op === "or" || g.op === "not") &&
+            Array.isArray(g.keys) && g.keys.every((k) => typeof k === "string"),
+        )))
   );
 }
 
@@ -272,9 +339,23 @@ export const updateSavedViewAtom = atom(null, (get, set, id: string) => {
 export const currentSavedViewIdAtom = atom((get) => {
   const views = get(savedViewsAtom);
   if (!views.length) return null;
-  const now = JSON.stringify(captureLibrarySnapshot(get));
-  return views.find((v) => JSON.stringify(v.snapshot) === now)?.id ?? null;
+  const now = snapshotSignature(captureLibrarySnapshot(get));
+  return views.find((v) => snapshotSignature(v.snapshot) === now)?.id ?? null;
 });
+
+/** A snapshot as a comparable string: keys sorted, and an older snapshot's
+ *  missing Match modes, ranges and groups read as their defaults. */
+function snapshotSignature(s: LibrarySnapshot): string {
+  const { countryMode: _c, descriptorMode: _d, ...rest } = s;
+  const norm = { ...rest, match: snapshotMatch(s), ranges: s.ranges ?? {}, groups: s.groups ?? [] };
+  const sorted = (x: unknown): unknown =>
+    Array.isArray(x)
+      ? x.map(sorted)
+      : x && typeof x === "object"
+        ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sorted((x as Record<string, unknown>)[k])]))
+        : x;
+  return JSON.stringify(sorted(norm));
+}
 
 /* ── Shared links ─────────────────────────────────────────────────────────
    `#view=<base64url JSON>`: the snapshot and its name. Uwazi V2 keeps its
