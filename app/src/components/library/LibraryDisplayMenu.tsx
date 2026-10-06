@@ -339,7 +339,8 @@ function thumbNote(mode: string, auto: boolean): string {
 /** A toggle row whose answer is one of a few short choices (Auto / On / Off):
  *  the label, a segmented control under it (the menu is too narrow for both
  *  on one line), and a note line that is always mounted, so a changing note
- *  never moves the rows below. Indented to the switches' label column. */
+ *  never moves the rows below. Full width, on the section label's edge, like the
+ *  segmented sections (Metadata properties, Columns). */
 function InlineChoiceRow({
   label,
   value,
@@ -360,7 +361,7 @@ function InlineChoiceRow({
     <div
       data-part="option"
       data-kind="choice"
-      className={`flex flex-col gap-1 ps-8 pe-2 ${touch ? "py-2" : "py-1.5"} ${disabled ? "opacity-40 pointer-events-none" : ""}`}
+      className={`flex flex-col gap-1.5 px-2 ${touch ? "py-2" : "py-1.5"} ${disabled ? "opacity-40 pointer-events-none" : ""}`}
     >
       <span className={`${touch ? "text-sm" : "text-xs"} text-ink`}>{label}</span>
       <SegmentedControl size="sm" fill ariaLabel={label} value={value} options={choices} onChange={onChange} />
