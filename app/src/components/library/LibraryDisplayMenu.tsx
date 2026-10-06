@@ -18,6 +18,7 @@ import {
   librarySortDirAtom,
   libraryActiveSearchAtom,
   libraryCardColumnsInEffectAtom,
+  libraryCardInfoAtom,
   defaultSortDir,
   type LibraryDisplayState,
 } from "../../atoms/library";
@@ -25,6 +26,7 @@ import {
   sectionsFor,
   sectionOptions,
   storageId,
+  THUMBS_SHOWN,
   type DisplaySection,
   type DisplayValue,
   type DisplayValues,
@@ -58,6 +60,7 @@ export function LibraryDisplayMenu() {
   const [toggleQuery, setToggleQuery] = useState("");
   const colsInEffect = useAtomValue(libraryCardColumnsInEffectAtom);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const cardInfo = useAtomValue(libraryCardInfoAtom);
 
   // Escape closes it, like every other overlay in the app. The scrim was the
   // only way out, which is a mouse-only exit from a keyboard-operable menu.
@@ -73,7 +76,13 @@ export function LibraryDisplayMenu() {
   // The merged view of this mode's answers — what `enabled` predicates read, and
   // what a control compares itself against. Sparse underneath: an absent key is
   // "still on its default", never a written-out copy of one.
-  const values: DisplayValues = { ...state.shared, ...(state.modes[mode] ?? {}) };
+  // `THUMBS_SHOWN` is Thumbnail with Auto resolved, which the stored value
+  // alone cannot answer.
+  const values: DisplayValues = {
+    ...state.shared,
+    ...(state.modes[mode] ?? {}),
+    [THUMBS_SHOWN]: cardInfo.preview,
+  };
 
   const valueOf = (id: string, scope: string, fallback: DisplayValue): DisplayValue => {
     const bag = scope === "shared" ? state.shared : state.modes[mode];
@@ -119,6 +128,20 @@ export function LibraryDisplayMenu() {
         ? renderChoice(section, live)
         : shown.map((o) => {
             const scope = o.scope ?? "mode";
+            if (o.choices) {
+              const current = String(valueOf(o.id, scope, o.default));
+              return (
+                <InlineChoiceRow
+                  key={o.id}
+                  label={o.label}
+                  value={current}
+                  choices={o.choices}
+                  note={o.id === "preview" ? thumbNote(current, cardInfo.thumbAuto) : o.detail}
+                  disabled={!live}
+                  onChange={(id) => write(o.id, scope, id)}
+                />
+              );
+            }
             const on = valueOf(o.id, scope, o.default) !== false;
             return (
               <OptionRow
@@ -301,6 +324,49 @@ export function LibraryDisplayMenu() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** What Thumbnail is doing, under its control. Auto names its answer and
+ *  why; On and Off say what they do to a record with nothing to preview. */
+function thumbNote(mode: string, auto: boolean): string {
+  if (mode === "on") return "Text cards where there is none";
+  if (mode === "off") return "Text cards for every result";
+  return auto ? "On: most results have images" : "Off: under half have images";
+}
+
+/** A toggle row whose answer is one of a few short choices (Auto / On / Off):
+ *  the label, a segmented control under it (the menu is too narrow for both
+ *  on one line), and a note line that is always mounted, so a changing note
+ *  never moves the rows below. Indented to the switches' label column. */
+function InlineChoiceRow({
+  label,
+  value,
+  choices,
+  note,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  choices: { id: string; label: string }[];
+  note?: string;
+  disabled: boolean;
+  onChange: (id: string) => void;
+}) {
+  const touch = useContext(TouchRows);
+  return (
+    <div
+      data-part="option"
+      data-kind="choice"
+      className={`flex flex-col gap-1 ps-8 pe-2 ${touch ? "py-2" : "py-1.5"} ${disabled ? "opacity-40 pointer-events-none" : ""}`}
+    >
+      <span className={`${touch ? "text-sm" : "text-xs"} text-ink`}>{label}</span>
+      <SegmentedControl size="sm" fill ariaLabel={label} value={value} options={choices} onChange={onChange} />
+      <p aria-live="polite" className={`min-h-4 ${touch ? "text-xs" : "text-meta"} leading-4 text-ink-tertiary truncate`}>
+        {note}
+      </p>
     </div>
   );
 }

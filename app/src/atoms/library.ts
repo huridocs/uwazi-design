@@ -12,6 +12,8 @@ import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
 import {
   optionsFor,
+  DEFAULT_THUMB_MODE,
+  type ThumbMode,
   type DisplayContext,
   type DisplayValue,
   type DisplayValues,
@@ -539,16 +541,26 @@ export interface LibraryDisplayState {
 }
 const libraryDisplayStoreAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
 
-/** `cardFields: "none"` was the off state before Metadata became its own
- *  switch. A mode that still holds it reads as Metadata off with the count on
- *  its default, so a saved display keeps hiding properties. Same object back
+/** Values from before two options changed shape. `cardFields: "none"` was the
+ *  off state before Metadata became its own switch: it reads as Metadata off
+ *  with the count on its default. A boolean `preview` was the Thumbnail switch:
+ *  it reads as On or Off. A saved display keeps what it showed. Same object back
  *  when there is nothing to migrate, so readers keep their memo identity. */
 function migrateDisplay(state: LibraryDisplayState): LibraryDisplayState {
   let modes: LibraryDisplayState["modes"] | null = null;
   for (const [mode, bag] of Object.entries(state.modes) as [LibraryViewMode, DisplayValues | undefined][]) {
-    if (bag?.cardFields !== "none") continue;
-    const { cardFields: _none, ...rest } = bag;
-    modes = { ...(modes ?? state.modes), [mode]: { ...rest, metadata: false } };
+    if (!bag) continue;
+    const none = bag.cardFields === "none";
+    const switched = typeof bag.preview === "boolean";
+    if (!none && !switched) continue;
+    const next: DisplayValues = { ...bag };
+    if (none) {
+      delete next.cardFields;
+      next.metadata = false;
+    }
+    // Thumbnail was a switch before it had Auto: on / off keep their answer.
+    if (switched) next.preview = bag.preview ? "on" : "off";
+    modes = { ...(modes ?? state.modes), [mode]: next };
   }
   return modes ? { ...state, modes } : state;
 }
@@ -733,16 +745,46 @@ export const libraryTimeHubAtom = displayOption<boolean>(
   (get) => DEFAULT_TIME_HUB && get(breakpointAtom) !== "mobile",
 );
 
+/** Share of the current results that have an image (0–1), set by the Library
+ *  from its filtered list in a layout effect, so cards paint with the right
+ *  answer. null before the Library has measured; then the whole corpus
+ *  answers. */
+export const libraryResultsImageShareAtom = atom<number | null>(null);
+
+const corpusImageShareAtom = atom((get) => imageShare(get(libraryEntitiesAtom)));
+
+/** Only images count. A document's thumbnail is its first page, which at
+ *  card size is mostly a letterhead, and a video or audio slot is a drawn
+ *  mark: neither is a reason to give every card a picture band. */
+export function imageShare(entities: readonly { preview?: string }[]): number | null {
+  if (entities.length === 0) return null;
+  let n = 0;
+  for (const e of entities) if (e.preview === "image") n++;
+  return n / entities.length;
+}
+
+/** What Thumbnail Auto resolves to: on when most results have an image. */
+export const libraryThumbAutoAtom = atom((get) => {
+  const share = get(libraryResultsImageShareAtom) ?? get(corpusImageShareAtom);
+  return share === null || share > 0.5;
+});
+
 /** What a card carries, for whichever mode is drawing cards. */
 export const libraryCardInfoAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
+  const thumbRaw = readOption(state, mode, "preview", "mode", DEFAULT_THUMB_MODE);
+  const thumbMode: ThumbMode = thumbRaw === "on" || thumbRaw === "off" ? thumbRaw : "auto";
+  const thumbAuto = get(libraryThumbAutoAtom);
   const fieldsRaw = readOption(state, mode, "cardFields", "mode", DEFAULT_CARD_FIELDS);
   const fields: CardFields =
     fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all" ? fieldsRaw : DEFAULT_CARD_FIELDS;
   return {
-    preview: read("preview"),
+    /** Thumbnails drawn, with Auto resolved. */
+    preview: thumbMode === "auto" ? thumbAuto : thumbMode === "on",
+    thumbMode,
+    thumbAuto,
     /** Off hides every property; `fields` is the count while it is on. */
     metadata: read("metadata"),
     fields,
@@ -759,7 +801,7 @@ export const libraryListColumnsAtom = atom((get) => {
   const defaults = new Map(
     get(libraryDisplayContextAtom).listColumns.map((o) => [o.id, o.default]),
   );
-  return (id: string) => (bag?.[id] as boolean | undefined) ?? defaults.get(id) ?? false;
+  return (id: string) => ((bag?.[id] as boolean | undefined) ?? defaults.get(id) ?? false) === true;
 });
 
 /** Does any option the menu shows for this mode sit off its default? Reads the

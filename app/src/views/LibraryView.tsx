@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
@@ -38,6 +38,8 @@ import {
   defaultSortDir,
   libraryActiveFilterCountAtom,
   libraryCardInfoAtom,
+  libraryResultsImageShareAtom,
+  imageShare,
   libraryCardSideAtom,
   libraryChainFiltersAtom,
   libraryCountryFiltersAtom,
@@ -818,6 +820,16 @@ export function LibraryView() {
         : [],
     [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
   );
+
+  /* Thumbnail Auto reads how many of these results have an image. A layout
+     effect, so a change of results repaints before the browser paints. */
+  const setImageShare = useSetAtom(libraryResultsImageShareAtom);
+  const resultsImageShare = useMemo(() => imageShare(filtered), [filtered]);
+  // Cleared on unmount, so the next mount answers from its own corpus until it measures.
+  useLayoutEffect(() => {
+    setImageShare(resultsImageShare);
+    return () => setImageShare(null);
+  }, [resultsImageShare, setImageShare]);
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.

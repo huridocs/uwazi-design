@@ -329,6 +329,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:
+  - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when more than
+    half of the filtered results have an image (`libraryThumbAutoAtom`; documents and media do
+    not count). Read the resolved answer from `libraryCardInfoAtom.preview`, never the stored
+    value. With thumbnails on, an entity with no preview is a text card: no slot, its title and
+    metadata span the slot's track (`TextRows` in `EntityCard`).
   - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]` with
     narrower columns (`cardGridCols`); Size sets the column count.
   - Fit (`libraryThumbFitAtom`): `auto` covers when the image's orientation matches the frame

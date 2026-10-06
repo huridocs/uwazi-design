@@ -50,8 +50,12 @@ export interface ToggleOption {
   label: string;
   /** Second line under the label, for options whose name isn't self-evident. */
   detail?: string;
-  default: boolean;
+  /** A boolean for a switch; a choice id when `choices` is set. */
+  default: boolean | string;
   scope?: DisplayScope;
+  /** Draw the row as a label with a small segmented control instead of a
+   *  check: a switch that also has an Auto answer. */
+  choices?: Choice[];
 }
 
 export interface Choice {
@@ -184,6 +188,15 @@ const LANGUAGE: DisplaySection = {
   },
 };
 
+/** Thumbnail: Auto shows thumbnails only when most of the current results
+ *  have an image (`imageShare` in atoms/library.ts), so a corpus of records and
+ *  documents opens as text cards. On draws every slot there is (images, media,
+ *  document pages); a record with none is a text card either way. The menu
+ *  says what Auto resolved to. Stored `true` / `false` from the old switch read
+ *  as On / Off. */
+export type ThumbMode = "auto" | "on" | "off";
+export const DEFAULT_THUMB_MODE: ThumbMode = "auto";
+
 /** What a CARD carries.
  *
  *  Country and Date are not here: a card draws neither, they are list columns.
@@ -196,7 +209,16 @@ const CARD_INFO: DisplaySection = {
   kind: "toggles",
   separator: true,
   options: [
-    { id: "preview", label: "Thumbnail", default: true },
+    {
+      id: "preview",
+      label: "Thumbnail",
+      default: DEFAULT_THUMB_MODE,
+      choices: [
+        { id: "auto", label: "Auto" },
+        { id: "on", label: "On" },
+        { id: "off", label: "Off" },
+      ],
+    },
     { id: "connections", label: "Relationships", default: true },
     { id: "metadata", label: "Metadata", default: true },
   ],
@@ -244,11 +266,16 @@ const CARD_COLUMNS: DisplaySection = {
   },
 };
 
+/** Not a stored option: whether thumbnails are drawn once Auto is resolved
+ *  against the current results. The menu adds it to the values the `enabled`
+ *  predicates read, since the stored "auto" alone cannot answer that. */
+export const THUMBS_SHOWN = "thumbnailsShown";
+
 /** Size, then frame, then fit — the order the questions come in: how big, what
  *  shape, how the picture sits in it. All three are dead while the Thumbnail
- *  toggle is off, and they say so by dimming rather than by leaving. */
+ *  toggle resolves to off, and they say so by dimming rather than by leaving. */
 const thumbSections = (): DisplaySection[] => {
-  const enabled = (v: DisplayValues) => v.preview !== false;
+  const enabled = (v: DisplayValues) => v[THUMBS_SHOWN] !== false;
   return [
     {
       id: "thumbSize",
@@ -316,7 +343,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
       label: "Card layout",
       kind: "choice",
       separator: true,
-      enabled: (v) => v.preview !== false,
+      enabled: (v) => v[THUMBS_SHOWN] !== false,
       option: {
         id: "cardLayout",
         default: "stacked",
