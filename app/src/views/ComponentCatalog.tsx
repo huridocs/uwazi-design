@@ -103,6 +103,11 @@ import { TypedConfirmModal } from "../components/shared/TypedConfirmModal";
 import { PasswordConfirmModal } from "../components/shared/PasswordConfirmModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
+import { DateInput } from "../components/shared/DateInput";
+import { TypedFieldEditor } from "../components/metadata/TypedFieldEditors";
+import { MediaFieldValue } from "../components/metadata/MediaFieldValue";
+import { ImageLightbox } from "../components/shared/ImageLightbox";
+import type { MetadataField } from "../data/metadata";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
@@ -1702,6 +1707,49 @@ const textColor = typeLabelColor(type.color);`}
                 </CatalogEntry>
               </div>
 
+              <div id="sh-date-input" ref={reg("sh-date-input")}>
+                <CatalogEntry
+                  name="DateInput"
+                  description="A date field in the collection's date format, with the browser's calendar on a button; yyyy-mm-dd in and out, like a native date input."
+                  code={`<DateInput value={iso} onChange={setIso} aria-label="Date filed" className={inputClass} />`}
+                >
+                  <DateInputDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-typed-editor" ref={reg("sh-typed-editor")}>
+                <CatalogEntry
+                  name="TypedFieldEditor"
+                  description="The edit form's editors for the property types with their own value shape: numeric, generated id, date list, date range, range list, link, place (coordinates and a map) and image. Each writes its typed value and recomputes the display value; returns null for any other type."
+                  code={`<TypedFieldEditor field={field} inputId={id} inputClass={cls} onPatch={(patch) => update(field.id, patch)} />`}
+                >
+                  <TypedEditorDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-media-field" ref={reg("sh-media-field")}>
+                <CatalogEntry
+                  name="MediaFieldValue · MediaFieldEditor"
+                  description="A media property: the in-record player with its chapter list, and the editor for the address and chapters (Uwazi's URL plus timelinks value)."
+                  code={`<MediaFieldValue raw={field.value} />
+<MediaFieldEditor inputId={id} label={field.label} value={field.value} onChange={save} onIssue={report} />`}
+                >
+                  <div className="max-w-xl">
+                    <MediaFieldValue raw={MEDIA_DEMO} />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-image-lightbox" ref={reg("sh-image-lightbox")}>
+                <CatalogEntry
+                  name="ImageLightbox"
+                  description="A picture at full size over the page, with its filename and Close; Escape and a click on the backdrop close it. The published view opens it from its masthead and gallery."
+                  code={`<ImageLightbox image={open ? image : null} onClose={close} />`}
+                >
+                  <LightboxDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="sh-toast" ref={reg("sh-toast")}>
                 <CatalogEntry
                   name="Toast"
@@ -2194,6 +2242,55 @@ function BulkPickDemo() {
           onClose={() => setOpen(false)}
         />
       )}
+    </>
+  );
+}
+
+const MEDIA_DEMO = 'https://youtu.be/R5bL2eheml0, {"timelinks":{"00:00:00":"Opening","00:12:30":"Testimony"}}';
+
+function DateInputDemo() {
+  const [iso, setIso] = useState("2010-05-12");
+  return (
+    <div className="max-w-xs">
+      <DateInput value={iso} onChange={setIso} aria-label="Date filed" className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border" />
+    </div>
+  );
+}
+
+function TypedEditorDemo() {
+  const [field, setField] = useState<MetadataField>({
+    id: "dates",
+    label: "Hearings",
+    type: "text",
+    propertyType: "multidate",
+    dates: ["12/05/2010", "03/11/2011"],
+    value: "12/05/2010 · 03/11/2011",
+    list: true,
+  });
+  return (
+    <div className="max-w-md flex flex-col gap-1.5">
+      <label htmlFor="demo-dates" className="text-xs font-medium text-ink-secondary">Hearings</label>
+      <TypedFieldEditor
+        field={field}
+        inputId="demo-dates"
+        inputClass="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border"
+        onPatch={(patch) => setField((f) => ({ ...f, ...patch }))}
+      />
+    </div>
+  );
+}
+
+function LightboxDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+        View image
+      </button>
+      <ImageLightbox
+        image={open ? { url: "artwork-images/1601708883168xwrh429c67.jpg", width: 800, height: 1000, aspect: "portrait", alt: "A painting from the Best Artworks collection", filename: "1601708883168xwrh429c67.jpg" } : null}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 }

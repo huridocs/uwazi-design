@@ -28,6 +28,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Hint } from "../shared/Hint";
 import { EntityOverlay } from "../relationships/EntityOverlay";
+import { ImageLightbox } from "../shared/ImageLightbox";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 import { WARM_BUTTON } from "../shared/warmButton";
 
@@ -108,6 +109,7 @@ export function PublishedEntityView() {
   const factsInSide = narrative && facts.length > 0;
   const hasSide = factsInSide || rels.entities > 0;
   const edited = entity?.updatedAt ?? entity?.createdAt;
+  const [lightbox, setLightbox] = useState<EntityImage | null>(null);
   // The slide-over's column takes pointer events only while a preview is open,
   // so the page under it stays usable.
   const previewOpen = useAtomValue(overlayEntityIdAtom) !== null;
@@ -158,7 +160,14 @@ export function PublishedEntityView() {
             className={`flex flex-col gap-6 ${hero ? "md:flex-row md:items-end md:gap-8" : ""}`}
           >
             {hero && (
-              <div data-part="masthead-image" className="block shrink-0 w-full md:w-44 rounded-md overflow-hidden bg-vellum">
+              <button
+                type="button"
+                data-part="masthead-image"
+                onClick={() => setLightbox(hero)}
+                aria-label={`View image: ${hero.alt}`}
+                className="block shrink-0 w-full md:w-44 rounded-md overflow-hidden bg-vellum cursor-zoom-in
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
+              >
                 <img
                   src={hero.url}
                   alt={hero.alt}
@@ -166,7 +175,7 @@ export function PublishedEntityView() {
                   height={hero.height}
                   className="block w-full aspect-[4/3] md:aspect-[4/5] object-cover"
                 />
-              </div>
+              </button>
             )}
             <div data-part="identity" className="flex flex-col gap-2 min-w-0">
               <EntityTypeTag typeId={profile.typeId} />
@@ -225,9 +234,15 @@ export function PublishedEntityView() {
                   <SectionLabel as="h2">{t("System", "Images")}</SectionLabel>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {gallery.map((img: EntityImage, i) => (
-                      <div key={`${img.url}-${i}`} className="block rounded-md overflow-hidden bg-vellum">
+                      <button
+                        key={`${img.url}-${i}`}
+                        type="button"
+                        onClick={() => setLightbox(img)}
+                        aria-label={`View image: ${img.alt}`}
+                        className="block rounded-md overflow-hidden bg-vellum cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
+                      >
                         <img src={img.url} alt={img.alt} className="block w-full aspect-square object-cover" />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -264,6 +279,7 @@ export function PublishedEntityView() {
           </div>
         </article>
       </div>
+      <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
     </div>
   );
 }
@@ -504,6 +520,8 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
       icon: labelledDivIcon(
         { html: '<span class="map-pin" style="--pin-color:var(--text-primary)"></span>', className: "", iconSize: [16, 16] },
         label,
+        // A picture of the point, not a control: it takes no focus or clicks.
+        { role: "img" },
       ),
     }).addTo(map);
     return () => {

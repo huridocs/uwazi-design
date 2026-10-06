@@ -5,6 +5,8 @@ import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
+import { MediaFieldValue } from "./MediaFieldValue";
+import { isImageUrl, safeHref } from "../../utils/typedValues";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
@@ -62,7 +64,10 @@ export type FieldKind = "scalar" | "long" | "chips";
 const LONG_CHARS = 60;
 
 export function fieldKind(f: MetadataField): FieldKind {
-  if (f.type === "multiline") return "long";
+  // A recording and its chapter list is a block of its own, like a paragraph.
+  if (f.type === "multiline" || f.type === "media") return "long";
+  // Several dates or date ranges are a list, one value per line.
+  if ((f.displayValues?.length ?? 0) > 1) return "chips";
   if (f.items && f.items.length > 0) return "chips";
   return (f.value?.length ?? 0) > LONG_CHARS ? "long" : "scalar";
 }
@@ -83,7 +88,19 @@ export function fieldItem(f: MetadataField): MetadataItem {
     // field is asking for.
     fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
-      f.type === "country" ? (
+      (f.displayValues?.length ?? 0) > 1 ? (
+        <ul data-part="value-list" className="space-y-0.5">
+          {f.displayValues!.map((v, i) => (
+            <li key={i} className="text-sm font-medium text-ink leading-relaxed tabular-nums">
+              {v}
+            </li>
+          ))}
+        </ul>
+      ) : f.type === "media" ? (
+        <MediaFieldValue raw={f.value} />
+      ) : f.propertyType === "image" && isImageUrl(f.value) ? (
+        <img src={f.value} alt={f.label} className="rounded-md border border-border-soft max-w-full max-h-64 object-contain" />
+      ) : f.type === "country" ? (
         <span className="inline-flex items-center gap-1.5 text-sm text-ink leading-relaxed">
           <span className="leading-none">{f.flag}</span>
           <span className="font-medium">{f.value}</span>
@@ -97,8 +114,17 @@ export function fieldItem(f: MetadataField): MetadataItem {
           className="inline-flex items-center gap-1 max-w-full min-w-0 text-sm text-ink leading-relaxed"
           title={f.value}
         >
-          <span className="font-medium underline truncate">{f.value}</span>
-          <ExternalLink size={10} className="text-ink-muted shrink-0" />
+          {/* Uwazi's link is a label and a URL: the label shows, the URL opens. */}
+          {safeHref(f.link?.url ?? f.value) ? (
+            <>
+              <a href={safeHref(f.link?.url ?? f.value)} target="_blank" rel="noreferrer" className="font-medium underline truncate">
+                {f.link?.label || f.value}
+              </a>
+              <ExternalLink size={10} className="text-ink-muted shrink-0" />
+            </>
+          ) : (
+            <span className="font-medium truncate">{f.link?.label || f.value}</span>
+          )}
         </span>
       ) : long ? (
         <p className="text-sm text-ink leading-relaxed">{f.value}</p>

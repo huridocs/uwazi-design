@@ -133,6 +133,9 @@ export interface EntityImage {
   /** Human-readable description for `alt` — the asset's original filename is
    *  not one. */
   alt: string;
+  /** The asset's ORIGINAL filename, which is not alt text and is not a caption
+   *  — it is how the person who uploaded it refers to it. */
+  filename?: string;
 }
 
 const baseEntities: Omit<Entity, "createdAt">[] = [
