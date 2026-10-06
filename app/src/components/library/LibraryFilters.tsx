@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
 import type { Entity } from "../../data/entities";
 import {
@@ -77,12 +77,20 @@ import { useActiveFilters } from "../../hooks/useActiveFilters";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
+import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { BAR_GHOST } from "../shared/warmButton";
 import { DateInput } from "../shared/DateInput";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
  *  Countries card (AND/OR + search, faceted counts), and a Clear at the bottom. */
+/** How many records carry each value, over the given records. */
+function tallyValues(entities: readonly Entity[], valuesOf: (e: Entity) => readonly string[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const e of entities) for (const v of valuesOf(e)) m.set(v, (m.get(v) ?? 0) + 1);
+  return m;
+}
+
 export function LibraryFilters() {
   const entities = useAtomValue(libraryEntitiesAtom);
   const types = useAtomValue(libraryTypesAtom);
@@ -167,6 +175,40 @@ export function LibraryFilters() {
     );
   }, [chainDefs, typeFilters, chainFilters]);
   const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
+
+  /* A facet card's shape comes from the collection, never from the results:
+     every value the collection holds stays listed, in an order fixed by the
+     collection's own counts, and the live counts only change the numbers (0s
+     dimmed and still tickable). Built once per corpus and language, so a
+     keystroke or a tick costs nothing here. */
+  const countryUniverse = useMemo(
+    () => tallyValues(entities, (e) => entityCountries(e, language)),
+    [entities, language],
+  );
+  const descriptorUniverse = useMemo(() => tallyValues(entities, (e) => e.descriptors ?? []), [entities]);
+  // Property and chain facets fill in as they are shown; the cache turns over
+  // with the corpus, its language or its templates.
+  const universeCache = useMemo(
+    () => new Map<string, Map<string, number>>(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `templates` is the store the defs are read from
+    [entities, language, dataSource, templates],
+  );
+  const universeOf = (key: string, build: () => Map<string, number>) => {
+    let u = universeCache.get(key);
+    if (!u) universeCache.set(key, (u = build()));
+    return u;
+  };
+  const inheritedUniverse = (def: (typeof inheritedDefs)[number]) =>
+    universeOf(inheritedKey(def.propId), () =>
+      tallyValues(entities, (e) => entityInheritedValues(e, def, language, dataSource)),
+    );
+  const chainUniverse = (def: ChainFacetDef) =>
+    universeOf(`chain:${def.key}`, () => {
+      const graph = chainGraphFor(dataSource);
+      return graph
+        ? chainFacetCounts(entities, { source: dataSource, language } as LibraryFilterState, def, graph)
+        : new Map();
+    });
 
   // The shared filter state — each facet's aggregation counts entities passing
   // every OTHER active filter (excluding its own dimension), so the numbers are
@@ -337,7 +379,7 @@ export function LibraryFilters() {
   const chainHasAny = (group: ChainFacetDef[]) =>
     group.some(
       (d) =>
-        (chainCounts[d.key]?.size ?? 0) > 0 ||
+        chainUniverse(d).size > 0 ||
         Object.values(chainFilters[d.key] ?? {}).some(Boolean),
     );
 
@@ -371,6 +413,11 @@ export function LibraryFilters() {
       ...s,
       [key]: { ...(s[key] ?? {}), [value]: !s[key]?.[value] },
     }));
+  const collectionMaxYear = useMemo(() => {
+    let y = -Infinity;
+    for (const e of entities) if (e.createdAt) y = Math.max(y, new Date(Date.parse(e.createdAt)).getUTCFullYear());
+    return y;
+  }, [entities]);
   // Date presets with faceted counts (relative to the newest dated entity that
   // passes the other filters) — quick ranges that read like aggregations.
   const datePresets = useMemo<DatePreset[]>(() => {
@@ -382,7 +429,10 @@ export function LibraryFilters() {
       const y = new Date(Date.parse(e.createdAt)).getUTCFullYear();
       if (y > maxY) maxY = y;
     }
-    if (dated.length === 0) return [];
+    // With nothing dated left in the results, the presets stay at 0 over the
+    // collection's newest year, so the card keeps its rows.
+    if (dated.length === 0) maxY = collectionMaxYear;
+    if (!Number.isFinite(maxY)) return [];
     const spans = [
       { label: "Last year", years: 1 },
       { label: "Last 5 years", years: 5 },
@@ -396,7 +446,7 @@ export function LibraryFilters() {
       const count = dated.reduce((n, e) => n + (entityInRange(e, fromMs, toMs) ? 1 : 0), 0);
       return { label, from: `${fromY}-01-01`, to: `${maxY}-12-31`, count };
     });
-  }, [entities, filterState]);
+  }, [entities, filterState, collectionMaxYear]);
   const hasDates = datePresets.length > 0;
   // Time fields only where records are timed to the hour (Nepal events).
   const hasHours = useMemo(() => entities.some((e) => e.span?.hour), [entities]);
@@ -463,6 +513,9 @@ export function LibraryFilters() {
     });
   };
 
+  const facetsRef = useRef<HTMLDivElement>(null);
+  useKeepClickedInPlace(facetsRef);
+
   return (
     <div data-component="LibraryFilters" className="flex flex-col h-full min-h-0 bg-warm">
       {/* No active-filter summary row here: the count rides as a BADGE on the
@@ -474,7 +527,7 @@ export function LibraryFilters() {
           block lines up with the first library card. */}
       {/* A scroll lane on the host's gutter (12px, the same edge as the entity
           preview that takes this drawer slot); `px-3.5` retired. */}
-      <div data-part="facets" className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
+      <div ref={facetsRef} data-part="facets" className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}
@@ -549,6 +602,7 @@ export function LibraryFilters() {
             <KeywordFacetCard
               title="Descriptores"
               counts={descriptorCounts.values}
+              universe={descriptorUniverse}
               selected={descriptorFilters}
               onToggle={toggleDescriptor}
               onClear={() => {
@@ -600,6 +654,7 @@ export function LibraryFilters() {
         <KeywordFacetCard
           title="Countries"
           counts={countryCounts.values}
+          universe={countryUniverse}
           selected={countryFilters}
           onToggle={toggleCountry}
           onClear={() => {
@@ -611,11 +666,14 @@ export function LibraryFilters() {
           hideWhenEmpty={dataSource === "nepal"}
         />
 
-        {shownDefs.map(({ propId, label, multi }) => (
+        {shownDefs.map((def) => {
+          const { propId, label, multi } = def;
+          return (
           <KeywordFacetCard
             key={propId}
             title={label}
             counts={inheritedCounts[propId]?.values ?? new Map()}
+            universe={inheritedUniverse(def)}
             selected={inheritedFilters[propId] ?? {}}
             onToggle={(v) => toggleInherited(propId, v)}
             onClear={() => {
@@ -631,7 +689,8 @@ export function LibraryFilters() {
             sort="count"
             hideWhenEmpty
           />
-        ))}
+          );
+        })}
 
         {shownRanges.map((def) => (
           <RangeFacetCard
@@ -672,6 +731,7 @@ export function LibraryFilters() {
                 key={def.key}
                 title={def.label}
                 counts={chainCounts[def.key] ?? new Map()}
+                universe={chainUniverse(def)}
                 selected={chainFilters[def.key] ?? {}}
                 onToggle={(v) => toggleChain(def.key, v)}
                 onClear={() => setChainFilters((s) => ({ ...s, [def.key]: {} }))}
@@ -953,9 +1013,10 @@ function ContentCard({
           </button>
         )}
       </header>
-      {/* Nothing ticked and nothing in these results: one line, not a column
-          of zeros. */}
-      {first && (selectedCount > 0 || CONTENT_GROUPS.some((g) => counts[g].size > 0)) ? (
+      {/* The rows are the collection's, at 0 when these results hold none, so
+          the card keeps its shape under a tick elsewhere. The sentence is only
+          for a collection that holds no rows at all. */}
+      {first ? (
         <>
           {group(first)}
           {showRest && rest.map(group)}
@@ -976,7 +1037,7 @@ function ContentCard({
         </>
       ) : (
         <p data-part="empty" className="px-2 py-2 text-meta text-ink-tertiary">
-          No files, images or media in these results.
+          No files, images or media in this collection.
         </p>
       )}
     </section>
@@ -1055,11 +1116,11 @@ function FacetRow({
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
         <span className="min-w-0 flex flex-col">
-          <span data-part="label" className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+          <span data-part="label" className={`truncate text-tab ${count === 0 && !checked ? "text-ink-muted" : bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
           {hint && <span data-part="hint" className="text-meta text-ink-tertiary leading-snug">{hint}</span>}
         </span>
       </span>
-      <span data-part="count" className={`shrink-0 text-tab tabular-nums ${bold ? "font-semibold text-ink" : "font-semibold text-ink-secondary"}`}>
+      <span data-part="count" className={`shrink-0 text-tab tabular-nums font-semibold ${count === 0 ? "text-ink-muted" : bold ? "text-ink" : "text-ink-secondary"}`}>
         {count}
       </span>
     </label>
@@ -1076,6 +1137,7 @@ const KEYWORD_CAP = 6;
 function KeywordFacetCard({
   title,
   counts,
+  universe,
   selected,
   onToggle,
   onClear,
@@ -1086,6 +1148,9 @@ function KeywordFacetCard({
 }: {
   title: string;
   counts: Map<string, number>;
+  /** Every value the collection holds, with its count over the collection:
+   *  the rows and their order. */
+  universe: Map<string, number>;
   selected: Record<string, boolean>;
   onToggle: (id: string) => void;
   onClear: () => void;
@@ -1102,17 +1167,20 @@ function KeywordFacetCard({
   const [showAll, setShowAll] = useState(false);
   const q = search.trim().toLowerCase();
 
-  // Items with a non-zero faceted count, plus any selected (so a selection never
-  // disappears under the current facet base).
+  // The collection's values, plus a ticked one it no longer holds, in an order
+  // set by the collection (its counts, or the name), never by the live counts:
+  // a tick elsewhere changes numbers, not rows.
+  const ordered = useMemo(
+    () =>
+      [...universe.keys()].sort((a, b) =>
+        sort === "count" ? universe.get(b)! - universe.get(a)! || a.localeCompare(b) : a.localeCompare(b),
+      ),
+    [universe, sort],
+  );
   const list = useMemo(() => {
-    const names = new Set<string>([...counts.keys()].filter((c) => (counts.get(c) ?? 0) > 0));
-    for (const c of Object.keys(selected)) if (selected[c]) names.add(c);
-    return [...names].sort((a, b) =>
-      sort === "count"
-        ? (counts.get(b) ?? 0) - (counts.get(a) ?? 0) || a.localeCompare(b)
-        : a.localeCompare(b),
-    );
-  }, [counts, selected, sort]);
+    const extra = Object.keys(selected).filter((c) => selected[c] && !universe.has(c));
+    return extra.length ? [...ordered, ...extra.sort()] : ordered;
+  }, [ordered, selected, universe]);
 
   const matched = q ? list.filter((c) => c.toLowerCase().includes(q)) : list;
   const cap = q || showAll ? Infinity : KEYWORD_CAP;
@@ -1194,10 +1262,11 @@ function KeywordFacetCard({
 
       <div data-part="options" className="max-h-64 overflow-auto">
         {visible.length === 0 ? (
-          <p className="px-2 py-1 text-xs text-ink-tertiary">No matches.</p>
+          q && <p className="px-2 py-1 text-xs text-ink-tertiary">No matches.</p>
         ) : (
           visible.map((c) => {
             const checked = !!selected[c];
+            const n = counts.get(c) ?? 0;
             return (
               <label
                 key={c}
@@ -1208,11 +1277,11 @@ function KeywordFacetCard({
                 }`}
               >
                 <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
-                <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
+                <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : n === 0 ? "text-ink-muted" : "text-ink-secondary"}`}>
                   {c}
                 </span>
-                <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-secondary">
-                  {counts.get(c) ?? 0}
+                <span className={`shrink-0 text-tab font-semibold tabular-nums ${n === 0 ? "text-ink-muted" : "text-ink-secondary"}`}>
+                  {n}
                 </span>
               </label>
             );

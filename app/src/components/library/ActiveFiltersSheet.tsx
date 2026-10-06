@@ -13,9 +13,10 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
  *  drop individually, and a Clear all.
  *
  *  It shares `useActiveFilters` with the action bar's popover, so the two views
- *  of the same state can't disagree. It's a sheet, not a fixed block: it rises
- *  only when there's something to say, caps its height and scrolls, and can be
- *  collapsed to its handle when the facets below matter more. */
+ *  of the same state can't disagree. It is always mounted at one height, empty
+ *  or not, so the facet scroller above never changes size as chips come and
+ *  go; the chips wrap and scroll inside it. It can be collapsed to its handle
+ *  when the facets matter more. */
 export function ActiveFiltersSheet() {
   // Clears EVERYTHING this sheet lists — the search chip included. The facets-
   // only clear stays on the panel's footer button, where "Clear" sits under the
@@ -32,14 +33,12 @@ export function ActiveFiltersSheet() {
   const count = items.length;
   const [open, setOpen] = useState(true);
 
-  if (count === 0) return null;
-
   return (
     <section
       data-component="ActiveFiltersSheet"
       data-state={open ? "open" : "closed"}
       aria-label="Active filters"
-      className="bleed shrink-0 bg-paper animate-fade-in-up"
+      className="bleed shrink-0 bg-paper"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <header data-part="header" className="flex items-center gap-2 h-9">
@@ -69,8 +68,10 @@ export function ActiveFiltersSheet() {
           type="button"
           data-part="clear-all"
           onClick={() => clearAll()}
+          disabled={count === 0}
           className="ms-auto px-2 h-6 text-meta font-medium rounded-md text-ink-tertiary
-            hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            hover:bg-parchment hover:text-ink transition-colors cursor-pointer
+            disabled:opacity-40 disabled:pointer-events-none"
         >
           Clear all
         </button>
@@ -78,6 +79,7 @@ export function ActiveFiltersSheet() {
 
       {open && (
         <div data-part="chips" className="h-16 overflow-y-auto pb-3 flex flex-wrap gap-1.5">
+          {count === 0 && <p data-part="empty" className="text-meta text-ink-muted">None</p>}
           {items.map((it) => (
             <ActiveFilterChip
               key={it.id}

@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
+import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { createPortal } from "react-dom";
 import { useAtomValue } from "jotai";
 import { X } from "lucide-react";
@@ -53,11 +54,13 @@ export function FiltersSlideOver(props: FiltersSlideOverProps) {
 }
 
 function FiltersSheet({ open, onClose, title = "Filters", children, footer }: FiltersSlideOverProps) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useKeepClickedInPlace(bodyRef);
   return (
     <MobileBottomSheet open={open} onClose={onClose} title={title}>
       {/* The same narrow gutter host the slide-over is. */}
       <div data-gutter-host data-component="FiltersSlideOver" className="gutter-host flex flex-col h-full min-h-0">
-        <div data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
+        <div ref={bodyRef} data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
           {children}
         </div>
         {footer && (
@@ -85,6 +88,8 @@ function PaneFiltersDrawer({
   // Slide from the inline end — flips to the left edge under RTL (Arabic).
   const rtl = useAtomValue(languageAtom) === "AR";
   const trapRef = useFocusTrap<HTMLElement>(open);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useKeepClickedInPlace(bodyRef);
 
   // While closed the drawer stays mounted (translated off-pane) — mark it
   // inert so Tab can never focus its controls: focusing a child would make
@@ -179,7 +184,7 @@ function PaneFiltersDrawer({
           </button>
         </header>
 
-        <div data-part="body" className="bleed flex-1 overflow-auto">
+        <div ref={bodyRef} data-part="body" className="bleed flex-1 overflow-auto">
           {children}
         </div>
 

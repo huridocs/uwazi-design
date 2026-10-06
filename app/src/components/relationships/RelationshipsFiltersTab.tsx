@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { useAtomValue, useSetAtom } from "jotai";
 import { relFiltersDockCountAtom, relFiltersTabRequestAtom } from "../../atoms/filters";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -40,9 +41,11 @@ export function useRelFiltersDock(show: () => void) {
 export function RelationshipsFiltersTab() {
   const count = useActiveFilterCount();
   const clear = useClearRelFilters();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useKeepClickedInPlace(bodyRef);
   return (
     <>
-      <div data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
+      <div ref={bodyRef} data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
         <RelationshipsFilterSlideOver />
       </div>
       <footer

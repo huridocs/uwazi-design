@@ -286,6 +286,9 @@ export function FacetSection({
           {regularRows.map((row, idx) => {
             const [id, count] = row.entry;
             const checked = !!selected[id];
+            // A facet keeps its rows when other facets empty them: a 0 is dimmed
+            // and stays tickable. Not in a form list, whose count is coverage.
+            const zero = count === 0 && !renderCount && !bare;
             // A NON-SELECTABLE group label opens each run of grouped children —
             // the thesaurus group is context, not a filter value of its own.
             const showGroupHeader = !!row.group && row.group !== regularRows[idx - 1]?.group;
@@ -339,13 +342,13 @@ export function FacetSection({
                   {renderMarker?.(id)}
                   <span
                     className={`text-tab truncate ${renderBadge ? "min-w-0" : "flex-1"} ${
-                      checked || mixed?.[id] ? "text-ink font-medium" : "text-ink-secondary"
+                      checked || mixed?.[id] ? "text-ink font-medium" : zero ? "text-ink-muted" : "text-ink-secondary"
                     }`}
                   >
                     {label(id)}
                   </span>
                   {renderBadge && <span className="flex-1 min-w-0 flex items-center">{renderBadge(id)}</span>}
-                  <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
+                  <span className={`text-meta tabular-nums shrink-0 ${zero ? "text-ink-muted" : "text-ink-tertiary"}`}>
                     {renderCount ? renderCount(id, count) : count}
                   </span>
                 </label>

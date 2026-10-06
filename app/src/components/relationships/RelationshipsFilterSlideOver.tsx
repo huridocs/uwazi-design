@@ -47,16 +47,65 @@ import { t } from "../../utils/i18n";
  * descriptors (mirrors the Library facets). They self-hide when no target
  * carries that data (e.g. the mock seed), so the mock surface is unchanged.
  */
-/** A fixed-vocabulary facet's options, in vocabulary order: the values present
- *  here, plus any ticked one (at 0, so it stays deselectable). */
+/** A fixed-vocabulary facet's options, in vocabulary order: the values these
+ *  references hold at all (`present`), plus any ticked one, at their live
+ *  counts. Zero stays listed, so a tick in another facet changes numbers, not
+ *  rows. */
 function facetEntries(
   labels: Record<string, string>,
   counts: Map<string, number>,
   selected: Record<string, boolean>,
+  present: Map<string, number>,
 ): [string, number][] {
   return Object.keys(labels)
-    .map((id) => [id, counts.get(id) ?? 0] as [string, number])
-    .filter(([id, n]) => n > 0 || selected[id]);
+    .filter((id) => present.has(id) || selected[id])
+    .map((id) => [id, counts.get(id) ?? 0] as [string, number]);
+}
+
+/** A facet's options: every value the references hold, ordered by how many
+ *  hold it (then by name), at their live counts; a ticked value they no longer
+ *  hold goes last. The order never follows the live counts. */
+function stableEntries(
+  present: Map<string, number>,
+  counts: Map<string, number>,
+  selected: Record<string, boolean>,
+): [string, number][] {
+  const ids = [...present.keys()].sort((a, b) => present.get(b)! - present.get(a)! || a.localeCompare(b));
+  for (const id of Object.keys(selected)) if (selected[id] && !present.has(id)) ids.push(id);
+  return ids.map((id) => [id, counts.get(id) ?? 0]);
+}
+
+/** Each facet's values over every reference in scope, no facet applied: the
+ *  rows the panel lists. Entity-derived facets count distinct targets. */
+function facetUniverse(
+  references: ReturnType<typeof useScopedReferences>,
+  directionOf: (r: ReturnType<typeof useScopedReferences>[number]) => string,
+  language: Parameters<typeof entityCountries>[1],
+) {
+  const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+  const out = {
+    rel: new Map<string, number>(),
+    ent: new Map<string, number>(),
+    country: new Map<string, number>(),
+    descriptor: new Map<string, number>(),
+    anchoring: new Map<string, number>(),
+    direction: new Map<string, number>(),
+    verification: new Map<string, number>(),
+  };
+  const seen = new Set<string>();
+  for (const ref of references) {
+    bump(out.rel, ref.relationType);
+    bump(out.anchoring, anchoringOf(ref));
+    bump(out.direction, directionOf(ref));
+    if (ref.verification) bump(out.verification, ref.verification);
+    const entity = getEntity(ref.targetEntityId);
+    bump(out.ent, entity?.typeId ?? "unknown");
+    if (!entity || seen.has(entity.id)) continue;
+    seen.add(entity.id);
+    for (const c of entityCountries(entity, language)) bump(out.country, c);
+    for (const d of entity.descriptors ?? []) bump(out.descriptor, d);
+  }
+  return out;
 }
 
 export function RelationshipsFilterSlideOver() {
@@ -84,6 +133,10 @@ export function RelationshipsFilterSlideOver() {
   const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
   // Against the unfiltered set, like the pipeline: see `directionClassifier`.
   const directionOf = useMemo(() => directionClassifier(references), [references]);
+  const universe = useMemo(
+    () => facetUniverse(references, directionOf, language),
+    [references, directionOf, language],
+  );
 
   // The focal entity's inherited relationship properties (e.g. Role, Region) —
   // each becomes a dynamic facet of the value inherited from the connected
@@ -253,18 +306,12 @@ export function RelationshipsFilterSlideOver() {
   const showDirection = directionKinds > 1 || Object.values(directionFilters).some(Boolean);
 
   const countryEntries = useMemo(
-    () =>
-      Array.from(byCountry.entries()).sort(
-        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-      ),
-    [byCountry],
+    () => stableEntries(universe.country, byCountry, countryFilters),
+    [universe, byCountry, countryFilters],
   );
   const descriptorEntries = useMemo(
-    () =>
-      Array.from(byDescriptor.entries()).sort(
-        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-      ),
-    [byDescriptor],
+    () => stableEntries(universe.descriptor, byDescriptor, descriptorFilters),
+    [universe, byDescriptor, descriptorFilters],
   );
   const targetCount = useMemo(
     () => new Set(references.map((r) => r.targetEntityId)).size,
@@ -277,7 +324,7 @@ export function RelationshipsFilterSlideOver() {
         <FacetSection
           title={t("System", "Verification")}
           total={totalRels}
-          entries={facetEntries(VERIFICATION_LABEL, byVerification, verificationFilters)}
+          entries={facetEntries(VERIFICATION_LABEL, byVerification, verificationFilters, universe.verification)}
           selected={verificationFilters}
           onToggle={(id) => setVerificationFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setVerificationFilters({})}
@@ -291,7 +338,7 @@ export function RelationshipsFilterSlideOver() {
         <FacetSection
           title={t("System", "Anchoring")}
           total={totalRels}
-          entries={facetEntries(ANCHORING_LABEL, byAnchoring, anchoringFilters)}
+          entries={facetEntries(ANCHORING_LABEL, byAnchoring, anchoringFilters, universe.anchoring)}
           selected={anchoringFilters}
           onToggle={(id) => setAnchoringFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setAnchoringFilters({})}
@@ -303,7 +350,7 @@ export function RelationshipsFilterSlideOver() {
         <FacetSection
           title={t("System", "Direction")}
           total={totalRels}
-          entries={facetEntries(DIRECTION_LABEL, byDirection, directionFilters)}
+          entries={facetEntries(DIRECTION_LABEL, byDirection, directionFilters, universe.direction)}
           selected={directionFilters}
           onToggle={(id) => setDirectionFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setDirectionFilters({})}
@@ -320,7 +367,7 @@ export function RelationshipsFilterSlideOver() {
       <FacetSection
         title={t("System", "Relationship type")}
         total={totalRels}
-        entries={Array.from(byRelType.entries()).sort((a, b) => b[1] - a[1])}
+        entries={stableEntries(universe.rel, byRelType, relTypeFilters)}
         selected={relTypeFilters}
         onToggle={(id) => setRelTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
         onClear={() => setRelTypeFilters({})}
@@ -331,7 +378,7 @@ export function RelationshipsFilterSlideOver() {
       <FacetSection
         title={t("System", "Target entity type")}
         total={totalRels}
-        entries={Array.from(byEntityType.entries()).sort((a, b) => b[1] - a[1])}
+        entries={stableEntries(universe.ent, byEntityType, entityTypeFilters)}
         selected={entityTypeFilters}
         onToggle={(id) =>
           setEntityTypeFilters((s) => ({ ...s, [id]: !s[id] }))
