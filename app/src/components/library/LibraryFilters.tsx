@@ -1,4 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
+import type { Entity } from "../../data/entities";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
@@ -136,8 +138,8 @@ export function LibraryFilters() {
       countryMode,
       descriptors: on(descriptorFilters),
       descriptorMode,
-      fromMs: dateFrom ? Date.parse(dateFrom) : null,
-      toMs: dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null,
+      fromMs: dateBoundMs(dateFrom, "from"),
+      toMs: dateBoundMs(dateTo, "to"),
       inherited,
       chains: buildActiveChains(chainFilters, chainDefs, chainGraphFor(dataSource)),
       q: query.trim().toLowerCase(),
@@ -246,13 +248,12 @@ export function LibraryFilters() {
   // Date presets with faceted counts (relative to the newest dated entity that
   // passes the other filters) — quick ranges that read like aggregations.
   const datePresets = useMemo<DatePreset[]>(() => {
-    const dated: number[] = [];
+    const dated: Entity[] = [];
     let maxY = -Infinity;
     for (const e of entities) {
       if (!e.createdAt || !matchesAll(e, filterState, "date")) continue;
-      const ts = Date.parse(e.createdAt);
-      dated.push(ts);
-      const y = new Date(ts).getUTCFullYear();
+      dated.push(e);
+      const y = new Date(Date.parse(e.createdAt)).getUTCFullYear();
       if (y > maxY) maxY = y;
     }
     if (dated.length === 0) return [];
@@ -265,11 +266,14 @@ export function LibraryFilters() {
       const fromY = maxY - years + 1;
       const fromMs = Date.parse(`${fromY}-01-01`);
       const toMs = Date.parse(`${maxY}-12-31`) + 86_400_000 - 1;
-      const count = dated.reduce((n, ts) => n + (ts >= fromMs && ts <= toMs ? 1 : 0), 0);
+      // The filter's own test, so a preset's count is what it returns.
+      const count = dated.reduce((n, e) => n + (entityInRange(e, fromMs, toMs) ? 1 : 0), 0);
       return { label, from: `${fromY}-01-01`, to: `${maxY}-12-31`, count };
     });
   }, [entities, filterState]);
   const hasDates = datePresets.length > 0;
+  // Time fields only where records are timed to the hour (Nepal events).
+  const hasHours = useMemo(() => entities.some((e) => e.span?.hour), [entities]);
   const toggleInherited = (propId: string, value: string) =>
     setInheritedFilters((s) => ({
       ...s,
@@ -501,6 +505,7 @@ export function LibraryFilters() {
             from={dateFrom}
             to={dateTo}
             presets={datePresets}
+            hasHours={hasHours}
             onFrom={setDateFrom}
             onTo={setDateTo}
             onSetRange={(f, t) => {
@@ -915,6 +920,7 @@ function DateRangeCard({
   from,
   to,
   presets,
+  hasHours = false,
   onFrom,
   onTo,
   onSetRange,
@@ -923,6 +929,7 @@ function DateRangeCard({
   from: string;
   to: string;
   presets: DatePreset[];
+  hasHours?: boolean;
   onFrom: (v: string) => void;
   onTo: (v: string) => void;
   onSetRange: (from: string, to: string) => void;
@@ -971,11 +978,49 @@ function DateRangeCard({
         </div>
       )}
       <div data-part="range" className="px-1 flex items-center gap-1.5">
-        <DateBox value={from} onChange={onFrom} ariaLabel="From date" />
+        <DateBox value={boundDay(from)} onChange={(d) => onFrom(withTime(d, boundTime(from)))} ariaLabel="From date" />
         <span aria-hidden className="text-ink-tertiary text-xs shrink-0">→</span>
-        <DateBox value={to} onChange={onTo} ariaLabel="To date" />
+        <DateBox value={boundDay(to)} onChange={(d) => onTo(withTime(d, boundTime(to)))} ariaLabel="To date" />
       </div>
+      {hasHours && (
+        /* Same columns as the dates above, so each time sits under its day.
+           A time needs its day: the field waits for one. */
+        <div data-part="times" className="px-1 flex items-center gap-1.5">
+          <TimeBox value={boundTime(from)} disabled={!from} onChange={(t) => onFrom(withTime(boundDay(from), t))} ariaLabel="From time" />
+          <span aria-hidden className="invisible text-xs shrink-0">→</span>
+          <TimeBox value={boundTime(to)} disabled={!to} onChange={(t) => onTo(withTime(boundDay(to), t))} ariaLabel="To time" />
+        </div>
+      )}
     </section>
+  );
+}
+
+/** A day plus an optional "HH:MM": the bound the date atoms hold. */
+const withTime = (day: string, time: string) => (day && time ? `${day}T${time}` : day);
+
+/** Hours and minutes for a bound, in UTC like the records. Empty = the whole
+ *  day. */
+function TimeBox({
+  value,
+  onChange,
+  ariaLabel,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel: string;
+  disabled?: boolean;
+}) {
+  return (
+    <input
+      type="time"
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel}
+      className="flex-1 min-w-0 w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary tabular-nums
+        focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all disabled:opacity-50"
+    />
   );
 }
 

@@ -329,6 +329,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     columns' start.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
+- Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with
+  `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
+  others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
+  use `entityInRange`. Time fields show only where a record is timed to the hour.
 - Recent searches: `librarySearchHistoryAtom`, recorded on settle (1.2s, Enter, blur), deduped,
   capped at 8, in sessionStorage.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected

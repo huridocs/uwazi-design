@@ -113,7 +113,8 @@ export function useActiveFilters(): ActiveFilter[] {
       out.push({
         id: "date",
         group: "Date",
-        label: `${dateFrom || "…"} → ${dateTo || "…"}`,
+        // A timed bound reads "2025-09-08 12:30".
+        label: `${dateFrom.replace("T", " ") || "…"} → ${dateTo.replace("T", " ") || "…"}`,
         remove: () => {
           setDateFrom("");
           setDateTo("");

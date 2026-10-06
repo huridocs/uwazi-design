@@ -160,6 +160,32 @@ function previewOf(e: NepalEntity): Pick<Entity, "preview" | "image"> {
 
 const isoDay = (secs: number) => new Date(secs * 1000).toISOString().slice(0, 10);
 
+/** The end of the period a time names, at a precision: the last ms of its
+ *  hour, day or month. */
+function endOf(ms: number, precision: string): number {
+  const d = new Date(ms);
+  if (precision === "hour") return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours() + 1) - 1;
+  if (precision === "month") return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) - 1;
+  if (precision === "year") return Date.UTC(d.getUTCFullYear() + 1, 0, 1) - 1;
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1) - 1;
+}
+
+/** A record's time as a span: an event's `when` (start, and end when it has
+ *  one), else its date, each at the record's precision. An hour-precision end
+ *  is a stated time, so it is kept as given. */
+function spanOf(e: NepalEntity): Entity["span"] {
+  if (e.date === undefined) return undefined;
+  const precision =
+    (e.metadata.precision?.[0]?.value as string | undefined) ?? e.datePrecision ?? "day";
+  const when = e.metadata.when?.[0]?.value as { from?: number | null; to?: number | null } | undefined;
+  const fromS = typeof when?.from === "number" ? when.from : e.date;
+  const toS = typeof when?.to === "number" ? when.to : null;
+  const hour = precision === "hour";
+  const from = fromS * 1000;
+  const to = toS === null ? endOf(from, precision) : hour ? toS * 1000 : endOf(toS * 1000, precision);
+  return { from, to: Math.max(from, to), ...(hour ? { hour: true } : {}) };
+}
+
 let _entities: Entity[] | null = null;
 let _byId: Map<string, Entity> | null = null;
 
@@ -182,6 +208,7 @@ export function nepalLibraryEntities(): Entity[] {
       // The record's own date, which the timeline and "Date" sort read. People,
       // organisations and places have none and sit with the undated.
       ...(e.date !== undefined ? { createdAt: isoDay(e.date), datePrecision: e.datePrecision ?? "day" } : {}),
+      ...(e.date !== undefined ? { span: spanOf(e) } : {}),
       published: true,
       ...(geo ? { geo } : {}),
       ...(inherited ? { inherited } : {}),

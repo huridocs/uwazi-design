@@ -25,6 +25,7 @@ import {
   toISODate,
   typeOrder,
   type TimeBucket,
+  dateBoundMs,
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
@@ -130,8 +131,8 @@ interface LayoutProps extends Props {
 function useRange() {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
-  const from = dateFrom ? Date.parse(dateFrom) : null;
-  const to = dateTo ? Date.parse(dateTo) + 86_399_999 : null;
+  const from = dateBoundMs(dateFrom, "from");
+  const to = dateBoundMs(dateTo, "to");
   const covers = (b: { start: number; end: number }) =>
     (from === null || b.start >= from) && (to === null || b.end - 1 <= to);
   const overlaps = (b: { start: number; end: number }) =>

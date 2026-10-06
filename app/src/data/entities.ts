@@ -82,6 +82,11 @@ export interface Entity {
   /** How precisely `createdAt` is known, for a corpus whose dates are the
    *  records' own (Nepal). Absent: the List prints the year, as before. */
   datePrecision?: "day" | "month" | "year";
+  /** The record's time as a span, where it has more than a point: an event's
+   *  start and end at its precision (a day-precision end runs to the end of
+   *  that day). In ms. The date filter tests overlap with it; the timeline
+   *  still plots `createdAt`. `hour`: the record is timed to the hour. */
+  span?: { from: number; to: number; hour?: boolean };
   /** Values for a collection's own List columns (`only` in `LIST_COLUMNS`),
    *  by column id. Adapter-supplied, like `fields`. */
   listCells?: Record<string, string>;

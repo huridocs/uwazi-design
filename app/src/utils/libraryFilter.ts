@@ -1,4 +1,5 @@
 import type { Entity } from "../data/entities";
+import { entityInRange } from "./timeline";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
@@ -231,12 +232,9 @@ const PREDICATES: Record<
     (s.descriptorMode === "AND"
       ? s.descriptors.every((d) => (e.descriptors ?? []).includes(d))
       : (e.descriptors ?? []).some((d) => s.descriptors.includes(d))),
-  date: (e, s) => {
-    if (!s.fromMs && !s.toMs) return true;
-    if (!e.createdAt) return false;
-    const ts = Date.parse(e.createdAt);
-    return (!s.fromMs || ts >= s.fromMs) && (!s.toMs || ts <= s.toMs);
-  },
+  // Overlap with the record's span where it has one (an event's start and
+  // end), else its date as a point: see `entityInRange`.
+  date: (e, s) => entityInRange(e, s.fromMs, s.toMs),
   inherited: (e, s) =>
     s.inherited.every((f) =>
       entityInheritedValues(e, f.def, s.language, s.source).some((v) =>

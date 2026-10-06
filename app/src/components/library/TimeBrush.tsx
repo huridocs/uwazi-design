@@ -14,6 +14,10 @@ import {
   stackByType,
   timeExtent,
   toISODate,
+  dateBoundMs,
+  entityInRange,
+  formatMoment,
+  toBound,
   typeOrder,
   type TimeBucket,
 } from "../../utils/timeline";
@@ -77,17 +81,18 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     return { min: buckets[0].start, max: buckets[buckets.length - 1].end };
   }, [buckets]);
 
-  const fromMs = dateFrom ? Date.parse(dateFrom) : null;
-  const toMs = dateTo ? Date.parse(dateTo) : null;
+  const fromMs = dateBoundMs(dateFrom, "from");
+  // The window's right edge is the START of the "to" bound (the strip draws
+  // the day it names); the filter itself runs to that day's end.
+  const toMs = dateTo ? dateBoundMs(dateTo, "from") : null;
+  const timed = dateFrom.includes("T") || dateTo.includes("T");
   const winFrom = drag ? drag.from : fromMs ?? axis?.min ?? 0;
   const winTo = drag ? drag.to : toMs ?? axis?.max ?? 0;
 
   const inRange = useMemo(
     () =>
-      entities.filter((e) => {
-        const t = entityTime(e);
-        return t !== null && t >= winFrom && t <= winTo;
-      }).length,
+      // The same test as the filter: a record's span overlaps the window.
+      entities.filter((e) => entityInRange(e, winFrom, winTo)).length,
     [entities, winFrom, winTo],
   );
 
@@ -97,11 +102,13 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         setDateFrom("");
         setDateTo("");
       } else {
-        setDateFrom(toISODate(from));
-        setDateTo(toISODate(to));
+        // Days, or day and minute when the window edge is not on a midnight
+        // (a range typed with a time keeps it through a nudge).
+        setDateFrom(timed ? toBound(from) : toISODate(from));
+        setDateTo(timed ? toBound(to) : toISODate(to));
       }
     },
-    [setDateFrom, setDateTo],
+    [setDateFrom, setDateTo, timed],
   );
 
   const msAt = useCallback(
@@ -295,11 +302,11 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           <span className="font-semibold text-ink-secondary">{inRange.toLocaleString()}</span>
           {" dated · "}
           <span className="text-ink-secondary">
-            {isMobile ? new Date(winFrom).getUTCFullYear() : formatDay(winFrom)}
+            {isMobile ? new Date(winFrom).getUTCFullYear() : formatMoment(winFrom, timed)}
           </span>
           {" → "}
           <span className="text-ink-secondary">
-            {isMobile ? new Date(winTo).getUTCFullYear() : formatDay(winTo)}
+            {isMobile ? new Date(winTo).getUTCFullYear() : formatMoment(winTo, timed)}
           </span>
         </span>
         <div className="flex-1" />

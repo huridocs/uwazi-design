@@ -184,6 +184,53 @@ export function colorSpread(entities: Entity[], cap = 4): string[] {
 
 export const toISODate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
+/* ── Date bounds and spans ─────────────────────────────────────────────────
+   The Library's date filter holds a day ("2025-09-08") or a day and a time
+   ("2025-09-08T12:30"). Both are read as UTC: the corpora store wall-clock
+   dates as UTC, so the filter and the records agree on what "12:30" means. */
+
+/** A filter bound in ms. A day `to` runs to the end of that day; a timed `to`
+ *  to the end of that minute. null for none or an unreadable value. */
+export function dateBoundMs(value: string, side: "from" | "to"): number | null {
+  if (!value) return null;
+  const timed = value.includes("T");
+  const t = Date.parse(timed && !/Z|[+-]\d\d:\d\d$/.test(value) ? `${value}Z` : value);
+  if (Number.isNaN(t)) return null;
+  if (side === "from") return t;
+  return t + (timed ? 60_000 : 86_400_000) - 1;
+}
+
+/** The day part of a bound, and its time ("" when the bound is a day). */
+export const boundDay = (value: string) => value.slice(0, 10);
+export const boundTime = (value: string) => (value.includes("T") ? value.slice(11, 16) : "");
+
+/** A bound from ms: the day when it falls on a UTC midnight, else day and
+ *  minute. */
+export function toBound(ms: number): string {
+  const iso = new Date(ms).toISOString();
+  return iso.slice(11, 16) === "00:00" ? iso.slice(0, 10) : iso.slice(0, 16);
+}
+
+/** Does the entity's time touch [from, to]? A record with a span (an event's
+ *  start and end, at its precision) overlaps it; a record with only a date is
+ *  a point. Undated records never match a bound. */
+export function entityInRange(e: Entity, from: number | null, to: number | null): boolean {
+  if (from === null && to === null) return true;
+  const lo = e.span ? e.span.from : entityTime(e);
+  if (lo === null) return false;
+  const hi = e.span ? e.span.to : lo;
+  return (from === null || hi >= from) && (to === null || lo <= to);
+}
+
+/** "8 Sep 2025, 12:30" when `withTime`, else the day. */
+export function formatMoment(ms: number, withTime: boolean): string {
+  if (!withTime) return formatDay(ms);
+  const d = new Date(ms);
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${formatDay(ms)}, ${hh}:${mm}`;
+}
+
 export function formatDay(ms: number): string {
   const d = new Date(ms);
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;

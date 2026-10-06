@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { dateBoundMs } from "../utils/timeline";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
@@ -593,9 +594,9 @@ export function LibraryView() {
   // The boolean shape of the same query (AND groups, OR within, NOT excluded).
   const searchQuery = useMemo(() => parseSearchQuery(query), [query]);
   const fullTextSearch = q.length >= 3;
-  const fromMs = dateFrom ? Date.parse(dateFrom) : null;
-  // Inclusive of the whole "to" day.
-  const toMs = dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null;
+  const fromMs = dateBoundMs(dateFrom, "from");
+  // Inclusive of the whole "to" day, or of the "to" minute when it is timed.
+  const toMs = dateBoundMs(dateTo, "to");
   // Inherited-property filters with at least one value selected, paired with the
   // facet definition (target type, source-specific value accessor).
   const inheritedDefs = libraryInheritedDefs(dataSource, language);
