@@ -105,6 +105,11 @@ export const relVerificationFiltersAtom = atom<Record<string, boolean>>({});
  *  link shows only if it held on that day (`refHoldsAt`); undated links stay. */
 export const relAsOfAtom = atom<string>("");
 
+/** The path chosen in "Connect to…": node ids from the panel's entity to the
+ *  other end, which the graph view draws. Scoped like the facets and cleared
+ *  with them, so a path never outlives the entity it starts from. */
+export const relConnectPathAtom = atom<string[] | null>(null);
+
 /* ── Scoped panel state ───────────────────────────────────────────────────────
    Two Relationships panels can be on screen at once (the host's and a connected
    entity's in the overlay or Library drawer preview), and they must not share
@@ -160,6 +165,7 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relAsOfAtom, scope), "");
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
   set(relAtomFor(relWhenYearsAtom, scope), null);
+  set(relAtomFor(relConnectPathAtom, scope), null);
 });
 
 /** "Clear all filters": the facets, the search box, and the sort order.

@@ -3,6 +3,7 @@ import { useSetAtom } from "jotai";
 import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
 import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
+import { ConnectButton } from "./ConnectToModal";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { ViewControls } from "./ViewControls";
 import { RelationshipsFilterSlideOver } from "./RelationshipsFilterSlideOver";
@@ -36,6 +37,7 @@ export function RelationshipsToolbar() {
         <div data-component="RelationshipsToolbar" className="flex items-center gap-2 shrink-0">
           <ViewControls />
           <RelationshipsDisplayMenu />
+          <ConnectButton />
           <FiltersButton
             activeCount={activeFilterCount}
             onClick={() => setFiltersOpen(true)}

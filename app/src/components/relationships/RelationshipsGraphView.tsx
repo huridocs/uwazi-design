@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Link2 } from "lucide-react";
+import { Link2, X } from "lucide-react";
 import { activeRefIdAtom } from "../../atoms/references";
-import { relGroupByAtom, relSearchQueryAtom } from "../../atoms/filters";
+import { relConnectPathAtom, relGroupByAtom, relSearchQueryAtom } from "../../atoms/filters";
 import { useEntityScopeId, useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
 import { HighlightedText } from "../shared/HighlightedText";
 import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
-import { getEntity, getEntityType } from "../../data/entities";
+import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
+import { chainGraphFor } from "../../data/chainFacets";
 import { Direction } from "../../data/references";
 import { currentDocument } from "../../data/document";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
@@ -65,6 +66,9 @@ const RING_GAP = 40;
 const ARC_GAP = 30;
 /** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
 const GRAPH_CAP = 150;
+/** Spacing of a "Connect to…" path's further nodes, out along the first
+ *  hop's ray. */
+const PATH_STEP = 120;
 /** Label type size, in user units AND the rendered floor it must never fall under.
  *  The 11px floor is a CSS-px rule, and SVG text inside the zoom group is not
  *  measured in CSS px: it passes through TWO scales — the viewBox fit
@@ -184,6 +188,12 @@ export function RelationshipsGraphView() {
   // dimming them would be a lie: the clicked node goes primary, its siblings keep
   // a quiet ring that says "same entity, different relation".
   const [clickedNodeId, setClickedNodeId] = useState<string | null>(null);
+  // A path chosen in "Connect to…" (ConnectToModal): drawn from the source
+  // through its first hop, which is one of this graph's nodes, then outward.
+  // Ignored when it starts from another entity.
+  const [connectPath, setConnectPath] = useRelAtom(relConnectPathAtom);
+  const path = connectPath && connectPath.length >= 2 && connectPath[0] === focusedId ? connectPath : null;
+  const firstHop = path?.[1] ?? null;
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -250,10 +260,15 @@ export function RelationshipsGraphView() {
     const allRels = deriveRelationships(filteredRefs, { includeHubMembers: true });
     // A radial graph of thousands of nodes is both unreadable and slow — keep
     // the most-evidenced relationships and surface how many were dropped.
-    const rels =
+    let rels =
       allRels.length > GRAPH_CAP
         ? [...allRels].sort((a, b) => b.evidenceCount - a.evidenceCount).slice(0, GRAPH_CAP)
         : allRels;
+    // A drawn path's first hop stays on the graph, whatever its evidence.
+    if (firstHop && rels !== allRels && !rels.some((r) => r.targetEntityId === firstHop)) {
+      const hop = allRels.find((r) => r.targetEntityId === firstHop);
+      if (hop) rels = [...rels.slice(0, GRAPH_CAP - 1), hop];
+    }
     const truncated = allRels.length - rels.length;
 
     // Bucket each relationship by the active primary grouping axis. When
@@ -383,13 +398,39 @@ export function RelationshipsGraphView() {
     });
 
     return { spokes: spokesArr, nodes, truncated };
-  }, [filteredRefs, collapsed, groupBy, activeRefId, previewEntityId, sourceLabelW, pillScale, nodeScale]);
+  }, [filteredRefs, collapsed, groupBy, activeRefId, previewEntityId, sourceLabelW, pillScale, nodeScale, firstHop]);
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
   // that entity reads as primary, the old behaviour, rather than all of them
   // going faint with nothing to anchor them.
   const pickedInGraph = nodes.some((n) => n.selected && n.id === clickedNodeId);
+
+  // The path's first hop (a node of this graph) and the nodes past it, laid
+  // out along the ray from the source through that node, beyond the outermost
+  // ring so they never land among the fan's own nodes.
+  const pathAnchor = firstHop ? nodes.find((n) => n.id.startsWith(`${firstHop}::`)) : undefined;
+  const pathExtras = useMemo(() => {
+    if (!path || !pathAnchor) return [];
+    const graph = chainGraphFor(entityCorpusOf(focusedId));
+    const dx = pathAnchor.x - CX;
+    const dy = pathAnchor.y - CY;
+    const len = Math.hypot(dx, dy) || 1;
+    const outer = Math.max(...nodes.map((n) => Math.hypot(n.x - CX, n.y - CY)));
+    const start = Math.max(len, outer) + PATH_STEP * 0.6;
+    return path.slice(2).map((id, k) => {
+      const e = getEntity(id);
+      const type = getEntityType(e?.typeId ?? graph?.templateOf(id) ?? "");
+      return {
+        id,
+        title: e?.title ?? graph?.titleOf(id) ?? id,
+        color: type?.color ?? "#9ca3af",
+        typeName: type?.name ?? "",
+        x: CX + (dx / len) * (start + PATH_STEP * k),
+        y: CY + (dy / len) * (start + PATH_STEP * k),
+      };
+    });
+  }, [path, pathAnchor, focusedId, nodes]);
 
   useEffect(() => {
     const el = svgRef.current;
@@ -452,7 +493,7 @@ export function RelationshipsGraphView() {
     let minY = CY - SOURCE_R;
     let maxY = CY + SOURCE_R + 36;
 
-    for (const n of nodes) {
+    for (const n of [...nodes, ...pathExtras.map((x) => ({ ...x, r: 40 }))]) {
       minX = Math.min(minX, n.x - n.r);
       maxX = Math.max(maxX, n.x + n.r);
       minY = Math.min(minY, n.y - n.r);
@@ -479,11 +520,11 @@ export function RelationshipsGraphView() {
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     return { scale, tx: scale * (CX - cx), ty: scale * (CY - cy) };
-  }, [nodes, spokes, sourceLabelW]);
+  }, [nodes, spokes, sourceLabelW, pathExtras]);
 
   // Re-fit when the DRAWING changes (filters, grouping, collapse) — not on every
   // render, or panning and zooming would snap back under your cursor.
-  const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}`;
+  const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}::${path?.join(">") ?? ""}`;
   const lastFitKey = useRef<string | null>(null);
   // The layout depends on the zoom (see `pillScale`) and the fit on the layout,
   // so a fit can re-lay the graph larger than the fit allowed for. Follow it —
@@ -700,6 +741,21 @@ export function RelationshipsGraphView() {
             );
           })}
 
+          {/* The "Connect to…" path: source → first hop → the nodes past it. */}
+          {pathAnchor && (
+            <polyline
+              data-part="path"
+              points={[[CX, CY], [pathAnchor.x, pathAnchor.y], ...pathExtras.map((x) => [x.x, x.y])]
+                .map(([x, y]) => `${x},${y}`)
+                .join(" ")}
+              fill="none"
+              stroke="var(--accent-blue)"
+              strokeWidth={2.5}
+              strokeLinejoin="round"
+              opacity={0.85}
+            />
+          )}
+
           {/* Source node */}
           <g>
             <circle
@@ -783,8 +839,9 @@ export function RelationshipsGraphView() {
               setClickedNodeId(n.id);
               setPreviewEntityId(n.id.split("::")[0]);
             };
+            const offPath = !!pathAnchor && n.id !== pathAnchor.id;
             return (
-            <g key={n.id}>
+            <g key={n.id} opacity={offPath ? 0.3 : 1}>
               {/* The hit area (M15): nodes draw at 6–7px, far below a finger. An
                   invisible r=16 circle under each takes the same pointer
                   events; focus and the keyboard stay on the drawn node. */}
@@ -811,6 +868,12 @@ export function RelationshipsGraphView() {
                   strokeDasharray={sibling ? "2 2" : undefined}
                   opacity={primary ? 0.55 : 0.3}
                 />
+              )}
+              {pathAnchor?.id === n.id && (
+                <>
+                  <circle cx={n.x} cy={n.y} r={n.r + 4} fill="none" stroke="var(--accent-blue)" strokeWidth={2} />
+                  <PathLabel x={n.x} y={n.y + n.r + 6} text={n.title} scale={labelScale} />
+                </>
               )}
               {focusedNodeId === n.id && !n.selected && (
                 <circle
@@ -867,8 +930,64 @@ export function RelationshipsGraphView() {
             );
           })}
 
+          {pathExtras.map((x, i) => {
+            const last = i === pathExtras.length - 1;
+            return (
+              <g key={`path-${x.id}`} data-part="path-node">
+                <circle
+                  cx={x.x}
+                  cy={x.y}
+                  r={last ? 9 : 7}
+                  fill={x.color}
+                  stroke="var(--accent-blue)"
+                  strokeWidth={2}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${x.title} — ${x.typeName}, on the path`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dragRef.current.moved) return;
+                    setPreviewEntityId(x.id);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setPreviewEntityId(x.id);
+                    }
+                  }}
+                  style={{ cursor: "pointer", outline: "none" }}
+                />
+                <title>{x.title}</title>
+                <PathLabel x={x.x} y={x.y + 12} text={x.title} scale={labelScale} strong={last} />
+              </g>
+            );
+          })}
+
         </g>
       </svg>
+
+      {path && (
+        <div
+          data-part="path-bar"
+          role="status"
+          className="absolute bottom-3 left-3 z-10 flex items-center gap-2 max-w-[calc(100%-14rem)] ps-3 pe-1 py-1 rounded-md bg-paper/95 shadow-sm text-meta text-ink-secondary"
+          style={{ border: "1px solid var(--border-soft)" }}
+        >
+          <span className="truncate">
+            {pathAnchor
+              ? `Path to ${getEntity(path[path.length - 1])?.title ?? pathExtras[pathExtras.length - 1]?.title ?? "the entity"} · ${path.length - 1} ${path.length === 2 ? "hop" : "hops"}`
+              : "The path's first step is hidden by the filters"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setConnectPath(null)}
+            aria-label="Clear path"
+            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-ink-tertiary hover:text-ink hover:bg-parchment cursor-pointer"
+          >
+            <X size={12} aria-hidden />
+          </button>
+        </div>
+      )}
 
       {hover && containerRef.current && (() => {
         const rect = containerRef.current.getBoundingClientRect();
@@ -930,6 +1049,21 @@ export function RelationshipsGraphView() {
         </button>
       </div>
     </div>
+  );
+}
+
+/** A node's name on a "Connect to…" path: a pill under the node, held at the
+ *  label floor like the branch pills. */
+function PathLabel({ x, y, text, scale, strong = false }: { x: number; y: number; text: string; scale: number; strong?: boolean }) {
+  const shown = truncate(text, 28);
+  const w = Math.max(72, pillWidth(shown) - 8);
+  return (
+    <g pointerEvents="none" transform={`translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`}>
+      <rect x={x - w / 2} y={y} width={w} height={PILL_H} rx={4} fill="var(--bg-surface)" stroke="var(--accent-blue)" strokeWidth={1} />
+      <text x={x} y={y + 15} textAnchor="middle" fontSize={LABEL_PX} fontWeight={strong ? 600 : 500} fill="var(--text-primary)">
+        {shown}
+      </text>
+    </g>
   );
 }
 

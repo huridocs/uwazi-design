@@ -47,6 +47,15 @@ const GRAPHS: Partial<Record<Corpus, () => ChainGraph | null>> = {
 
 export const chainGraphFor = (corpus: Corpus): ChainGraph | null => GRAPHS[corpus]?.() ?? null;
 
+/** Templates a path search does not pass through by default, per collection:
+ *  Nepal's sources report on everything, so a path through one says only that
+ *  one article mentions both ends. `label` names them in the UI. */
+const PATH_SKIP: Partial<Record<Corpus, { typeIds: string[]; label: string }>> = {
+  nepal: { typeIds: ["nepal_source"], label: "sources" },
+};
+
+export const pathSkipFor = (corpus: Corpus) => PATH_SKIP[corpus] ?? null;
+
 const defsCache = new WeakMap<TemplateDef[], ChainFacetDef[]>();
 
 /** Every chain facet the collection's templates declare, in template order.

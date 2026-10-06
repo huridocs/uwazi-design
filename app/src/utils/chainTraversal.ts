@@ -34,6 +34,12 @@ export interface GraphEdge {
   relationType: string | null;
   direction: Direction;
   hub?: string;
+  /** Display extras the engine ignores, for surfaces that show an edge (path
+   *  rows): the relation type's name, the link's verification status and the
+   *  source's quote, where the corpus has them. */
+  label?: string;
+  status?: string;
+  quote?: string;
 }
 
 /** The adapter the engine traverses. Implementations index the underlying data;

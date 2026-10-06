@@ -9,12 +9,20 @@
 // segments stay fixed length.
 import type { ChainGraph, GraphEdge } from "../../utils/chainTraversal";
 import { nepalCorpus, nepalEntity, nepalRefsByEntity } from "./load";
+import { nepalRelTypeName } from "./schema";
 import type { NepalCorpus } from "./load";
 
 /** The property name a chain facet reads for a place and what it is in. */
 export const PLACE_WITHIN = "placeWithin";
 
 let cache: { corpus: NepalCorpus; graph: ChainGraph } | null = null;
+
+/** A link's verification, as path rows print it. */
+const STATUS: Record<string, string> = {
+  confirmed: "Confirmed",
+  "single-source": "Single source",
+  disputed: "Disputed",
+};
 
 /** Every place `id` is in, nearest first, by `located_in`. Guards against a
  *  cycle in the data. */
@@ -64,8 +72,13 @@ export function nepalChainGraph(): ChainGraph | null {
       if (cached) return cached;
       const edges: GraphEdge[] = [];
       for (const r of refsByEntity.get(entityId) ?? []) {
-        if (r.from === entityId) edges.push({ neighborId: r.to, relationType: r.type, direction: "outgoing" });
-        if (r.to === entityId) edges.push({ neighborId: r.from, relationType: r.type, direction: "incoming" });
+        const extras = {
+          label: nepalRelTypeName.get(r.type) ?? r.type,
+          status: STATUS[r.verification],
+          ...(r.quote ? { quote: r.quote } : {}),
+        };
+        if (r.from === entityId) edges.push({ neighborId: r.to, relationType: r.type, direction: "outgoing", ...extras });
+        if (r.to === entityId) edges.push({ neighborId: r.from, relationType: r.type, direction: "incoming", ...extras });
       }
       neighborCache.set(entityId, edges);
       return edges;
