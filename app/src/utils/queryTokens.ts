@@ -177,8 +177,29 @@ function globRegex(term: string): RegExp {
   return re;
 }
 
+/** A plain term of three characters or fewer ("on", "at", "19") matches only
+ *  at the start of a word: as a bare substring it marked "wat-er", "cann-on"
+ *  and "K-at-hmandu". A prefix, not a whole word, so a query typed letter by
+ *  letter ("kat") still finds "Kathmandu". Longer terms stay substrings. */
+const SHORT_TERM = 3;
+const shortCache = new Map<string, RegExp>();
+function shortRegex(term: string): RegExp | null {
+  if (term.length > SHORT_TERM || isGlob(term)) return null;
+  let re = shortCache.get(term);
+  if (!re) {
+    re = new RegExp(`(?<!${WORD_CHAR})${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "gu");
+    shortCache.set(term, re);
+  }
+  return re;
+}
+
 /** Does folded `text` contain `term`? */
 export function termIn(text: string, term: string): boolean {
+  const short = shortRegex(term);
+  if (short) {
+    short.lastIndex = 0;
+    return short.test(text);
+  }
   if (!isGlob(term)) return text.includes(term);
   const re = globRegex(term);
   re.lastIndex = 0;
@@ -187,6 +208,12 @@ export function termIn(text: string, term: string): boolean {
 
 /** The first hit of `term` in folded `text` at or after `from`, as [start, end). */
 export function termHit(text: string, term: string, from = 0): [number, number] | null {
+  const short = shortRegex(term);
+  if (short) {
+    short.lastIndex = from;
+    const m = short.exec(text);
+    return m ? [m.index, m.index + m[0].length] : null;
+  }
   if (!isGlob(term)) {
     const i = text.indexOf(term, from);
     return i < 0 ? null : [i, i + term.length];
