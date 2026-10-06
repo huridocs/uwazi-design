@@ -28,8 +28,8 @@ const VIEW_LABEL: Record<string, string> = {
   list: "List",
   map: "Map",
   timeline: "Timeline",
-  results: "Results",
   evidence: "Evidence",
+  results: "Adv. Search",
 };
 
 /** One line saying what a snapshot holds: its view, its filter count and its

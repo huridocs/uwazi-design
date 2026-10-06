@@ -421,7 +421,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
     LANGUAGE,
     {
       id: "resultsLayout",
-      label: "Results layout",
+      label: "Adv. Search layout",
       kind: "choice",
       separator: true,
       option: {

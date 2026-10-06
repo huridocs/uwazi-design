@@ -20,11 +20,12 @@ const VIEWS = [
   { value: "list", label: "List" },
   { value: "map", label: "Map" },
   { value: "timeline", label: "Timeline" },
-  // Always listed, query or not — the view renders its own "search to see where
-  // terms match" state rather than appearing and disappearing from the menu.
-  { value: "results", label: "Results" },
-  // Also always listed: with no claims in the set it says what to filter.
+  // Always listed: with no claims in the set it says what to filter.
   { value: "evidence", label: "Evidence" },
+  // Last, and always listed, query or not — the view renders its own "search to
+  // see where terms match" state rather than appearing and disappearing from the
+  // menu. Labelled "Adv. Search"; the value stays "results".
+  { value: "results", label: "Adv. Search" },
 ];
 
 export function ViewSwitcher({

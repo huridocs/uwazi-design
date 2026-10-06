@@ -323,11 +323,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   (`utils/librarySnippets.ts`, tokens from `utils/queryTokens.ts`), used by:
   - `MatchOrigin`: a row mark in the List table and the timeline spine, shown only when the match
     is in a field the row does not display.
-  - Results (`libraryViewModeAtom = "results"`): a search switches to it and remembers the
-    previous view; `clearLibrarySearchAtom` restores it. Leaving Results during a query cancels
-    both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
+  - Adv. Search (`libraryViewModeAtom = "results"`; code says "results", the UI says "Adv.
+    Search": the last View option, the drawer tab and the phone sheet tab): a search switches to
+    it and remembers the previous view; `clearLibrarySearchAtom` restores it. Leaving Adv. Search
+    during a query cancels both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
     passages, spine. None repeats the title snippet.
-  - `TimeSpine`: the one chronology for the timeline and the Results spine. Callers pass rows,
+  - `TimeSpine`: the one chronology for the timeline and the Adv. Search spine. Callers pass rows,
     `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
     marks share one capsule and brace with no count; the "N later" label sits at the row
     columns' start.
@@ -422,7 +423,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   e-mail). Verification is the first property facet (`defaultfilter`), after Status, Template
   and Content, the order Uwazi gives built-in and property filters. Its List opens on its own columns
   (`COLLECTION_COLUMNS` and `listCells` in `listColumns.tsx`). A reference's quote is a search
-  field ("Quote" on the source, "Source quote" on its target), so search and Results snippets
+  field ("Quote" on the source, "Source quote" on its target), so search and Adv. Search snippets
   reach it through `entitySearchFields`, with no second index.
   - Documents: 23 Government of Nepal PDFs, unaltered, in `public/nepal-data/docs/`; their
     per-page OCR text, issuer and source in `docs.json`. 51 records (sources and the actions they

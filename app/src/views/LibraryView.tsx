@@ -1668,7 +1668,7 @@ export function LibraryView() {
           // A query that found nothing gets no dot: the tab would be pointing at
           // an empty panel. Dot means "there is something here", not "you typed".
           ...(showResultsTab
-            ? [{ id: "results", label: t("System", "Results"), dot: hasQuery && filtered.length > 0 }]
+            ? [{ id: "results", label: t("System", "Adv. Search"), dot: hasQuery && filtered.length > 0 }]
             : []),
         ]}
         activeId={drawerTab}
@@ -1751,7 +1751,7 @@ export function LibraryView() {
           ? [
               {
                 id: "results",
-                label: "Results",
+                label: t("System", "Adv. Search"),
                 count: hasQuery ? filtered.length : undefined,
                 content: (
                   <div data-gutter-host className="gutter-host h-full min-h-0 flex flex-col">

@@ -234,6 +234,7 @@ export const seedTranslationKeys: Record<string, TranslationKey[]> = {
     { key: "Library", values: { en: "Library", es: "Biblioteca", fr: "Bibliothèque", ar: "المكتبة", pt: "Biblioteca" } },
     { key: "Search", values: { en: "Search", es: "Buscar", fr: "Rechercher", ar: "بحث", pt: "Pesquisar" } },
     { key: "Filters", values: { en: "Filters", es: "Filtros", fr: "Filtres", ar: "المرشحات", pt: "Filtros" } },
+    { key: "Adv. Search", values: { en: "Adv. Search", es: "Búsq. avanzada", fr: "Rech. avancée", ar: "بحث متقدم", pt: "Pesq. avançada" } },
     { key: "Upload", values: { en: "Upload", es: "Subir", fr: "Téléverser", ar: "رفع", pt: "Enviar" } },
     { key: "Save", values: { en: "Save", es: "Guardar", fr: "Enregistrer", ar: "حفظ", pt: "Salvar" } },
     { key: "Cancel", values: { en: "Cancel", es: "Cancelar", fr: "Annuler", ar: "إلغاء", pt: "Cancelar" } },
