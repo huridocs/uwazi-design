@@ -9,7 +9,8 @@ import { kindOfUwaziType } from "../../utils/propertyKind";
 import { asset } from "../../utils/asset";
 import { displayStrings, latLngOf } from "../../utils/templateProjection";
 import { nepalTemplateById } from "./schema";
-import { nepalCorpus, nepalEntity } from "./load";
+import { nepalCorpus, nepalDoc, nepalEntity, nepalRefsByEntity } from "./load";
+import { languageName, lengthRow, quoteRows, registerContentProvider, type EntityContent } from "../../utils/entityContent";
 import type { NepalEntity, NepalReference } from "./types";
 
 /** One property's values as display strings. */
@@ -85,14 +86,80 @@ function geoOf(e: NepalEntity): LatLng | undefined {
  *  `verification`; a claim's `verification_status` is the outcome of the
  *  checks on it, the same three values. It is the point of the corpus, so it
  *  leads the facets. */
-export const nepalFacetDefs: { propId: string; label: string; defaultFilter: boolean }[] = [
+export const nepalFacetDefs: { propId: string; label: string; defaultFilter: boolean; templateIds?: string[] }[] = [
   { propId: "verification", label: "Verification", defaultFilter: true },
+  // From `rights`, which is not listed as itself (see "Rights, split").
+  { propId: "licence", label: "Licence", defaultFilter: true, templateIds: ["nepal_media"] },
 ];
 
 function facetValuesOf(e: NepalEntity): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
   const v = (e.metadata.verification ?? e.metadata.verification_status)?.[0]?.label;
-  return v ? { verification: [v] } : undefined;
+  if (v) out.verification = [v];
+  const licence = licenceOf(e);
+  if (licence) out.licence = [licence];
+  return Object.keys(out).length ? out : undefined;
 }
+
+/* ── Rights, split ─────────────────────────────────────────────────────────
+   The seed's `rights` value says two things at once: where the item is
+   (bundled here, or a link) and its licence. Storage is the Content card's
+   "Where it is"; the licence is its own facet. The record still shows the
+   property as the seed wrote it. */
+const rightsOf = (e: NepalEntity) => e.metadata.rights?.[0]?.value as string | undefined;
+const LICENCE: Record<string, string> = {
+  cc0: "CC0",
+  "cc-by": "CC BY",
+  "cc-by-sa": "CC BY-SA",
+  "public-domain": "Public domain",
+  "open-government": "Open government licence",
+};
+function licenceOf(e: NepalEntity): string | undefined {
+  const r = rightsOf(e);
+  if (!r) return undefined;
+  if (r === "link-only") return "Rights reserved";
+  return LICENCE[r.replace(/^(bundled|linked)-/, "")];
+}
+function storageOf(e: NepalEntity): "stored" | "linked" | undefined {
+  const r = rightsOf(e);
+  if (!r) return undefined;
+  return r.startsWith("bundled-") ? "stored" : "linked";
+}
+
+/** The Content card's answer for a Nepal record: its attached PDFs (stored,
+ *  OCR, by language and length), a media item's kind, storage, language and
+ *  warning, and the passages a source is quoted for. */
+function contentOf(id: string): EntityContent {
+  const e = nepalEntity(id);
+  if (!e) return {};
+  const out: Record<string, Set<string>> = {};
+  const add = (g: string, v: string) => (out[g] ??= new Set()).add(v);
+  for (const docId of e.docs ?? []) {
+    const doc = nepalDoc(docId);
+    add("contains", "document");
+    add("storage", "stored");
+    add("text", "ocr");
+    if (doc) {
+      add("language", languageName(doc.language));
+      add("length", lengthRow(doc.pages));
+    }
+  }
+  if (e.template === "nepal_media") {
+    const kind = e.metadata.media_kind?.[0]?.value as string | undefined;
+    add("contains", kind === "video" ? "video" : kind === "audio" ? "audio" : "image");
+    const storage = storageOf(e);
+    if (storage) add("storage", storage);
+    const lang = e.metadata.language?.[0]?.value as string | undefined;
+    if (lang) add("language", languageName(lang));
+    // 24 audio items carry no warning: listed, so the rows add up to the media.
+    const w = e.metadata.content_warning?.[0]?.value as string | undefined;
+    add("warning", w === "none" || w === "distressing" || w === "graphic" ? w : "unassessed");
+  }
+  const quoted = (nepalRefsByEntity().get(id) ?? []).filter((r) => r.from === id && r.quote).length;
+  for (const q of quoteRows(quoted)) add("quotes", q);
+  return Object.fromEntries(Object.entries(out).map(([g, v]) => [g, [...v]]));
+}
+registerContentProvider("nepal", (e) => contentOf(e.id));
 
 /** The List's Verification column: the facet's value, shortened to fit. */
 const VERIFICATION_SHORT: Record<string, string> = {

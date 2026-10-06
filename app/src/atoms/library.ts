@@ -114,8 +114,15 @@ export const clearSearchHistoryAtom = atom(null, (_get, set) => {
 /** Selected entity-type facets (typeId → on). Empty = all types. */
 export const libraryTypeFiltersAtom = atom<Record<string, boolean>>({});
 
-/** "Has document" facet toggle. */
+/** "Has document" facet toggle. The Content card's "Contains: Document" took
+ *  its place in the sidebar; kept for the filter state's `hasDocOnly`. */
 export const libraryHasDocAtom = atom(false);
+
+/** The Content card's selection: group → row id → ticked (see
+ *  `utils/entityContent.ts`). */
+export const libraryContentFiltersAtom = atom<Record<string, Record<string, boolean>>>({});
+/** "All of these" on the card's first group (Contains): AND instead of OR. */
+export const libraryContentModeAtom = atom<"AND" | "OR">("OR");
 
 /** Publishing-status facet: keys "published" / "restricted". */
 export const libraryStatusFiltersAtom = atom<Record<string, boolean>>({});
@@ -960,6 +967,8 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(libraryDescriptorFiltersAtom, {});
   set(libraryInheritedFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
+  set(libraryContentFiltersAtom, {});
+  set(libraryContentModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   set(libraryOpenEntityIdAtom, null);
@@ -982,6 +991,8 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
+  set(libraryContentFiltersAtom, {});
+  set(libraryContentModeAtom, "OR");
 });
 
 /** Clear every filter and the search. The one definition, so callers cannot drift. */
@@ -1000,6 +1011,8 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
+  set(libraryContentFiltersAtom, {});
+  set(libraryContentModeAtom, "OR");
 });
 
 /** Count of active facets (not the search; see `libraryActiveSearchAtom`). The
@@ -1015,6 +1028,8 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   for (const vals of Object.values(get(libraryInheritedFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   for (const vals of Object.values(get(libraryChainFiltersAtom)))
+    n += Object.values(vals).filter(Boolean).length;
+  for (const vals of Object.values(get(libraryContentFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   return n;
 });

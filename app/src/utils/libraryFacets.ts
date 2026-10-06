@@ -72,7 +72,9 @@ const FIXED_FACET_PROPERTIES: Record<DataSource, string[]> = {
   mock: ["country"],
   travesia: [],
   // The curated Verification facet lists a claim's status with the others.
-  nepal: ["verification_status"],
+  // `rights` is split into the Content card's storage and the Licence facet;
+  // `content_warning` is the Content card's own group.
+  nepal: ["verification_status", "rights", "content_warning"],
   artworks: ["genres"],
 };
 

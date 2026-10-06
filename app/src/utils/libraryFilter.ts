@@ -1,5 +1,6 @@
 import type { Entity } from "../data/entities";
 import { entityInRange } from "./timeline";
+import { EMPTY_CONTENT, entityContent, hasContentSelection, matchesContent, registerContentProvider, type ContentSelection } from "./entityContent";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
@@ -85,6 +86,9 @@ export interface LibraryFilterState {
   fullTextSearch: boolean;
   /** Which KINDS of match to keep (Results-tab chips). All-true = no narrowing. */
   matchTypes: { title: boolean; properties: boolean; document: boolean };
+  /** The Content card: ticked rows per group, and Contains' Any/All. */
+  content: ContentSelection;
+  contentMode: "AND" | "OR";
 }
 
 /** One independent filter dimension. A facet's own key is excluded when
@@ -99,16 +103,19 @@ export type FacetKey =
   | "date"
   | "inherited"
   | "search"
-  | "matchType";
+  | "matchType"
+  | "content";
 
 export function entityIsDoc(e: Entity, source: DataSource): boolean {
   switch (source) {
     case "cejil":
       return e.preview === "document";
     case "travesia":
-    case "nepal":
       // Records, not documents: the schema carries no files.
       return false;
+    case "nepal":
+      // 51 records carry an attached PDF (sources and official actions).
+      return (entityContent(e, source).contains ?? []).includes("document");
     case "artworks":
       // An image corpus: nothing carries a document. Previously this fell
       // through to the mock branch and was right only because "artwork" and
@@ -143,6 +150,20 @@ export function buildSearchIndex(entities: Entity[], language: Language): Map<st
   return m;
 }
 
+/** The Sample's content: a document for the document-bearing types (their
+ *  renditions carry embedded text), an image where the record has one. */
+registerContentProvider("mock", (e) => {
+  const doc = typeHasDocument(e.typeId);
+  const img = !!(e.image || e.images?.length);
+  if (!doc && !img) return EMPTY_CONTENT;
+  return {
+    contains: [...(doc ? ["document"] : []), ...(img ? ["image"] : [])],
+    storage: ["stored"],
+    ...(doc ? { text: ["embedded"] } : {}),
+  };
+});
+
+
 /** Inert defaults for every filter dimension — each value means "don't narrow". */
 const EMPTY_SEARCH_INDEX: Map<string, string> = new Map();
 const ALL_MATCH_TYPES = { title: true, properties: true, document: true };
@@ -166,6 +187,8 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   searchTerms: [],
   fullTextSearch: false,
   matchTypes: ALL_MATCH_TYPES,
+  content: {},
+  contentMode: "OR",
 };
 
 /** Fill in any dimension the caller didn't supply.
@@ -208,6 +231,8 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     searchQuery: s.searchQuery ?? { groups: (s.searchTerms ?? []).map((t) => [t]), exclude: [] },
     fullTextSearch: s.fullTextSearch ?? false,
     matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
+    content: s.content ?? {},
+    contentMode: s.contentMode ?? "OR",
   };
   normalizedStates.set(s, out);
   normalizedStates.set(out, out);
@@ -248,6 +273,8 @@ const PREDICATES: Record<
   // one semantics (so "torture cruel" matches an entity carrying both words in
   // different fields/pages, and both get marked).
   search: (e, s) => matchesSearch(e, s),
+  content: (e, s) =>
+    !hasContentSelection(s.content) || matchesContent(entityContent(e, s.source), s.content, s.contentMode),
   // Where the query matched (title / properties / document). All-on is the
   // common case and short-circuits BEFORE categorising, so the (blob-scanning)
   // categorisation is only paid when the user has actually narrowed.

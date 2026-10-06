@@ -1,6 +1,15 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
 import type { Entity } from "../../data/entities";
+import {
+  CONTENT_GROUPS,
+  CONTENT_GROUP_LABEL,
+  CONTENT_ROWS,
+  contentSelectionOf,
+  entityContent,
+  matchesContent,
+  type ContentGroup,
+} from "../../utils/entityContent";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
@@ -12,6 +21,8 @@ import {
   libraryQueryAtom,
   libraryTypeFiltersAtom,
   libraryHasDocAtom,
+  libraryContentFiltersAtom,
+  libraryContentModeAtom,
   libraryStatusFiltersAtom,
   libraryCountryFiltersAtom,
   libraryCountryModeAtom,
@@ -27,7 +38,6 @@ import {
   type FacetMode,
 } from "../../atoms/library";
 import { MatchModeToggle } from "../shared/MatchModeToggle";
-import { typeHasDocument } from "../../data/entityProfiles";
 import { cejilSettings } from "../../data/cejil/settings";
 import {
   entityCountries,
@@ -45,7 +55,6 @@ import {
   matchesAll,
   buildSearchIndex,
   chainFacetCounts,
-  entityIsDoc,
   type LibraryFilterState,
 } from "../../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
@@ -64,7 +73,10 @@ export function LibraryFilters() {
   const language = useAtomValue(languageAtom);
   const query = useAtomValue(libraryQueryAtom);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
-  const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
+  const hasDocOnly = useAtomValue(libraryHasDocAtom);
+  const [contentFilters, setContentFilters] = useAtom(libraryContentFiltersAtom);
+  const [contentMode, setContentMode] = useAtom(libraryContentModeAtom);
+  const contentSelection = useMemo(() => contentSelectionOf(contentFilters), [contentFilters]);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
   const [countryMode, setCountryMode] = useAtom(libraryCountryModeAtom);
@@ -148,11 +160,14 @@ export function LibraryFilters() {
       searchQuery: parseSearchQuery(query),
       fullTextSearch: query.trim().length >= 3,
       matchTypes,
+      content: contentSelection,
+      contentMode,
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
     dateFrom, dateTo, inheritedFilters, chainDefs, chainFilters, query, matchTypes,
+    contentSelection, contentMode,
   ]);
 
   const typeCounts = useMemo(() => {
@@ -161,11 +176,36 @@ export function LibraryFilters() {
       if (matchesAll(e, filterState, "type")) m[e.typeId] = (m[e.typeId] ?? 0) + 1;
     return m;
   }, [entities, filterState]);
-  const docCount = useMemo(
-    () =>
-      entities.filter((e) => matchesAll(e, filterState, "doc") && entityIsDoc(e, dataSource)).length,
-    [entities, filterState, dataSource],
-  );
+  // The Content card: per group, the results that pass every other filter and
+  // every OTHER content group, tallied by row. `contentAny` is whether the
+  // collection carries content at all; without it the card is not drawn.
+  const { contentCounts, contentPresent, contentAny } = useMemo(() => {
+    const counts = Object.fromEntries(CONTENT_GROUPS.map((g) => [g, new Map<string, number>()])) as Record<
+      ContentGroup,
+      Map<string, number>
+    >;
+    // Rows the collection holds at all: they stay listed (at 0) when other
+    // filters empty them, as the Template card's rows do, so the card does not
+    // change shape under the reader.
+    const present = Object.fromEntries(CONTENT_GROUPS.map((g) => [g, new Set<string>()])) as Record<
+      ContentGroup,
+      Set<string>
+    >;
+    let any = false;
+    for (const e of entities) {
+      const c = entityContent(e, dataSource);
+      if (!c.contains?.length && !c.quotes?.length) continue;
+      any = true;
+      for (const g of CONTENT_GROUPS) for (const v of c[g] ?? []) present[g].add(v);
+      if (!matchesAll(e, filterState, "content")) continue;
+      for (const g of CONTENT_GROUPS) {
+        const vals = c[g];
+        if (!vals?.length || !matchesContent(c, contentSelection, contentMode, g)) continue;
+        for (const v of vals) counts[g].set(v, (counts[g].get(v) ?? 0) + 1);
+      }
+    }
+    return { contentCounts: counts, contentPresent: present, contentAny: any };
+  }, [entities, filterState, dataSource, contentSelection, contentMode]);
   const statusBase = useMemo(
     () => entities.filter((e) => matchesAll(e, filterState, "status")),
     [entities, filterState],
@@ -227,8 +267,6 @@ export function LibraryFilters() {
   // Uwazi does when `settings.filters` is empty.
   const shownTypes = matched.length ? matched : types;
   const typeName = (id: string) => types.find((t) => t.id === id)?.name ?? id;
-  const nonDocTypes = shownTypes.filter((t) => !typeHasDocument(t.id));
-  const docTypes = shownTypes.filter((t) => typeHasDocument(t.id));
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -280,7 +318,6 @@ export function LibraryFilters() {
       [propId]: { ...(s[propId] ?? {}), [value]: !s[propId]?.[value] },
     }));
 
-  const [docOpen, setDocOpen] = useState(true);
   // CEJIL filter groups (e.g. "Documentos") — expanded by default.
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const groupNames =
@@ -288,7 +325,6 @@ export function LibraryFilters() {
   const cejilHasGroup = groupNames.length > 0;
   const setAllGroups = (open: boolean) => {
     setOpenGroups(Object.fromEntries(groupNames.map((n) => [n, open])));
-    setDocOpen(open);
   };
   const collapseAll = () => setAllGroups(false);
   const expandAll = () => setAllGroups(true);
@@ -399,8 +435,10 @@ export function LibraryFilters() {
           </>
         ) : (
           <>
+            {/* Every template, documents included: what a record CONTAINS is
+                the Content card's question now, not the Template card's. */}
             <FacetCard title="Template">
-              {nonDocTypes.map((t) => (
+              {shownTypes.map((t) => (
                 <FacetRow
                   key={t.id}
                   checked={!!typeFilters[t.id]}
@@ -411,38 +449,25 @@ export function LibraryFilters() {
                 />
               ))}
             </FacetCard>
-
-            {/* The Nepal records hold no files and no country field: the
-                Documents card and Countries would only ever read 0. */}
-            {dataSource !== "nepal" && (
-            <FacetCard>
-              <FacetRow
-                checked={hasDocOnly}
-                onToggle={() => setHasDocOnly((v) => !v)}
-                label="Documents"
-                count={docCount}
-                expandable
-                expanded={docOpen}
-                onExpand={() => setDocOpen((o) => !o)}
-                bold
-              />
-              {docOpen && (
-                <TreeChildren>
-                  {docTypes.map((t) => (
-                    <FacetRow
-                      key={t.id}
-                      checked={!!typeFilters[t.id]}
-                      onToggle={() => toggleType(t.id)}
-                      label={t.name}
-                      count={typeCounts[t.id] ?? 0}
-                      child
-                    />
-                  ))}
-                </TreeChildren>
-              )}
-            </FacetCard>
-            )}
           </>
+        )}
+
+        {contentAny && (
+          <ContentCard
+            key={dataSource}
+            counts={contentCounts}
+            present={contentPresent}
+            selected={contentFilters}
+            mode={contentMode}
+            onModeChange={setContentMode}
+            onToggle={(g, id) =>
+              setContentFilters((prev) => ({ ...prev, [g]: { ...(prev[g] ?? {}), [id]: !prev[g]?.[id] } }))
+            }
+            onClear={() => {
+              setContentFilters({});
+              setContentMode("OR");
+            }}
+          />
         )}
 
         <KeywordFacetCard
@@ -664,6 +689,122 @@ const FACET_ROW = "flex items-center py-1 cursor-pointer transition-colors";
  *  status icon · label · bold count. Top-level rows reserve a triangle gutter so
  *  every checkbox aligns in one column; `child` rows drop the gutter (the tree
  *  line provides the indent). */
+/* ── Content card ──
+   What a record carries and how it is stored (utils/entityContent.ts). Groups
+   in card order, each a small heading over rows; a group shows only the rows
+   the results hold, and a group with none is not drawn, so the card is as long
+   as the collection's content is varied. The first group is open; the rest
+   sit behind one "More" row unless one of them holds a selection. */
+function ContentCard({
+  counts,
+  present,
+  selected,
+  mode,
+  onModeChange,
+  onToggle,
+  onClear,
+}: {
+  counts: Record<ContentGroup, Map<string, number>>;
+  /** Rows the collection holds, whatever the other filters leave. */
+  present: Record<ContentGroup, Set<string>>;
+  selected: Record<string, Record<string, boolean>>;
+  mode: "AND" | "OR";
+  onModeChange: (m: "AND" | "OR") => void;
+  onToggle: (group: ContentGroup, id: string) => void;
+  onClear: () => void;
+}) {
+  const [more, setMore] = useState(false);
+  const isOn = (g: ContentGroup) => Object.values(selected[g] ?? {}).some(Boolean);
+  const rowsOf = (g: ContentGroup): { id: string; label: string; hint?: string }[] => {
+    if (g === "language") {
+      const ids = new Set([...present.language, ...Object.keys(selected.language ?? {}).filter((k) => selected.language[k])]);
+      return [...ids]
+        // Alphabetical, Other last: an order by count would reshuffle the rows
+        // each time another filter changes the counts.
+        .sort((a, b) => Number(a === "Other") - Number(b === "Other") || a.localeCompare(b))
+        .map((id) => ({ id, label: id }));
+    }
+    return CONTENT_ROWS[g].filter((row) => present[g].has(row.id) || selected[g]?.[row.id]);
+  };
+  const groups = CONTENT_GROUPS.filter((g) => rowsOf(g).length > 0);
+  const [first, ...rest] = groups;
+  const showRest = more || rest.some(isOn);
+  const selectedCount = CONTENT_GROUPS.reduce(
+    (n, g) => n + Object.values(selected[g] ?? {}).filter(Boolean).length,
+    0,
+  );
+
+  const group = (g: ContentGroup) => (
+    <div key={g} data-part="content-group" data-group={g} role="group" aria-label={CONTENT_GROUP_LABEL[g]}>
+      <div className="flex items-center justify-between gap-2 px-2 pt-1.5 pb-0.5">
+        <h3 data-part="group-title" className="text-meta font-medium text-ink-tertiary">
+          {CONTENT_GROUP_LABEL[g]}
+        </h3>
+        {g === "contains" && rowsOf(g).length > 1 && (
+          <MatchModeToggle mode={mode} onChange={onModeChange} groupLabel="Match mode for Contains" />
+        )}
+      </div>
+      {rowsOf(g).map((row) => (
+        <FacetRow
+          key={row.id}
+          checked={!!selected[g]?.[row.id]}
+          onToggle={() => onToggle(g, row.id)}
+          label={row.label}
+          hint={row.hint}
+          count={counts[g].get(row.id) ?? 0}
+          bold
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <section data-component="ContentCard" className={FACET_CARD}>
+      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
+        <h2 data-part="title" className="text-tab font-semibold text-ink">Content</h2>
+        {selectedCount > 0 && (
+          <button
+            type="button"
+            data-part="clear"
+            onClick={onClear}
+            aria-label="Clear Content"
+            className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+          >
+            <X size={11} aria-hidden />
+            Clear
+          </button>
+        )}
+      </header>
+      {/* Nothing ticked and nothing in these results: one line, not a column
+          of zeros. */}
+      {first && (selectedCount > 0 || CONTENT_GROUPS.some((g) => counts[g].size > 0)) ? (
+        <>
+          {group(first)}
+          {showRest && rest.map(group)}
+          {rest.length > 0 && !rest.some(isOn) && (
+            <button
+              type="button"
+              data-part="more"
+              aria-expanded={showRest}
+              onClick={() => setMore((m) => !m)}
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 mt-0.5 rounded-md text-meta text-ink-secondary hover:text-ink hover:bg-warm text-start cursor-pointer"
+            >
+              <Play size={8} fill="currentColor" aria-hidden className={`shrink-0 transition-transform ${showRest ? "-rotate-90" : "rotate-90"}`} />
+              <span className="truncate">
+                {showRest ? "Fewer" : `More: ${rest.map((g) => CONTENT_GROUP_LABEL[g]).join(", ")}`}
+              </span>
+            </button>
+          )}
+        </>
+      ) : (
+        <p data-part="empty" className="px-2 py-2 text-meta text-ink-tertiary">
+          No files, images or media in these results.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function FacetRow({
   checked,
   onToggle,
@@ -676,7 +817,10 @@ function FacetRow({
   expanded,
   onExpand,
   reserveGutter,
+  hint,
 }: {
+  /** A second line under the label, for a row whose name needs a reason. */
+  hint?: string;
   checked: boolean;
   onToggle: () => void;
   label: string;
@@ -732,7 +876,10 @@ function FacetRow({
       <Checkbox checked={checked} onChange={onToggle} ariaLabel={label} />
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
-        <span data-part="label" className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+        <span className="min-w-0 flex flex-col">
+          <span data-part="label" className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+          {hint && <span data-part="hint" className="text-meta text-ink-tertiary leading-snug">{hint}</span>}
+        </span>
       </span>
       <span data-part="count" className={`shrink-0 text-tab tabular-nums ${bold ? "font-semibold text-ink" : "font-semibold text-ink-secondary"}`}>
         {count}

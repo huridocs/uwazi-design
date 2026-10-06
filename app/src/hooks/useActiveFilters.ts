@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { CONTENT_GROUPS, CONTENT_GROUP_LABEL, contentRowLabel } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   libraryQueryAtom,
@@ -12,6 +13,7 @@ import {
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
+  libraryContentFiltersAtom,
 } from "../atoms/library";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
@@ -50,6 +52,7 @@ export function useActiveFilters(): ActiveFilter[] {
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
+  const [contentFilters, setContentFilters] = useAtom(libraryContentFiltersAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -121,6 +124,21 @@ export function useActiveFilters(): ActiveFilter[] {
         },
       });
 
+    for (const g of CONTENT_GROUPS)
+      for (const [id, on] of Object.entries(contentFilters[g] ?? {}))
+        if (on)
+          out.push({
+            id: `content-${g}-${id}`,
+            group: "Content",
+            label: `${CONTENT_GROUP_LABEL[g]}: ${contentRowLabel(g, id)}`,
+            remove: () =>
+              setContentFilters((s) => {
+                const next = { ...(s[g] ?? {}) };
+                delete next[id];
+                return { ...s, [g]: next };
+              }),
+          });
+
     const defs = libraryInheritedDefs(dataSource, language);
     for (const [propId, vals] of Object.entries(inheritedFilters))
       for (const [v, on] of Object.entries(vals))
@@ -164,6 +182,8 @@ export function useActiveFilters(): ActiveFilter[] {
     dateTo,
     inheritedFilters,
     chainFilters,
+    contentFilters,
+    setContentFilters,
     dataSource,
     language,
     clearSearch,

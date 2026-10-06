@@ -6,7 +6,8 @@ import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
 import { cejilDocBearingIds } from "./profile";
-import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
+import { cejilCorpus, cejilFilesBySid, cejilFullText, cejilLoaded, cejilRelsByEntity } from "./load";
+import { languageName, lengthRow, registerContentProvider } from "../../utils/entityContent";
 import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
 import { formatPlace } from "../../utils/geoFormat";
 import { parseMediaValue } from "../../utils/mediaValue";
@@ -446,6 +447,31 @@ function inheritedPlaceRelName(templateId: string): string | undefined {
  *  canonical — titles/labels are richest in es). Returns [] until the corpus is
  *  fetched; the Library gates on `cejilLoaded()` and re-renders on load. */
 let _libraryEntities: Entity[] | null = null;
+/** The Content card's answer for a CEJIL record, from its file records: a
+ *  document per file, stored in the collection, by language and page count.
+ *  Its text is its own when recovered by `_id`, a stand-in when it resolves
+ *  through one of the six shared filenames (`BorrowedDocLine`), else none. */
+registerContentProvider("cejil", (e) => {
+  const files = cejilFilesBySid().get(e.id);
+  if (!files?.length) return {};
+  const text = cejilFullText();
+  const lang = new Set<string>();
+  const length = new Set<string>();
+  const source = new Set<string>();
+  for (const f of files) {
+    lang.add(languageName(f.language));
+    length.add(lengthRow(f.totalPages ?? 1));
+    source.add(text[f._id] ? "embedded" : text[f.filename] ? "stand-in" : "none");
+  }
+  return {
+    contains: ["document"],
+    storage: ["stored"],
+    language: [...lang],
+    length: [...length],
+    text: [...source],
+  };
+});
+
 export function cejilLibraryEntities(): Entity[] {
   if (!cejilLoaded()) return [];
   if (_libraryEntities) return _libraryEntities;

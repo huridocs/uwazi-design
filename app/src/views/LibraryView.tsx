@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { dateBoundMs } from "../utils/timeline";
+import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
@@ -53,6 +54,8 @@ import {
   libraryFieldColumnsAtom,
   libraryPropertySortsAtom,
   libraryHasDocAtom,
+  libraryContentFiltersAtom,
+  libraryContentModeAtom,
   libraryInheritedFiltersAtom,
   libraryLanguageInMenuAtom,
   libraryListColumnsAtom,
@@ -620,6 +623,12 @@ export function LibraryView() {
     [dataSource, chainFilters, chainTemplates, cejilReady, nepalReady],
   );
   const chainKey = JSON.stringify(chainFilters);
+  // The Content card, keyed on content like the facets above.
+  const contentFilters = useAtomValue(libraryContentFiltersAtom);
+  const contentMode = useAtomValue(libraryContentModeAtom);
+  const contentKey = `${JSON.stringify(contentFilters)}:${contentMode}`;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- content key
+  const contentSelection = useMemo(() => contentSelectionOf(contentFilters), [contentKey]);
 
   // Must stay memoised: `matchTypeBase`, `searchMatchCount` and the two brush
   // passes depend on it, and each is a full-corpus pass. A new identity per
@@ -649,6 +658,8 @@ export function LibraryView() {
       searchQuery,
       fullTextSearch,
       matchTypes,
+      content: contentSelection,
+      contentMode,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- content keys, see above
     [
@@ -672,6 +683,7 @@ export function LibraryView() {
       searchQuery,
       fullTextSearch,
       matchTypes,
+      contentKey,
     ],
   );
 
@@ -777,7 +789,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -813,7 +825,7 @@ export function LibraryView() {
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
     () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, showBrush],
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
   // doesn't shrink the grid to that single lane.
@@ -822,7 +834,7 @@ export function LibraryView() {
       viewMode === "timeline" && !cejilLoading
         ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
         : [],
-    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
+    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
   );
 
   /* Thumbnail Auto reads how many of these results have an image. A layout
