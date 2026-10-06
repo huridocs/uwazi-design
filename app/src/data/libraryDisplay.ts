@@ -29,7 +29,7 @@
  *  place: turning Thumbnail off must not make three sections vanish from under
  *  the pointer that is still travelling toward them. */
 
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results";
+export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results" | "evidence";
 
 export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "cards",
@@ -37,6 +37,7 @@ export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "map",
   "timeline",
   "results",
+  "evidence",
 ];
 
 export type DisplayValue = string | boolean;
@@ -440,6 +441,10 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
    *  sort and nothing else. An empty-feeling menu is the honest answer; a menu
    *  full of controls that act on nothing is not. */
   map: [CHART, SORT, LANGUAGE],
+
+  /** Claims against their sources: the sort orders the claims; nothing else
+   *  here has a card or a column to configure. */
+  evidence: [CHART, SORT, LANGUAGE],
 };
 
 // ── Reading the registry ─────────────────────────────────────────────────────

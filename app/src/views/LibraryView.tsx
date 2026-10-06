@@ -99,6 +99,7 @@ import {
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
+import { LibraryEvidenceView } from "../components/library/LibraryEvidenceView";
 import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
@@ -1367,6 +1368,10 @@ export function LibraryView() {
               relevanceOf={scoreOf}
             />
           </div>
+        ) : viewMode === "evidence" ? (
+          // Owns its empty state: an empty set and a set without claims say
+          // the same thing here.
+          <LibraryEvidenceView entities={filtered} selectedId={selectedId} onSelect={handleSelect} />
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">
             No entities match your filters.
@@ -1421,7 +1426,7 @@ export function LibraryView() {
         )}
 
         {/* Hidden while the table has no columns: there is nothing to show more of. */}
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" &&
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button

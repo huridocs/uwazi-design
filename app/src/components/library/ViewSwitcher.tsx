@@ -23,6 +23,8 @@ const VIEWS = [
   // Always listed, query or not — the view renders its own "search to see where
   // terms match" state rather than appearing and disappearing from the menu.
   { value: "results", label: "Results" },
+  // Also always listed: with no claims in the set it says what to filter.
+  { value: "evidence", label: "Evidence" },
 ];
 
 export function ViewSwitcher({
