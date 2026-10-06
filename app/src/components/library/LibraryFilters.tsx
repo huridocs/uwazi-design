@@ -406,7 +406,9 @@ export function LibraryFilters() {
       [propId]: { ...(s[propId] ?? {}), [value]: !s[propId]?.[value] },
     }));
 
-  // Groups pick from the facets that narrow now, named as their chips are.
+  // Groups pick from the facets that narrow now, named as their chips are,
+  // then from the property facets shown that do not, by name: a member can
+  // join before it is set, and its values are then ticked inside the group.
   const activeFilters = useActiveFilters();
   const groupOptions = useMemo(() => {
     const m = new Map<string, { name: string; values: string[] }>();
@@ -416,26 +418,29 @@ export function LibraryFilters() {
       entry.values.push(f.label);
       m.set(f.facetKey, entry);
     }
-    return [...m].map(([key, { name, values }]) => ({
+    const narrowing = [...m].map(([key, { name, values }]) => ({
       key,
       name,
       // A range's chip already starts with its name ("Age 18 → 30").
       label: values[0]?.startsWith(name) ? values.join(", ") : `${name}: ${values.join(", ")}`,
     }));
-  }, [activeFilters]);
+    const unset = [
+      ...shownDefs.map((d) => ({ key: inheritedKey(d.propId), name: d.label })),
+      ...shownRanges.map((d) => ({ key: rangeKey(d.name), name: d.label })),
+    ]
+      .filter((o) => !m.has(o.key))
+      .map((o) => ({ ...o, label: o.name }));
+    return [...narrowing, ...unset];
+  }, [activeFilters, shownDefs, shownRanges]);
   // A facet's name when it no longer narrows, so a group can still show it.
   const facetName = (key: string) => {
     if (key.startsWith("inh:")) return inheritedDefs.find((d) => d.propId === key.slice(4))?.label ?? key.slice(4);
     if (key.startsWith("range:")) return rangeDefs.find((d) => d.name === key.slice(6))?.label ?? key.slice(6);
     return FIXED_FACET_NAMES[key] ?? key;
   };
-  const addGroup = () =>
-    setGroups((gs) => {
-      // Start from the first facets no other group holds, when there are any.
-      const taken = new Set(gs.flatMap((g) => g.keys));
-      const free = groupOptions.map((o) => o.key).filter((k) => !taken.has(k));
-      return [...gs, { id: `group-${Date.now().toString(36)}`, op: "or", keys: free.slice(0, 2) }];
-    });
+  // A new group starts empty: guessing its members picked the first two
+  // narrowing facets, which were rarely the ones meant.
+  const addGroup = () => setGroups((gs) => [...gs, { id: `group-${Date.now().toString(36)}`, op: "or", keys: [] }]);
   const updateGroup = (id: string, next: Partial<FilterGroup>) =>
     setGroups((gs) => gs.map((g) => (g.id === id ? { ...g, ...next } : g)));
   // CEJIL filter groups (e.g. "Documentos") — expanded by default.

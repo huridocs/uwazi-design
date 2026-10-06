@@ -520,7 +520,10 @@ export const groupEffective = (g: FilterGroup, narrowing: (key: string) => boole
   g.keys.filter(narrowing).length >= (g.op === "or" ? 2 : 1);
 
 /** Fold the groups into the AND list: each group's narrowing members leave
- *  the list and come back as one node, in the first member's place. */
+ *  the list and come back as one node, in the first member's place. The node
+ *  also carries the keys of members that do not narrow yet, so their
+ *  aggregation skips it: a value the group's other members exclude still has a
+ *  count, and can be ticked inside the group. */
 function withGroups(leaves: FilterNode[], groups: readonly FilterGroup[]): FilterNode[] {
   if (!groups.length) return leaves;
   const byKey = new Map(leaves.map((n) => [n.keys[0], n] as const));
@@ -529,10 +532,12 @@ function withGroups(leaves: FilterNode[], groups: readonly FilterGroup[]): Filte
     const members = g.keys.map((k) => byKey.get(k)).filter((n): n is FilterNode => !!n && !replaced.has(n));
     if (!members.length) continue;
     const tests = members.map((n) => n.test);
+    const narrowing = members.map((n) => n.keys[0]);
+    const keys = [...narrowing, ...g.keys.filter((k) => !byKey.has(k))];
     const node: FilterNode =
       g.op === "not"
-        ? { keys: members.map((n) => n.keys[0]), test: (e) => !tests.some((t) => t(e)) }
-        : { keys: members.map((n) => n.keys[0]), test: (e) => tests.some((t) => t(e)) };
+        ? { keys, test: (e) => !tests.some((t) => t(e)) }
+        : { keys, test: (e) => tests.some((t) => t(e)) };
     replaced.set(members[0], node);
     for (const m of members.slice(1)) replaced.set(m, null);
   }
