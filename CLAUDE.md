@@ -325,10 +325,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - `MatchOrigin`: a row mark in the List table and the timeline spine, shown only when the match
     is in a field the row does not display.
   - Adv. Search (`libraryViewModeAtom = "results"`; code says "results", the UI says "Adv.
-    Search": the last View option, the drawer tab and the phone sheet tab): a search switches to
-    it and remembers the previous view; `clearLibrarySearchAtom` restores it. Leaving Adv. Search
-    during a query cancels both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
-    passages, spine. None repeats the title snippet.
+    Search" for the last View option and the main-pane view, "Results" for the drawer tab and the
+    phone sheet) opens only when the reader picks it and stays until they pick another view. A
+    search never changes the view: the view in front marks the matches and the drawer's Results
+    tab lists them (on phones the Results sheet opens on submit). `clearLibrarySearchAtom` ends
+    the search and leaves the view. Logic lives in `atoms/library.ts`. Layouts
+    (`libraryResultsLayoutAtom`): grouped, tree, passages, spine. None repeats the title snippet.
   - Adv. Search toolbar (`ResultsSnippets/AdvancedSearchBar.tsx`, on phones in the Results
     sheet): "Search in" (`librarySearchScopeAtom`: all, title, metadata, full text, quotes) and
     "Match" (`librarySearchMatchAtom`: partial, whole) are part of the search, not filters: they
