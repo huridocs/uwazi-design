@@ -17,6 +17,8 @@ import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
+import { networkTypeOptionsAtom } from "./network";
+import { NETWORK_EVIDENCE_TEMPLATES } from "../data/network/graph";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
@@ -547,7 +549,8 @@ const enterSearchResultsAtom = atom(null, (get, set) => {
   }
   if (get(searchModeOverriddenAtom)) return;
   const mode = get(viewModeStateAtom);
-  if (mode === "results") return;
+  // The Network view dims what a search leaves out, in place, so it keeps the view.
+  if (mode === "results" || mode === "network") return;
   set(preSearchViewModeAtom, mode);
   set(viewModeStateAtom, "results");
 });
@@ -719,8 +722,14 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom), source: get(dataSourceAtom) }),
     sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],
+    // Only the Network view builds the graph its type list comes from.
+    networkTypes: get(libraryViewModeAtom) === "network" ? get(networkTypeOptionsAtom) : [],
+    networkEvidence: !!NETWORK_EVIDENCE_TEMPLATES[get(dataSourceAtom)],
   };
 });
+
+/** The Network view's stored Display answers (`LIBRARY_DISPLAY.network`). */
+export const libraryNetworkDisplayAtom = atom((get) => get(libraryDisplayAtom).modes.network ?? {});
 
 /** Read one option for one mode, falling back to its registry default. */
 function readOption(

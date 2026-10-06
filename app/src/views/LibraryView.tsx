@@ -102,6 +102,7 @@ import {
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
+import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
 import { LibraryEvidenceView } from "../components/library/LibraryEvidenceView";
 import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
@@ -1320,7 +1321,7 @@ export function LibraryView() {
         // The map is a canvas: it fills the lane to the pane edges, no gutter
         // and no inset.
         className={`flex-1 min-h-0 bg-warm ${viewMode === "map" ? "bleed-flush" : "bleed py-3"} ${
-          viewMode === "map" || viewMode === "timeline" || viewMode === "results"
+          viewMode === "map" || viewMode === "timeline" || viewMode === "results" || viewMode === "network"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
@@ -1390,6 +1391,17 @@ export function LibraryView() {
               relevanceOf={scoreOf}
             />
           </div>
+        ) : viewMode === "network" ? (
+          // Draws the whole collection and dims what the filters leave out,
+          // so an empty result set is a fully dimmed network, not a message.
+          <div className="flex-1 min-h-0">
+            <LibraryNetworkView
+              matches={filtered}
+              filtering={filtered.length !== entities.length}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+            />
+          </div>
         ) : viewMode === "evidence" ? (
           // Owns its empty state: an empty set and a set without claims say
           // the same thing here.
@@ -1448,7 +1460,7 @@ export function LibraryView() {
         )}
 
         {/* Hidden while the table has no columns: there is nothing to show more of. */}
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" &&
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button

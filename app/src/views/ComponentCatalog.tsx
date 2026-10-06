@@ -84,6 +84,7 @@ import {
   MainTabsDemo,
   BeaconDemo,
   ViewSwitcherDemo,
+  NetworkCanvasDemo,
   CopyFromPickerDemo,
   FileTableDemo,
   SearchBarDemo,
@@ -1603,6 +1604,22 @@ sendFill(selection.text);                                    // commits, then di
 {/* Width held by Select's steady prop — reserves the widest label. */}`}
                 >
                   <ViewSwitcherDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-network-canvas" ref={reg("sh-network-canvas")}>
+                <CatalogEntry
+                  name="NetworkCanvas"
+                  description="The Library's Network view: a whole collection on one canvas 2D drawing (CEJIL is 4,398 nodes and 16,585 edges, past what SVG holds). Positions are precomputed per collection; filters dim in place through `strength` (match, neighbour, rest) and toggles hide through `nodeOn` / `edgeOn`, so nothing moves a node. Zoomed out, a large collection draws one mark per community; zoom or a click opens it into nodes. Hub edges draw faint. Wheel and pinch zoom, drag pans, a node click selects. A visually hidden list of the best-connected records follows the canvas for the keyboard, with a focus ring drawn on the node."
+                  code={`<NetworkCanvas
+  graph={graph} placement={placement}
+  colorOf={colorOf} typeNameOf={typeNameOf} titleOf={titleOf}
+  nodeOn={nodeOn} edgeOn={edgeOn} strength={strength}
+  hubDegree={100} hubEdges="faint" overview
+  selected={selected} onSelect={onSelect} label="Network of the collection"
+/>`}
+                >
+                  <NetworkCanvasDemo />
                 </CatalogEntry>
               </div>
 

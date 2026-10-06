@@ -30,6 +30,7 @@ const VIEW_LABEL: Record<string, string> = {
   map: "Map",
   timeline: "Timeline",
   evidence: "Evidence",
+  network: "Network",
   results: "Adv. Search",
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { YearStrip } from "../../components/relationships/when/YearStrip";
 import { EventRow } from "../../components/relationships/when/EventRow";
 import { createStore, Provider, useSetAtom } from "jotai";
@@ -55,6 +55,8 @@ import { RelationshipFieldEditor } from "../../components/metadata/RelationshipF
 import { groupConnections, resolveRelationshipField } from "../../utils/inheritance";
 import { relationshipFieldsByLanguage } from "../../data/metadata";
 import { ViewSwitcher } from "../../components/library/ViewSwitcher";
+import { NetworkCanvas } from "../../components/library/NetworkCanvas";
+import { demoColorOf, demoNetwork, demoTypeNameOf } from "../../data/network/demo";
 import { CopyFromPicker } from "../../components/metadata/CopyFromPicker";
 import { copyUnitsOneToOne } from "../../utils/copyFrom";
 import { entities } from "../../data/entities";
@@ -895,6 +897,35 @@ export function DataTableDemo() {
 export function ViewSwitcherDemo() {
   const [view, setView] = useState("cards");
   return <ViewSwitcher value={view} onChange={setView} />;
+}
+
+/** The Network view's canvas over a made-up collection, live: pan, zoom,
+ *  click a community mark to open it, click a node to select it. */
+export function NetworkCanvasDemo() {
+  const { graph, placement, titles } = useMemo(() => demoNetwork(), []);
+  const [selected, setSelected] = useState(-1);
+  const nodeOn = useMemo(() => new Uint8Array(graph.ids.length).fill(1), [graph]);
+  const edgeOn = useMemo(() => new Uint8Array(graph.a.length).fill(1), [graph]);
+  return (
+    <div className="h-[26rem] w-full rounded-lg bg-warm p-3">
+      <NetworkCanvas
+        graph={graph}
+        placement={placement}
+        colorOf={demoColorOf}
+        typeNameOf={demoTypeNameOf}
+        titleOf={(i) => titles[i]}
+        nodeOn={nodeOn}
+        edgeOn={edgeOn}
+        strength={null}
+        hubDegree={6}
+        hubEdges="faint"
+        overview
+        selected={selected}
+        onSelect={setSelected}
+        label="Network of the demo collection"
+      />
+    </div>
+  );
 }
 
 /** The Copy From source picker, in a bounded box (it fills its positioned

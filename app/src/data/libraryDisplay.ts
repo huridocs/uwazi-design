@@ -29,7 +29,7 @@
  *  place: turning Thumbnail off must not make three sections vanish from under
  *  the pointer that is still travelling toward them. */
 
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results" | "evidence";
+export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results" | "evidence" | "network";
 
 export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "cards",
@@ -38,6 +38,7 @@ export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "timeline",
   "results",
   "evidence",
+  "network",
 ];
 
 export type DisplayValue = string | boolean;
@@ -108,6 +109,11 @@ export interface DisplayContext {
    *  column is one entry there and appears here, in the menu and in the table
    *  without a second edit. */
   listColumns: ToggleOption[];
+  /** The Network view's type switches, one per relationship type the
+   *  collection carries (`networkTypeOptionsAtom`). Empty outside that view. */
+  networkTypes: ToggleOption[];
+  /** The collection has an evidence layer the Network view can hide (Nepal). */
+  networkEvidence: boolean;
 }
 
 interface SectionBase {
@@ -448,6 +454,44 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** Claims against their sources: the sort orders the claims; nothing else
    *  here has a card or a column to configure. */
   evidence: [CHART, SORT, LANGUAGE],
+
+  /** The whole collection as a graph. Its options decide which edges and
+   *  records are drawn; none of them moves a node (the layout is fixed per
+   *  collection). Sort orders nothing here, so it is not offered. */
+  network: [
+    CHART,
+    LANGUAGE,
+    {
+      id: "hubEdges",
+      label: "Hub edges",
+      kind: "choice",
+      separator: true,
+      option: {
+        id: "hubEdges",
+        default: "faint",
+        choices: [
+          { id: "faint", label: "Faint", detail: "Links to the best-connected records, drawn light" },
+          { id: "full", label: "Full" },
+          { id: "off", label: "Hidden" },
+        ],
+      },
+    },
+    {
+      id: "layers",
+      label: "Layers",
+      kind: "toggles",
+      separator: true,
+      visible: (ctx) => ctx.networkEvidence,
+      options: [{ id: "evidence", label: "Evidence", detail: "Sources, claims and media, and their links", default: true }],
+    },
+    {
+      id: "networkTypes",
+      label: "Relationship types",
+      kind: "toggles",
+      separator: true,
+      options: (ctx) => ctx.networkTypes,
+    },
+  ],
 };
 
 // ── Reading the registry ─────────────────────────────────────────────────────

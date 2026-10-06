@@ -347,6 +347,18 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
     marks share one capsule and brace with no count; the "N later" label sits at the row
     columns' start.
+- Network view (`libraryViewModeAtom = "network"`, `LibraryNetworkView` → `NetworkCanvas`): the
+  whole collection on a canvas, no cap. Graph from `data/network/graph.ts` (one edge per record
+  pair, `networkGraphAtom`, built only in this view). Positions and Louvain communities are
+  precomputed by `scripts/build-network-layout.mjs` into `public/<corpus>-data/network.json`
+  (the Sample's in `public/sample-data/`); rerun it when a corpus's records or references change.
+  Nothing re-runs a layout at runtime; records the file lacks sit at their neighbours' centre.
+  Filters, facets, brush and search dim in place from the same `filtered` list, and a search does
+  not switch this view to Adv. Search. Display: hub edges (`HUB_DEGREE`), relationship types
+  (CEJIL's Mecanismo, País, Paises, "Relacionado a" off by default, `NETWORK_TYPES_OFF`), and
+  Nepal's Evidence layer. Collections of 500+ records open on community marks. Headless Chromium
+  needs `--use-angle=metal --enable-gpu-rasterization` to measure fps; SwiftShader raster runs
+  zoomed-in pans at ~7 fps.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with

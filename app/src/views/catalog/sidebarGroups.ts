@@ -139,6 +139,7 @@ export const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "sh-section-label", label: "SectionLabel" },
       { id: "sh-pin-toggle", label: "PinToggle" },
+      { id: "sh-network-canvas", label: "NetworkCanvas" },
       { id: "sh-saved-views", label: "SavedViewsMenu" },
       { id: "sh-case-panel", label: "CasePanel" },
       { id: "sh-filter-card", label: "FilterCard" },

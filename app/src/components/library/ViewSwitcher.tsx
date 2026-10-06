@@ -22,6 +22,8 @@ const VIEWS = [
   { value: "timeline", label: "Timeline" },
   // Always listed: with no claims in the set it says what to filter.
   { value: "evidence", label: "Evidence" },
+  // The whole collection as a graph; filters dim it in place.
+  { value: "network", label: "Network" },
   // Last, and always listed, query or not — the view renders its own "search to
   // see where terms match" state rather than appearing and disappearing from the
   // menu. Labelled "Adv. Search"; the value stays "results".
