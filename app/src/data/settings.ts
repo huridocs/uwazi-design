@@ -275,19 +275,34 @@ export const seedActivityLog: SettingsLogEntry[] = [
 ];
 
 // ── Menu (navlinks) ─────────────────────────────────────────────────────────
+/** One navbar item: a link, or a group of links (Uwazi's `settings.links`,
+ *  where a group's links are its `sublinks`). Groups do not nest. */
+export interface SettingsMenuSublink {
+  id: string;
+  title: string;
+  url: string;
+}
 export interface SettingsMenuLink {
   id: string;
   title: string;
   url: string;
   type: "link" | "group";
+  sublinks: SettingsMenuSublink[];
 }
 
 export const seedMenuLinks: SettingsMenuLink[] = [
-  { id: "m1", title: "Library", url: "/library", type: "link" },
-  { id: "m2", title: "About", url: "/page/about", type: "link" },
-  { id: "m3", title: "Resources", url: "", type: "group" },
-  { id: "m4", title: "Methodology", url: "/page/methodology", type: "link" },
-  { id: "m5", title: "Contact", url: "/page/contact", type: "link" },
+  { id: "m1", title: "Library", url: "/library", type: "link", sublinks: [] },
+  { id: "m2", title: "About", url: "/page/about", type: "link", sublinks: [] },
+  {
+    id: "m3",
+    title: "Resources",
+    url: "",
+    type: "group",
+    sublinks: [
+      { id: "m4", title: "Methodology", url: "/page/methodology" },
+      { id: "m5", title: "Contact", url: "/page/contact" },
+    ],
+  },
 ];
 
 // ── Metadata extraction (IX) ────────────────────────────────────────────────

@@ -16,13 +16,18 @@ import { deleteThesaurusAtom } from "../../atoms/thesauri";
 import { deleteGroupAtom, deleteUserAtom, type GroupWithMembers } from "../../atoms/users";
 import { removeAccessMemberAtom } from "../../atoms/entityOverlay";
 import { dataSourceAtom } from "../../atoms/dataSource";
+import { pageMenuLinks } from "../../utils/settingsUsage";
+import { menuSettings } from "../../atoms/siteMenu";
+import { defaultLanguageAtom } from "../../atoms/languages";
+import { pagesStore, pageTitle, type SitePage } from "../../atoms/sitePages";
+import { consumeFailureAtom } from "../../atoms/devSwitches";
 import type { SettingsThesaurus, SettingsUser } from "../../data/settings";
 
 /** One delete dialog per Settings domain: each reads its usage selector
  *  (`atoms/settingsUsage.ts`), refuses where Uwazi refuses, performs the
  *  delete it describes, and records it (`useSettingsNotify`). Each mounts
- *  only while open, so its selector runs only then. Languages and pages join
- *  with their stores. */
+ *  only while open, so its selector runs only then. Languages join with their
+ *  store. */
 
 export function ThesaurusDelete({ thesaurus, onCancel }: { thesaurus: SettingsThesaurus | null; onCancel: () => void }) {
   return thesaurus ? <ThesaurusDeleteOpen thesaurus={thesaurus} onCancel={onCancel} /> : null;
@@ -187,6 +192,81 @@ function GroupDeleteOpen({ group, onCancel }: { group: GroupWithMembers; onCance
         unshare(group.id);
         record({ method: "DELETE", domain: "group", noun: "group", id: group.id, name: group.name });
         onCancel();
+      }}
+    />
+  );
+}
+
+/** Delete one or more pages: Uwazi's "Do you want to delete the following
+ *  items?" with their titles, plus each menu link that leads to one of them
+ *  and what happens to it (it stays and leads to a missing page; Uwazi does
+ *  not touch the menu). The pages go from the store, each logged; one Beacon
+ *  card says it. */
+export function PagesDelete({ pages, onCancel, onDone }: { pages: SitePage[]; onCancel: () => void; onDone: () => void }) {
+  return pages.length ? <PagesDeleteOpen pages={pages} onCancel={onCancel} onDone={onDone} /> : null;
+}
+
+function PagesDeleteOpen({ pages, onCancel, onDone }: { pages: SitePage[]; onCancel: () => void; onDone: () => void }) {
+  const { record, fail } = useSettingsNotify();
+  const menu = useAtomValue(menuSettings.valueAtom).links;
+  const lang = useAtomValue(defaultLanguageAtom)?.key ?? "en";
+  const remove = useSetAtom(pagesStore.deleteAtom);
+  const consumeFailure = useSetAtom(consumeFailureAtom);
+  const lines = pages.flatMap((p) => {
+    const links = pageMenuLinks([p.id, p.slug, ...(p.aliases ?? [])], menu);
+    return links.map(
+      (l) => `The menu link “${l.title}” (${l.url}) leads to “${pageTitle(p, lang)}”. It stays in the menu and will lead to a missing page.`,
+    );
+  });
+  return (
+    <ConfirmDelete
+      open
+      title="Are you sure?"
+      message={
+        // Spans: the dialog sets this inside its own paragraph.
+        <>
+          <span className="block">Do you want to delete the following items?</span>
+          <span data-part="items" className="block mt-2">
+            {pages.map((p) => (
+              <span key={p.id} className="block ps-3 font-medium">
+                • {pageTitle(p, lang)}
+              </span>
+            ))}
+          </span>
+          {!lines.length && (
+            <span className="block mt-2 text-ink-tertiary">
+              No menu link leads to {pages.length === 1 ? "it" : "them"}; nothing else changes.
+            </span>
+          )}
+        </>
+      }
+      impact={{ lines, block: null }}
+      onCancel={onCancel}
+      onConfirm={() => {
+        // A failed delete keeps the pages and says why (Uwazi says nothing).
+        const injected = consumeFailure("delete");
+        if (injected) {
+          fail(undefined, injected);
+          return onCancel();
+        }
+        pages.forEach((p, i) => {
+          try {
+            remove({ id: p.id });
+          } catch (e) {
+            fail("An error occurred", `“${pageTitle(p, lang)}” was not deleted: ${e instanceof Error ? e.message : String(e)}`);
+            return;
+          }
+          record({
+            method: "DELETE",
+            domain: "page",
+            noun: "page",
+            id: p.id,
+            name: pageTitle(p, lang),
+            message: "Deleted successfully.",
+            notify: i === 0,
+          });
+        });
+        onDone();
       }}
     />
   );

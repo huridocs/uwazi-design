@@ -141,6 +141,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "sh-date-input", label: "DateInput" },
       { id: "set-map-point", label: "MapPointPicker" },
       { id: "set-image-picker", label: "ImagePickerModal" },
+      { id: "sh-pages-editor", label: "Pages editor" },
       { id: "sh-typed-editor", label: "TypedFieldEditor" },
       { id: "sh-media-field", label: "MediaField" },
       { id: "sh-image-lightbox", label: "ImageLightbox" },
