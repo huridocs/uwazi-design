@@ -1,7 +1,6 @@
 /** Mock seed for the cloned Settings views. Shapes mirror Uwazi's real
  *  collections (languages, users, groups) but trimmed to what the prototype
  *  renders. No backend — these are the initial atom values. */
-import { entityTypes } from "./entities";
 
 export interface SettingsLanguage {
   key: string;
@@ -57,29 +56,6 @@ export const seedGroups: SettingsGroupRecord[] = [
 
 /** The account signed in when the prototype opens (`signedInUserIdAtom`). */
 export const DEFAULT_SIGNED_IN_USER_ID = "u1";
-
-// ── Templates ──────────────────────────────────────────────────────────────
-export interface SettingsTemplate {
-  id: string;
-  name: string;
-  color: string;
-  propertyCount: number;
-  entityCount: number;
-  isDefault: boolean;
-}
-
-/** The Sample's templates as the extraction pages list them, until those
- *  pages read the template store (`atoms/templates.ts`). Settings › Templates
- *  and every other reader use the store. */
-export const seedTemplates: SettingsTemplate[] = entityTypes.map((t, i) => ({
-  id: t.id,
-  name: t.name,
-  color: t.color,
-  propertyCount: [8, 12, 6, 10, 5, 7, 9, 4][i] ?? 6,
-  entityCount: [18, 13, 9, 6, 4, 5, 3, 2][i] ?? 1,
-  // The template store's default (data/sample/templates.ts): uploads take it.
-  isDefault: t.id === "document",
-}));
 
 // ── Thesauri (dictionaries) ─────────────────────────────────────────────────
 export interface SettingsThesaurus {
@@ -303,54 +279,6 @@ export const seedMenuLinks: SettingsMenuLink[] = [
       { id: "m5", title: "Contact", url: "/page/contact" },
     ],
   },
-];
-
-// ── Metadata extraction (IX) ────────────────────────────────────────────────
-export type ExtractorStatus = "ready" | "training" | "processing" | "error";
-
-export interface SettingsExtractor {
-  id: string;
-  property: string;
-  template: string;
-  status: ExtractorStatus;
-  documents: number;
-  accuracy: number | null;
-}
-
-export const seedExtractors: SettingsExtractor[] = [
-  { id: "x1", property: "Date filed", template: "Court Case", status: "ready", documents: 142, accuracy: 94 },
-  { id: "x2", property: "Respondent state", template: "Court Case", status: "ready", documents: 142, accuracy: 88 },
-  { id: "x3", property: "Court", template: "Judgment", status: "training", documents: 56, accuracy: null },
-  { id: "x4", property: "Date of birth", template: "Person", status: "processing", documents: 38, accuracy: 71 },
-  { id: "x5", property: "Article", template: "Right", status: "error", documents: 12, accuracy: null },
-];
-
-// ── Paragraph extraction ────────────────────────────────────────────────────
-export interface SettingsParagraphJob {
-  id: string;
-  template: string;
-  status: ExtractorStatus;
-  paragraphs: number;
-}
-
-export const seedParagraphJobs: SettingsParagraphJob[] = [
-  { id: "pe1", template: "Judgment", status: "ready", paragraphs: 1840 },
-  { id: "pe2", template: "Court Case", status: "processing", paragraphs: 612 },
-  { id: "pe3", template: "Document", status: "ready", paragraphs: 327 },
-];
-
-// ── Preserve ────────────────────────────────────────────────────────────────
-export interface SettingsPreserveToken {
-  id: string;
-  name: string;
-  token: string;
-  capturedCount: number;
-  lastRun: string;
-}
-
-export const seedPreserveTokens: SettingsPreserveToken[] = [
-  { id: "pr1", name: "Court press releases", token: "pk_live_a1b2…f9", capturedCount: 214, lastRun: "2026-06-15 06:00" },
-  { id: "pr2", name: "NGO bulletins", token: "pk_live_c3d4…2a", capturedCount: 87, lastRun: "2026-06-14 06:00" },
 ];
 
 // ── Uploads (custom uploads) ────────────────────────────────────────────────

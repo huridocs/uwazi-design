@@ -1,4 +1,4 @@
-import type { ExtractorStatus } from "../../data/settings";
+import type { ExtractorStatus } from "../../data/extraction";
 
 const styles: Record<ExtractorStatus, { cls: string; label: string }> = {
   ready: { cls: "bg-success-light text-success-label", label: "Ready" },

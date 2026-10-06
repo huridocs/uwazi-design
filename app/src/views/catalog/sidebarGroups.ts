@@ -155,10 +155,8 @@ export const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "set-data-table", label: "DataTable" },
       { id: "set-radio-group", label: "RadioGroup" },
-      { id: "set-button", label: "Button" },
       { id: "set-settings-button", label: "SettingsButton" },
       { id: "set-dropzone", label: "Dropzone" },
-      { id: "set-field", label: "Field" },
       { id: "set-status-pill", label: "StatusPill" },
       { id: "set-row-actions", label: "RowActions" },
       { id: "set-list-page", label: "SettingsListPage" },

@@ -39,13 +39,11 @@ import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { SettingsNav } from "../components/settings/SettingsNav";
 
 // Settings primitives (static demos)
-import { Button } from "../components/settings/Button";
 import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
 import { Dropzone } from "../components/shared/Dropzone";
 import { AlphaJump } from "../components/shared/AlphaJump";
 import { TranslationProgress } from "../components/settings/TranslationProgress";
 import { DevPanel } from "./catalog/DevPanel";
-import { Field, TextInput } from "../components/settings/Field";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
 
@@ -1995,25 +1993,6 @@ const textColor = typeLabelColor(type.color);`}
                 </CatalogEntry>
               </div>
 
-              <div id="set-button" ref={reg("set-button")}>
-                <CatalogEntry
-                  name="Button"
-                  description="Settings-scoped action button. Warm fill is canonical; seal for danger only."
-                  code={`<Button variant="primary" size="sm">Save</Button>
-<Button variant="secondary" size="sm">Translate</Button>
-<Button variant="ghost" size="sm">Cancel</Button>
-<Button variant="danger" size="sm">Delete</Button>`}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="primary" size="sm">Save</Button>
-                    <Button variant="secondary" size="sm">Translate</Button>
-                    <Button variant="ghost" size="sm">Cancel</Button>
-                    <Button variant="danger" size="sm">Delete</Button>
-                    <Button variant="primary" size="sm" disabled>Disabled</Button>
-                  </div>
-                </CatalogEntry>
-              </div>
-
               <div id="set-settings-button" ref={reg("set-settings-button")}>
                 <CatalogEntry
                   name="SettingsButton"
@@ -2056,25 +2035,6 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="max-w-md flex flex-col gap-2">
                     <Dropzone onFile={() => {}} />
                     <Dropzone file={{ name: "estados.csv", detail: "Adds 3 values and 1 group." }} onRemove={() => {}} />
-                  </div>
-                </CatalogEntry>
-              </div>
-
-              <div id="set-field" ref={reg("set-field")}>
-                <CatalogEntry
-                  name="Field"
-                  description="Labelled form field wrapper (label + hint/error) with the warm TextInput."
-                  code={`<Field label="Username" hint="Used to log in.">
-  <TextInput defaultValue="admin" />
-</Field>`}
-                >
-                  <div className="w-full max-w-sm flex flex-col gap-3">
-                    <Field label="Username" hint="Used to log in.">
-                      <TextInput defaultValue="admin" />
-                    </Field>
-                    <Field label="Password" error="Passwords don't match">
-                      <TextInput type="password" defaultValue="••••••" />
-                    </Field>
                   </div>
                 </CatalogEntry>
               </div>
