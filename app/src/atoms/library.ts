@@ -497,7 +497,12 @@ export type { LibraryViewMode };
 /** The view the reader picked, or null: until they pick one, the Library
  *  opens on the collection's default view (Settings › Collection). */
 const viewModeChosenAtom = atom<LibraryViewMode | null>(null);
-const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = { cards: "cards", table: "list", map: "map" };
+const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = {
+  cards: "cards",
+  table: "list",
+  map: "map",
+  network: "network",
+};
 /** Evidence reads as the default view in a collection with no claim evidence
  *  (a saved view or link made in Nepal, or one opened before Nepal loaded). */
 const viewModeStateAtom = atom(

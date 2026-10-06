@@ -176,6 +176,16 @@ export function graphFromLinks(source: DataSource, ids: string[], typeIds: strin
   };
 }
 
+const graphIds = new WeakMap<NetworkGraph, number>();
+let nextGraphId = 1;
+/** A number per graph object, for cache keys: two graphs of the same size
+ *  (the Sample after a reference is added) never share one. */
+export function graphId(g: NetworkGraph): number {
+  let id = graphIds.get(g);
+  if (id === undefined) graphIds.set(g, (id = nextGraphId++));
+  return id;
+}
+
 /** The other end of edge `e` from node `i`. */
 export const otherEnd = (g: NetworkGraph, e: number, i: number) => (g.a[e] === i ? g.b[e] : g.a[e]);
 

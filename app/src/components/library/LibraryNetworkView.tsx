@@ -4,8 +4,8 @@ import type { Entity } from "../../data/entities";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryNetworkDisplayAtom } from "../../atoms/library";
 import { networkFindStepAtom, networkGraphAtom } from "../../atoms/network";
-import { HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
-import { loadNetworkLayout, placeNetwork, type StoredLayout } from "../../data/network/layout";
+import { graphId, HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
+import { loadNetworkLayout, placeNetworkCached, type StoredLayout } from "../../data/network/layout";
 import { cachedFocus, FOCUS_MAX, focusMembers, runFocus, type FocusLayout } from "../../data/network/focus";
 import { NetworkCanvas } from "./NetworkCanvas";
 
@@ -52,22 +52,28 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   relevanceOf: (e: Entity) => { score: number };
 }) {
   const source = useAtomValue(dataSourceAtom);
+  // Start of the first-paint measure (`network-first-paint`, NetworkCanvas).
+  useState(() => performance.mark("network-open"));
   const entities = useAtomValue(libraryEntitiesAtom);
   const graph = useAtomValue(networkGraphAtom);
   const display = useAtomValue(libraryNetworkDisplayAtom);
   const types = useAtomValue(libraryTypesAtom);
 
-  const [stored, setStored] = useState<{ source: string; layout: StoredLayout | null } | null>(null);
+  const [stored, setStored] = useState<{ source: string; layout: StoredLayout | null; failed?: boolean } | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let alive = true;
-    loadNetworkLayout(source).then((layout) => alive && setStored({ source, layout }));
+    loadNetworkLayout(source).then(
+      (layout) => alive && setStored({ source, layout }),
+      () => alive && setStored({ source, layout: null, failed: true }),
+    );
     return () => {
       alive = false;
     };
-  }, [source]);
-  const ready = stored?.source === source;
+  }, [source, attempt]);
+  const ready = stored?.source === source && !stored.failed;
   const placement = useMemo(
-    () => (ready ? placeNetwork(graph, stored!.layout) : null),
+    () => (ready ? placeNetworkCached(graph, stored!.layout) : null),
     [ready, graph, stored],
   );
 
@@ -118,6 +124,15 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     for (let i = 0; i < out.length; i++) if (out[i]) h = Math.imul(h ^ i, 16777619);
     return { match: out, matchCount: count, matchKey: `${count}:${(h >>> 0).toString(36)}` };
   }, [filtering, matches, graph]);
+  /* Matches a Display switch hides (Nepal's Evidence layer): they are not
+     drawn, offered to Focus or counted on the canvas, which says so. */
+  const hiddenMatches = useMemo(() => {
+    if (!match) return 0;
+    let k = 0;
+    for (let i = 0; i < match.length; i++) if (match[i] && !nodeOn[i]) k++;
+    return k;
+  }, [match, nodeOn]);
+  const shownMatches = matchCount - hiddenMatches;
 
   /* 2 match, 1 neighbour of a match (over a drawn edge), 0 rest. */
   const strength = useMemo(() => {
@@ -142,9 +157,9 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     if (!filtering) setWhole(false);
   }, [filtering]);
   const hubDegree = HUB_DEGREE[source];
-  const focusAvailable = filtering && matchCount > 0 && matchCount <= FOCUS_MAX;
+  const focusAvailable = filtering && shownMatches > 0 && shownMatches <= FOCUS_MAX;
   const wantFocus = focusAvailable && !whole && !!placement;
-  const focusKey = `${source}|${graph.ids.length}|${matchKey}|${typeOnKey}|${evidenceOn ? 1 : 0}`;
+  const focusKey = `${source}|${graphId(graph)}|${matchKey}|${typeOnKey}|${evidenceOn ? 1 : 0}`;
   const [focus, setFocus] = useState<{ key: string; layout: FocusLayout | null } | null>(null);
   useEffect(() => {
     if (!wantFocus || !placement || !match) return;
@@ -175,8 +190,10 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wantFocus, focusKey, placement]);
   const focusReady = wantFocus && focus?.key === focusKey;
-  const focusLayout = focusReady ? focus!.layout : null;
   const pending = wantFocus && !focusReady;
+  // While the next focus layout is on its way the last one stays: what is
+  // drawn and what answers a click are the same positions until it lands.
+  const focusLayout = focusReady || pending ? focus?.layout ?? null : null;
   // Held while the focus layout is on its way, so the camera moves once.
   const fitKey = pending ? null : `${matchKey}|${focusLayout ? focusKey : "global"}`;
 
@@ -240,6 +257,16 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
     [graph, onSelect],
   );
 
+  if (stored?.source === source && stored.failed) {
+    return (
+      <div role="alert" className="flex flex-col items-center justify-center gap-2 h-40">
+        <p className="text-sm font-medium text-ink-secondary">The network layout could not be loaded.</p>
+        <button type="button" className="h-8 px-3 rounded-md text-xs font-medium text-ink hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40" onClick={() => setAttempt((a) => a + 1)}>
+          Try again
+        </button>
+      </div>
+    );
+  }
   if (!placement) {
     return (
       <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">Loading the network…</div>
@@ -263,11 +290,11 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         focus={focusLayout}
         fitKey={fitKey}
         layoutSwitch={
-          filtering && matchCount > 0
+          filtering && shownMatches > 0
             ? {
                 focus: wantFocus,
                 available: focusAvailable,
-                reason: `Focus lays out up to ${FOCUS_MAX.toLocaleString()} matches; there are ${matchCount.toLocaleString()}`,
+                reason: `Focus lays out up to ${FOCUS_MAX.toLocaleString()} matches; there are ${shownMatches.toLocaleString()}`,
                 pending,
                 onChange: (on) => setWhole(!on),
               }
@@ -277,6 +304,7 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         onSelect={select}
         onClear={onClear}
         find={find}
+        hiddenMatches={hiddenMatches}
         edgeInfo={edgeInfo}
         label={
           !filtering

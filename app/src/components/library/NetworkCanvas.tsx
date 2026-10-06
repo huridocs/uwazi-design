@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { otherEnd, type NetworkGraph } from "../../data/network/graph";
 import type { Community, NetworkPlacement } from "../../data/network/layout";
 import type { FocusLayout } from "../../data/network/focus";
@@ -75,6 +75,8 @@ export interface NetworkCanvasProps {
   } | null;
   /** Escape or a click on empty canvas: the selection ends. */
   onClear: () => void;
+  /** Matches a Display switch hides, for the canvas's note. */
+  hiddenMatches?: number;
   /** What an edge carries, for its tooltip: relationship types, reference
    *  count, and (Nepal) quotes with their status. */
   edgeInfo: (edge: number) => EdgeInfo;
@@ -137,6 +139,9 @@ interface Hover {
   wx: number;
   wy: number;
 }
+
+/** Time constant of a glide's slowing after a flick. */
+const GLIDE_MS = 325;
 
 /** Length of the lift fading in or out. */
 const LIFT_MS = 140;
@@ -231,8 +236,8 @@ export function NetworkCanvas({
   colorOf,
   typeNameOf,
   titleOf,
-  nodeOn,
-  edgeOn,
+  nodeOn: nodeOnIn,
+  edgeOn: edgeOnIn,
   strength,
   hubDegree,
   hubEdges,
@@ -245,6 +250,7 @@ export function NetworkCanvas({
   onClear,
   edgeInfo,
   find = null,
+  hiddenMatches = 0,
   label,
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -268,9 +274,36 @@ export function NetworkCanvas({
   const [focusedCommunity, setFocusedCommunity] = useState(-1);
   const [rel, setRel] = useState(1);
   const themeVersion = useThemeVersion();
+  const helpId = useId();
+  const painted = useRef(false);
+  /** Boxes of the controls laid over the canvas, which labels keep clear of. */
+  const overlays = useRef<Box[]>([]);
 
   const n = graph.ids.length;
   const { communities } = placement;
+
+  /* The legend's templates: hidden ones leave the drawing (and hit testing)
+     where they are; nothing is laid out again. */
+  const [hiddenTypes, setHiddenTypes] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => setHiddenTypes(new Set()), [graph]);
+  const nodeOn = useMemo(() => {
+    if (!hiddenTypes.size) return nodeOnIn;
+    const out = new Uint8Array(nodeOnIn);
+    for (let i = 0; i < n; i++) if (hiddenTypes.has(graph.typeIds[i])) out[i] = 0;
+    return out;
+  }, [nodeOnIn, hiddenTypes, graph, n]);
+  const edgeOn = useMemo(() => {
+    if (!hiddenTypes.size) return edgeOnIn;
+    const out = new Uint8Array(edgeOnIn.length);
+    for (let e = 0; e < out.length; e++) out[e] = edgeOnIn[e] && nodeOn[graph.a[e]] && nodeOn[graph.b[e]] ? 1 : 0;
+    return out;
+  }, [edgeOnIn, nodeOn, hiddenTypes, graph]);
+  /* Per template in the drawing (Display switches applied): its records. */
+  const legend = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (let i = 0; i < n; i++) if (nodeOnIn[i]) counts.set(graph.typeIds[i], (counts.get(graph.typeIds[i]) ?? 0) + 1);
+    return [...counts.entries()].sort((x, y) => y[1] - x[1]).map(([typeId, count]) => ({ typeId, count }));
+  }, [nodeOnIn, graph, n]);
   /* Where nodes are going (`target`) and where they are drawn now (`shown`),
      which a move interpolates between. `fade` is 1 while non-members of a
      focus layout are hidden. */
@@ -297,6 +330,14 @@ export function NetworkCanvas({
     r.dispose();
     return { tokens, dot, mark };
   }, [graph, colorOf, themeVersion]);
+
+  /* Per community: its records drawn now (Display switches and the legend
+     applied). A mark is sized by them, and is not drawn when none are. */
+  const shownCount = useMemo(() => {
+    const out = new Map<Community, number>();
+    for (const c of communities) out.set(c, c.members.reduce((k, i) => k + (nodeOn[i] ? 1 : 0), 0));
+    return out;
+  }, [communities, nodeOn]);
 
   /* Node order for labels: most neighbours first. */
   const byDegree = useMemo(() => {
@@ -347,7 +388,7 @@ export function NetworkCanvas({
   const mix = (r: number) => (marksOn ? Math.max(fade.current, clamp((r - OPEN_FROM) / (OPEN_TO - OPEN_FROM), 0, 1)) : 1);
   // Marks scale with the pane, so a phone's overview is not one overlapping heap.
   const markScale = clamp(Math.min(size.w, size.h) / 760, 0.4, 1);
-  const markRadius = (c: Community) => clamp((3 + Math.sqrt(c.members.length) * 1.5) * markScale, 3, 56);
+  const markRadius = (c: Community) => clamp((3 + Math.sqrt(shownCount.get(c) ?? c.members.length) * 1.5) * markScale, 3, 56);
   const nodeRadius = (i: number, r: number) =>
     clamp((1.6 + 0.55 * Math.sqrt(graph.degree[i])) * clamp(Math.sqrt(r / 2), 0.75, 1.8), 1.4, 16);
   /* Node size and strength while filtering: a neighbour is small, the rest a point. */
@@ -634,6 +675,8 @@ export function NetworkCanvas({
         ctx.textBaseline = "middle";
         ctx.lineJoin = "round";
         const boxes = new LabelBoxes();
+        // The controls over the canvas (legend, breadcrumb, stepper, zoom).
+        for (const b of overlays.current) boxes.add(b);
         const density = clamp(0.15 + 0.25 * Math.log2(Math.max(1, r)), 0.15, 1);
         const budget = Math.round(clamp(((W * H) / 16000) * density, 8, 120));
         const want = [
@@ -721,6 +764,7 @@ export function NetworkCanvas({
         ctx.stroke();
       }
       communities.forEach((c, idx) => {
+        if (!shownCount.get(c)) return;
         const x = cx(c), y = cy(c);
         const rad = markRadius(c);
         const color = colors.mark.get(c.typeId) ?? t.inkTertiary;
@@ -774,6 +818,7 @@ export function NetworkCanvas({
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         const boxes = new LabelBoxes();
+        for (const b of overlays.current) boxes.add(b);
         const markBox = communities.map((c): Box => {
           const rd = markRadius(c) + (communityMatch ? 7 : 1);
           return [cx(c) - rd, cy(c) - rd, cx(c) + rd, cy(c) + rd];
@@ -781,7 +826,7 @@ export function NetworkCanvas({
         markBox.forEach((b) => boxes.add(b));
         const own = new LabelBoxes();
         communities.forEach((c, idx) => {
-          if (c.members.length < 8 || (communityMatch && communityMatch[idx] === 0)) return;
+          if ((shownCount.get(c) ?? 0) < 8 || (communityMatch && communityMatch[idx] === 0)) return;
           const text = truncate(titleOf(c.top), 28);
           const x = cx(c);
           const y = cy(c) + markRadius(c) + (communityMatch ? 13 : 9);
@@ -813,10 +858,14 @@ export function NetworkCanvas({
     }
     ctx.globalAlpha = 1;
     placeTip();
+    if (!painted.current) {
+      painted.current = true;
+      performance.mark("network-first-paint");
+    }
     if (lifting) frame.current = requestAnimationFrame(() => drawRef.current());
     // `mix`, `markRadius` and `radiusAt` close over props only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn, shownCount]);
 
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -971,8 +1020,8 @@ export function NetworkCanvas({
       cam.current = { k, tx: size.w / 2 - cxw * k, ty: size.h / 2 - cyw * k };
     }
     fitted.current = { extent: placement.extent, w: size.w, h: size.h };
-    setRel(cam.current.k / fitK.current);
     draw();
+    sync.current();
     // Only a size or collection change refits here; filter moves are below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size, placement.extent, dprVersion]);
@@ -980,8 +1029,19 @@ export function NetworkCanvas({
   /* ── Moves ───────────────────────────────────────────────────────────── */
 
   const anim = useRef(0);
+  /** An inertial pan in progress. */
+  const glide = useRef(0);
   /** Tests hover again at the pointer (set below, once hit testing exists). */
   const rehover = useRef<() => void>(() => {});
+  /** After the camera rests: the relative zoom, the breadcrumb, the keyboard
+   *  list and the hover (set below). */
+  const sync = useRef<() => void>(() => {});
+  const syncTimer = useRef(0);
+  /** Sync once a continuous gesture (wheel, pinch) has paused. */
+  const syncSoon = () => {
+    window.clearTimeout(syncTimer.current);
+    syncTimer.current = window.setTimeout(() => sync.current(), 120);
+  };
   /** Positions and fade of the move in progress, so another move can finish it. */
   const moving = useRef<{ to: Float32Array; fade: number } | null>(null);
   const settle = () => {
@@ -995,8 +1055,9 @@ export function NetworkCanvas({
   /** One move: positions to `to`, non-members to `toFade`, camera to `next`.
    *  Positions and fade only change when given. */
   const move = useCallback(
-    (next: Camera, animate: boolean, to?: Float32Array, toFade?: number) => {
+    (next: Camera, animate: boolean, to?: Float32Array, toFade?: number, ms = MOVE_MS) => {
       cancelAnimationFrame(anim.current);
+      cancelAnimationFrame(glide.current);
       settle();
       const from = { ...cam.current };
       const fromPos = to ? new Float32Array(shown.current) : null;
@@ -1007,9 +1068,8 @@ export function NetworkCanvas({
         if (to) shown.current.set(to);
         fade.current = endFade;
         moving.current = null;
-        setRel(next.k / fitK.current);
         draw();
-        rehover.current();
+        sync.current();
       };
       if (!animate || reducedMotion()) return finish();
       if (to) moving.current = { to, fade: endFade };
@@ -1017,7 +1077,7 @@ export function NetworkCanvas({
       let frames = 0;
       const step = (now: number) => {
         frames++;
-        const p = Math.min(1, (now - start) / MOVE_MS);
+        const p = Math.min(1, (now - start) / ms);
         const e = ease(p);
         // Interpolate the zoom geometrically so the centre path stays straight.
         const k = from.k * (next.k / from.k) ** e;
@@ -1050,7 +1110,26 @@ export function NetworkCanvas({
     [draw, size],
   );
 
-  const setCamera = useCallback((next: Camera, animate = false) => move(next, animate), [move]);
+  const setCamera = useCallback(
+    (next: Camera, animate = false, ms?: number) => move(next, animate, undefined, undefined, ms),
+    [move],
+  );
+
+  /** A camera change from a continuous gesture (wheel, pinch, a held arrow
+   *  key): drawn on the next frame, synced once the gesture rests. Many
+   *  events in one frame draw once. */
+  const nudge = useCallback(
+    (next: Camera) => {
+      cancelAnimationFrame(anim.current);
+      cancelAnimationFrame(glide.current);
+      settle();
+      cam.current = next;
+      request();
+      syncSoon();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [request],
+  );
 
   // A new match set or layout: move nodes and camera together, to the
   // matches (or, with a search, to its best match). The first one (the view
@@ -1141,10 +1220,24 @@ export function NetworkCanvas({
       const c = cam.current;
       const k = clamp(c.k * factor, fitK.current * MIN_REL, fitK.current * MAX_REL);
       const f = k / c.k;
-      setCamera({ k, tx: x - (x - c.tx) * f, ty: y - (y - c.ty) * f }, animate);
+      const next = { k, tx: x - (x - c.tx) * f, ty: y - (y - c.ty) * f };
+      if (animate) setCamera(next, true, 220);
+      else nudge(next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setCamera],
+    [setCamera, nudge],
+  );
+
+  const panBy = useCallback(
+    (dx: number, dy: number, animate = false) => {
+      settle();
+      const c = cam.current;
+      const next = { k: c.k, tx: c.tx + dx, ty: c.ty + dy };
+      if (animate) setCamera(next, true, 180);
+      else nudge(next);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setCamera, nudge],
   );
 
   const centreOn = useCallback(
@@ -1153,21 +1246,29 @@ export function NetworkCanvas({
     [setCamera, size],
   );
 
-  // Wheel zoom needs a native listener: React's is passive and cannot
-  // preventDefault the page scroll.
+  // The wheel needs a native listener: React's is passive and cannot
+  // preventDefault the page scroll. A trackpad's two-finger swipe pans; its
+  // pinch (ctrlKey), ⌘ + wheel and a mouse wheel's notches zoom.
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = el.getBoundingClientRect();
-      const scale = e.deltaMode === 1 ? 16 : 1;
-      const factor = Math.exp(-e.deltaY * scale * (e.ctrlKey ? 0.01 : 0.0018));
-      zoomAt(factor, e.clientX - rect.left, e.clientY - rect.top);
+      const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1;
+      // A mouse wheel moves in whole notches (lines, or 100-odd pixels) on one
+      // axis; a trackpad sends small, often fractional, deltas on both.
+      const notch = e.deltaMode !== 0 || (e.deltaX === 0 && Math.abs(e.deltaY) >= 50 && Number.isInteger(e.deltaY));
+      if (e.ctrlKey || e.metaKey || notch) {
+        const factor = Math.exp(-e.deltaY * scale * (e.ctrlKey ? 0.01 : 0.0018));
+        zoomAt(factor, e.clientX - rect.left, e.clientY - rect.top);
+      } else {
+        panBy(-e.deltaX * scale, -e.deltaY * scale);
+      }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoomAt]);
+  }, [zoomAt, panBy]);
 
   /* ── Hit testing ─────────────────────────────────────────────────────── */
 
@@ -1181,6 +1282,7 @@ export function NetworkCanvas({
         let best = -1;
         let bestD = Infinity;
         communities.forEach((cm, idx) => {
+          if (!shownCount.get(cm)) return;
           const d = Math.hypot(cm.x * c.k + c.tx - x, cm.y * c.k + c.ty - y);
           if (d <= markRadius(cm) + 3 && d < bestD) {
             bestD = d;
@@ -1195,7 +1297,7 @@ export function NetworkCanvas({
       return d <= radiusAt(i, r) + 5 ? { kind: "node", i } : null;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [communities, quad, nodeOn, member, target, marksOn, size, strength],
+    [communities, quad, nodeOn, member, target, marksOn, size, strength, shownCount],
   );
 
   /** The drawn edge within 5px of a point, at node level. While a node is
@@ -1267,6 +1369,43 @@ export function NetworkCanvas({
     request();
   };
 
+  /* ── After the camera rests ──────────────────────────────────────────── */
+
+  // The community the camera is inside (for the breadcrumb), and the records
+  // in view (for the keyboard list), recomputed when a gesture or move ends.
+  const [openCommunity, setOpenCommunity] = useState(-1);
+  const [viewNodes, setViewNodes] = useState<number[] | null>(null);
+  sync.current = () => {
+    window.clearTimeout(syncTimer.current);
+    const c = cam.current;
+    const r = c.k / fitK.current;
+    setRel(r);
+    const atNodes = mix(r) >= 0.5;
+    if (marksOn && atNodes) {
+      const i = quad.nearest((size.w / 2 - c.tx) / c.k, (size.h / 2 - c.ty) / c.k, Math.max(size.w, size.h) / c.k, (j) => nodeOn[j] === 1);
+      setOpenCommunity(i >= 0 ? communityIndex.get(placement.community[i]) ?? -1 : -1);
+    } else setOpenCommunity(-1);
+    if (atNodes) {
+      const inView: number[] = [];
+      for (const i of byDegree) {
+        if (!nodeOn[i] || (member && !member[i])) continue;
+        const x = target[i * 2] * c.k + c.tx;
+        const y = target[i * 2 + 1] * c.k + c.ty;
+        if (x >= 0 && x <= size.w && y >= 0 && y <= size.h) inView.push(i);
+      }
+      // Matches first, then their neighbours, then the rest; best-connected
+      // first within each.
+      const rank = (i: number) => (!strength ? 0 : strength[i] === 2 ? 0 : strength[i] === 1 ? 1 : 2);
+      const list = inView
+        .map((i, k) => [i, rank(i) * n + k] as const)
+        .sort((x, y) => x[1] - y[1])
+        .slice(0, KEYBOARD_LIST)
+        .map(([i]) => i);
+      setViewNodes((prev) => (prev && prev.length === list.length && prev.every((x, k) => x === list[k]) ? prev : list));
+    } else setViewNodes(null);
+    rehover.current();
+  };
+
   /* ── Pointer: pan, pinch, hover, click ───────────────────────────────── */
 
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -1279,8 +1418,36 @@ export function NetworkCanvas({
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
+  /** Pan velocity in px/ms, smoothed over the last moves of a drag. */
+  const velocity = useRef({ vx: 0, vy: 0, t: 0 });
+
+  /** After a flick, the camera keeps moving and slows to a stop. */
+  const startGlide = () => {
+    const v = velocity.current;
+    if (reducedMotion() || performance.now() - v.t > 60 || Math.hypot(v.vx, v.vy) < 0.25) return;
+    let { vx, vy } = v;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = Math.min(32, now - last);
+      last = now;
+      const c = cam.current;
+      cam.current = { ...c, tx: c.tx + vx * dt, ty: c.ty + vy * dt };
+      const decay = Math.exp(-dt / GLIDE_MS);
+      vx *= decay;
+      vy *= decay;
+      drawRef.current();
+      if (Math.hypot(vx, vy) > 0.02) glide.current = requestAnimationFrame(step);
+      else sync.current();
+    };
+    glide.current = requestAnimationFrame(step);
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
+    // A press stops a glide, and takes the keyboard to the canvas.
+    cancelAnimationFrame(glide.current);
+    velocity.current = { vx: 0, vy: 0, t: 0 };
+    hostRef.current?.focus({ preventScroll: true });
     e.currentTarget.setPointerCapture(e.pointerId);
     const p = local(e);
     pointers.current.set(e.pointerId, p);
@@ -1336,6 +1503,14 @@ export function NetworkCanvas({
     }
     const c = cam.current;
     cam.current = { ...c, tx: c.tx + p.x - before.x, ty: c.ty + p.y - before.y };
+    const now = performance.now();
+    const v = velocity.current;
+    const dt = Math.max(1, now - (v.t || now - 16));
+    velocity.current = {
+      vx: 0.7 * ((p.x - before.x) / dt) + 0.3 * v.vx,
+      vy: 0.7 * ((p.y - before.y) / dt) + 0.3 * v.vy,
+      t: now,
+    };
     request();
   };
 
@@ -1344,7 +1519,8 @@ export function NetworkCanvas({
     const g = gesture.current;
     if (pointers.current.size === 0) {
       gesture.current = null;
-      setRel(cam.current.k / fitK.current);
+      if (g?.moved && g.dist === 0) startGlide();
+      sync.current();
     } else if (g) {
       // One finger left a pinch: it pans from where it is now.
       g.dist = 0;
@@ -1404,6 +1580,7 @@ export function NetworkCanvas({
       let best = -1;
       let bestD = Infinity;
       communities.forEach((cm, idx) => {
+        if (!shownCount.get(cm)) return;
         const d = Math.hypot(cm.x * c.k + c.tx - x, cm.y * c.k + c.ty - y) - markRadius(cm);
         if (d <= 16 && d < bestD) {
           bestD = d;
@@ -1447,7 +1624,7 @@ export function NetworkCanvas({
   /* ── Keyboard list ───────────────────────────────────────────────────── */
 
   // Matches first, then their neighbours, then the best-connected rest.
-  const keyboardNodes = useMemo(() => {
+  const bestNodes = useMemo(() => {
     const on = byDegree.filter((i) => nodeOn[i] && (!member || member[i]));
     if (!strength) return on.slice(0, KEYBOARD_LIST);
     const rank = (i: number) => (strength[i] === 2 ? 0 : strength[i] === 1 ? 1 : 2);
@@ -1457,6 +1634,9 @@ export function NetworkCanvas({
       .slice(0, KEYBOARD_LIST)
       .map(([i]) => i);
   }, [byDegree, strength, nodeOn, member, n]);
+  // At node level the list is the records in view, so Tab reaches what the
+  // camera shows (Review #3); on the overview, the best-connected.
+  const keyboardNodes = viewNodes ?? bestNodes;
 
   const focusNode = (i: number) => {
     setFocused(i);
@@ -1503,6 +1683,19 @@ export function NetworkCanvas({
   }, [tipOf, hover, pinned, graph, strength, titleOf, typeNameOf, edgeInfo, communities, communityMatch]);
   useLayoutEffect(() => {
     placeTip();
+    const host = hostRef.current;
+    if (!host) return;
+    const origin = host.getBoundingClientRect();
+    const next: Box[] = [];
+    host.querySelectorAll<HTMLElement>("[data-overlay]").forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width) next.push([r.left - origin.left - 4, r.top - origin.top - 4, r.right - origin.left + 4, r.bottom - origin.top + 4]);
+    });
+    const prev = overlays.current;
+    if (next.length !== prev.length || next.some((b, k) => b.some((v, j) => Math.abs(v - prev[k][j]) > 0.5))) {
+      overlays.current = next;
+      request();
+    }
   });
 
   /* Communities for the keyboard: by match count while filtering (those with
@@ -1511,10 +1704,10 @@ export function NetworkCanvas({
     if (!marksOn) return [];
     return communities
       .map((c, idx) => ({ c, idx, m: communityMatch ? communityMatch[idx] : -1 }))
-      .filter((x) => x.m !== 0)
+      .filter((x) => x.m !== 0 && (shownCount.get(x.c) ?? 0) > 0)
       .sort((p, q) => q.m - p.m || q.c.members.length - p.c.members.length)
       .slice(0, 20);
-  }, [marksOn, communities, communityMatch]);
+  }, [marksOn, communities, communityMatch, shownCount]);
 
   /* While filtering, the chip counts matches with no relationship (never
      inside a community mark), or says nothing matches. */
@@ -1529,7 +1722,9 @@ export function NetworkCanvas({
       ? `${placement.isolated.toLocaleString()} ${placement.isolated === 1 ? "record has" : "records have"} no relationships`
       : null
     : matchOrder && matchOrder.length === 0
-      ? "No records match"
+      ? hiddenMatches > 0
+        ? `${hiddenMatches.toLocaleString()} ${hiddenMatches === 1 ? "match is" : "matches are"} hidden by Display options`
+        : "No records match"
       : isolatedMatches > 0 && marksOn && rel < OPEN_TO
         ? `${isolatedMatches.toLocaleString()} ${isolatedMatches === 1 ? "match has" : "matches have"} no relationships`
         : null;
@@ -1541,19 +1736,55 @@ export function NetworkCanvas({
       on ? "bg-parchment text-ink" : "text-ink-secondary hover:text-ink cursor-pointer"
     }`;
   const centre = () => ({ x: size.w / 2, y: size.h / 2 });
+  // Open where it is short and there is room; a long list starts closed.
+  const [legendOpen, setLegendOpen] = useState<boolean | null>(null);
+  const legendShown = legendOpen ?? (legend.length <= 8 && size.w >= 640);
+  const crumb = communities[openCommunity];
 
   return (
     <div
       ref={hostRef}
       data-component="NetworkCanvas"
-      className="relative w-full h-full min-h-0 overflow-hidden"
+      className="relative w-full h-full min-h-0 overflow-hidden rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
+      // The canvas region takes the keyboard: arrows pan (Shift: farther),
+      // + and − zoom, 0 fits, Escape ends the selection. Keys pressed on the
+      // controls inside it are theirs, except Escape.
+      tabIndex={0}
+      role="group"
+      aria-roledescription="network"
+      aria-label={label}
+      aria-describedby={helpId}
       onKeyDown={(e) => {
-        if (e.key === "Escape" && (selected >= 0 || pinnedRef.current)) {
-          e.preventDefault();
-          clearAll();
+        if (e.key === "Escape") {
+          if (selected >= 0 || pinnedRef.current) {
+            e.preventDefault();
+            clearAll();
+          }
+          return;
         }
+        if (e.target !== e.currentTarget || e.metaKey || e.ctrlKey || e.altKey) return;
+        const stepPx = e.shiftKey ? 240 : 80;
+        const c = centre();
+        const keys: Record<string, () => void> = {
+          ArrowLeft: () => panBy(stepPx, 0, !e.repeat),
+          ArrowRight: () => panBy(-stepPx, 0, !e.repeat),
+          ArrowUp: () => panBy(0, stepPx, !e.repeat),
+          ArrowDown: () => panBy(0, -stepPx, !e.repeat),
+          "+": () => zoomAt(1.4, c.x, c.y, !e.repeat),
+          "=": () => zoomAt(1.4, c.x, c.y, !e.repeat),
+          "-": () => zoomAt(1 / 1.4, c.x, c.y, !e.repeat),
+          _: () => zoomAt(1 / 1.4, c.x, c.y, !e.repeat),
+          "0": () => setCamera(fitCamera(), true),
+        };
+        const run = keys[e.key];
+        if (!run) return;
+        e.preventDefault();
+        run();
       }}
     >
+      <p id={helpId} className="sr-only">
+        Arrow keys pan, plus and minus zoom, 0 fits, Escape clears the selection. Tab reaches the records in view.
+      </p>
       <canvas
         ref={canvasRef}
         role="img"
@@ -1595,9 +1826,85 @@ export function NetworkCanvas({
           {"hint" in tip && tip.hint && <p className="text-meta text-ink-tertiary">{tip.hint}</p>}
         </div>
       )}
+      {/* Where the camera is, once a community has opened into nodes. The
+          slot is kept on collections with an overview, so the legend under
+          it does not move. */}
+      {marksOn && crumb && (
+        <nav
+          aria-label="Where you are"
+          data-part="breadcrumb" data-overlay
+          className="absolute top-0 left-0 h-6 max-w-[calc(100%-9rem)] flex items-center gap-1 px-1 bg-paper border border-border-soft rounded-md shadow-sm text-meta"
+        >
+          <button
+            type="button"
+            className="h-5 px-1 rounded-sm text-ink-secondary hover:text-ink hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+            onClick={() => setCamera(frameOf(baseExtent), true)}
+          >
+            Collection
+          </button>
+          <span aria-hidden className="text-ink-muted">
+            ›
+          </span>
+          <span aria-current="location" className="min-w-0 truncate font-medium text-ink">
+            Around {titleOf(crumb.top)}
+          </span>
+          <span className="shrink-0 pe-1 text-ink-tertiary tabular-nums">{crumb.members.length.toLocaleString()}</span>
+        </nav>
+      )}
+      {legend.length > 1 && (
+        <div
+          data-part="legend" data-overlay
+          className={`absolute left-0 ${marksOn ? "top-8" : "top-0"} w-fit max-w-[16rem] bg-paper border border-border-soft rounded-md shadow-sm`}
+        >
+          <button
+            type="button"
+            aria-expanded={legendShown}
+            className="w-full h-6 flex items-center gap-1 px-2 rounded-md text-meta font-semibold uppercase tracking-wider text-ink-tertiary hover:text-ink cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+            onClick={() => setLegendOpen(!legendShown)}
+          >
+            Templates
+            {hiddenTypes.size > 0 && <span className="normal-case tracking-normal font-medium">· {hiddenTypes.size} hidden</span>}
+            {legendShown ? <ChevronUp size={12} aria-hidden className="ms-auto" /> : <ChevronDown size={12} aria-hidden className="ms-auto" />}
+          </button>
+          {legendShown && (
+            <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn ? 112 : 80), 96, 244) }}>
+              {legend.map(({ typeId, count }) => {
+                const on = !hiddenTypes.has(typeId);
+                const name = typeNameOf(typeId);
+                return (
+                  <li key={typeId}>
+                    <button
+                      type="button"
+                      aria-pressed={on}
+                      title={on ? `Hide ${name}` : `Show ${name}`}
+                      className="w-full h-6 flex items-center gap-1.5 px-1 rounded-sm text-meta hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                      onClick={() =>
+                        setHiddenTypes((prev) => {
+                          const next = new Set(prev);
+                          if (on) next.add(typeId);
+                          else next.delete(typeId);
+                          return next;
+                        })
+                      }
+                    >
+                      <span
+                        aria-hidden
+                        className="w-2 h-2 rounded-[2px] shrink-0 border"
+                        style={{ backgroundColor: on ? colors.dot.get(typeId) : "transparent", borderColor: colors.dot.get(typeId) }}
+                      />
+                      <span className={`min-w-0 truncate ${on ? "text-ink-secondary" : "text-ink-tertiary line-through"}`}>{name}</span>
+                      <span className="ms-auto ps-2 text-ink-tertiary tabular-nums">{count.toLocaleString()}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
       {find && (
         <div
-          data-part="find"
+          data-part="find" data-overlay
           role="group"
           aria-label="Matches"
           className="absolute top-0 right-0 flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
@@ -1628,7 +1935,7 @@ export function NetworkCanvas({
       )}
       {chip && (
         <p
-          data-part="isolated"
+          data-part="isolated" data-overlay
           className="absolute left-0 bottom-0 w-fit px-2 h-6 flex items-center rounded-md bg-paper border border-border-soft text-meta text-ink-tertiary"
         >
           {chip}
@@ -1637,7 +1944,7 @@ export function NetworkCanvas({
       <div className="absolute bottom-0 right-0 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-full">
         {layoutSwitch && (
           <div
-            data-part="layout"
+            data-part="layout" data-overlay
             role="group"
             aria-label="Layout"
             className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
@@ -1667,7 +1974,7 @@ export function NetworkCanvas({
           </div>
         )}
         <div
-          data-part="zoom"
+          data-part="zoom" data-overlay
           role="group"
           aria-label="Zoom"
           className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"

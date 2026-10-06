@@ -148,6 +148,14 @@ export const cachedFocus = (key: string) => results.get(key) ?? null;
 export function runFocus(key: string, placement: NetworkPlacement, members: Members): Promise<FocusLayout | null> {
   const hit = results.get(key);
   if (hit) return Promise.resolve(hit);
+  // A newer request supersedes the one in flight: the worker is restarted
+  // rather than left to finish a layout nobody will draw.
+  if (waiting.size) {
+    for (const done of waiting.values()) done(null);
+    waiting.clear();
+    worker?.terminate();
+    worker = null;
+  }
   const w = getWorker();
   if (!w) return Promise.resolve(null);
   const id = nextId++;

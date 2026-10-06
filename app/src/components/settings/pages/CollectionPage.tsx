@@ -38,7 +38,7 @@ const toForm = (s: CollectionSettings): CollectionForm => {
   return { ...rest, lat: p ? String(p.lat) : "", lon: p ? String(p.lon) : "" };
 };
 
-const VIEW_LABEL: Record<DefaultLibraryView, string> = { cards: "Cards", map: "Map", table: "Table" };
+const VIEW_LABEL: Record<DefaultLibraryView, string> = { cards: "Cards", map: "Map", table: "Table", network: "Network" };
 
 type FieldId = "name" | "landing" | "matomo" | "senderEmail" | "contactEmail" | "mapApiKey" | "lat" | "lon";
 /** DOM order, for focusing the first invalid field. */

@@ -28,7 +28,9 @@ export interface StoredLayout {
 const pending = new Map<DataSource, Promise<StoredLayout | null>>();
 
 /** The collection's stored layout, fetched once. Null for a collection with no
- *  file (the artworks), or when the fetch fails: every node is then "unplaced". */
+ *  file (the artworks): every node is then "unplaced". A failed fetch (an error
+ *  status included) rejects and is forgotten, so the view can say so and try
+ *  again. */
 export function loadNetworkLayout(source: DataSource): Promise<StoredLayout | null> {
   const hit = pending.get(source);
   if (hit) return hit;
@@ -36,12 +38,12 @@ export function loadNetworkLayout(source: DataSource): Promise<StoredLayout | nu
   const p: Promise<StoredLayout | null> = !file
     ? Promise.resolve(null)
     : fetch(asset(file))
-        .then((r) => (r.ok ? (r.json() as Promise<LayoutFile>) : null))
-        .then((f) => (f ? decode(f) : null))
-        .catch(() => {
-          pending.delete(source);
-          return null;
-        });
+        .then((r) => {
+          if (!r.ok) throw new Error(`network layout: HTTP ${r.status}`);
+          return r.json() as Promise<LayoutFile>;
+        })
+        .then(decode);
+  p.catch(() => pending.delete(source));
   pending.set(source, p);
   return p;
 }
@@ -84,6 +86,17 @@ export interface NetworkPlacement {
   isolated: number;
   /** Half-extent of the drawing, for the first fit. */
   extent: { minX: number; maxX: number; minY: number; maxY: number };
+}
+
+const placed = new WeakMap<NetworkGraph, { stored: StoredLayout | null; placement: NetworkPlacement }>();
+
+/** `placeNetwork`, kept per graph, so opening the view again draws at once. */
+export function placeNetworkCached(g: NetworkGraph, stored: StoredLayout | null): NetworkPlacement {
+  const hit = placed.get(g);
+  if (hit && hit.stored === stored) return hit.placement;
+  const placement = placeNetwork(g, stored);
+  placed.set(g, { stored, placement });
+  return placement;
 }
 
 /** Place every node of `g`: stored positions first, then the rest. */

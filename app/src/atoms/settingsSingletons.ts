@@ -20,9 +20,11 @@ const arrayOf = (check: (x: Record<string, unknown>) => boolean) => (v: unknown)
 
 /* ── Collection ─────────────────────────────────────────────────────────── */
 
-export type DefaultLibraryView = "cards" | "table" | "map";
+/** Uwazi offers cards, table and map. Network is the prototype's own: the
+ *  whole collection as a graph (the Library's Network view). */
+export type DefaultLibraryView = "cards" | "table" | "map" | "network";
 /** Uwazi's option order: Cards, Map, Table. */
-export const DEFAULT_VIEWS: DefaultLibraryView[] = ["cards", "map", "table"];
+export const DEFAULT_VIEWS: DefaultLibraryView[] = ["cards", "map", "table", "network"];
 export type MapProvider = "mapbox" | "google";
 export type MapLayer = "Dark" | "Streets" | "Satellite" | "Hybrid";
 /** Popover order. */
