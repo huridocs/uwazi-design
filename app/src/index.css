@@ -292,6 +292,22 @@ body {
   }
 }
 
+/* A landscape band starts its page just above the first line of text
+   (`PdfPageThumb` with `fromText`). Raised, the page drops that crop and shows
+   from its top edge, so what rises out of the band reads as a page, not as a
+   strip cut through its text. Same 240ms as the lift; the loupe reads the
+   image's rect every frame, so it follows. */
+.pdf-from-text {
+  margin-top: var(--text-start, 0px);
+  transition: margin-top 240ms ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-peek="up"] .pdf-from-text,
+  .group:has(:focus-visible) .pdf-from-text {
+    margin-top: 0;
+  }
+}
+
 /* The Small card's page lift (`DocPlaceholder` with `lift`): the peek above,
    rising further.
 

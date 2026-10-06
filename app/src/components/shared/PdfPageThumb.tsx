@@ -199,8 +199,15 @@ export function PdfPageThumb({
                 alt=""
                 aria-hidden
                 onLoad={onLoad}
-                className="w-full block"
-                style={fromText && pageAspect ? { marginTop: textStartMargin(ink, pageAspect) } : undefined}
+                // The crop is a variable so the raised page can drop it
+                // (`.pdf-from-text` in index.css): at rest the band starts at
+                // the text, raised the page shows from its top edge.
+                className={`w-full block ${fromText ? "pdf-from-text" : ""}`}
+                style={
+                  fromText && pageAspect
+                    ? ({ "--text-start": textStartMargin(ink, pageAspect) } as React.CSSProperties)
+                    : undefined
+                }
               />
             ))}
         </div>
