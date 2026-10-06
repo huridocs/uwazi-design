@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Bookmark, Check, Clock, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
+import { quotedQuery } from "../../utils/queryTokens";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 import { SheetDone } from "../layout/SheetDone";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -38,7 +39,7 @@ export function snapshotSummary(s: LibrarySnapshot, { withQuery = true } = {}): 
   return [
     s.viewMode ? VIEW_LABEL[s.viewMode] : "Default view",
     n ? `${n} ${n === 1 ? "filter" : "filters"}` : null,
-    withQuery && s.query ? `“${s.query}”` : null,
+    withQuery && s.query ? quotedQuery(s.query) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -245,7 +246,7 @@ export function SavedViewsPanel({ onDone, touch = false }: { onDone?: () => void
             <Row
               key={h.id}
               touch={touch}
-              title={`“${h.query}”`}
+              title={quotedQuery(h.query)}
               detail={`${snapshotSummary(h.snapshot, { withQuery: false })} · ${ago(h.at, now)}`}
               onOpen={() => {
                 apply(h.snapshot);

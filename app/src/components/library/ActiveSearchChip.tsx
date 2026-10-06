@@ -1,6 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { libraryActiveSearchAtom, clearLibrarySearchAtom } from "../../atoms/library";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
+import { quotedQuery } from "../../utils/queryTokens";
 
 /** The committed search, shown where its results are, with the one affordance
  *  that ends it.
@@ -41,7 +42,7 @@ export function ActiveSearchChip({ className }: { className?: string } = {}) {
 
   return (
     <ActiveFilterChip
-      label={`“${q}”`}
+      label={quotedQuery(q)}
       onRemove={() => clearSearch()}
       removeLabel={`Clear search: ${q}`}
       className={className}

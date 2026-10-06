@@ -260,3 +260,12 @@ export function highlightRanges(text: string, terms: string[]): [number, number]
   }
   return merged;
 }
+
+/** A query as display text, in curly quotes. A query that is already one
+ *  quoted phrase (`"Ministry of Home Affairs"`) takes the curly quotes in
+ *  place of its own, so it does not read “"Ministry of Home Affairs"”. */
+export function quotedQuery(query: string): string {
+  const q = query.trim();
+  const phrase = /^"([^"]+)"$/.exec(q);
+  return `“${phrase ? phrase[1] : q}”`;
+}
