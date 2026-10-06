@@ -97,12 +97,21 @@ function EvidencePopover({
   const setPreview = useSetAtom(previewEntityIdAtom);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
+  // Beside the field's card, never over it: the popover explains a value, so
+  // the value stays in view. Right of the card when there is room, else left,
+  // else (a phone) under the card.
   useLayoutEffect(() => {
     const place = () => {
-      const r = anchor.current?.getBoundingClientRect();
+      const trigger = anchor.current;
+      const card = trigger?.closest<HTMLElement>("section") ?? trigger;
+      const r = card?.getBoundingClientRect();
       if (!r) return;
       const width = Math.min(352, window.innerWidth - EDGE * 2);
-      const left = Math.max(EDGE, Math.min(r.right - width, window.innerWidth - width - EDGE));
+      const height = panelRef.current?.offsetHeight ?? 0;
+      const top = Math.max(EDGE, Math.min(r.top, window.innerHeight - height - EDGE));
+      if (r.right + 8 + width <= window.innerWidth - EDGE) return setPos({ top, left: r.right + 8, width });
+      if (r.left - 8 - width >= EDGE) return setPos({ top, left: r.left - 8 - width, width });
+      const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - width - EDGE));
       setPos({ top: r.bottom + 6, left, width });
     };
     place();
@@ -197,7 +206,17 @@ function EvidencePopover({
                   );
                 })}
               </ul>
-              {row.note && !row.inferred && <p className="text-meta text-ink-tertiary leading-relaxed">{row.note}</p>}
+              {row.note && !row.inferred && (
+                <p className="text-meta text-ink-tertiary leading-relaxed">
+                  <NoteText
+                    note={row.note}
+                    onOpen={(id) => {
+                      onClose();
+                      setPreview(id);
+                    }}
+                  />
+                </p>
+              )}
             </li>
           ))}
         </ul>
@@ -205,4 +224,32 @@ function EvidencePopover({
     </>,
     document.body,
   );
+}
+
+/** A note as Research wrote it, with each claim it cites by slug
+ *  ("first-shots-at-12-37") printed as the claim's title, a link that opens
+ *  the claim. A slug that names no record stays as written. */
+function NoteText({ note, onOpen }: { note: string; onOpen: (id: string) => void }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of note.matchAll(/[a-z0-9]+(?:-[a-z0-9]+){2,}/g)) {
+    const id = `claim:${m[0]}`;
+    const e = getEntity(id);
+    if (!e) continue;
+    parts.push(note.slice(last, m.index));
+    parts.push(
+      <button
+        key={m.index}
+        type="button"
+        onClick={() => onOpen(id)}
+        className="inline text-left text-ink-secondary underline underline-offset-2 hover:text-ink cursor-pointer rounded
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+      >
+        {e.title}
+      </button>,
+    );
+    last = m.index! + m[0].length;
+  }
+  parts.push(note.slice(last));
+  return <>{parts}</>;
 }
