@@ -361,6 +361,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   matches, their non-hub neighbours and the hubs they touch to `focusLayout.worker.ts`
   (ForceAtlas2 seeded from the global positions, hubs fixed on a ring outside), cached by match
   set and drawn edges. "Whole collection" keeps global positions until the filters are cleared.
+  Double-click or double-tap centres the community under the pointer (its matches while
+  filtering) and opens it into nodes; the first tap keeps its own action (a node's preview).
+  The keyboard list's groups do the same on Enter.
   Display: hub edges (`HUB_DEGREE`), relationship types
   (CEJIL's Mecanismo, País, Paises, "Relacionado a" off by default, `NETWORK_TYPES_OFF`), and
   Nepal's Evidence layer. Collections of 500+ records open on community marks. Headless Chromium

@@ -73,6 +73,8 @@ const MAX_REL = 60;
 const KEYBOARD_LIST = 60;
 /** Length of a filter move: positions and camera together. */
 const MOVE_MS = 380;
+/** Two taps within this long (and 12px) are a double-click. */
+const DOUBLE_TAP_MS = 320;
 /** Pixels kept clear around a fit, for marks, names and the controls. */
 const FIT_PAD = 96;
 
@@ -189,6 +191,7 @@ export function NetworkCanvas({
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
   const [focused, setFocused] = useState(-1);
+  const [focusedCommunity, setFocusedCommunity] = useState(-1);
   const [rel, setRel] = useState(1);
   const themeVersion = useThemeVersion();
 
@@ -533,10 +536,20 @@ export function NetworkCanvas({
         ctx.textAlign = "start";
       }
     }
+    /* Keyboard focus on a community: a carbon ring at its mark. */
+    const fc = communities[focusedCommunity];
+    if (fc) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.carbon;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(fc.x * k + tx, fc.y * k + ty, marksAlpha > 0.5 ? markRadius(fc) + 9 : 14, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.globalAlpha = 1;
     // `mix`, `markRadius` and `radiusAt` close over props only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, focused, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, communityLinks, communityMatch, marksOn]);
 
   const request = useCallback(() => {
     if (!frame.current) frame.current = requestAnimationFrame(draw);
@@ -774,6 +787,8 @@ export function NetworkCanvas({
   /* ── Pointer: pan, pinch, hover, click ───────────────────────────────── */
 
   const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
+  const communityIndex = useMemo(() => new Map(communities.map((c, idx) => [c.id, idx])), [communities]);
   const gesture = useRef<{ moved: boolean; x: number; y: number; dist: number; mx: number; my: number } | null>(null);
 
   const local = (e: { clientX: number; clientY: number }) => {
@@ -861,6 +876,19 @@ export function NetworkCanvas({
     }
     if (!g || g.moved || pointers.current.size) return;
     const p = local(e);
+    // A second tap close in time and place is a double-click (or a phone's
+    // double-tap): it centres the community under it. The first tap has
+    // already done its own thing (selected a node, began opening a mark);
+    // the second does not repeat it.
+    const now = performance.now();
+    const last = lastTap.current;
+    lastTap.current = { t: now, x: p.x, y: p.y };
+    if (last && now - last.t < DOUBLE_TAP_MS && Math.hypot(p.x - last.x, p.y - last.y) < 12) {
+      lastTap.current = null;
+      const idx = communityAt(p.x, p.y);
+      if (idx >= 0) centreCommunity(idx);
+      return;
+    }
     const hit = hitAt(p.x, p.y);
     if (!hit) return;
     if (hit.kind === "node") {
@@ -871,6 +899,46 @@ export function NetworkCanvas({
     const cm = communities[hit.i];
     const k = Math.max(fitK.current * OPEN_TO * 1.1, Math.min(size.w, size.h) / Math.max(1, cm.spread * 4.5));
     centreOn(cm.x, cm.y, Math.min(k, fitK.current * MAX_REL));
+  };
+
+  /** The community at a point: the mark under it (or near it) on the
+   *  overview, the community of the nearest node at node level; -1 for none
+   *  within reach or a record with no relationships. */
+  const communityAt = (x: number, y: number): number => {
+    const c = cam.current;
+    if (mix(c.k / fitK.current) < 0.5) {
+      let best = -1;
+      let bestD = Infinity;
+      communities.forEach((cm, idx) => {
+        const d = Math.hypot(cm.x * c.k + c.tx - x, cm.y * c.k + c.ty - y) - markRadius(cm);
+        if (d <= 16 && d < bestD) {
+          bestD = d;
+          best = idx;
+        }
+      });
+      return best;
+    }
+    const i = quad.nearest((x - c.tx) / c.k, (y - c.ty) / c.k, 40 / c.k, (j) => nodeOn[j] === 1 && (!member || member[j] === 1));
+    return i < 0 ? -1 : communityIndex.get(placement.community[i]) ?? -1;
+  };
+
+  /** Centre community `idx` and zoom until it fills the view with a margin:
+   *  its matches while filtering, when it has any. On the overview the zoom
+   *  goes far enough to open it into nodes. */
+  const centreCommunity = (idx: number) => {
+    const cm = communities[idx];
+    if (!cm) return;
+    settle();
+    const on = (i: number) => nodeOn[i] === 1 && (!member || member[i] === 1);
+    const matched = strength ? cm.members.filter((i) => strength[i] === 2 && on(i)) : [];
+    const nodes = matched.length ? matched : cm.members.filter(on);
+    const ext = boundsOf(target, nodes);
+    if (!ext) return;
+    const mx = Math.max((ext.maxX - ext.minX) * 0.1, 1);
+    const my = Math.max((ext.maxY - ext.minY) * 0.1, 1);
+    const f = frameOf({ minX: ext.minX - mx, maxX: ext.maxX + mx, minY: ext.minY - my, maxY: ext.maxY + my });
+    const k = clamp(f.k, fitK.current * (marksOn ? OPEN_TO * 1.1 : 1), fitK.current * Math.min(MAX_REL, 12));
+    centreOn((ext.minX + ext.maxX) / 2, (ext.minY + ext.maxY) / 2, k);
   };
 
   const onPointerLeave = () => {
@@ -919,20 +987,22 @@ export function NetworkCanvas({
       return {
         title: titleOf(c.top),
         sub: `${m.toLocaleString()} of ${records} ${m === 1 ? "matches" : "match"}, mostly ${typeNameOf(c.typeId)}`,
+        hint: "Double-click to centre",
       };
     }
-    return { title: titleOf(c.top), sub: `${records}, mostly ${typeNameOf(c.typeId)}` };
+    return { title: titleOf(c.top), sub: `${records}, mostly ${typeNameOf(c.typeId)}`, hint: "Double-click to centre" };
   })();
 
-  /* Where the matches are, for screen readers: communities by match count. */
-  const matchedCommunities = useMemo(() => {
-    if (!communityMatch) return [];
+  /* Communities for the keyboard: by match count while filtering (those with
+     a match only), by size otherwise. Enter centres one. */
+  const keyboardCommunities = useMemo(() => {
+    if (!marksOn) return [];
     return communities
-      .map((c, idx) => ({ c, m: communityMatch[idx] }))
-      .filter((x) => x.m > 0)
-      .sort((p, q) => q.m - p.m)
+      .map((c, idx) => ({ c, idx, m: communityMatch ? communityMatch[idx] : -1 }))
+      .filter((x) => x.m !== 0)
+      .sort((p, q) => q.m - p.m || q.c.members.length - p.c.members.length)
       .slice(0, 20);
-  }, [communities, communityMatch]);
+  }, [marksOn, communities, communityMatch]);
 
   /* While filtering, the chip counts matches with no relationship (never
      inside a community mark), or says nothing matches. */
@@ -989,6 +1059,7 @@ export function NetworkCanvas({
         >
           <p className="text-xs font-medium text-ink truncate">{tip.title}</p>
           <p className="text-meta text-ink-tertiary truncate">{tip.sub}</p>
+          {"hint" in tip && <p className="text-meta text-ink-tertiary">{tip.hint}</p>}
         </div>
       )}
       {chip && (
@@ -1053,11 +1124,25 @@ export function NetworkCanvas({
           </button>
         </div>
       </div>
-      {matchedCommunities.length > 0 && marksOn && (
-        <ul aria-label="Where the matches are" className="sr-only">
-          {matchedCommunities.map(({ c, m }) => (
+      {keyboardCommunities.length > 0 && (
+        <ul aria-label={communityMatch ? "Where the matches are" : "Groups"} className="sr-only">
+          {keyboardCommunities.map(({ c, idx, m }) => (
             <li key={c.id}>
-              Group around {titleOf(c.top)}: {m.toLocaleString()} of {c.members.length.toLocaleString()} records match
+              <button
+                type="button"
+                onFocus={() => {
+                  setFocusedCommunity(idx);
+                  request();
+                }}
+                onBlur={() => setFocusedCommunity((f) => (f === idx ? -1 : f))}
+                onClick={() => centreCommunity(idx)}
+              >
+                Group around {titleOf(c.top)}:{" "}
+                {m >= 0
+                  ? `${m.toLocaleString()} of ${c.members.length.toLocaleString()} records match`
+                  : `${c.members.length.toLocaleString()} records`}
+                . Press Enter to centre it.
+              </button>
             </li>
           ))}
         </ul>
