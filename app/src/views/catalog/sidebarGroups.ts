@@ -170,6 +170,8 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-bulk-pick", label: "BulkPickModal" },
     ],
   },
+  // Dev builds only, like the section it indexes.
+  ...(import.meta.env.DEV ? [{ label: "Dev", items: [{ id: "dev-panel", label: "Dev panel" }] }] : []),
 ];
 
 export const allItemIds = sidebarGroups.flatMap((g) =>

@@ -44,6 +44,7 @@ import { SettingsBarContext, SettingsButton } from "../components/settings/Setti
 import { Dropzone } from "../components/shared/Dropzone";
 import { AlphaJump } from "../components/shared/AlphaJump";
 import { TranslationProgress } from "../components/settings/TranslationProgress";
+import { DevPanel } from "./catalog/DevPanel";
 import { Field, TextInput } from "../components/settings/Field";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -2233,6 +2234,23 @@ const textColor = typeLabelColor(type.color);`}
               </div>
             </div>
           </section>
+
+          {import.meta.env.DEV && (
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Dev</h2>
+            <div className="space-y-10">
+              <div id="dev-panel" ref={reg("dev-panel")}>
+                <CatalogEntry
+                  name="Dev panel"
+                  description="Switches for demos and QA, in dev builds only. Fail next request: the next action of the chosen kind fails once with the given reason (one 'An error occurred' entry, edits kept). Slow load: Settings lists read as loading for two seconds. Zero rows: empty a store to see its empty state. Reset demo data clears every switch."
+                  code={`set(failNextAtom, { scope: "save", reason })`}
+                >
+                  <DevPanel />
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+          )}
         </div>
       </div>
       </div>

@@ -1,13 +1,16 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { registerSettingsReset } from "./settingsReset";
+import { dataSourceAtom } from "./dataSource";
+import { templateStore, templatesAtom } from "./templates";
+import { deleteThesaurusAtom, thesauriAtom } from "./thesauri";
+import { deleteRelationTypeAtom, relationTypesCorpus, relationTypesOfAtom } from "./relationTypes";
+import { emptyActivityLogAtom } from "./activityLog";
 
 /** Dev switches for demos and QA (the component catalog's Dev panel,
  *  acceptance SD-1): one-shot failure injection. The next action of the armed
  *  scope fails the way a server error would, with its reason, then the switch
- *  clears. Reset demo data clears it too. The zero-row switch (SD-5) arrives
- *  with the stores it acts on; the missing-id request (SD-6) is below, its
- *  button with the Dev panel. */
+ *  clears. Reset demo data clears it too. */
 export type FailScope = "save" | "delete" | "import" | "install" | "run" | "read";
 
 export const FAIL_SCOPES: { value: FailScope; label: string }[] = [
@@ -51,6 +54,25 @@ export const slowLoadingAtom = atom(
     if (import.meta.env.DEV) set(slowLoadingBaseAtom, on);
   },
 );
+
+/* ── Zero rows (SD-5) ──────────────────────────────────────────────────── */
+
+/** The extraction stores join with stage 4 (Import CSV, extraction, Preserve). */
+export type EmptyDomain = "templates" | "thesauri" | "relationTypes" | "activity";
+
+/** Empty a content store for the collection shown, past its delete guards,
+ *  so its empty state and create action can be reached. Reset demo data
+ *  brings the seed back. */
+export const emptyDomainAtom = atom(null, (get, set, domain: EmptyDomain) => {
+  const corpus = get(dataSourceAtom);
+  if (domain === "templates")
+    for (const t of get(templatesAtom(corpus))) set(templateStore.deleteAtom, { id: t.id, corpus });
+  if (domain === "thesauri") for (const t of get(thesauriAtom(corpus))) set(deleteThesaurusAtom, { corpus, id: t.id });
+  if (domain === "relationTypes")
+    for (const t of get(relationTypesOfAtom(relationTypesCorpus(corpus))))
+      set(deleteRelationTypeAtom, { id: t.id, to: null, corpus: relationTypesCorpus(corpus) });
+  if (domain === "activity") set(emptyActivityLogAtom);
+});
 
 /* ── Missing id (SD-6) ─────────────────────────────────────────────────── */
 
