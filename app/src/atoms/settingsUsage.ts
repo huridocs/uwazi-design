@@ -10,12 +10,16 @@ import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { templatesAtom } from "./templates";
 import { entityPropertyValues } from "../utils/propertyValues";
 import { cejilUsageByRelationType } from "../data/cejil/aggregates";
+import type { ThesaurusValue } from "../data/settings";
 import {
+  boundProperties,
   groupUsage,
   propertyUsage,
   relationTypeUsage,
   schemaFromTemplates,
+  thesaurusUsage,
   userUsage,
+  valueUsage,
   type HeldValue,
   type ValueReader,
 } from "../utils/settingsUsage";
@@ -25,14 +29,15 @@ import { entityAccessAtom, libraryEntityOverlayAtom } from "./entityOverlay";
 import { entityMetadataAtom } from "./entityMetadata";
 import type { Language } from "./language";
 import { referencesAtom } from "./references";
+import { thesaurusBindingsAtom } from "./thesauri";
 import { groupsAtom, signedInUserAtom, userDeleteBlock, usersAtom } from "./users";
 
 /** Usage selectors for Settings, one per domain (pure logic in
  *  `utils/settingsUsage.ts`). Each answers for the corpus whose configuration
  *  the page shows, which is not always the Library's: Templates and
  *  Relationship types show CEJIL's configuration on CEJIL and the Sample's
- *  everywhere else. This stage carries templates, properties, relationship
- *  types, users and groups; thesauri and languages join with their pages. */
+ *  everywhere else; Thesauri show each corpus's own, with artworks showing the
+ *  Sample's (`atoms/thesauri.ts`). Languages join with their page. */
 export const templatesCorpus = (source: DataSource): Corpus => (source === "cejil" ? "cejil" : "mock");
 
 /** A corpus's template properties and template names, from the template
@@ -44,6 +49,7 @@ const templateNamesAtom = atomFamily((corpus: Corpus) =>
     return (id: string) => m.get(id) ?? id;
   }),
 );
+export const thesauriCorpus = (source: DataSource): Corpus => (source === "artworks" ? "mock" : source);
 
 /** A corpus's entities with the session's changes. `null` while a lazy corpus
  *  has not loaded: counts are unknown, not zero. */
@@ -145,6 +151,46 @@ const propertyUsageFamily = atomFamily((key: string) => {
 });
 export const propertyUsageAtom = (k: { templateId: string; label: string; name?: string }) =>
   propertyUsageFamily(JSON.stringify([k.templateId, k.label, k.name ?? null]));
+
+/* ── Thesauri ──────────────────────────────────────────────────────────── */
+
+const boundAtom = atomFamily((thesaurusId: string) =>
+  atom((get) => {
+    const source = get(dataSourceAtom);
+    const corpus = thesauriCorpus(source);
+    return boundProperties(get(schemaAtom(corpus)), thesaurusId, get(thesaurusBindingsAtom(source)));
+  }),
+);
+
+export const thesaurusUsageAtom = atomFamily((thesaurusId: string) =>
+  atom((get) => {
+    const corpus = thesauriCorpus(get(dataSourceAtom));
+    const groups = get(byTemplate(corpus));
+    return withPending(
+      thesaurusUsage({
+        properties: get(boundAtom(thesaurusId)),
+        entitiesOf: (id) => groups?.get(id) ?? [],
+        read: get(readerAtom(corpus)),
+        templateName: get(templateNamesAtom(corpus)),
+      }),
+      groups === null,
+    );
+  }),
+);
+
+/** Entities holding one value of a thesaurus: a function of the value, read
+ *  once per removal rather than a family per value. */
+export const valueUsageAtom = atomFamily((thesaurusId: string) =>
+  atom((get) => {
+    const corpus = thesauriCorpus(get(dataSourceAtom));
+    const groups = get(byTemplate(corpus));
+    const read = get(readerAtom(corpus));
+    const properties = get(boundAtom(thesaurusId));
+    // null: the corpus has not loaded, so the count is unknown.
+    return (value: ThesaurusValue): number | null =>
+      groups === null ? null : valueUsage({ value, properties, entitiesOf: (id) => groups.get(id) ?? [], read });
+  }),
+);
 
 /* ── Relationship types ────────────────────────────────────────────────── */
 

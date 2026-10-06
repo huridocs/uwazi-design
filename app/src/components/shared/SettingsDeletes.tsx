@@ -1,16 +1,44 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { useSettingsNotify } from "../../hooks/useSettingsNotify";
-import { groupUsageAtom, userUsageAtom } from "../../atoms/settingsUsage";
+import { groupUsageAtom, thesaurusUsageAtom, userUsageAtom } from "../../atoms/settingsUsage";
+import { deleteThesaurusAtom } from "../../atoms/thesauri";
 import { deleteGroupAtom, deleteUserAtom, type GroupWithMembers } from "../../atoms/users";
 import { removeAccessMemberAtom } from "../../atoms/entityOverlay";
-import type { SettingsUser } from "../../data/settings";
+import { dataSourceAtom } from "../../atoms/dataSource";
+import type { SettingsThesaurus, SettingsUser } from "../../data/settings";
 
 /** One delete dialog per Settings domain: each reads its usage selector
  *  (`atoms/settingsUsage.ts`), refuses where Uwazi refuses, performs the
  *  delete it describes, and records it (`useSettingsNotify`). Each mounts
- *  only while open, so its selector runs only then. Users and groups are
- *  here; the other domains join with their stores. */
+ *  only while open, so its selector runs only then. Relationship types,
+ *  languages and pages join with their stores. */
+
+export function ThesaurusDelete({ thesaurus, onCancel }: { thesaurus: SettingsThesaurus | null; onCancel: () => void }) {
+  return thesaurus ? <ThesaurusDeleteOpen thesaurus={thesaurus} onCancel={onCancel} /> : null;
+}
+
+function ThesaurusDeleteOpen({ thesaurus, onCancel }: { thesaurus: SettingsThesaurus; onCancel: () => void }) {
+  const usage = useAtomValue(thesaurusUsageAtom(thesaurus.id));
+  const corpus = useAtomValue(dataSourceAtom);
+  const deleteThesaurus = useSetAtom(deleteThesaurusAtom);
+  const { record } = useSettingsNotify();
+  const values = thesaurus.itemCount;
+  return (
+    <ConfirmDelete
+      open
+      title="Delete thesaurus"
+      message={`Delete the ${thesaurus.name} thesaurus and its ${values.toLocaleString()} ${values === 1 ? "value" : "values"}? No template uses it.`}
+      impact={usage}
+      onCancel={onCancel}
+      onConfirm={() => {
+        deleteThesaurus({ corpus, id: thesaurus.id });
+        record({ method: "DELETE", domain: "thesaurus", noun: "thesaurus", id: thesaurus.id, name: thesaurus.name });
+        onCancel();
+      }}
+    />
+  );
+}
 
 export function UserDelete({ user, onCancel }: { user: SettingsUser | null; onCancel: () => void }) {
   return user ? <UserDeleteOpen user={user} onCancel={onCancel} /> : null;

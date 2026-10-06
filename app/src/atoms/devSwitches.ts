@@ -5,8 +5,9 @@ import { registerSettingsReset } from "./settingsReset";
 /** Dev switches for demos and QA (the component catalog's Dev panel,
  *  acceptance SD-1): one-shot failure injection. The next action of the armed
  *  scope fails the way a server error would, with its reason, then the switch
- *  clears. Reset demo data clears it too. The zero-row and missing-id
- *  switches (SD-5, SD-6) arrive with the stores they act on. */
+ *  clears. Reset demo data clears it too. The zero-row switch (SD-5) arrives
+ *  with the stores it acts on; the missing-id request (SD-6) is below, its
+ *  button with the Dev panel. */
 export type FailScope = "save" | "delete" | "import" | "install" | "run" | "read";
 
 export const FAIL_SCOPES: { value: FailScope; label: string }[] = [
@@ -50,3 +51,10 @@ export const slowLoadingAtom = atom(
     if (import.meta.env.DEV) set(slowLoadingBaseAtom, on);
   },
 );
+
+/* ── Missing id (SD-6) ─────────────────────────────────────────────────── */
+
+/** A thesaurus id the Thesauri page opens its editor on, once, then clears:
+ *  the Dev panel's "Open thesaurus editor with a missing id" (the app has no
+ *  router, so a URL cannot be edited by hand). */
+export const openThesaurusRequestAtom = atom<string | null>(null);

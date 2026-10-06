@@ -42,6 +42,7 @@ import { SettingsNav } from "../components/settings/SettingsNav";
 import { Button } from "../components/settings/Button";
 import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
 import { Dropzone } from "../components/shared/Dropzone";
+import { AlphaJump } from "../components/shared/AlphaJump";
 import { Field, TextInput } from "../components/settings/Field";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -2139,6 +2140,16 @@ const textColor = typeLabelColor(type.color);`}
   dirty={dirty} onSave={() => markSaved()} onDiscard={discard}>…</SettingsFormPage>`}
                 >
                   <SettingsEditorDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-alpha-jump" ref={reg("set-alpha-jump")}>
+                <CatalogEntry
+                  name="AlphaJump"
+                  description="An A–Z index for a long list (the thesaurus editor's 2,443 values). Letters with no row are disabled; # covers labels that start with anything else. A toolbar of buttons; the caller scrolls to the first row filed under the letter and focuses it."
+                  code={`<AlphaJump present={lettersInList} onJump={(letter) => scrollToFirst(letter)} />`}
+                >
+                  <AlphaJump present={new Set([..."ABCDEGHIJLMNOPQRSTUVYZ"])} onJump={() => {}} />
                 </CatalogEntry>
               </div>
 

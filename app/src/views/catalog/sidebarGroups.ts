@@ -162,6 +162,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-empty-state", label: "SettingsEmptyState" },
       { id: "set-section", label: "SettingsSection" },
       { id: "set-editor", label: "SettingsEditor" },
+      { id: "set-alpha-jump", label: "AlphaJump" },
       { id: "set-bulk-pick", label: "BulkPickModal" },
     ],
   },
