@@ -10,6 +10,7 @@ import { isNepalEntity } from "../data/nepal/profile";
 import { nepalDoc, nepalEntity, nepalRefsByEntity } from "../data/nepal/load";
 import { nepalSourceLink } from "../data/nepal/sourceLink";
 import { isCejilEntity } from "../data/cejil/profile";
+import { STANCES, STANCE_LABEL, type Stance } from "../data/nepal/claimEvidence";
 
 /** Where a record can be read and who put it there. */
 export interface RecordSource {
@@ -19,7 +20,8 @@ export interface RecordSource {
   date?: string;
 }
 
-/** One cited passage: the record it is quoted from, and the link's status. */
+/** One cited passage: the record it is quoted from, its stance, and the
+ *  link's status. */
 export interface Citation {
   /** The record the quote is from. */
   sourceId: string;
@@ -29,6 +31,13 @@ export interface Citation {
   date?: string;
   /** The link's status where the collection records one. */
   status?: string;
+  /** Whether the quote supports or disputes the claim it is cited for, or
+   *  reports on it without a side (Nepal's `supports` / `disputes` /
+   *  `reports_on` links). Absent for links that take no stance. */
+  stance?: Stance;
+  /** The claim the stance is about, when it is not the cited record itself
+   *  (a pinned source's quote supports some other record). */
+  stanceOn?: string;
   quote: string;
   /** "p. 14", where the quote was found on a page of a document. */
   page?: string;
@@ -99,15 +108,16 @@ export function recordSource(id: string): RecordSource {
 
 /** The quoted passages behind a record. Nepal: every reference with a quote
  *  that touches the record, cited to the record the quote is from (the
- *  reference's `from`), with the link's status and the PDF page where the
- *  quote was found. Other collections: the record's anchored references,
- *  quoted from the record's own document. */
+ *  reference's `from`), with its stance, the link's status and the PDF page
+ *  where the quote was found. Other collections: the record's anchored
+ *  references, quoted from the record's own document. */
 function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
   const out: Citation[] = [];
   if (isNepalEntity(id)) {
     for (const r of nepalRefsByEntity().get(id) ?? []) {
       if (!r.quote) continue;
       const src = recordSource(r.from);
+      const stance = (STANCES as string[]).includes(r.type) ? (r.type as Stance) : undefined;
       out.push({
         sourceId: r.from,
         sourceTitle: getEntity(r.from)?.title ?? r.from,
@@ -115,6 +125,7 @@ function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
         publisher: src.publisher,
         date: src.date,
         status: STATUS_LONG[r.verification],
+        ...(stance ? { stance, ...(r.to !== id ? { stanceOn: getEntity(r.to)?.title ?? r.to } : {}) } : {}),
         quote: r.quote,
         page: r.file && r.page ? `p. ${r.page}` : undefined,
       });
@@ -142,11 +153,11 @@ function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
 }
 
 /** A quote cited twice from one record (two links resting on one sentence)
- *  is one citation. */
+ *  is one citation, unless the two links take different stances. */
 function dedupe(list: Citation[]): Citation[] {
   const seen = new Set<string>();
   return list.filter((c) => {
-    const k = `${c.sourceId}\u0000${c.quote}\u0000${c.page ?? ""}`;
+    const k = `${c.sourceId}\u0000${c.quote}\u0000${c.page ?? ""}\u0000${c.stance ?? ""}\u0000${c.stanceOn ?? ""}`;
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
@@ -175,10 +186,17 @@ export function buildCaseEntries(ids: readonly string[], refsOf: (id: string) =>
 
 const mdEscape = (s: string) => s.replace(/([\\`*_[\]])/g, "\\$1");
 
-/** One citation as a sentence: “quote” — Source, Publisher, date. URL. Status. p. N */
-function citationParts(c: Citation): { quote: string; rest: string[] } {
+/** "Disputes", or "Supports “19 killed in Kathmandu”" when the claim is
+ *  another record. */
+export function stanceText(c: Citation): string | undefined {
+  if (!c.stance) return undefined;
+  return c.stanceOn ? `${STANCE_LABEL[c.stance]} “${c.stanceOn}”` : STANCE_LABEL[c.stance];
+}
+
+/** One citation as a sentence: Stance: “quote” — Source, Publisher, date. URL. Status. p. N */
+function citationParts(c: Citation): { stance?: string; quote: string; rest: string[] } {
   const where = [c.sourceTitle, c.publisher, c.date].filter(Boolean).join(", ");
-  return { quote: c.quote, rest: [where, c.url, c.status, c.page].filter(Boolean) as string[] };
+  return { stance: stanceText(c), quote: c.quote, rest: [where, c.url, c.status, c.page].filter(Boolean) as string[] };
 }
 
 function headLine(e: CaseEntry): string[] {
@@ -197,11 +215,12 @@ export function citationsMarkdown(name: string, collection: string, entries: Cas
     if (head.length || e.source.url) lines.push("");
     if (!e.found) lines.push("_No longer in the collection._", "");
     for (const c of e.citations) {
-      const { quote, rest } = citationParts(c);
+      const { stance, quote, rest } = citationParts(c);
       const [where, ...more] = rest;
       const url = c.url ? ` <${c.url}>` : "";
       const tail = more.filter((x) => x !== c.url);
-      lines.push(`- “${mdEscape(quote)}” — ${mdEscape(where)}.${url}${tail.length ? ` ${tail.join(" · ")}` : ""}`);
+      const lead = stance ? `**${mdEscape(stance)}:** ` : "";
+      lines.push(`- ${lead}“${mdEscape(quote)}” — ${mdEscape(where)}.${url}${tail.length ? ` ${tail.join(" · ")}` : ""}`);
     }
     if (e.citations.length) lines.push("");
   });
@@ -218,8 +237,8 @@ export function citationsText(name: string, collection: string, entries: CaseEnt
     if (head.length) lines.push(`   ${head.join(" · ")}`);
     if (e.source.url) lines.push(`   ${e.source.url}`);
     for (const c of e.citations) {
-      const { quote, rest } = citationParts(c);
-      lines.push(`   – “${quote}” — ${rest.join(" · ")}`);
+      const { stance, quote, rest } = citationParts(c);
+      lines.push(`   – ${stance ? `${stance}: ` : ""}“${quote}” — ${rest.join(" · ")}`);
     }
     lines.push("");
   });

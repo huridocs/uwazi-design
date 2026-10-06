@@ -15,11 +15,13 @@ import { collectionSettings } from "../../atoms/settingsSingletons";
 import { referencesAtom, referencesFor } from "../../atoms/references";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
+import type { Stance } from "../../data/nepal/claimEvidence";
 import {
   buildCaseEntries,
   caseCsv,
   citationsMarkdown,
   citationsText,
+  stanceText,
   type CaseEntry,
 } from "../../utils/caseCitations";
 import { downloadCsv } from "../../utils/exportCsv";
@@ -416,6 +418,14 @@ function PinnedRow({ entry, onOpen, onUnpin }: { entry: CaseEntry; onOpen: () =>
   );
 }
 
+/** A quote's stance on the claim, in the claim matrix's tones: support
+ *  green, dispute amber, a report without a side neutral. */
+const STANCE_TONE: Record<Stance, string> = {
+  supports: "text-success-label",
+  disputes: "text-warning-label",
+  reports_on: "text-ink-secondary",
+};
+
 function CitationEntry({ n, entry }: { n: number; entry: CaseEntry }) {
   const head = [entry.template, entry.source.publisher, entry.source.date].filter(Boolean).join(" · ");
   return (
@@ -437,6 +447,14 @@ function CitationEntry({ n, entry }: { n: number; entry: CaseEntry }) {
               {/* One run of text, each separator bound to the part before it
                   (a no-break space), so a wrapped line never starts with "·". */}
               <p className="mt-0.5 text-meta text-ink-tertiary text-pretty">
+                {c.stance && (
+                  <>
+                    <span data-part="stance" data-stance={c.stance} className={`font-medium ${STANCE_TONE[c.stance]}`}>
+                      {stanceText(c)}
+                    </span>
+                    {"\u00a0· "}
+                  </>
+                )}
                 {[
                   [c.sourceId === entry.id ? null : c.sourceTitle, c.publisher].filter(Boolean).join(", ") || "This record",
                   c.status?.replace(/ /g, "\u00a0"),
