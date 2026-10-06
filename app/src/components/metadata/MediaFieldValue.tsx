@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AudioLines, CirclePlay, Clapperboard, ExternalLink, Play } from "lucide-react";
 import { mediaUrlAt, parseMediaValue, youtubeId, type MediaValue } from "../../utils/mediaValue";
+import { YouTubeStill } from "../shared/YouTubeStill";
 
 /** A `media` property in the record.
  *
@@ -13,9 +14,14 @@ export function MediaFieldValue({
   raw,
   segment,
   kindHint,
+  poster = false,
 }: {
   raw: string;
   segment?: MediaSegment;
+  /** Draw the video's YouTube still behind the play button. Off by default:
+   *  the still is a request to YouTube before the reader presses play. The
+   *  Nepal media item turns it on for items with no content warning. */
+  poster?: boolean;
   /** What the record says the recording is, for an address that does not
    *  (an outlet's episode page). The address wins when it knows. */
   kindHint?: "video" | "audio";
@@ -27,7 +33,11 @@ export function MediaFieldValue({
     return <p className="text-sm text-ink-secondary leading-relaxed break-words">{raw}</p>;
   }
   const id = youtubeId(media);
-  return id ? <YouTubeMedia media={media} id={id} segment={segment} /> : <LinkedMedia media={media} segment={segment} />;
+  return id ? (
+    <YouTubeMedia media={media} id={id} segment={segment} poster={poster} />
+  ) : (
+    <LinkedMedia media={media} segment={segment} />
+  );
 }
 
 /** The part of a recording a record is about, in seconds. `end` absent: from
@@ -177,11 +187,11 @@ const SEEK_TOLERANCE_S = 3;
 
 /** A YouTube video played in place.
  *
- *  FACADE FIRST. Until the reader presses play (or a chapter) this is a drawn
- *  poster and a button — no iframe, no image from YouTube's servers: opening a
- *  hearing's record makes no request to Google. The poster is local on purpose;
- *  YouTube's thumbnails live on `i.ytimg.com`, and fetching one would be exactly
- *  the request the facade exists to avoid.
+ *  FACADE FIRST. Until the reader presses play (or a chapter) this is a poster
+ *  and a button, no iframe. By default the poster is drawn locally, so opening
+ *  a hearing's record makes no request to Google. With `poster`, the video's
+ *  still from `i.ytimg.com` sits behind the button (one image request, no
+ *  player, no cookies); a still YouTube no longer has leaves the drawn poster.
  *
  *  The embed is `youtube-nocookie.com` with `rel=0` and our `origin`. Chapters
  *  SEEK it: once the player has answered the `listening` handshake, a chapter
@@ -194,7 +204,19 @@ const SEEK_TOLERANCE_S = 3;
  *
  *  THE BOX IS DEFINITE: `aspect-video` on the same element before and after the
  *  iframe arrives, so the record never shifts when the player loads. */
-function YouTubeMedia({ media, id, segment }: { media: MediaValue; id: string; segment?: MediaSegment }) {
+function YouTubeMedia({
+  media,
+  id,
+  segment,
+  poster,
+}: {
+  media: MediaValue;
+  id: string;
+  segment?: MediaSegment;
+  poster: boolean;
+}) {
+  const [stillMissing, setStillMissing] = useState(false);
+  const still = poster && !stillMissing;
   /** `null` until the reader asks for the player; then the start it loaded at.
    *  `loadNonce` changes the iframe's key when a reload is the only way to seek. */
   const [start, setStart] = useState<number | null>(null);
@@ -322,6 +344,10 @@ function YouTubeMedia({ media, id, segment }: { media: MediaValue; id: string; s
             className="absolute inset-0 w-full h-full border-0"
           />
         ) : (
+          <>
+          {still && (
+            <YouTubeStill id={id} onMissing={() => setStillMissing(true)} className="absolute inset-0 w-full h-full" />
+          )}
           <button
             type="button"
             data-part="play"
@@ -337,10 +363,15 @@ function YouTubeMedia({ media, id, segment }: { media: MediaValue; id: string; s
             >
               <Play size={18} className="translate-x-px" fill="currentColor" />
             </span>
-            <span aria-hidden className="px-4 text-center text-meta text-ink-tertiary">
-              {segment ? `Plays ${segmentText(segment)}. ` : ""}Loads{"\u00a0"}from {media.provider ?? "the provider"} when you press{"\u00a0"}play
-            </span>
+            {/* Over a still the line would sit on the picture (and on any title
+                burned into it); the still already says what will play. */}
+            {!still && (
+              <span aria-hidden className="px-4 text-center text-meta text-ink-tertiary">
+                {segment ? `Plays ${segmentText(segment)}. ` : ""}Loads{"\u00a0"}from {media.provider ?? "the provider"} when you press{"\u00a0"}play
+              </span>
+            )}
           </button>
+          </>
         )}
       </div>
       <MetaRow media={media} />

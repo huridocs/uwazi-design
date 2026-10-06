@@ -5,19 +5,21 @@ import type { ThumbFit, ThumbFrame } from "../../atoms/library";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { resolvePrimaryFile } from "../../data/files";
 import { PdfPageThumb } from "../shared/PdfPageThumb";
+import { YouTubeStill } from "../shared/YouTubeStill";
 
 /** A Library card's preview.
  *
  *  A document entity shows page one of its own document, the same preview the
  *  Metadata card shows. An image entity shows its asset (`Entity.image`, passed
  *  in by the caller, which already holds the entity) and falls back to a glyph
- *  without one. Video and audio have no poster assets, so they draw a tile: a
- *  play mark on ink, or a waveform.
+ *  without one. A YouTube video draws its still under the play mark; any other
+ *  video, and audio, draw a tile: a play mark on warm, or a waveform.
  */
 export function EntityThumbnail({
   kind,
   entityId,
   image,
+  youtubeId,
   size = "md",
   fit = "auto",
   frame = "landscape",
@@ -31,6 +33,9 @@ export function EntityThumbnail({
   entityId?: string;
   /** The asset behind `kind === "image"`. Absent → the glyph. */
   image?: EntityImage;
+  /** The YouTube video behind `kind === "video"`: its still under the play
+   *  mark. Absent, or a still YouTube no longer has → the plain tile. */
+  youtubeId?: string;
   size?: "sm" | "md" | "lg";
   /** Image fit only: the Display menu's override. `auto` applies the ratio rule
    *  in `ImageThumb`; documents ignore it. */
@@ -75,22 +80,7 @@ export function EntityThumbnail({
     return <ImageThumb image={image} size={size} fit={fit} frame={frame} className={className} />;
   }
   if (kind === "video") {
-    // Warm ground like audio, paper puck, ink triangle, each sized as a fraction
-    // of the slot so it reads the same in the portrait slot and the list chip.
-    // An ink ground turned a list of CEJIL hearings into a column of black bars.
-    return (
-      <div
-        data-component="EntityThumbnail"
-        data-kind="video"
-        className={`flex items-center justify-center bg-warm ${className}`}
-      >
-        {/* Sized off the box's height, not its width: the slots differ by ratio,
-            not scale. Height plus min/max caps keeps one apparent size in both. */}
-        <span data-part="puck" className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper shadow-sm">
-          <Play aria-hidden className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
-        </span>
-      </div>
-    );
+    return <VideoThumb youtubeId={youtubeId} size={size} frame={frame} className={className} />;
   }
   // Audio: a warm ground and a waveform in the entity type's colour, both
   // scaled to the slot.
@@ -102,6 +92,50 @@ export function EntityThumbnail({
           className="w-full h-full"
           style={{ color: tint ?? "var(--text-tertiary)" }}
         />
+      </span>
+    </div>
+  );
+}
+
+/** A video's slot: its YouTube still, else a warm tile, with one play mark.
+ *
+ *  The still covers the landscape band and the square list chip. The portrait
+ *  slot is the wrong way round for a 16:9 picture, so the still is matted there
+ *  in a 16:9 box on vellum, by the same rule `ImageThumb` applies. The puck is
+ *  sized off the box's height, not its width: the slots differ by ratio, not
+ *  scale. A warm ground, not ink: an ink ground turned a list of CEJIL hearings
+ *  into a column of black bars. */
+function VideoThumb({
+  youtubeId,
+  size,
+  frame,
+  className,
+}: {
+  youtubeId?: string;
+  size: "sm" | "md" | "lg";
+  frame: ThumbFrame;
+  className: string;
+}) {
+  const [missing, setMissing] = useState(false);
+  const still = youtubeId && !missing ? youtubeId : null;
+  const matted = !!still && frame === "portrait" && size !== "sm";
+  return (
+    <div
+      data-component="EntityThumbnail"
+      data-kind="video"
+      data-still={still ? (matted ? "contain" : "cover") : undefined}
+      className={`relative flex items-center justify-center ${matted ? "bg-vellum" : "bg-warm"} ${className}`}
+    >
+      {still &&
+        (matted ? (
+          <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 aspect-video overflow-hidden">
+            <YouTubeStill id={still} onMissing={() => setMissing(true)} className="w-full h-full" />
+          </span>
+        ) : (
+          <YouTubeStill id={still} onMissing={() => setMissing(true)} className="absolute inset-0 w-full h-full" />
+        ))}
+      <span data-part="puck" className="relative flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper shadow-sm">
+        <Play aria-hidden className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
       </span>
     </div>
   );

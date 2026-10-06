@@ -313,6 +313,7 @@ export const EntityCard = memo(function EntityCard({
                 kind={entity.preview}
                 entityId={entity.id}
                 image={entity.image}
+                youtubeId={entity.youtubeId}
                 size="sm"
                 fit={thumbFit}
                 tint={type?.color}
@@ -494,6 +495,7 @@ export const EntityCard = memo(function EntityCard({
                 kind={entity.preview}
                 entityId={entity.id}
                 image={entity.image}
+                youtubeId={entity.youtubeId}
                 fit={thumbFit}
                 frame={thumbFrame}
                 peek={thumbFrame === "landscape"}

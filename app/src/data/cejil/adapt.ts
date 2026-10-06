@@ -10,7 +10,7 @@ import { cejilCorpus, cejilEsBySid, cejilFilesBySid, cejilFullText, cejilLoaded,
 import { languageName, lengthRow, registerContentProvider, type EntityContent } from "../../utils/entityContent";
 import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
 import { formatPlace } from "../../utils/geoFormat";
-import { parseMediaValue } from "../../utils/mediaValue";
+import { parseMediaValue, youtubeId } from "../../utils/mediaValue";
 import { PLACE_INHERITED_KEY } from "./placeKey";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
@@ -153,6 +153,7 @@ function fieldsOf(
   const out: CardField[] = [];
   const marks: CardMark[] = [];
   const mediaKeys: Partial<Record<MediaMark, string>> = {};
+  let youtube: string | undefined;
   for (const p of props) {
     if (p.name === "title") continue;
     /* The connection a place was inherited THROUGH is not also a row of its own.
@@ -189,6 +190,7 @@ function fieldsOf(
            both; a value whose address names neither gets the neutral mark. */
         for (const v of vals) {
           const parsed = parseMediaValue(v.value);
+          youtube ??= (parsed && youtubeId(parsed)) || undefined;
           const mark: MediaMark = parsed?.kind === "video" ? "video" : parsed?.kind === "audio" ? "audio" : "media";
           if (!marks.includes(mark)) marks.push(mark);
           mediaKeys[mark] ??= p.name;
@@ -239,6 +241,7 @@ function fieldsOf(
     fields: out.length ? out : undefined,
     marks: marks.length ? marks : undefined,
     mediaKeys: Object.keys(mediaKeys).length ? mediaKeys : undefined,
+    youtubeId: youtube,
   };
 }
 
@@ -562,6 +565,8 @@ export function cejilLibraryEntities(): Entity[] {
         fields: card.fields,
         marks: card.marks,
         mediaKeys: card.mediaKeys,
+        // The still shows only where the card draws the video tile.
+        ...(card.youtubeId && !docBearing.has(e.sharedId) ? { youtubeId: card.youtubeId } : {}),
         searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))

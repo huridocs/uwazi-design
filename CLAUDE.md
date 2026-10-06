@@ -366,8 +366,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Thumbnails:
   - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when at least
     half of the filtered results have a preview: an image, a document's first page (CEJIL file
-    records, Sample documents, Nepal PDFs) or a recording (CEJIL Audiencias, which draw the
-    play tile; there are no posters). CEJIL therefore opens with thumbnails. The menu note gives
+    records, Sample documents, Nepal PDFs) or a recording (CEJIL Audiencias, Nepal videos). A
+    YouTube recording draws its still (`YouTubeStill`, `Entity.youtubeId`) under the play mark;
+    a warned item, a non-YouTube host or YouTube's 120px placeholder draws the plain tile. CEJIL therefore opens with thumbnails. The menu note gives
     the answer and the count (`libraryThumbAutoAtom`, `previewCount`). Auto counts what the
     Content card's Contains counts (`carriesContent` in `utils/entityContent.ts`); `entityContent`
     always puts the record's `preview` kind in Contains, so the two never disagree. CEJIL media

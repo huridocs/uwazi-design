@@ -189,6 +189,12 @@ export function youtubeId(media: MediaValue): string | null {
   return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
 }
 
+/** The YouTube video id of a stored `media` value, or null. */
+export function youtubeIdOf(raw: unknown): string | null {
+  const media = parseMediaValue(raw);
+  return media ? youtubeId(media) : null;
+}
+
 /** The URL that starts playback at `seconds`. */
 export function mediaUrlAt(media: MediaValue, seconds: number): string {
   const url = new URL(media.url);

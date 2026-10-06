@@ -102,6 +102,10 @@ export interface Entity {
   /** Optional preview thumbnail kind shown on the Library card. Document-bearing
    *  entities get a page preview; a few others get image/video/audio. */
   preview?: PreviewKind;
+  /** The YouTube video behind `preview: "video"`, whose still the card draws.
+   *  Adapter-supplied; absent on a record with a graphic or distressing
+   *  content warning, which keeps the plain tile. */
+  youtubeId?: string;
   /** The actual asset behind `preview: "image"`. Adapter-supplied, like `geo`
    *  and `fields` — see {@link EntityImage}. */
   image?: EntityImage;

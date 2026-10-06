@@ -7,6 +7,7 @@ import type { LatLng } from "../geo";
 import type { PropertyDef, TemplateDef } from "../templates/types";
 import { kindOfUwaziType } from "../../utils/propertyKind";
 import { asset } from "../../utils/asset";
+import { youtubeIdOf } from "../../utils/mediaValue";
 import { displayStrings, hourPrecise, latLngOf } from "../../utils/templateProjection";
 import { nepalTemplateById } from "./schema";
 import { nepalCorpus, nepalDoc, nepalEntity, nepalRefsByEntity } from "./load";
@@ -206,7 +207,7 @@ function listCellsOf(e: NepalEntity): Record<string, string> | undefined {
  *  picture, or the video or audio mark when it is a recording. An item with a
  *  content warning shows the mark, never the picture: the card is not where a
  *  reader chooses to look (see `MediaItemCard`). */
-function previewOf(e: NepalEntity): Pick<Entity, "preview" | "image"> {
+function previewOf(e: NepalEntity): Pick<Entity, "preview" | "image" | "youtubeId"> {
   if (e.docs?.length) return { preview: "document" };
   if (e.template !== "nepal_media") return {};
   const warned = e.metadata.content_warning?.some((v) => v.value === "graphic" || v.value === "distressing");
@@ -227,7 +228,11 @@ function previewOf(e: NepalEntity): Pick<Entity, "preview" | "image"> {
     };
   }
   const kind = e.metadata.media_kind?.[0]?.value;
-  if (kind === "video") return { preview: "video" };
+  if (kind === "video") {
+    // A YouTube recording draws its still, unless a warning covers the item.
+    const id = warned ? null : youtubeIdOf(e.metadata.embed?.[0]?.value);
+    return id ? { preview: "video", youtubeId: id } : { preview: "video" };
+  }
   if (kind === "audio") return { preview: "audio" };
   return {};
 }

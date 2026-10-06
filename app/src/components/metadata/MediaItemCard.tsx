@@ -182,6 +182,9 @@ function Stage({ item, onOpenImage }: { item: MediaItemView; onOpenImage: (image
         raw={item.embed}
         segment={item.segment}
         kindHint={item.kind === "audio" || item.kind === "video" ? item.kind : undefined}
+        // The still only where no warning covers the item: a covered stage
+        // must not fetch the picture it is covering.
+        poster={!item.contentWarning}
       />
     );
   return <LinkStage item={item} />;
