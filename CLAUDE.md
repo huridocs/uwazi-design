@@ -39,6 +39,7 @@ One term per concept, in code, comments, docs and UI copy.
 | The entity a view is about / shown in a drawer / checkbox set / jump target | focused / open / selected / active |
 | Background job / log entry | task / notification |
 | The assistant | Bert in the UI, `agent*` in code |
+| Pinned records, notes and citations | notebook |
 
 ## Data model
 
@@ -392,13 +393,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   applies on load and then removes. Match modes, range bounds and groups are optional snapshot
   keys (`match`, `ranges`, `groups`): a view or link saved before them opens with the defaults, and
   an old Country/Descriptor "AND" opens as `all`.
-- Case: one per collection (`atoms/caseFile.ts`, localStorage): pinned records and markdown
-  notes. `PinToggle` pins from a card footer, the entity header (`DocMeta`) and a relationship
-  pill. `CasePanel` (navbar Case button; a sheet on phones) lists the pins, the notes and the
-  citation list built by `utils/caseCitations.ts` (Nepal: the quoting source's URL, publisher and
-  date, the link's status, the PDF page; CEJIL: the summa.cejil.org record and its anchored
-  quotes). Exports: copy as text, Markdown, CSV. Reset demo data and the Dev panel clear saved
-  views, cases and history.
+- Notebook: one per collection (`atoms/notebook.ts`, localStorage `uwazi:notebooks`; the old
+  `uwazi:cases` key is moved over once on load): pinned records and markdown notes. `PinToggle`
+  pins from a card footer, the entity header (`DocMeta`) and a relationship pill. `NotebookPanel`
+  (navbar Notebook button; a sheet on phones) lists the pins, the notes and the citation list
+  built by `utils/notebookCitations.ts` (Nepal: the quoting source's URL, publisher and date, the
+  link's status, the PDF page; CEJIL: the summa.cejil.org record and its anchored quotes).
+  Exports: copy as text, Markdown, CSV, named `notebook-<collection>-<date>`. Reset demo data and
+  the Dev panel clear saved views, notebooks and history.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:

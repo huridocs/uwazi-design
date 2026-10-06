@@ -155,7 +155,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           )}
         </div>
       )}
-      {/* Pin to the case: the record's own control, at the strip's end on
+      {/* Pin to the notebook: the record's own control, at the strip's end on
           every tab. Absent for an id the collection does not hold. */}
       {entity && <PinToggle entityId={entity.id} title={entity.title} variant="label" className="ms-auto" />}
       </div>

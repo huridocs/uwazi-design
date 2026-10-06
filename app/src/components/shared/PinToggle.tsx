@@ -1,10 +1,10 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { Pin } from "lucide-react";
-import { entityPinnedAtom, togglePinAtom } from "../../atoms/caseFile";
+import { entityPinnedAtom, togglePinAtom } from "../../atoms/notebook";
 import { Hint } from "./Hint";
 import { breakpointAtom } from "../../atoms/viewport";
 
-/** Pin a record to the collection's case, or take it out. One control in
+/** Pin a record to the collection's notebook, or take it out. One control in
  *  three places: a Library card's footer and a relationship row's entity pill
  *  (`icon`), and the entity view's header (`label`).
  *
@@ -32,7 +32,7 @@ export function PinToggle({
   const phone = useAtomValue(breakpointAtom) === "mobile";
   const hidden = reveal && !pinned && !phone;
   const name = title ? `“${title}”` : "this record";
-  const label = pinned ? `Unpin ${name} from the case` : `Pin ${name} to the case`;
+  const label = pinned ? `Remove ${name} from notebook` : `Pin ${name} to notebook`;
   const onClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggle(entityId);
@@ -63,7 +63,7 @@ export function PinToggle({
     );
 
   return (
-    <Hint text={pinned ? "Pinned to the case" : "Pin to the case"} describe={false}>
+    <Hint text={pinned ? "Remove from notebook" : "Pin to notebook"} describe={false}>
       {(hint) => (
         <button
           {...hint}

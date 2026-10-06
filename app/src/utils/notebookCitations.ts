@@ -1,6 +1,6 @@
-// What a case exports: one entry per pinned record, each with the passages
+// What a notebook exports: one entry per pinned record, each with the passages
 // that support it. Pure: callers pass the entities and the corpus's
-// references, so the Case panel, the exports and the stories share it.
+// references, so the Notebook panel, the exports and the stories share it.
 import type { Entity } from "../data/entities";
 import { getEntity, getEntityType } from "../data/entities";
 import { selectionPage, type Reference, type Verification } from "../data/references";
@@ -43,7 +43,7 @@ export interface Citation {
   page?: string;
 }
 
-export interface CaseEntry {
+export interface NotebookEntry {
   id: string;
   title: string;
   template: string;
@@ -164,9 +164,9 @@ function dedupe(list: Citation[]): Citation[] {
   });
 }
 
-/** The case's entries, in pin order. `refsOf` gives a record's references
+/** The notebook's entries, in pin order. `refsOf` gives a record's references
  *  (`referencesFor`); only non-Nepal records read it. */
-export function buildCaseEntries(ids: readonly string[], refsOf: (id: string) => readonly Reference[]): CaseEntry[] {
+export function buildNotebookEntries(ids: readonly string[], refsOf: (id: string) => readonly Reference[]): NotebookEntry[] {
   return ids.map((id) => {
     const e = getEntity(id);
     if (!e) return { id, title: id, template: "", source: {}, citations: [], found: false };
@@ -199,13 +199,13 @@ function citationParts(c: Citation): { stance?: string; quote: string; rest: str
   return { stance: stanceText(c), quote: c.quote, rest: [where, c.url, c.status, c.page].filter(Boolean) as string[] };
 }
 
-function headLine(e: CaseEntry): string[] {
+function headLine(e: NotebookEntry): string[] {
   return [e.template, e.status, e.source.publisher, e.source.date].filter(Boolean) as string[];
 }
 
 /** The citation list as Markdown: a heading per record, its address, then its
  *  passages as a list. */
-export function citationsMarkdown(name: string, collection: string, entries: CaseEntry[], notes = ""): string {
+export function citationsMarkdown(name: string, collection: string, entries: NotebookEntry[], notes = ""): string {
   const lines: string[] = [`# ${mdEscape(name)}`, "", `${collection} · exported ${new Date().toISOString().slice(0, 10)}`, ""];
   entries.forEach((e, i) => {
     lines.push(`## ${i + 1}. ${mdEscape(e.title)}`, "");
@@ -229,7 +229,7 @@ export function citationsMarkdown(name: string, collection: string, entries: Cas
 }
 
 /** The same list as plain text, for pasting into a document or an e-mail. */
-export function citationsText(name: string, collection: string, entries: CaseEntry[]): string {
+export function citationsText(name: string, collection: string, entries: NotebookEntry[]): string {
   const lines: string[] = [name, `${collection} · exported ${new Date().toISOString().slice(0, 10)}`, ""];
   entries.forEach((e, i) => {
     lines.push(`${i + 1}. ${e.title}`);
@@ -254,7 +254,7 @@ const cell = (v: string) => {
 
 /** The pinned records as CSV: one row each, with where they are published and
  *  how many passages the citation list quotes for them. */
-export function caseCsv(entries: CaseEntry[], pinnedAt: (id: string) => number | undefined): string {
+export function notebookCsv(entries: NotebookEntry[], pinnedAt: (id: string) => number | undefined): string {
   const head = ["Title", "Template", "Status", "Date", "Publisher", "Source URL", "Quoted passages", "Pinned", "Id"];
   const rows = entries.map((e) => {
     const at = pinnedAt(e.id);

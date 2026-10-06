@@ -8,7 +8,7 @@ import { LoginView } from "./LoginView";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
 import { PinToggle } from "../components/shared/PinToggle";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
-import { CaseBody } from "../components/case/CasePanel";
+import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { libraryEntitiesAtom } from "../atoms/dataSource";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
@@ -1649,7 +1649,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="sh-pin-toggle" ref={reg("sh-pin-toggle")}>
                 <CatalogEntry
                   name="PinToggle"
-                  description="Pins a record to the collection's case, or takes it out. `icon` sits in a Library card's footer and beside a relationship row's entity pill: hidden until the card or row is hovered or focused, always shown once pinned, and always shown on a phone. `label` is the entity header's Pin / Pinned, both words held in one slot so the button keeps its width. The pins here are live: they land in the case of the collection shown."
+                  description="Pins a record to the collection's notebook, or takes it out. `icon` sits in a Library card's footer and beside a relationship row's entity pill: hidden until the card or row is hovered or focused, always shown once pinned, and always shown on a phone. `label` is the entity header's Pin / Pinned, both words held in one slot so the button keeps its width. The pins here are live: they land in the notebook of the collection shown."
                   code={`<PinToggle entityId={id} title={title} reveal />
 <PinToggle entityId={id} title={title} variant="label" />`}
                 >
@@ -1670,15 +1670,15 @@ sendFill(selection.text);                                    // commits, then di
                 </CatalogEntry>
               </div>
 
-              <div id="sh-case-panel" ref={reg("sh-case-panel")}>
+              <div id="sh-notebook-panel" ref={reg("sh-notebook-panel")}>
                 <CatalogEntry
-                  name="CasePanel · CaseBody"
-                  description="The case: a named set of pinned records and markdown notes per collection, kept in localStorage. Pinned lists each record with its template, status and how many passages it is quoted in; Citations is the list the exports carry (title, address, publisher, date, status, quote, page anchor). Footer: Copy citations as text, Markdown download, CSV of the pinned records. A slide-over from the navbar's Case button on desktop, a sheet on phones. Live: it shows the case of the collection shown."
-                  code={`<CaseButton rtl={rtl} compact={isMobile} />   // navbar; mounts CasePanel
-<CaseBody onClose={close} />`}
+                  name="NotebookPanel · NotebookBody"
+                  description="The notebook: a named set of pinned records and markdown notes per collection, kept in localStorage. Pinned lists each record with its template, status and how many passages it is quoted in; Citations is the list the exports carry (title, address, publisher, date, status, quote, page anchor). Footer: Copy citations as text, Markdown download, CSV of the pinned records. A slide-over from the navbar's Notebook button on desktop, a sheet on phones. Live: it shows the notebook of the collection shown."
+                  code={`<NotebookButton rtl={rtl} compact={isMobile} />   // navbar; mounts NotebookPanel
+<NotebookBody onClose={close} />`}
                 >
                   <div data-gutter-host className="gutter-host-main flex flex-col h-[32rem] w-[26rem] max-w-full rounded-md border border-border bg-paper overflow-hidden">
-                    <CaseBody />
+                    <NotebookBody />
                   </div>
                 </CatalogEntry>
               </div>

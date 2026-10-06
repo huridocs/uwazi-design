@@ -8,7 +8,7 @@ import { settingsSectionAtom } from "../../atoms/settings";
 import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
 import { clearSavedViewsAndHistoryAtom } from "../../atoms/savedViews";
-import { clearAllCasesAtom } from "../../atoms/caseFile";
+import { clearAllNotebooksAtom } from "../../atoms/notebook";
 import {
   FAIL_SCOPES,
   emptyDomainAtom,
@@ -45,7 +45,7 @@ export function DevPanel() {
   const setAppView = useSetAtom(appViewAtom);
   const setSection = useSetAtom(settingsSectionAtom);
   const clearViews = useSetAtom(clearSavedViewsAndHistoryAtom);
-  const clearCases = useSetAtom(clearAllCasesAtom);
+  const clearNotebooks = useSetAtom(clearAllNotebooksAtom);
   const [researchCleared, setResearchCleared] = useState(false);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
@@ -149,21 +149,21 @@ export function DevPanel() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-ink">Saved views, cases and search history</h3>
+        <h3 className="text-sm font-semibold text-ink">Saved views, notebooks and search history</h3>
         <p className="text-xs text-ink-tertiary text-pretty">
-          Kept in this browser for every collection: saved views and cases in local storage, the search history for the session.
+          Kept in this browser for every collection: saved views and notebooks in local storage, the search history for the session.
         </p>
         <div>
           <button
             type="button"
             onClick={() => {
               clearViews();
-              clearCases();
+              clearNotebooks();
               setResearchCleared(true);
             }}
             className="h-8 px-3 text-xs font-medium rounded-md bg-warm text-ink hover:bg-parchment cursor-pointer"
           >
-            Clear saved views, cases and history
+            Clear saved views, notebooks and history
           </button>
         </div>
         <p role="status" className="min-h-4 text-meta text-ink-secondary">

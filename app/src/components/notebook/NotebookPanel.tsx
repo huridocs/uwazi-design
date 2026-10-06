@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { BookMarked, Check, ExternalLink, Pin, Trash2, X } from "lucide-react";
 import {
-  caseAtom,
-  caseOpenAtom,
-  clearCaseAtom,
-  renameCaseAtom,
-  setCaseNotesAtom,
+  notebookAtom,
+  notebookOpenAtom,
+  clearNotebookAtom,
+  renameNotebookAtom,
+  setNotebookNotesAtom,
   unpinAtom,
-  UNNAMED_CASE,
-} from "../../atoms/caseFile";
+  UNNAMED_NOTEBOOK,
+} from "../../atoms/notebook";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import { collectionSettings } from "../../atoms/settingsSingletons";
 import { referencesAtom, referencesFor } from "../../atoms/references";
@@ -17,13 +17,13 @@ import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import type { Stance } from "../../data/nepal/claimEvidence";
 import {
-  buildCaseEntries,
-  caseCsv,
+  buildNotebookEntries,
+  notebookCsv,
   citationsMarkdown,
   citationsText,
   stanceText,
-  type CaseEntry,
-} from "../../utils/caseCitations";
+  type NotebookEntry,
+} from "../../utils/notebookCitations";
 import { downloadCsv } from "../../utils/exportCsv";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
@@ -38,11 +38,11 @@ import { Markdown } from "../../views/catalog/Markdown";
 
 type Tab = "pinned" | "notes" | "citations";
 
-/** The case: the records pinned in this collection, free notes, and the
+/** The notebook: the records pinned in this collection, free notes, and the
  *  citation list they make. A slide-over from the navbar, over any view, so a
  *  record can be pinned in the entity view and read in the Library. */
-export function CasePanel({ rtl = false }: { rtl?: boolean }) {
-  const [open, setOpen] = useAtom(caseOpenAtom);
+export function NotebookPanel({ rtl = false }: { rtl?: boolean }) {
+  const [open, setOpen] = useAtom(notebookOpenAtom);
   const trapRef = useFocusTrap<HTMLElement>(open);
   useEffect(() => {
     trapRef.current?.toggleAttribute("inert", !open);
@@ -58,10 +58,10 @@ export function CasePanel({ rtl = false }: { rtl?: boolean }) {
   if (phone)
     // Phones: a sheet on the shared stack, as every nested view is there.
     return (
-      <MobileBottomSheet open={open} onClose={() => setOpen(false)} bare ariaLabel="Case" defaultSnap="full">
+      <MobileBottomSheet open={open} onClose={() => setOpen(false)} bare ariaLabel="Notebook" defaultSnap="full">
         {(chrome) => (
-          <div data-component="CasePanel" data-gutter-host className="gutter-host-main flex flex-col h-full min-h-0 bg-paper">
-            {open && <CaseBody onClose={chrome.close} />}
+          <div data-component="NotebookPanel" data-gutter-host className="gutter-host-main flex flex-col h-full min-h-0 bg-paper">
+            {open && <NotebookBody onClose={chrome.close} />}
           </div>
         )}
       </MobileBottomSheet>
@@ -74,7 +74,7 @@ export function CasePanel({ rtl = false }: { rtl?: boolean }) {
     <>
       <div
         onClick={() => setOpen(false)}
-        data-component="CasePanel"
+        data-component="NotebookPanel"
         data-part="scrim"
         className={`fixed inset-0 z-[60] bg-ink/20 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         aria-hidden
@@ -84,8 +84,8 @@ export function CasePanel({ rtl = false }: { rtl?: boolean }) {
         dir={rtl ? "rtl" : "ltr"}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="case-panel-title"
-        data-component="CasePanel"
+        aria-labelledby="notebook-panel-title"
+        data-component="NotebookPanel"
         data-part="panel"
         data-state={open ? "open" : "closed"}
         data-gutter-host
@@ -95,7 +95,7 @@ export function CasePanel({ rtl = false }: { rtl?: boolean }) {
       >
         {/* Mounted only while open: the entries read every pinned record's
             references, which a closed panel has no reason to do. */}
-        {open && <CaseBody onClose={() => setOpen(false)} />}
+        {open && <NotebookBody onClose={() => setOpen(false)} />}
       </aside>
     </>
   );
@@ -103,15 +103,15 @@ export function CasePanel({ rtl = false }: { rtl?: boolean }) {
 
 /** The panel's contents, apart from its chrome, so the catalog can show them
  *  in a frame. */
-export function CaseBody({ onClose }: { onClose?: () => void }) {
-  const file = useAtomValue(caseAtom);
+export function NotebookBody({ onClose }: { onClose?: () => void }) {
+  const file = useAtomValue(notebookAtom);
   const corpus = useAtomValue(dataSourceAtom);
   const collection = useAtomValue(collectionSettings.valueOfAtom(corpus)).name;
   const refs = useAtomValue(referencesAtom);
-  const rename = useSetAtom(renameCaseAtom);
-  const setNotes = useSetAtom(setCaseNotesAtom);
+  const rename = useSetAtom(renameNotebookAtom);
+  const setNotes = useSetAtom(setNotebookNotesAtom);
   const unpin = useSetAtom(unpinAtom);
-  const clear = useSetAtom(clearCaseAtom);
+  const clear = useSetAtom(clearNotebookAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const [tab, setTab] = useState<Tab>("pinned");
   const [notesMode, setNotesMode] = useState<"write" | "preview">("write");
@@ -120,10 +120,10 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
   const [status, setStatus] = useState("");
 
   const ids = useMemo(() => file.pins.map((p) => p.id), [file.pins]);
-  const entries = useMemo(() => buildCaseEntries(ids, (id) => referencesFor(id, refs)), [ids, refs]);
+  const entries = useMemo(() => buildNotebookEntries(ids, (id) => referencesFor(id, refs)), [ids, refs]);
   const citationCount = entries.reduce((n, e) => n + e.citations.length, 0);
-  const name = file.name.trim() || UNNAMED_CASE;
-  const slug = (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "case").slice(0, 40);
+  const name = file.name.trim() || UNNAMED_NOTEBOOK;
+  const slug = `notebook-${collection.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "collection"}`;
   const day = new Date().toISOString().slice(0, 10);
   const empty = ids.length === 0;
 
@@ -140,7 +140,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
   const pinnedAt = (id: string) => file.pins.find((p) => p.id === id)?.at;
 
   const exportCsv = () => {
-    downloadCsv(caseCsv(entries, pinnedAt), `${slug}-${day}.csv`);
+    downloadCsv(notebookCsv(entries, pinnedAt), `${slug}-${day}.csv`);
     setStatus(`${entries.length} ${entries.length === 1 ? "record" : "records"} exported as CSV.`);
   };
   const exportMarkdown = () => {
@@ -162,8 +162,8 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
     <>
       <header data-part="header" className="shrink-0 bleed border-b border-border">
         <div className="flex items-center gap-2 h-14">
-          <h2 id="case-panel-title" data-part="title" className="text-sm font-semibold text-ink">
-            Case
+          <h2 id="notebook-panel-title" data-part="title" className="text-sm font-semibold text-ink">
+            Notebook
           </h2>
           <span className="text-xs text-ink-tertiary truncate">{collection}</span>
           <div className="ms-auto flex items-center gap-0.5">
@@ -172,7 +172,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
                 type="button"
                 onClick={onClose}
                 data-part="close"
-                aria-label="Close case"
+                aria-label="Close notebook"
                 data-gutter-align="box"
                 className="flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
               >
@@ -185,8 +185,8 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
           type="text"
           value={file.name}
           onChange={(e) => rename(e.target.value)}
-          placeholder={UNNAMED_CASE}
-          aria-label="Case name"
+          placeholder={UNNAMED_NOTEBOOK}
+          aria-label="Notebook name"
           data-part="name"
           data-gutter-align="text"
           className="w-full h-8 -mt-1 mb-2 bg-transparent text-sm font-medium text-ink placeholder:text-ink-tertiary rounded-md
@@ -196,7 +196,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
           <SegmentedControl
             fill
             size="sm"
-            ariaLabel="Case section"
+            ariaLabel="Notebook section"
             value={tab}
             onChange={(id) => setTab(id as Tab)}
             options={[
@@ -211,7 +211,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
       {/* A `bleed` scroll lane, as in the notifications drawer: warm ground
           and scrollbar at the panel edge, content on the gutter. */}
       <div data-part="body" data-tab={tab} className="flex-1 min-h-0 overflow-y-auto bleed bg-warm">
-          {tab === "pinned" && (empty ? <CaseEmpty /> : (
+          {tab === "pinned" && (empty ? <NotebookEmpty /> : (
               <ul data-part="pins" className="flex flex-col gap-2 py-3">
                 {entries.map((e) => (
                   <PinnedRow
@@ -238,7 +238,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
                 data-gutter-align="text"
               >
                 <Trash2 size={12} aria-hidden />
-                Clear case
+                Clear notebook
               </button>
             </div>
           )}
@@ -262,7 +262,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
                 <textarea
                   value={file.notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  aria-label="Case notes"
+                  aria-label="Notebook notes"
                   placeholder={"What the records show, what is still open.\n\n**Bold**, _italic_, - lists and [links](https://…) work."}
                   className={`${MODAL_TEXTAREA} min-h-[18rem] flex-1 font-mono text-xs leading-relaxed`}
                 />
@@ -280,7 +280,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
 
           {tab === "citations" &&
             (empty ? (
-              <CaseEmpty />
+              <NotebookEmpty />
             ) : (
               <ol data-part="citations" className="flex flex-col gap-3 py-3">
                 {entries.map((e, i) => (
@@ -335,7 +335,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
         open={confirmClear}
         title={`Clear “${name}”?`}
         message={`Unpins ${ids.length} ${ids.length === 1 ? "record" : "records"} and deletes the notes. The records stay in the collection.`}
-        confirmLabel="Clear case"
+        confirmLabel="Clear notebook"
         variant="danger"
         onConfirm={() => {
           clear();
@@ -347,7 +347,7 @@ export function CaseBody({ onClose }: { onClose?: () => void }) {
   );
 }
 
-function CaseEmpty() {
+function NotebookEmpty() {
   return (
     <div data-part="empty" className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
       <Pin size={24} className="text-ink-muted" strokeWidth={1.5} aria-hidden />
@@ -365,7 +365,7 @@ const STATUS_TONE: Record<string, string> = {
   misattributed: "bg-seal-tint text-seal-label",
 };
 
-export function CaseStatus({ entry }: { entry: Pick<CaseEntry, "status" | "statusKey"> }) {
+export function NotebookStatus({ entry }: { entry: Pick<NotebookEntry, "status" | "statusKey"> }) {
   if (!entry.status) return null;
   return (
     <span
@@ -380,7 +380,7 @@ export function CaseStatus({ entry }: { entry: Pick<CaseEntry, "status" | "statu
   );
 }
 
-function PinnedRow({ entry, onOpen, onUnpin }: { entry: CaseEntry; onOpen: () => void; onUnpin: () => void }) {
+function PinnedRow({ entry, onOpen, onUnpin }: { entry: NotebookEntry; onOpen: () => void; onUnpin: () => void }) {
   const e = getEntity(entry.id);
   const n = entry.citations.length;
   return (
@@ -408,7 +408,7 @@ function PinnedRow({ entry, onOpen, onUnpin }: { entry: CaseEntry; onOpen: () =>
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
         {e ? <EntityTypeTag typeId={e.typeId} /> : <span className="text-meta text-ink-tertiary">No longer in the collection</span>}
-        <CaseStatus entry={entry} />
+        <NotebookStatus entry={entry} />
         {entry.source.date && <span className="text-meta text-ink-tertiary tabular-nums">{entry.source.date}</span>}
         <span className="ms-auto text-meta text-ink-tertiary tabular-nums">
           {n === 0 ? "No quotes" : `${n} ${n === 1 ? "quote" : "quotes"}`}
@@ -426,7 +426,7 @@ const STANCE_TONE: Record<Stance, string> = {
   reports_on: "text-ink-secondary",
 };
 
-function CitationEntry({ n, entry }: { n: number; entry: CaseEntry }) {
+function CitationEntry({ n, entry }: { n: number; entry: NotebookEntry }) {
   const head = [entry.template, entry.source.publisher, entry.source.date].filter(Boolean).join(" · ");
   return (
     <li data-part="citation-entry" className="rounded-lg border border-border-soft bg-paper px-3 py-2.5">
@@ -436,7 +436,7 @@ function CitationEntry({ n, entry }: { n: number; entry: CaseEntry }) {
       </p>
       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-ink-tertiary">
         {head && <span>{head}</span>}
-        <CaseStatus entry={entry} />
+        <NotebookStatus entry={entry} />
       </div>
       {entry.source.url && <SourceLink url={entry.source.url} />}
       {entry.citations.length > 0 && (

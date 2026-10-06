@@ -68,6 +68,12 @@ const translationSettings = createSettingsSingleton<{ values: Stored }>({
   },
 });
 
+/** System keys the prototype adds for features Uwazi does not have yet, with
+ *  the texts they start with. */
+const PROTOTYPE_UI_KEYS: ContextKey[] = [
+  { id: "Notebook", text: "Notebook", defaults: { es: "Cuaderno", fr: "Carnet", ar: "دفتر", pt: "Caderno" } },
+];
+
 const LANG: Record<string, Language> = { en: "EN", es: "ES", fr: "FR", ar: "AR" };
 const byText = (a: ContextKey, b: ContextKey) => a.text.localeCompare(b.text, undefined, { sensitivity: "base" });
 
@@ -83,7 +89,10 @@ export const translationContextsAtom = atomFamily((corpus: Corpus) =>
       // Uwazi's own System keys and its shipped translations (SD-7).
       // Korean's column is Uwazi's predefined translation: installing Korean
       // brings it (SD-8); a language Uwazi ships none for starts untranslated.
-      keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar, ko: k.ko } })),
+      keys: [
+        ...UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar, ko: k.ko } })),
+        ...PROTOTYPE_UI_KEYS,
+      ],
     });
     // The Menu's links and sub-links, as Settings › Menu saved them.
     const menuKeys = get(menuSettings.valueOfAtom(corpus))

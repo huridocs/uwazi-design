@@ -41,7 +41,7 @@ import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
-import { CaseButton } from "../case/CaseButton";
+import { NotebookButton } from "../notebook/NotebookButton";
 import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
@@ -420,7 +420,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       {/* Right: Notifications + Assistant + Settings + Theme toggle */}
       <div data-part="end" className="flex items-center gap-2">
         {!showingCatalog && <Beacon rtl={rtl} />}
-        {!showingCatalog && <CaseButton rtl={rtl} compact={isMobile} />}
+        {!showingCatalog && <NotebookButton rtl={rtl} compact={isMobile} />}
         {!showingCatalog && (
           <button
             type="button"

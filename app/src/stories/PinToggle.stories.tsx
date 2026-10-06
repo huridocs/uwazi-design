@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStore, Provider } from "jotai";
 import { PinToggle } from "../components/shared/PinToggle";
-import { togglePinAtom } from "../atoms/caseFile";
+import { togglePinAtom } from "../atoms/notebook";
 
-/** Pin a record to the collection's case. `icon` (card footer, relationship
- *  pill) and `label` (entity header). Each story starts from an empty case. */
+/** Pin a record to the collection's notebook. `icon` (card footer, relationship
+ *  pill) and `label` (entity header). Each story starts from an empty notebook. */
 function withCase(pinned: string[]) {
   return (Story: () => React.ReactNode) => {
     try {
-      localStorage.removeItem("uwazi:cases");
+      localStorage.removeItem("uwazi:notebooks");
     } catch {
       /* storage blocked */
     }

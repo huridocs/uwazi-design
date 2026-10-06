@@ -45,6 +45,7 @@ const STRINGS: Record<string, { es: string; fr: string }> = {
   Tools: { es: "Herramientas", fr: "Outils" },
   Settings: { es: "Configuración", fr: "Paramètres" },
   "Ask Bert": { es: "Pregunta a Bert", fr: "Demander à Bert" },
+  Notebook: { es: "Cuaderno", fr: "Carnet" },
   Theme: { es: "Tema", fr: "Thème" },
   Light: { es: "Claro", fr: "Clair" },
   Dark: { es: "Oscuro", fr: "Sombre" },

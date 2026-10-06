@@ -512,7 +512,7 @@ export const clearSearchHistoryAtom = atom(null, (get, set) => {
 
 /* ── Clearing ─────────────────────────────────────────────────────────────
    The Dev panel's switch and Reset demo data clear saved views and search
-   history in every collection (the case clears through `caseFile.ts`). */
+   history in every collection (the notebook clears through `notebook.ts`). */
 export const clearSavedViewsAndHistoryAtom = atom(null, (_get, set) => {
   set(savedViewsStoreAtom, {});
   set(historyStoreAtom, []);
