@@ -65,7 +65,7 @@ every swap is also a hue shift toward the warm palette).
 | Primary | `--text-primary` | `text-ink` | `#1A1A1A` | `#F5F0E8` | `gray-900` |
 | Secondary | `--text-secondary` | `text-ink-secondary` | `#333333` | `#D4CDB8` | `gray-700` |
 | Tertiary (labels) | `--text-tertiary` | `text-ink-tertiary` | `#555555` | `#ADA79E` | `gray-600` |
-| Muted (hints, icons) | `--text-muted` | `text-ink-muted` | `#777777` | `#8A857C` | `gray-500` / `gray-400` |
+| Muted (placeholders, disabled, icons; never text) | `--text-muted` | `text-ink-muted` | `#777777` | `#8A857C` | `gray-500` / `gray-400` |
 
 ### Borders
 

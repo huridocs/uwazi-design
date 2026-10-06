@@ -37,7 +37,6 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   ├── components/
 │   │   │   ├── layout/            # Navbar, Beacon + NotificationsDrawer, SplitView, AdaptiveSplitView,
 │   │   │   │                      # MainTabs, DrawerTabs, SegmentedTabs, Breadcrumb, DocMeta,
-│   │   │   │                      # ToolsActionBar,
 │   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer
 │   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap, HoverExpand
 │   │   │   ├── relationships/     # The merged Relationships surface: ReferencePanel, RelationshipsPanelBody,
@@ -53,8 +52,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # DrawerFilesBody, AddFileModal, AddFileDropArea
 │   │   │   ├── metadata/          # MetadataCard, MetadataRecord, ConnectionGroupCard,
 │   │   │   │                      # RelationshipFieldCard/Editor, InheritedValueChip (includes ProvenanceTrail)
-│   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
-│   │   │   │                      # EntitiesTable, IssuesTable, ImportEmptyState, NewImportModal
+│   │   │   ├── import-csv/        # ImportCSVLayout, ImportList, ImportStatusPage, NewImportModal
 │   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersDrawer,
 │   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, SelectControls, FadeTruncate);
 │   │   │   │                      # elements (EntityPill, PageTag, CountBadge, ViewButton); feedback (ConfirmDialog,
@@ -67,8 +65,9 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # ResultsSnippets/ (ResultsBody, ResultsMainView, EntityResultCard)
 │   │   │   ├── share/             # ShareEntityModal
 │   │   │   ├── search/            # Document search: DocumentSearchBody, PageSpine
-│   │   │   ├── settings/          # Settings clone: SettingsContent/Nav/Table/Button/Field/RowActions,
-│   │   │   │                      # StatusPill, pages/ (18 pages incl. TemplateEditor, ThesaurusEditor)
+│   │   │   ├── settings/          # Settings: shells (SettingsListPage, SettingsEditor, SettingsContent),
+│   │   │   │                      # SettingsNav/Table/Button/Field/Section, RowActions, StatusPill,
+│   │   │   │                      # pages/ (incl. TemplateEditor, ThesaurusEditor, extraction/, paragraphs/)
 │   │   │   ├── agent/             # "Bert" assistant: AgentModal (includes BertMark)
 │   │   ├── data/                  # Mock data (entities, document, references, files, metadata, toc, imports,
 │   │   │                          # suggestions, settings) + cejil/ (the full published corpus, lazy JSON)

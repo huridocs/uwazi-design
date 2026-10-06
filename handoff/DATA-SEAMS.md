@@ -9,7 +9,8 @@ as spec, and what is demo scaffolding you should NOT reproduce.
 Companion files: [`TOKENS-MAPPING.md`](./TOKENS-MAPPING.md) (styles),
 `PATTERNS.md` (a11y/motion). Prototype sources of truth:
 `app/src/data/references.ts`, `app/src/utils/relationships.ts`,
-`app/src/data/metadata.ts`, `app/src/utils/{inheritance,chainTraversal}.ts`.
+`app/src/data/metadata.ts`, `app/src/utils/{inheritance,chainTraversal}.ts`,
+`app/src/data/templates/types.ts`, `app/src/utils/templateProjection.ts`.
 
 ## 1. The stored record and the two derived shapes
 
@@ -267,7 +268,85 @@ paint the matched term in the PDF. The viewer renders react-pdf's text layer, so
 using the same `highlightTerms` tokens the snippet rows used, so page marks and
 row marks can't disagree.
 
-## 9. Porting checklist
+## 9. Templates are the schema
+
+A template (`TemplateDef`, `app/src/data/templates/types.ts`) uses Uwazi's own
+property types and flags. It is the one source for what an entity's form,
+record, Library card, list columns, facets and sort offer. One store per
+collection (`app/src/atoms/templates.ts`) holds the seed plus the session's
+edits from Settings › Templates; code outside React reads the same value
+through `data/templates/mirror.ts`.
+
+```ts
+interface PropertyDef {
+  id: string;        // Uwazi's _id, or `${templateId}:${name}` where the data has none
+  name: string;      // the key values are stored under; stable on rename (below)
+  label: string;     // English; other languages are Translations' job
+  type: PropertyType;            // Uwazi's 16 types (+ CEJIL's nested)
+  required?, noLabel?, showInCard?, filter?, defaultfilter?, prioritySorting?,
+  fullWidth?, style?, generatedId?;
+  content?: string;              // select: thesaurus id; relationship: target template id
+  relationType?: string;         // relationship: registry id
+  inherit?: { property: string; type: PropertyType };  // by property id, as Uwazi
+  x?: { inheritPath?, inheritLeaf?, reduce?, connectionKey?, entityLabel? };  // ⚠ prototype-only
+  origin?: "uwazi" | "prototype";                                             // ⚠ prototype-only
+}
+```
+
+How each surface reads it (`utils/templateProjection.ts` and the readers named):
+
+| Surface | Reads | Rule |
+|---|---|---|
+| Edit form, Create entity, Change template, bulk edit | `blankFieldsFor`, `recordFieldsFor` | one field per property, in template order; editors switch on `propertyType` |
+| Record | the profile's fields + `noLabel`, `fullWidth`, `style` | a connection with nothing connected is not drawn |
+| Library card | `entityCardFields` | `showInCard` properties in template order; never image, preview or markdown |
+| List columns | `propertyColumns` | one per property `name`; same name and compatible type across templates share a column |
+| Facets | `libraryInheritedDefs` | Uwazi's rule: no Type selected → `defaultfilter` properties only; Types selected → what every selected template filters on |
+| Sort | `prioritySorting` | the property most templates in view share; dates newest first |
+
+Decisions that ARE spec:
+
+- **Values are read through the template as it is now.** A record saved
+  earlier is laid over the current template (`projectRecordFields`): the
+  template gives fields, order and labels; the record gives values by `name`.
+  A template edit reaches every entity at once.
+- **Delete a template:** refused for the default one and for one in use (and
+  while the collection's records are still loading, when "in use" is not
+  known). Otherwise other templates lose their relationship properties that
+  target it, unless something inherits one (refused, as a direct removal is).
+- **Delete a property:** refused when another template inherits it, or a
+  chain field ends on it. Save first states what is lost.
+- **Same label across templates:** the type must match exactly (Uwazi's
+  client rule), and the thesaurus, relationship type, target and inherit too.
+
+Divergences from Uwazi (⚠ decide before porting):
+
+| Prototype | Uwazi | Why |
+|---|---|---|
+| A rename changes the label only; `name` is kept | `name` is re-derived from the label and a job migrates every entity's values | the seeds are static; every key-based reader (records, columns, facets, translations) keeps working |
+| Removing a property keeps its values in the records; re-adding the same label of the **same** type reads them again, of another type gets a new name (`status_2`) | the values are deleted by a job | soft removal makes Undo possible; the suffix stops old values being read through a new type |
+| A property without an `_id` gets `${templateId}:${name}` | every property has an `_id` | CEJIL's dump dropped them; inheritance needs a stable id |
+
+Value units (the record's `MetadataField`, not Uwazi's stored value):
+
+| Type | Prototype field | Uwazi stores |
+|---|---|---|
+| date | `value` dd/mm/yyyy | epoch seconds |
+| multidate | `dates[]` dd/mm/yyyy, `displayValues` | epoch seconds[] |
+| daterange / multidaterange | `ranges[{from,to}]` dd/mm/yyyy | `{from,to}` epoch seconds |
+| select / multiselect | `value`/`values` labels + `valueIds` | the thesaurus value id; label denormalized |
+| link | `link {label, url}` | `{label, url}` |
+| geolocation | `geo {lat, lon, label?}` | `{lat, lon, label}` |
+| image | the file's id | the file's URL |
+| generatedid | `value` string, drawn once per new entity | string |
+
+Prototype-only, don't port as spec: the `x.*` fields and `origin` above; the
+legacy `MetadataField.type` editor union (`text | multiline | date | …`),
+which sits beside `propertyType` until the editors switch on the template
+type alone; and `keyAliases` on CEJIL connection fields, which group
+properties of one relation type so a judge is not listed twice.
+
+## 10. Porting checklist
 
 1. Map `Reference` → v2 `Relationship` rows (`direction` flag → from/to
    position; selections carry over per-endpoint).
@@ -281,3 +360,6 @@ row marks can't disagree.
 5. Replace `connectedEntityIds` with a relationships query (§6 warning).
 6. Counter parity check: header count must equal tree-leaf count in every
    filter state — it's the regression test for the whole seam.
+7. Templates: read the form, record, cards, columns, facets and sort from the
+   template (§9). Decide the two divergences in §9's table first: rename
+   (keep `name` or migrate values) and soft removal.

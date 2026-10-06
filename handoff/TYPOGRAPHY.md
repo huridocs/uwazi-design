@@ -50,9 +50,9 @@ don't ship more:
 | Weight | Tailwind utility | Uses |
 |---|---|---|
 | 400 | (default) / `font-normal` | body default |
-| 500 | `font-medium` | 361 |
-| 600 | `font-semibold` | 214 |
-| 700 | `font-bold` | 39 |
+| 500 | `font-medium` | 443 |
+| 600 | `font-semibold` | 186 |
+| 700 | `font-bold` | 36 (chart labels, document content, inline emphasis, the dev catalog) |
 
 JetBrains Mono: 400 only. Use `font-display: swap` on all faces.
 
@@ -91,111 +91,118 @@ Two supporting rules:
 Dark mode changes no typography — only colors move (via the semantic tokens)
 plus `:root.dark { color-scheme: dark; }` for native controls.
 
-## 3. The type scale as used
+## 3. Type roles
 
-No custom font-size tokens — the scale is Tailwind's, and the identity comes
-from its center of gravity sitting LOW: `text-xs` (12px) is the workhorse UI
-size, `text-sm` (14px) is "large" (content), and anything bigger is rare.
+The scale is Tailwind's plus two tokens, declared in `index.css` `@theme`:
+`--text-meta` (11px) and `--text-tab` (13px). There are no bracket sizes in the
+app. The floor for UI text is 11px.
 
-| Size | Uses | Role |
+| Size | Utility | Uses | Used for |
+|---|---|---|---|
+| 11px | `text-meta` | 390 | caps labels, badges, chips, row meta, validation lines, tooltips |
+| 12px | `text-xs` | 533 | buttons, field labels, help text, secondary cells, menu items, search inputs |
+| 13px | `text-tab` | 40 | tab strips, nav buttons, facet headings |
+| 14px | `text-sm` | 295 | titles, inputs, primary cells, field values, prose, empty titles |
+| 20px | `text-xl` | 5 | stat figures |
+| 24px | `text-2xl` | 4 | the published title on phones |
+| 30px | `text-3xl` | 1 | the published title (one place, see the role table) |
+
+`text-base` and `text-lg` are not UI sizes. Document content
+(`DocumentRendition`) and the dev catalog keep them.
+
+On `main` the recipes below were applied to Settings and to the files ported
+with it. Surfaces outside Settings that the pass has not reached still carry
+older sizes: `text-base` or `text-lg` titles in `AddFileModal`,
+`CreateRelationshipModal`, `NotificationsDrawer`, `AgentModal`, `MetadataView`
+and `metadata/items.tsx`, and `tracking-wide` on a few Library labels. Treat
+those as not yet migrated, not as recipes.
+
+Each role below has one recipe. Copy the recipe; do not compose a new one for a
+role that is already listed. A role that is not listed is a question for the
+designer, not a new recipe.
+
+### Role table
+
+| Role | Recipe | Where |
 |---|---|---|
-| `text-xs` (12px) | 383 | default UI: buttons, chips, meta, table cells |
-| `text-sm` (14px) | 229 | content: passages, field values, card titles |
-| `text-[10px]` | 180 | section labels (see combo below) |
-| `text-[11px]` | 157 | table headers, small meta |
-| `text-[13px]` | 29 | tabs |
-| `text-base` and up | ~45 total | view titles only — big type is scarce on purpose |
-| `text-[9px]` / `text-[8px]` | 14 | chart and track labels only — see below |
+| Published title (the one display size) | `text-2xl md:text-3xl font-semibold leading-tight text-ink text-balance` | `PublishedEntityView` masthead only. A published page is read like a document, not worked in; nothing else in the app takes this size |
+| Title (page bar, dialog, drawer, sheet) | `text-sm font-semibold text-ink`, truncating | `SettingsContent` header, `Modal`, `MobileBottomSheet`, `NotificationsDrawer`, `AgentModal` |
+| Section heading | `text-sm font-semibold text-ink` | `SettingsSection`, card and panel sections |
+| Sub-heading (inside a card or popover) | `text-xs font-semibold text-ink` | property panel, file drawer groups |
+| Facet heading | `text-tab font-semibold text-ink` | `LibraryFilters`, `FacetSection` |
+| Caps label (section label, table header, stat label, caps field label) | `text-meta font-semibold uppercase tracking-wider text-ink-tertiary` | `SectionLabel`, `DataTable`, `SettingsTable`, `SettingsStat`, `StatsCard` |
+| Field label (form) | `text-xs font-medium text-ink-secondary`; error swaps to `text-seal-label` | `SettingsField`, `ModalField`, `MODAL_LABEL` |
+| Display label (read-only record) | `text-xs text-ink-tertiary` | `MetadataCard` |
+| Field value | `text-sm font-medium text-ink` | `MetadataCard`, metadata items |
+| Input | `text-sm text-ink`, normal weight; `h-9` | `SettingsField`, `MODAL_INPUT`, `MODAL_TEXTAREA`, entity edit form |
+| Search input (toolbar, facet, dropdown, modal search row) | `text-xs text-ink` | `SearchBar`, `ModalSearchField`, `FacetSection` |
+| Help / caption / intro / section description | `text-xs text-ink-tertiary` | `SettingsIntro`, `SettingsField` description, `ModalField` hint |
+| Validation / swapped hint line | `text-meta leading-4` | `FieldMessage` |
+| Table primary cell | `text-sm font-medium text-ink` | first column of every table |
+| Table secondary / count cell | `text-xs text-ink-tertiary tabular-nums` | dates, sizes, counts, template names |
+| Row meta (line under a row title) | `text-meta text-ink-tertiary` | `ListInfoRow`, `EntityCard`, `FileTable`, notification cards |
+| Status badge (non-interactive, tinted fill) | `text-meta font-semibold`, `rounded-md`, `w-fit` | `StatusBadge`, `StatusPill`, extraction state pills |
+| Chip (toggle, filter, removable, neutral tag) | `text-meta font-medium` | `ToggleChip`, `ActiveFilterChip`, template and language tags |
+| Count badge | `text-xs font-medium tabular-nums` | `CountBadge` |
+| Filter count dot | `text-meta font-semibold`, 16px circle | `FiltersButton` |
+| Stat figure | `text-xl font-semibold text-ink tabular-nums`; label is the caps label | `StatsCard`, `SettingsStat`, Import CSV status |
+| Inline toolbar count | `text-sm font-semibold text-ink tabular-nums` beside an `xs` label | Import CSV and extraction toolbars |
+| Empty state title (block) | `text-sm font-medium text-ink-secondary` | `SettingsEmptyState`, panel empties |
+| Empty state hint | `text-xs text-ink-tertiary` | `SettingsEmptyState` |
+| One-line empty ("No matches.") | `text-xs text-ink-tertiary` | tables, menus, pickers |
+| Button | `text-xs font-medium` | every bar and modal button (`warmButton.ts` ladder) |
+| Touch button (phone sheet, mobile menu) | `text-sm font-medium` | `SheetDone`, `Navbar` mobile |
+| Nav button | `text-tab font-medium` | `Navbar`, `SettingsNav` |
+| Tab | `text-tab font-medium` (`TAB_BUTTON`) | `layout/tabStrip.ts`; never copied by hand |
+| Segmented control | `text-xs font-medium` | `SegmentedTabs`, `SegmentedControl` |
+| Link-style button | `text-xs text-ink-secondary underline` | inline actions in help lines |
+| Menu item | `text-xs text-ink-secondary`, hover `text-ink`; selected `font-semibold text-ink`; phone sheet `text-sm` | `Select`, `DocMeta`, `MobileActionMenu`, `AgentModal` scope menu |
+| Breadcrumb | `text-sm`; ancestors `text-ink-tertiary` hover `text-ink`; current is the title | `SettingsContent` header, `layout/Breadcrumb` |
+| Modal subtitle | `text-meta text-ink-tertiary`, inline after the title | `Modal` |
+| Confirm message | `text-sm text-ink`; supporting list `text-sm text-ink-secondary` | `ConfirmDialog`, `ConfirmDelete`, `TypedConfirmModal` |
+| Modal list row | `text-xs` | `ModalListRow` |
+| Tooltip | `text-meta`, `text-paper` on `bg-ink` | `Hint` |
+| Card title | `text-sm font-semibold text-ink leading-snug` | `EntityCard`, `EntityIdentity`, notification and task cards |
+| Prose / passage | `text-sm leading-relaxed text-ink` | snippets, rendition text, Bert replies |
 
-**Below 10px is a real tier, and it is charts.** Timeline tick labels, the
-spine's year marks, the reference minimap's track text, a file-extension tag on
-a postage-stamp-sized doc icon: 14 sites where 10px genuinely does not fit the
-box the label has to live in. Nothing else may use them — if a label has room to
-be 10px it has to be 10px, and a `text-[9px]` outside a chart is drift, not an
-exception. Named here because a reader following this file alone would otherwise
-meet these in the code and have no way to tell an intentional floor from a slip.
+### Weights
 
-`font-bold` is scarcer than the weights table suggests it is: about a third of
-its uses are `ComponentCatalog`'s own page headings (`text-lg font-bold`), which
-is a dev-tool tier that does not appear in the product and is not a recipe to
-copy.
+- UI text tops out at `font-semibold`. `font-bold` is for chart labels
+  (the minimap), document content and inline emphasis inside a sentence.
+- Steps run normal → medium → semibold. Adjacent text differs by weight and
+  colour far more often than by size.
 
-### Canonical combos (copy these, don't improvise)
+### Colour on text
 
-```
-section label   text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary
-table header    text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary
-tab             text-[13px] font-medium
-card title      text-sm font-semibold text-ink leading-snug
-form label      text-xs font-medium text-ink-secondary
-field value     text-sm font-medium text-ink leading-relaxed
-prose/passage   text-sm leading-relaxed text-ink
-button          text-xs font-medium
-badge / chip    text-[11px] font-medium          (count/entity pills: text-xs font-medium)
-dialog heading  text-base font-semibold text-ink
-published title text-2xl md:text-3xl font-semibold leading-tight text-ink text-balance
-                                                 (PublishedEntityView masthead only: the one display size)
-empty title     text-sm font-medium text-ink-secondary
-caption         text-xs text-ink-muted           (field messages: FieldMessage, text-[11px] leading-4)
-```
+- Steps: `text-ink` → `-secondary` → `-tertiary`. Text never uses
+  `text-ink-muted`.
+- `text-ink-muted` (`#777`, 3.95:1 on parchment; 4.23:1 on `#242424` in dark)
+  fails AA for text. It is kept for placeholders, disabled controls, icons and
+  decorative separators (`·`, `/`, `→`). `SectionLabel` and Storybook's a11y
+  check enforce this on their own surfaces.
+- Carbon is the data accent, not a link colour. Links and breadcrumbs use the
+  ink steps.
 
-The bottom five were added after an audit measured them: each was a real,
-near-unanimous convention in the app that this file simply never named, which is
-how each of them acquired one or two outliers nobody could argue with. They are
-descriptions, not new inventions — `button` was already `text-xs font-medium` on
-every `px-3 py-1.5` button in the product bar one, `dialog heading` was already
-`text-base font-semibold` across six modals bar two.
+### Exemptions
 
-Two of them deserve their reasoning written down:
-
-- **`empty title` is `-secondary`, not `-ink`.** An empty state announces an
-  absence, so a full-strength headline overstates it — but it is also usually the
-  only text on screen, so tertiary-with-no-weight fails to register as a heading
-  at all. The three sites had drifted to exactly those two extremes and the
-  middle; this is the middle.
-- **`badge / chip` splits by size on purpose.** The 11px family is the filter and
-  status chips; the 12px family is `CountBadge`, `EntityPill`, `EntityTypeChip` —
-  things that carry an entity's identity rather than a piece of UI state, and
-  that sit inline with 12px body text. Both are `font-medium`; the weight is what
-  holds them together.
-
-Three of those lines say something different from what earlier drafts of this
-file said, because the app was measured and the app won:
-
-- **`card title` was `font-bold … leading-tight`.** That recipe matched exactly
-  one component in the codebase. The most-rendered card title in the product —
-  the title on every card in the Library grid — is `font-semibold leading-snug`,
-  and so are the Relationships group headers and the entity-identity header that
-  arrived at it independently. `font-bold` at 14px also reads heavier than the
-  hierarchy this file describes two sections down, where weight steps run
-  between medium and semibold. Bold stays available for a true headline; it is
-  not what a card title is.
-- **`section header` is now `table header`**, and it kept its recipe. The
-  11px/`tracking-wider` string was never used for a free-standing section label
-  in this app — every occurrence was a table column header. Naming it after the
-  job it actually does is what stops the two from being confused again.
-  The free-floating group label ("Properties" over a card's field hits, "Tasks ·
-  3" over the notification drawer) is the 10px `section label` line above, and
-  it now has ONE implementation: `components/shared/SectionLabel.tsx`. Reach for
-  that rather than the class string — four hand-written components of that name
-  had already drifted apart on tracking and colour before it existed.
-- **`form label` is new**, and it is what `components/settings/Field.tsx` gives
-  every Settings page. It was worth writing down because the entity-edit form
-  had been using the card-title recipe for it — a 14px bold word naming an
-  input, two full steps above every other field label in the app.
+- `views/catalog/Markdown.tsx` inline code is `0.85em`: relative to the
+  paragraph, so it is not a step on the scale.
+- `LibraryMapView` pin count is `7 / zoom` px on an SVG pin and scales with the
+  map. It stays below the floor because the pin is that size.
+- `RelationshipsGraphView` `LABEL_PX = 11` is on the floor.
+- `utils/sitePageRender.ts` styles the published-site preview document, not
+  the app UI.
+- Relationships rows change size with the zoom setting (`AggregateRow`).
 
 ### Rules
 
-- **Letter-spacing exists ONLY on uppercase labels** (`tracking-wide` /
-  `tracking-wider`, 90 uses). Prose and mixed-case UI are never tracked —
-  1 stray `tracking-tight` in the whole app.
-- **Every number a user compares is `tabular-nums`** (112 uses): counts,
-  page tags (`p.15`), percentages, steppers, dates in lists. Inter's default
-  proportional figures make columns of numbers wobble; this is load-bearing.
-- **Weights do hierarchy, size mostly doesn't.** Adjacent text differs by
-  `font-medium` vs `font-semibold` vs color (`text-ink` → `-secondary` →
-  `-tertiary` → `-muted`) far more often than by size.
-- **Line-height**: `leading-relaxed` for anything that wraps (42 uses),
-  `leading-tight`/`snug`/`none` for one-liners. Nothing custom.
-- Layout in `rem`; the bracket sizes above (`10/11/13px`) are the sanctioned
-  exceptions because they're type, not layout.
+- **Letter-spacing exists only on uppercase labels**, and it is
+  `tracking-wider` (the one exception is above). Prose and mixed-case UI are
+  never tracked.
+- **Every number a user compares is `tabular-nums`**: counts, page tags
+  (`p.15`), percentages, steppers, dates in lists.
+- **Line-height**: `leading-relaxed` for anything that wraps,
+  `leading-tight`/`snug`/`none` for one-liners. `text-meta` and `text-tab` carry
+  no line-height of their own and inherit their parent's.
+- A value does not change size between where it is read and where it is
+  edited: field values and inputs are both `text-sm`, in pages and in modals.

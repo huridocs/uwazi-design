@@ -101,6 +101,61 @@ Known gaps, kept on purpose:
   by `data/documentRenditions.ts`. All four languages stay on the same judgment so references
   line up; FR/AR use the EN PDF. AR renders RTL.
 
+### Templates
+- A template (`TemplateDef`, `data/templates/types.ts`) uses Uwazi's property types and flags and
+  is the one source for an entity's form, record, Library card, list columns, facets and sort.
+  One store per collection (`atoms/templates.ts`) holds the seed plus edits from Settings ›
+  Templates; code outside React reads it through `data/templates/mirror.ts`.
+- Readers go through `utils/templateProjection.ts` (`blankFieldsFor`, `recordFieldsFor`,
+  `projectRecordFields`). A saved record is laid over the template as it is now: the template
+  gives fields, order and labels, the record gives values by `name`.
+- A rename changes the label and keeps `name`. A removed property keeps its values; re-adding the
+  same label with another type gets a suffixed name. Both differ from Uwazi on purpose. Spec and
+  divergences: `handoff/DATA-SEAMS.md` §9.
+
+### Settings stores
+- A settings domain's records live in a store built with `createSettingsCollection`
+  (`atoms/settingsCollection.ts`): seed plus a created/patched/deleted overlay, ids from
+  `newSettingsId`, overlay in sessionStorage. Settings and every other reader use the store,
+  never the seed. Thesauri (`atoms/thesauri.ts`) predate it.
+- Scope: what describes a collection's content (templates, thesauri, relationship types,
+  filters, menu, pages, translations, languages, imports, extractors) is per corpus. What
+  describes the people who sign in (users, groups, the account) is global.
+- Membership is by group id on the user; a group's member count is derived.
+- Every store registers with `registerSettingsReset`; Settings › Dashboard › "Reset demo data"
+  clears them all.
+- Every settings editor and form page edits through `useSettingsDraft`, which registers with
+  the dirty guard. Dirty compares with the last save; call `markSaved` on a page that stays
+  open.
+- Usage: `atoms/settingsUsage.ts` answers what a template, property, thesaurus, value,
+  relationship type, group, user or language is used by (pure logic in `utils/settingsUsage.ts`).
+  Deletes go through `components/shared/SettingsDeletes.tsx` on `ConfirmDelete`, which lists the
+  impact and, where Uwazi refuses, names the rule and offers only OK. A confirm message says only
+  what the code does.
+- A child row removed inside an open editor (property, value, filter group, sub-link) gets an Undo
+  in the Beacon (`useSettingsUndo`), not a dialog.
+- Every settings create, save and delete goes through `useSettingsNotify().record`: one Beacon
+  notification plus an Activity log entry (`atoms/activityLog.ts`). A save to a list that lives
+  only in a page's state passes `log: false`. Editor footers show `LastSavedLine`. Transient
+  feedback that changes no record stays on `useNotify`.
+- Collection, Global CSS & JS and Filters are per-corpus singletons (`createSettingsSingleton`,
+  `atoms/settingsSingletons.ts`). The window title, the Library's default view and its Template
+  facet read them.
+- Relationship types are one registry per collection (`atoms/relationTypes.ts`); the Sample's is
+  `relationTypesAtom`, shared by Settings, the Relationships panel and the template editor.
+  Settings never lists `no_label`.
+- Settings is gated by the signed-in role (`settingsAccessAtom`): collaborator sees Account only;
+  editor sees Account and the two extraction pages; admin sees everything. The navbar's Tools
+  menu and the Library footer filter through the same check. There is no login screen on `main`:
+  the default user is an admin, and the Dev panel switches role.
+- Every Settings page is one of three shells: `SettingsListPage` (intro, toolbar, table, lead
+  create action), `SettingsEditor` (list → detail, Cancel then the commit) or `SettingsFormPage`
+  (one form, Discard changes then Save). Bodies use `SettingsSection`, `SettingsFieldRow`,
+  `SettingsCheckList`, `SettingsStat`; empty lists use `SettingsEmptyState`. A form keeps fields
+  and prose at 40rem (`data-measure`); a `data-table` block is exempt. A table of per-corpus
+  records passes `corpusScoped`. Row actions show on hover and focus; a row that opens its editor
+  has no pencil.
+
 ## Layout and style
 
 ### Units, gutter and rhythm
@@ -153,6 +208,22 @@ repo; update them when tokens or style rules change.
 - Radii are overridden in `index.css` (`xs 2 … 4xl 16`). Entity dots are `rounded-[2px]`, track
   dots `rounded-full`, pills and badges `rounded-md`.
 
+### Type roles
+One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3. On `main` it covers Settings
+and the files ported with it; other surfaces have not had the pass yet.
+- Title (page bar, dialog, drawer, sheet) and section heading: `text-sm font-semibold text-ink`.
+- Caps label (section label, table header, stat label): `text-meta font-semibold uppercase
+  tracking-wider text-ink-tertiary`. Use `SectionLabel`.
+- Status badge `text-meta font-semibold`; chip `text-meta font-medium`.
+- Table primary cell `text-sm font-medium text-ink`; secondary or count cell
+  `text-xs text-ink-tertiary tabular-nums`.
+- Input `text-sm`, `h-9`, in pages and modals (`MODAL_INPUT`). Search fields stay `text-xs`.
+- Help and caption `text-xs text-ink-tertiary`. Empty message `text-sm font-medium
+  text-ink-secondary`; one-line empty `text-xs text-ink-tertiary`.
+- Stat figure `text-xl font-semibold tabular-nums`. Breadcrumb `text-sm`.
+- UI text tops out at `font-semibold`. Text never uses `text-ink-muted`; it is for placeholders,
+  disabled controls, icons and separators.
+
 ### Buttons and dialogs
 - A warm button on paper outside bars and dialogs uses `WARM_BUTTON` from
   `components/shared/warmButton.ts` (fill plus `WARM_EDGE`). Buttons on warm, parchment or vellum
@@ -177,8 +248,8 @@ repo; update them when tokens or style rules change.
 ## Accessibility
 - A clickable row or card is never `role="button"`. It renders a stretched invisible button as
   its first child (focus ring, `aria-pressed`, accessible name); content sits above it in a
-  `relative` wrapper so nested controls work. Used by `EntityCard`, `DataTable`, `ImportTable`,
-  and `ListCardRow` with `onClick`. Give `DataTable` a `rowAriaLabel`; the fallback is "Open row".
+  `relative` wrapper so nested controls work. Used by `EntityCard`, `DataTable` and
+  `ListCardRow` with `onClick`. Give `DataTable` a `rowAriaLabel`; the fallback is "Open row".
 - A row whose actions are all visible controls has no row target. Relationship rows
   (`rows/RowShell.tsx`) expose the entity pill ("Open Case 12.045") and the page tag ("Go to page
   14"); delete stays behind hover. `PageTag` and `RowEntityPill` stop propagation.
@@ -285,8 +356,23 @@ repo; update them when tokens or style rules change.
   `DocumentGroup.isPrimary` is data written by `AddFileModal`; the rendered primary document is
   the first primary group by `order`. `AddFileModal`'s "Add as" is a radio group with a readback
   line (`roleReadback`).
-- Import CSV: seed rows in `data/imports.ts` match `images/screens/import_csv/`. `pending` rows
-  are grey with a disabled Open. `ToolsActionBar` has `list` and `detail` modes.
+- Import CSV: imports are a per-corpus store (`atoms/csvImports.ts`, seed in `data/imports.ts`,
+  Sample only) with Uwazi's stages and copy. `useCsvImportRunner` (mounted by `App`) moves every
+  unfinished import and keeps one Beacon task each, whatever view is open. The list is a
+  `SettingsListPage`, the status page a `SettingsContent`; Cancel and "Download failed rows" are
+  on its footer. Admins only, from Tools and the Library footer (`useRegisterCsvImport`).
+- Metadata extraction: extractors and suggestion states are per-corpus stores
+  (`atoms/extraction.ts`, seeds on the Sample only). Suggestion rows are derived from the
+  entities; Accept writes the entity through the entity overlay (G12). Train and process runs are
+  timers with one Beacon task each; the page restarts a run that a reload interrupted. No Reject,
+  no "Accept all".
+- Paragraph extraction: extractors and per-entity statuses are per-corpus stores
+  (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
+  rich text and a numeric property. No collection on `main` has one, so every collection starts
+  empty and the wizard says what a target needs; a Sample template given both properties in
+  Settings › Templates becomes a target.
+- Preserve: one extension token per user (`atoms/preserve.ts`), requested on the page and stored
+  at once.
 - Catalog: the logo toggles `ComponentCatalog`. Add shared components as a `CatalogEntry` with a
   live demo.
 - Mobile: `<768` / `768–1023` / `≥1024` (`atoms/viewport.ts`). On phones every nested view is a
@@ -303,6 +389,9 @@ rather than rebuilding:
 - File re-ranking (promote, demote, active primary) and the file drawer's Translations tab.
 - Also playground-only: the When view, per-scope Relationships panel state, the Anchoring and
   Direction facets, the "Most evidence" sort, and one-member hubs read as plain aggregates.
+- Not ported with Settings (2026-10): the login screen, the Red Travesía and Nepal corpora, the
+  Sample v4 seed, the research tools (F1–F7), the Content card. Settings on `main` reads main's
+  own Sample templates.
 
 ## Performance traps
 - `filterState` in `LibraryView` stays memoised and keyed on content (`activeTypeIds.join(",")`,

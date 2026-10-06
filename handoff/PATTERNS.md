@@ -53,9 +53,9 @@ Why each part matters:
 - `focus-visible:ring-inset` — an outset ring is clipped by the row's `overflow`.
 - Enter/Space come free from the native `<button>`. Don't hand-roll key handlers.
 
-In the prototype this shell backs `ListCardRow`, `EntityCard`, `DataTable` rows and
-`ImportTable` rows. In Uwazi, the equivalent surfaces are the library card list, the
-table rows, and the file/attachment lists.
+In the prototype this shell backs `ListCardRow`, `EntityCard` and `DataTable` rows.
+In Uwazi, the equivalent surfaces are the library card list, the table rows, and the
+file/attachment lists.
 
 > A row with **no** nested controls may be `as="button"` (a real `<button>` shell).
 > The moment a control lands inside, switch to the stretched-button form.
