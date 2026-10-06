@@ -489,14 +489,14 @@ export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
  *  - `lanes`    a template × period grid */
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
 
-/** How many metadata properties a card draws; the user chooses, the app does
- *  not cap it. */
-export type CardFields = "none" | "3" | "5" | "all";
+/** How many metadata properties a card draws while the Metadata switch is on;
+ *  the user chooses, the app does not cap it. */
+export type CardFields = "3" | "5" | "all";
 export const DEFAULT_CARD_FIELDS: CardFields = "all";
 
 /** The choice as a number of lines, or null for "every one this entity has". */
 export function cardFieldLimit(v: CardFields): number | null {
-  return v === "none" ? 0 : v === "all" ? null : Number(v);
+  return v === "all" ? null : Number(v);
 }
 
 /** Thumbnail slot size. `m` (the default) is the smallest height at which a
@@ -537,7 +537,30 @@ export interface LibraryDisplayState {
   modes: Partial<Record<LibraryViewMode, DisplayValues>>;
   shared: DisplayValues;
 }
-export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
+const libraryDisplayStoreAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
+
+/** `cardFields: "none"` was the off state before Metadata became its own
+ *  switch. A mode that still holds it reads as Metadata off with the count on
+ *  its default, so a saved display keeps hiding properties. Same object back
+ *  when there is nothing to migrate, so readers keep their memo identity. */
+function migrateDisplay(state: LibraryDisplayState): LibraryDisplayState {
+  let modes: LibraryDisplayState["modes"] | null = null;
+  for (const [mode, bag] of Object.entries(state.modes) as [LibraryViewMode, DisplayValues | undefined][]) {
+    if (bag?.cardFields !== "none") continue;
+    const { cardFields: _none, ...rest } = bag;
+    modes = { ...(modes ?? state.modes), [mode]: { ...rest, metadata: false } };
+  }
+  return modes ? { ...state, modes } : state;
+}
+
+export const libraryDisplayAtom = atom(
+  (get) => migrateDisplay(get(libraryDisplayStoreAtom)),
+  (get, set, next: LibraryDisplayState | ((prev: LibraryDisplayState) => LibraryDisplayState)) =>
+    set(
+      libraryDisplayStoreAtom,
+      typeof next === "function" ? next(migrateDisplay(get(libraryDisplayStoreAtom))) : next,
+    ),
+);
 
 /** The list's optional metadata columns: one per template property of the
  *  templates in view (the selected Types, else the whole corpus), keyed by
@@ -717,13 +740,11 @@ export const libraryCardInfoAtom = atom((get) => {
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
   const fieldsRaw = readOption(state, mode, "cardFields", "mode", DEFAULT_CARD_FIELDS);
   const fields: CardFields =
-    fieldsRaw === "none" || fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all"
-      ? fieldsRaw
-      : DEFAULT_CARD_FIELDS;
+    fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all" ? fieldsRaw : DEFAULT_CARD_FIELDS;
   return {
     preview: read("preview"),
-    /** Derived from `fields` rather than stored, so the two cannot disagree. */
-    metadata: fields !== "none",
+    /** Off hides every property; `fields` is the count while it is on. */
+    metadata: read("metadata"),
     fields,
     country: read("country"),
     date: read("date"),

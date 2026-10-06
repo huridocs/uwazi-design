@@ -112,6 +112,9 @@ interface SectionBase {
   enabled?: (values: DisplayValues) => boolean;
   /** Draw a hairline above this section. */
   separator?: boolean;
+  /** Said under a segmented section while `enabled` is false, so a dimmed
+   *  control names what turns it back on. */
+  disabledReason?: string;
 }
 
 export type DisplaySection =
@@ -183,12 +186,10 @@ const LANGUAGE: DisplaySection = {
 
 /** What a CARD carries.
  *
- *  Three toggles, not five. The old shared record listed Country and Date here
- *  too — and a card draws NEITHER: those two keys only ever moved columns in the
- *  list table, while Thumbnail and Metadata only ever moved parts of a card. So
- *  under one "Show information" heading, in every mode, sat five switches of
- *  which two did nothing where you were standing. Splitting the record is what
- *  made that visible; Country and Date are columns now, and live in the list. */
+ *  Country and Date are not here: a card draws neither, they are list columns.
+ *  Metadata is a switch beside Thumbnail and Relationships so that hiding every
+ *  property is one visible action; how many properties a card draws is the
+ *  count below, which dims while this is off. */
 const CARD_INFO: DisplaySection = {
   id: "info",
   label: "Show information",
@@ -197,24 +198,24 @@ const CARD_INFO: DisplaySection = {
   options: [
     { id: "preview", label: "Thumbnail", default: true },
     { id: "connections", label: "Relationships", default: true },
+    { id: "metadata", label: "Metadata", default: true },
   ],
 };
 
-/** How much of the record a card carries.
- *
- *  This was a Metadata on/off switch, which answered only "all or nothing" while
- *  the interesting number — how many properties — sat in the code as a constant
- *  nobody could see. A template's property count is not the app's to cap; the
- *  reader picks. `None` is the old off state, so nothing is lost. */
+/** How many properties a card draws while Metadata is on. A template's
+ *  property count is not the app's to cap; the reader picks. There is no
+ *  "None": the Metadata switch above is the off state. */
 const CARD_FIELDS: DisplaySection = {
   id: "cardFields",
   label: "Metadata properties",
   kind: "choice",
+  enabled: (v) => v.metadata !== false,
+  disabledReason: "Metadata is off",
   option: {
     id: "cardFields",
     default: "all",
+    layout: "segmented",
     choices: [
-      { id: "none", label: "None" },
       { id: "3", label: "First 3" },
       { id: "5", label: "First 5" },
       { id: "all", label: "All", detail: "Every property the template fills" },

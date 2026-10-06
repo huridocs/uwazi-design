@@ -222,15 +222,16 @@ export const EntityCard = memo(function EntityCard({
   // Only fields that resolved to a value; shared with the list table's metadata columns.
   // The template's showInCard properties (utils/entityFields).
   const scalarFields = entityCardFields(entity, language);
-  /* No fixed ceiling: the count is the Display menu's choice (None / First 3 /
-     First 5 / All). The subgrid keeps rows level whatever the line counts, and
-     no "Language" row is added because the toolbar already shows it. */
+  /* No fixed ceiling: the count is the Display menu's choice (First 3 /
+     First 5 / All), read only while the Metadata switch is on. The subgrid
+     keeps rows level whatever the line counts, and no "Language" row is added
+     because the toolbar already shows it. */
   const menuLimit = cardFieldLimit(info.fields);
   const limit = side ? Math.min(menuLimit ?? Infinity, SIDE_FIELD_CAP) : menuLimit;
   const fields = limit === null ? scalarFields : scalarFields.slice(0, limit);
-  /* Properties the limit left out, shown as `+N`. Suppressed at "None": the
+  /* Properties the limit left out, shown as `+N`. None with Metadata off: the
      reader turned properties off, so a count on every card is noise. */
-  const beyond = limit === 0 ? 0 : scalarFields.length - fields.length;
+  const beyond = showMetadata ? scalarFields.length - fields.length : 0;
 
   /* Kinds that cannot be a card line; adapter-supplied, absent in the mock sample. */
   const marks = showMetadata ? (entity.marks ?? []) : [];

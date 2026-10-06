@@ -1362,7 +1362,7 @@ export function LibraryView() {
           </ul>
         ) : breakpoint === "mobile" ? (
           // Phones: two-line rows, no table columns (M19).
-          <MobileEntityList rows={shown} query={query} selectedId={selectedId} onSelect={handleSelect} />
+          <MobileEntityList rows={shown} query={query} selectedId={selectedId} onSelect={handleSelect} columnOn={listColumnOn} />
         ) : tableColumns.length === 0 ? (
           // Every column can be switched off; with none on, show a message that
           // names the way out instead of an empty grid.

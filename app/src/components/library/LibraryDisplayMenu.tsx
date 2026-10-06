@@ -166,27 +166,35 @@ export function LibraryDisplayMenu() {
     const key = storageId(option, values);
     const current = bound ? bound.value : (valueOf(key, scope, option.default) as string);
     if (option.layout === "segmented") {
-      // Columns: the grid reports what it drew. Auto names it; a count the
-      // pane cannot fit says so rather than looking ignored.
+      // The line under the row is always mounted. Dimmed, it names what turns
+      // the control back on. Columns: the grid reports what it drew; Auto names
+      // it, and a count the pane cannot fit says so rather than looking
+      // ignored. Otherwise the picked choice's detail, if it has one.
       const n = Number(current);
-      const note =
-        option.id !== "cardCols" || !colsInEffect
-          ? null
-          : current === "auto"
-            ? `${colsInEffect} in this pane`
-            : colsInEffect < n
-              ? `${colsInEffect} in effect: the pane is too narrow for ${n}`
-              : null;
+      const note = !live
+        ? (section.disabledReason ?? null)
+        : option.id === "cardCols"
+          ? !colsInEffect
+            ? null
+            : current === "auto"
+              ? `${colsInEffect} in this pane`
+              : colsInEffect < n
+                ? `${colsInEffect} in effect: the pane is too narrow for ${n}`
+                : null
+          : (option.choices.find((c) => c.id === current)?.detail ?? null);
       return (
-        <div className={`px-2 pb-1 flex flex-col gap-1.5 ${live ? "" : "opacity-40 pointer-events-none"}`}>
-          <SegmentedControl
-            size="sm"
-            fill
-            ariaLabel={section.label}
-            value={current}
-            options={option.choices.map((c) => ({ id: c.id, label: c.label }))}
-            onChange={(id) => write(key, scope, id)}
-          />
+        <div className="px-2 pb-1 flex flex-col gap-1.5">
+          {/* Dimmed and out of the tab order while the section is off. */}
+          <div ref={(el) => el?.toggleAttribute("inert", !live)} className={live ? "" : "opacity-40 pointer-events-none"}>
+            <SegmentedControl
+              size="sm"
+              fill
+              ariaLabel={section.label}
+              value={current}
+              options={option.choices.map((c) => ({ id: c.id, label: c.label }))}
+              onChange={(id) => write(key, scope, id)}
+            />
+          </div>
           <p data-part="in-effect" aria-live="polite" className="min-h-4 text-meta leading-4 text-ink-tertiary">
             {note}
           </p>
