@@ -45,11 +45,10 @@ import {
   libraryCardSideAtom,
   libraryChainFiltersAtom,
   libraryCountryFiltersAtom,
-  libraryCountryModeAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryDescriptorFiltersAtom,
-  libraryDescriptorModeAtom,
+  libraryFacetMatchAtom,
   libraryDrawnIdsAtom,
   libraryFieldColumnsAtom,
   libraryPropertySortsAtom,
@@ -103,7 +102,7 @@ import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
 import { templatesAtom } from "../atoms/templates";
-import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
 import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from "../utils/librarySnippets";
@@ -280,9 +279,10 @@ export function LibraryView() {
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
-  const countryMode = useAtomValue(libraryCountryModeAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
-  const descriptorMode = useAtomValue(libraryDescriptorModeAtom);
+  const facetMatch = useAtomValue(libraryFacetMatchAtom);
+  const countryMode = facetMatch.country ?? "any";
+  const descriptorMode = facetMatch.descriptor ?? "any";
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
@@ -606,17 +606,9 @@ export function LibraryView() {
   // Inherited-property filters with at least one value selected, paired with the
   // facet definition (target type, source-specific value accessor).
   const inheritedDefs = libraryInheritedDefs(dataSource, language);
-  const activeInherited = Object.entries(inheritedFilters)
-    .map(([propId, vals]) => ({
-      def: inheritedDefs.find((d) => d.propId === propId),
-      values: new Set(Object.entries(vals).filter(([, on]) => on).map(([v]) => v)),
-    }))
-    .filter((f) => f.def && f.values.size > 0) as {
-    def: (typeof inheritedDefs)[number];
-    values: Set<string>;
-  }[];
+  const activeInherited = activeInheritedOf(inheritedFilters, facetMatch, inheritedDefs, entities, language, dataSource);
   const inheritedKey = activeInherited
-    .map((f) => `${f.def.propId}:${[...f.values].join("|")}`)
+    .map((f) => `${f.def.propId}:${f.mode}:${[...f.values].join("|")}`)
     .join(";");
   // Relationship-chain filters: the chains the templates declare, over the
   // collection's graph (null until its corpus has loaded).
@@ -649,8 +641,10 @@ export function LibraryView() {
       wantRestricted,
       countries: activeCountries,
       countryMode,
+      countryCarriers: countryCarriersOf(entities, dataSource, language),
       descriptors: activeDescriptors,
       descriptorMode,
+      descriptorCarriers: descriptorCarriersOf(entities, dataSource),
       fromMs,
       toMs,
       inherited: activeInherited,
@@ -672,6 +666,7 @@ export function LibraryView() {
       hasDocOnly,
       wantPublished,
       wantRestricted,
+      entities,
       activeCountries.join(","),
       countryMode,
       activeDescriptors.join(","),

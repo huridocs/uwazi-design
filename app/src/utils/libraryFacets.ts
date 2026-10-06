@@ -28,6 +28,9 @@ export interface LibraryInheritedDef {
   /** The templates whose `filter` property this facet lists: with a Type
    *  selection, the facet shows only when one of them is selected (§6.4). */
   templateIds?: string[];
+  /** A record can hold several values (multiselect, relationship): the facet
+   *  offers Match `all`. Absent counts as several. */
+  multi?: boolean;
 }
 
 /** The inherited-property facet definitions for the active data source:
@@ -106,12 +109,13 @@ function withPropertyFacets(
       const seen = byName.get(p.name);
       if (seen) {
         seen.templateIds!.push(t.id);
+        if (p.type !== "select") seen.multi = true;
         if (p.defaultfilter) seen.defaultFilter = true;
         continue;
       }
       if (taken.has(p.name)) continue;
       taken.add(p.name);
-      const def: LibraryInheritedDef = { propId: p.name, label: p.label, property: p.name, templateIds: [t.id], ...(p.defaultfilter ? { defaultFilter: true } : {}) };
+      const def: LibraryInheritedDef = { propId: p.name, label: p.label, property: p.name, templateIds: [t.id], multi: p.type !== "select", ...(p.defaultfilter ? { defaultFilter: true } : {}) };
       byName.set(p.name, def);
       added.push(def);
     }
@@ -170,17 +174,4 @@ export function entityCountries(e: Entity, lang: Language): string[] {
   const native = getEntityProp(e.id, "country", lang);
   if (native && !out.includes(native)) out.push(native);
   return out;
-}
-
-/** Does an entity pass a country selection under AND/OR semantics? */
-export function matchesCountries(
-  countriesOfEntity: string[],
-  selected: string[],
-  mode: "AND" | "OR",
-): boolean {
-  if (selected.length === 0) return true;
-  if (countriesOfEntity.length === 0) return false;
-  return mode === "AND"
-    ? selected.every((c) => countriesOfEntity.includes(c))
-    : selected.some((c) => countriesOfEntity.includes(c));
 }

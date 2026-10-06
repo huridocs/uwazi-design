@@ -25,9 +25,8 @@ import {
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
   libraryCountryFiltersAtom,
-  libraryCountryModeAtom,
   libraryDescriptorFiltersAtom,
-  libraryDescriptorModeAtom,
+  libraryFacetMatchAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
@@ -35,7 +34,6 @@ import {
   libraryActiveFilterCountAtom,
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
-  type FacetMode,
 } from "../../atoms/library";
 import { MatchModeToggle } from "../shared/MatchModeToggle";
 import { cejilSettings } from "../../data/cejil/settings";
@@ -55,7 +53,14 @@ import {
   matchesAll,
   buildSearchIndex,
   chainFacetCounts,
+  forEachFacetBase,
+  activeInheritedOf,
+  inheritedCarriers,
+  inheritedKey,
+  countryCarriersOf,
+  descriptorCarriersOf,
   type LibraryFilterState,
+  type LibraryMatch,
 } from "../../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
@@ -79,9 +84,17 @@ export function LibraryFilters() {
   const contentSelection = useMemo(() => contentSelectionOf(contentFilters), [contentFilters]);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
-  const [countryMode, setCountryMode] = useAtom(libraryCountryModeAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
-  const [descriptorMode, setDescriptorMode] = useAtom(libraryDescriptorModeAtom);
+  const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
+  const countryMode = facetMatch.country ?? "any";
+  const descriptorMode = facetMatch.descriptor ?? "any";
+  const setMatch = (key: string, mode: LibraryMatch) =>
+    setFacetMatch((m) => {
+      const next = { ...m };
+      if (mode === "any") delete next[key];
+      else next[key] = mode;
+      return next;
+    });
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
@@ -107,9 +120,10 @@ export function LibraryFilters() {
       (d) =>
         !d.templateIds ||
         (typeIds.length ? typeIds.every((id) => d.templateIds!.includes(id)) : !!d.defaultFilter) ||
-        Object.values(inheritedFilters[d.propId] ?? {}).some(Boolean),
+        Object.values(inheritedFilters[d.propId] ?? {}).some(Boolean) ||
+        !!facetMatch[inheritedKey(d.propId)],
     );
-  }, [inheritedDefs, typeFilters, inheritedFilters]);
+  }, [inheritedDefs, typeFilters, inheritedFilters, facetMatch]);
   // Relationship chains the templates declare. A chain shows by the same rule
   // as a property facet: `defaultFilter` with no Type selected, or when every
   // selected Type is its template; and while it holds a selection.
@@ -130,15 +144,7 @@ export function LibraryFilters() {
   const filterState = useMemo<LibraryFilterState>(() => {
     const on = (rec: Record<string, boolean>) =>
       Object.entries(rec).filter(([, v]) => v).map(([k]) => k);
-    const inherited = Object.entries(inheritedFilters)
-      .map(([propId, vals]) => ({
-        def: inheritedDefs.find((d) => d.propId === propId),
-        values: new Set(on(vals)),
-      }))
-      .filter((f) => f.def && f.values.size > 0) as {
-      def: (typeof inheritedDefs)[number];
-      values: Set<string>;
-    }[];
+    const inherited = activeInheritedOf(inheritedFilters, facetMatch, inheritedDefs, entities, language, dataSource);
     return {
       source: dataSource,
       language,
@@ -148,8 +154,10 @@ export function LibraryFilters() {
       wantRestricted: !!statusFilters.restricted,
       countries: on(countryFilters),
       countryMode,
+      countryCarriers: countryCarriersOf(entities, dataSource, language),
       descriptors: on(descriptorFilters),
       descriptorMode,
+      descriptorCarriers: descriptorCarriersOf(entities, dataSource),
       fromMs: dateBoundMs(dateFrom, "from"),
       toMs: dateBoundMs(dateTo, "to"),
       inherited,
@@ -166,8 +174,8 @@ export function LibraryFilters() {
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, chainDefs, chainFilters, query, matchTypes,
-    contentSelection, contentMode,
+    dateFrom, dateTo, inheritedFilters, facetMatch, chainDefs, chainFilters, query, matchTypes,
+    contentSelection, contentMode, entities,
   ]);
 
   const typeCounts = useMemo(() => {
@@ -212,29 +220,52 @@ export function LibraryFilters() {
   );
   const publishedCount = useMemo(() => statusBase.filter((e) => e.published).length, [statusBase]);
   const restrictedCount = statusBase.length - publishedCount;
+  // Each keyword facet's value counts, and how many records that can carry
+  // the value have none (what `missing` would keep), over the records passing
+  // every other facet.
   const countryCounts = useMemo(() => {
     const m = new Map<string, number>();
+    const carriers = countryCarriersOf(entities, dataSource, language);
+    let missing = 0;
     for (const e of entities)
-      if (matchesAll(e, filterState, "country"))
-        for (const c of entityCountries(e, language)) m.set(c, (m.get(c) ?? 0) + 1);
-    return m;
-  }, [entities, filterState, language]);
+      if (matchesAll(e, filterState, "country")) {
+        const vals = entityCountries(e, language);
+        if (!vals.length && carriers.has(e.typeId)) missing++;
+        for (const c of vals) m.set(c, (m.get(c) ?? 0) + 1);
+      }
+    return { values: m, missing };
+  }, [entities, filterState, language, dataSource]);
   const descriptorCounts = useMemo(() => {
     const m = new Map<string, number>();
+    const carriers = descriptorCarriersOf(entities, dataSource);
+    let missing = 0;
     for (const e of entities)
-      if (matchesAll(e, filterState, "descriptor"))
-        for (const d of e.descriptors ?? []) m.set(d, (m.get(d) ?? 0) + 1);
-    return m;
-  }, [entities, filterState]);
+      if (matchesAll(e, filterState, "descriptor")) {
+        const vals = e.descriptors ?? [];
+        if (!vals.length && carriers.has(e.typeId)) missing++;
+        for (const d of vals) m.set(d, (m.get(d) ?? 0) + 1);
+      }
+    return { values: m, missing };
+  }, [entities, filterState, dataSource]);
+  // Every shown property facet in one pass: a record counts towards a facet
+  // when it passes all the other facets, so ticking a value in one narrows the
+  // counts of the rest but never its own.
   const inheritedCounts = useMemo(() => {
-    const m: Record<string, Map<string, number>> = {};
-    for (const { propId } of shownDefs) m[propId] = new Map();
-    for (const e of entities) {
-      if (!matchesAll(e, filterState, "inherited")) continue;
-      for (const def of shownDefs)
-        for (const v of entityInheritedValues(e, def, language, dataSource))
-          m[def.propId].set(v, (m[def.propId].get(v) ?? 0) + 1);
-    }
+    const m: Record<string, { values: Map<string, number>; missing: number }> = {};
+    const facets = shownDefs.map((def) => ({
+      def,
+      key: inheritedKey(def.propId),
+      carriers: inheritedCarriers(def, entities, language, dataSource),
+      out: (m[def.propId] = { values: new Map<string, number>(), missing: 0 }),
+    }));
+    forEachFacetBase(entities, filterState, (e, failed) => {
+      for (const f of facets) {
+        if (failed && !failed.includes(f.key)) continue;
+        const vals = entityInheritedValues(e, f.def, language, dataSource);
+        if (!vals.length && f.carriers.has(e.typeId)) f.out.missing++;
+        for (const v of vals) f.out.values.set(v, (f.out.values.get(v) ?? 0) + 1);
+      }
+    });
     return m;
   }, [entities, filterState, shownDefs, language, dataSource]);
   // Relationship-chain facet counts (path-coupled), for the chains on show.
@@ -423,12 +454,14 @@ export function LibraryFilters() {
             </FacetCard>
             <KeywordFacetCard
               title="Descriptores"
-              counts={descriptorCounts}
+              counts={descriptorCounts.values}
               selected={descriptorFilters}
               onToggle={toggleDescriptor}
-              onClear={() => setDescriptorFilters({})}
-              mode={descriptorMode}
-              onModeChange={setDescriptorMode}
+              onClear={() => {
+                setDescriptorFilters({});
+                setMatch("descriptor", "any");
+              }}
+              match={{ mode: descriptorMode, onChange: (m) => setMatch("descriptor", m), multi: true, missing: descriptorCounts.missing }}
               sort="count"
               hideWhenEmpty
             />
@@ -472,24 +505,35 @@ export function LibraryFilters() {
 
         <KeywordFacetCard
           title="Countries"
-          counts={countryCounts}
+          counts={countryCounts.values}
           selected={countryFilters}
           onToggle={toggleCountry}
-          onClear={() => setCountryFilters({})}
-          mode={countryMode}
-          onModeChange={setCountryMode}
+          onClear={() => {
+            setCountryFilters({});
+            setMatch("country", "any");
+          }}
+          match={{ mode: countryMode, onChange: (m) => setMatch("country", m), multi: true, missing: countryCounts.missing }}
           sort="alpha"
           hideWhenEmpty={dataSource === "nepal"}
         />
 
-        {shownDefs.map(({ propId, label }) => (
+        {shownDefs.map(({ propId, label, multi }) => (
           <KeywordFacetCard
             key={propId}
             title={label}
-            counts={inheritedCounts[propId] ?? new Map()}
+            counts={inheritedCounts[propId]?.values ?? new Map()}
             selected={inheritedFilters[propId] ?? {}}
             onToggle={(v) => toggleInherited(propId, v)}
-            onClear={() => setInheritedFilters((s) => ({ ...s, [propId]: {} }))}
+            onClear={() => {
+              setInheritedFilters((s) => ({ ...s, [propId]: {} }));
+              setMatch(inheritedKey(propId), "any");
+            }}
+            match={{
+              mode: facetMatch[inheritedKey(propId)] ?? "any",
+              onChange: (m) => setMatch(inheritedKey(propId), m),
+              multi: multi !== false,
+              missing: inheritedCounts[propId]?.missing ?? 0,
+            }}
             sort="count"
             hideWhenEmpty
           />
@@ -901,8 +945,7 @@ function KeywordFacetCard({
   selected,
   onToggle,
   onClear,
-  mode,
-  onModeChange,
+  match,
   sort,
   hideWhenEmpty = false,
   headingLevel = 2,
@@ -912,8 +955,9 @@ function KeywordFacetCard({
   selected: Record<string, boolean>;
   onToggle: (id: string) => void;
   onClear: () => void;
-  mode?: FacetMode;
-  onModeChange?: (m: FacetMode) => void;
+  /** The facet's Match row. Absent on chain facets, whose values combine
+   *  path-coupled. */
+  match?: FacetMatch;
   sort: "alpha" | "count";
   hideWhenEmpty?: boolean;
   /** 3 inside the chain-filter group, which carries its own `h2`. */
@@ -940,9 +984,12 @@ function KeywordFacetCard({
   const cap = q || showAll ? Infinity : KEYWORD_CAP;
   const visible = matched.slice(0, cap);
   const hidden = matched.length - visible.length;
-  const selectedCount = Object.values(selected).filter(Boolean).length;
+  const missingMode = match?.mode === "missing";
+  // In `missing` the ticks are kept but ignored, so they are not counted.
+  const selectedCount = missingMode ? 0 : Object.values(selected).filter(Boolean).length;
+  const narrowing = selectedCount > 0 || (!!match && match.mode !== "any");
 
-  if (hideWhenEmpty && list.length === 0) return null;
+  if (hideWhenEmpty && list.length === 0 && !narrowing) return null;
 
   return (
     <section data-component="KeywordFacetCard" className={`${FACET_CARD} space-y-1.5`}>
@@ -956,7 +1003,7 @@ function KeywordFacetCard({
           )}
         </span>
         <span className="flex items-center gap-1.5 shrink-0">
-          {selectedCount > 0 && (
+          {narrowing && (
             <button
               type="button"
               data-part="clear"
@@ -968,16 +1015,18 @@ function KeywordFacetCard({
               Clear
             </button>
           )}
-          {mode && onModeChange && (
-            <MatchModeToggle
-              mode={mode}
-              onChange={onModeChange}
-              groupLabel={`Match mode for ${title}`}
-            />
-          )}
         </span>
       </header>
 
+      {match && <FacetMatchRow title={title} match={match} />}
+
+      {/* In `missing` the list stays in place, dimmed and inert: the ticks are
+          kept for the way back and do not take part. */}
+      <div
+        data-part="values"
+        className={`space-y-1.5 transition-opacity ${missingMode ? "opacity-40" : ""}`}
+        ref={(el) => el?.toggleAttribute("inert", missingMode)}
+      >
       <div data-part="search" className="px-1">
         <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
           <input
@@ -1050,7 +1099,51 @@ function KeywordFacetCard({
           </button>
         )}
       </div>
+      </div>
     </section>
+  );
+}
+
+/** A facet's Match mode, and what `missing` would keep. */
+interface FacetMatch {
+  mode: LibraryMatch;
+  onChange: (mode: LibraryMatch) => void;
+  /** Records can hold several values: offer `all`. */
+  multi: boolean;
+  /** Records that could carry a value and have none, over the other facets. */
+  missing: number;
+}
+
+const MATCH_LABEL: Record<LibraryMatch, string> = { any: "any", all: "all", none: "none", missing: "missing" };
+
+/** One quiet line under a facet's title: how its ticks select records. Text
+ *  segments, not a toolbar; the current one takes the warm fill. In `missing`
+ *  the line ends with how many records have no value. */
+function FacetMatchRow({ title, match }: { title: string; match: FacetMatch }) {
+  const modes: LibraryMatch[] = match.multi ? ["any", "all", "none", "missing"] : ["any", "none", "missing"];
+  return (
+    <div data-component="FacetMatchRow" className="flex items-center gap-0.5 h-5 px-2">
+      <span aria-hidden className="text-meta text-ink-tertiary me-1">Match</span>
+      <div role="group" aria-label={`Match mode for ${title}`} className="flex items-center gap-0.5">
+        {modes.map((m) => (
+          <button
+            key={m}
+            type="button"
+            data-part="mode"
+            aria-pressed={match.mode === m}
+            onClick={() => match.onChange(m)}
+            className={`px-1.5 h-5 rounded-sm text-meta transition-colors cursor-pointer ${
+              match.mode === m ? "bg-warm text-ink" : "text-ink-tertiary hover:text-ink"
+            }`}
+          >
+            {MATCH_LABEL[m]}
+          </button>
+        ))}
+      </div>
+      <span data-part="missing" aria-live="polite" className="ms-auto text-meta tabular-nums text-ink-tertiary">
+        {match.mode === "missing" ? `${match.missing.toLocaleString()} without` : ""}
+      </span>
+    </div>
   );
 }
 

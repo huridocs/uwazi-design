@@ -13,16 +13,111 @@ import {
 import { fold, termIn, type SearchQuery } from "./queryTokens";
 import {
   entityCountries,
-  matchesCountries,
   entityInheritedValues,
   type DataSource,
   type LibraryInheritedDef,
 } from "./libraryFacets";
 
+/** How a facet's ticked values select records. `any` and `all` are Uwazi's OR
+ *  and AND; `none` keeps records that carry none of them; `missing` keeps
+ *  records with no value at all, and ignores the ticks. `none` and `missing`
+ *  only keep records whose template can carry the value (`carriers`), so
+ *  "no cause" means casualties without one, not every event and source. */
+export type LibraryMatch = "any" | "all" | "none" | "missing";
+
 /** The active inherited-property selections (a facet def + its chosen values). */
 export interface ActiveInherited {
   def: LibraryInheritedDef;
   values: Set<string>;
+  mode: LibraryMatch;
+  /** The types that can carry the value; read by `none` and `missing`. */
+  carriers: ReadonlySet<string>;
+}
+
+/** Does a facet with this mode and these ticks narrow at all? */
+export const facetActive = (mode: LibraryMatch, ticked: number) => mode === "missing" || ticked > 0;
+
+/** One facet's test on one record: its values against the ticked set. */
+export function matchValues(
+  vals: readonly string[],
+  selected: ReadonlySet<string>,
+  mode: LibraryMatch,
+  carrier: boolean,
+): boolean {
+  switch (mode) {
+    case "all":
+      for (const v of selected) if (!vals.includes(v)) return false;
+      return true;
+    case "none":
+      return carrier && !vals.some((v) => selected.has(v));
+    case "missing":
+      return carrier && vals.length === 0;
+    default:
+      return vals.some((v) => selected.has(v));
+  }
+}
+
+/** The types at least one record of which has a value for a facet, per entity
+ *  list. Curated facets have no template list to say which types carry them,
+ *  so `none` and `missing` read this instead. */
+const carrierCache = new WeakMap<readonly Entity[], Map<string, Set<string>>>();
+export function carrierTypes(
+  entities: readonly Entity[],
+  key: string,
+  valuesOf: (e: Entity) => readonly string[],
+): ReadonlySet<string> {
+  let byKey = carrierCache.get(entities);
+  if (!byKey) carrierCache.set(entities, (byKey = new Map()));
+  let out = byKey.get(key);
+  if (!out) {
+    out = new Set();
+    for (const e of entities) if (!out.has(e.typeId) && valuesOf(e).length) out.add(e.typeId);
+    byKey.set(key, out);
+  }
+  return out;
+}
+
+/** The types that carry a country, and a descriptor: the fixed facets'
+ *  carriers for `none` and `missing`. */
+export const countryCarriersOf = (entities: readonly Entity[], source: DataSource, language: Language) =>
+  carrierTypes(entities, `${source}|country|${language}`, (e) => entityCountries(e, language));
+export const descriptorCarriersOf = (entities: readonly Entity[], source: DataSource) =>
+  carrierTypes(entities, `${source}|descriptor`, (e) => e.descriptors ?? []);
+
+/** The facet key a property facet's mode is stored and excepted under. */
+export const inheritedKey = (propId: string) => `inh:${propId}`;
+
+/** The inherited and property facets that narrow, from the atoms: the ticked
+ *  values, the mode, and the types that carry the value. Shared by the Library
+ *  view and the Filters panel so the two states cannot disagree. */
+export function activeInheritedOf(
+  filters: Record<string, Record<string, boolean>>,
+  match: Record<string, LibraryMatch>,
+  defs: readonly LibraryInheritedDef[],
+  entities: readonly Entity[],
+  language: Language,
+  source: DataSource,
+): ActiveInherited[] {
+  const out: ActiveInherited[] = [];
+  for (const def of defs) {
+    const mode = match[inheritedKey(def.propId)] ?? "any";
+    const values = new Set(Object.entries(filters[def.propId] ?? {}).filter(([, on]) => on).map(([v]) => v));
+    if (!facetActive(mode, values.size)) continue;
+    out.push({ def, values, mode, carriers: inheritedCarriers(def, entities, language, source) });
+  }
+  return out;
+}
+
+/** The types that can carry an inherited or property facet's value. */
+export function inheritedCarriers(
+  def: LibraryInheritedDef,
+  entities: readonly Entity[],
+  language: Language,
+  source: DataSource,
+): ReadonlySet<string> {
+  if (def.templateIds) return new Set(def.templateIds);
+  if (def.targetTypeId) return new Set([def.targetTypeId]);
+  return carrierTypes(entities, `${source}|${def.propId}`, (e) => entityInheritedValues(e, def, language, source));
 }
 
 /** One active value-constraint on a chain segment — the selections of a single
@@ -61,9 +156,12 @@ export interface LibraryFilterState {
   wantPublished: boolean;
   wantRestricted: boolean;
   countries: string[];
-  countryMode: "AND" | "OR";
+  countryMode: LibraryMatch;
+  /** Types that carry a country; read by `none` and `missing`. */
+  countryCarriers?: ReadonlySet<string>;
   descriptors: string[];
-  descriptorMode: "AND" | "OR";
+  descriptorMode: LibraryMatch;
+  descriptorCarriers?: ReadonlySet<string>;
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
@@ -93,7 +191,8 @@ export interface LibraryFilterState {
 
 /** One independent filter dimension. A facet's own key is excluded when
  *  computing that facet's aggregation, so its options never count against
- *  themselves (and never vanish). */
+ *  themselves (and never vanish). Property facets are excepted one by one,
+ *  by `inheritedKey(propId)`. */
 export type FacetKey =
   | "type"
   | "doc"
@@ -101,7 +200,6 @@ export type FacetKey =
   | "country"
   | "descriptor"
   | "date"
-  | "inherited"
   | "search"
   | "matchType"
   | "content";
@@ -175,9 +273,9 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   wantPublished: false,
   wantRestricted: false,
   countries: [],
-  countryMode: "OR",
+  countryMode: "any",
   descriptors: [],
-  descriptorMode: "OR",
+  descriptorMode: "any",
   fromMs: null,
   toMs: null,
   inherited: [],
@@ -218,9 +316,11 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     wantPublished: s.wantPublished ?? false,
     wantRestricted: s.wantRestricted ?? false,
     countries: s.countries ?? [],
-    countryMode: s.countryMode ?? "OR",
+    countryMode: s.countryMode ?? "any",
+    countryCarriers: s.countryCarriers,
     descriptors: s.descriptors ?? [],
-    descriptorMode: s.descriptorMode ?? "OR",
+    descriptorMode: s.descriptorMode ?? "any",
+    descriptorCarriers: s.descriptorCarriers,
     fromMs: s.fromMs ?? null,
     toMs: s.toMs ?? null,
     inherited: s.inherited ?? [],
@@ -239,52 +339,73 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
   return out;
 }
 
-const PREDICATES: Record<
-  FacetKey,
-  (e: Entity, s: LibraryFilterState) => boolean
-> = {
-  type: (e, s) => s.typeIds.length === 0 || s.typeIds.includes(e.typeId),
-  doc: (e, s) => !s.hasDocOnly || entityIsDoc(e, s.source),
-  status: (e, s) =>
-    !(s.wantPublished || s.wantRestricted) ||
-    (s.wantPublished && e.published) ||
-    (s.wantRestricted && !e.published),
-  country: (e, s) =>
-    s.countries.length === 0 ||
-    matchesCountries(entityCountries(e, s.language), s.countries, s.countryMode),
-  descriptor: (e, s) =>
-    s.descriptors.length === 0 ||
-    (s.descriptorMode === "AND"
-      ? s.descriptors.every((d) => (e.descriptors ?? []).includes(d))
-      : (e.descriptors ?? []).some((d) => s.descriptors.includes(d))),
+/** One AND-ed term of the filter: the facet keys it reads and its test. A
+ *  facet's aggregation skips the node holding its key ("except me"). */
+interface FilterNode {
+  keys: readonly string[];
+  test: (e: Entity) => boolean;
+}
+
+/** The filter as a list of AND-ed nodes, built once per state and holding
+ *  only the facets that narrow, cheapest first. Replaces a fixed table that
+ *  ran every predicate for every record, active or not. */
+const compiledStates = new WeakMap<LibraryFilterState, FilterNode[]>();
+function compile(s: LibraryFilterState): FilterNode[] {
+  const hit = compiledStates.get(s);
+  if (hit) return hit;
+  const nodes: FilterNode[] = [];
+  const leaf = (key: string, test: (e: Entity) => boolean) => nodes.push({ keys: [key], test });
+  if (s.typeIds.length) leaf("type", (e) => s.typeIds.includes(e.typeId));
+  if (s.hasDocOnly) leaf("doc", (e) => entityIsDoc(e, s.source));
+  if (s.wantPublished || s.wantRestricted)
+    leaf("status", (e) => (s.wantPublished && e.published) || (s.wantRestricted && !e.published));
+  if (facetActive(s.countryMode, s.countries.length)) {
+    const sel = new Set(s.countries);
+    const carriers = s.countryCarriers;
+    leaf("country", (e) =>
+      matchValues(entityCountries(e, s.language), sel, s.countryMode, !carriers || carriers.has(e.typeId)),
+    );
+  }
+  if (facetActive(s.descriptorMode, s.descriptors.length)) {
+    const sel = new Set(s.descriptors);
+    const carriers = s.descriptorCarriers;
+    leaf("descriptor", (e) =>
+      matchValues(e.descriptors ?? [], sel, s.descriptorMode, !carriers || carriers.has(e.typeId)),
+    );
+  }
   // Overlap with the record's span where it has one (an event's start and
   // end), else its date as a point: see `entityInRange`.
-  date: (e, s) => entityInRange(e, s.fromMs, s.toMs),
-  inherited: (e, s) =>
-    s.inherited.every((f) =>
-      entityInheritedValues(e, f.def, s.language, s.source).some((v) =>
-        f.values.has(v),
-      ),
-    ),
+  if (s.fromMs !== null || s.toMs !== null) leaf("date", (e) => entityInRange(e, s.fromMs, s.toMs));
+  // One cached answer per entity (`entityContent`); the card's own groups
+  // are faceted inside it.
+  if (hasContentSelection(s.content))
+    leaf("content", (e) => matchesContent(entityContent(e, s.source), s.content, s.contentMode));
+  for (const f of s.inherited)
+    leaf(inheritedKey(f.def.propId), (e) =>
+      matchValues(entityInheritedValues(e, f.def, s.language, s.source), f.values, f.mode, f.carriers.has(e.typeId)),
+    );
   // Match every query token (AND) somewhere in the entity's metadata index OR —
   // when the query is long enough to be worth the corpus scan — its document
   // body. Quoted phrases are single contiguous tokens. Sharing `searchTerms`
   // with the snippet builder + highlighter keeps filter, snippets, and marks in
   // one semantics (so "torture cruel" matches an entity carrying both words in
   // different fields/pages, and both get marked).
-  search: (e, s) => matchesSearch(e, s),
-  content: (e, s) =>
-    !hasContentSelection(s.content) || matchesContent(entityContent(e, s.source), s.content, s.contentMode),
+  if (s.q) leaf("search", (e) => matchesSearch(e, s));
   // Where the query matched (title / properties / document). All-on is the
-  // common case and short-circuits BEFORE categorising, so the (blob-scanning)
-  // categorisation is only paid when the user has actually narrowed.
-  matchType: (e, s) =>
-    passesMatchTypes(s.matchTypes, s.q, () =>
-      // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
-      // would read `not` / `or` as words to match.
-      matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
-    ),
-};
+  // common case and adds no node, so the (blob-scanning) categorisation is
+  // only paid when the user has actually narrowed.
+  const { title, properties, document } = s.matchTypes;
+  if (s.q && !(title && properties && document))
+    leaf("matchType", (e) =>
+      passesMatchTypes(s.matchTypes, s.q, () =>
+        // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
+        // would read `not` / `or` as words to match.
+        matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
+      ),
+    );
+  compiledStates.set(s, nodes);
+  return nodes;
+}
 
 /** The match-type chip gate, as ONE definition.
  *
@@ -323,8 +444,6 @@ export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
     (s.fullTextSearch && termIn(entityFullTextBlob(e, s.language, s.source), t));
   return groups.every((g) => g.some(hit)) && !exclude.some(hit);
 }
-
-const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];
 
 /** How deep to walk a chain: every segment, or with `partialPaths` only as
  *  far as the deepest node the tested facets read. */
@@ -365,11 +484,35 @@ export function matchesAll(
   except?: FacetKey | string,
 ): boolean {
   const s = withDefaults(state);
-  for (const key of ALL_KEYS) {
-    if (key === except) continue;
-    if (!PREDICATES[key](e, s)) return false;
+  for (const node of compile(s)) {
+    if (except !== undefined && node.keys.includes(except)) continue;
+    if (!node.test(e)) return false;
   }
   return chainMatches(e, s, except);
+}
+
+/** One pass that serves the aggregation of many facets at once. `visit` gets
+ *  each record that passes every node but at most one, with the keys of the
+ *  node it failed (`null` when it failed none): it counts towards a facet when
+ *  it failed none, or only that facet's node. The same answer as one
+ *  `matchesAll(e, s, key)` pass per facet, in one pass. */
+export function forEachFacetBase(
+  entities: readonly Entity[],
+  state: LibraryFilterState,
+  visit: (e: Entity, failed: readonly string[] | null) => void,
+): void {
+  const s = withDefaults(state);
+  const nodes = compile(s);
+  outer: for (const e of entities) {
+    let failed: readonly string[] | null = null;
+    for (const node of nodes) {
+      if (node.test(e)) continue;
+      if (failed) continue outer;
+      failed = node.keys;
+    }
+    if (!chainMatches(e, s)) continue;
+    visit(e, failed);
+  }
 }
 
 /** Faceted value counts for one chain-segment facet. For each root-type entity

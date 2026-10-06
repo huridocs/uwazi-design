@@ -10,6 +10,7 @@ import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
+import { inheritedKey, type LibraryMatch } from "../utils/libraryFilter";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -344,15 +345,16 @@ export const collapseSelectionAtom = atom(null, (get, set, then: () => void) => 
   });
 });
 
-/** Keyword-style Countries facet: selected country names + match mode. */
+/** Keyword-style Countries facet: selected country names. */
 export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
-export type FacetMode = "AND" | "OR";
-export const libraryCountryModeAtom = atom<FacetMode>("OR");
 
-/** Descriptores (violations) facet, CEJIL only. "OR" = any selected descriptor,
- *  "AND" = all of them (an entity carries several). */
+/** Descriptores (violations) facet, CEJIL only. */
 export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
-export const libraryDescriptorModeAtom = atom<FacetMode>("OR");
+
+/** Each facet's Match mode (any / all / none / missing), keyed "country",
+ *  "descriptor" or `inheritedKey(propId)`. Absent = any. */
+export type { LibraryMatch };
+export const libraryFacetMatchAtom = atom<Record<string, LibraryMatch>>({});
 
 /** Date-range filter on the entity's representative date (e.g. CEJIL `Fecha`).
  *  ISO `yyyy-mm-dd`; "" = open-ended on that side. */
@@ -945,6 +947,7 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(libraryStatusFiltersAtom, {});
   set(libraryDescriptorFiltersAtom, {});
   set(libraryInheritedFiltersAtom, {});
+  set(libraryFacetMatchAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -963,12 +966,11 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
-  set(libraryCountryModeAtom, "OR");
   set(libraryDescriptorFiltersAtom, {});
-  set(libraryDescriptorModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
+  set(libraryFacetMatchAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -983,12 +985,11 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
-  set(libraryCountryModeAtom, "OR");
   set(libraryDescriptorFiltersAtom, {});
-  set(libraryDescriptorModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
+  set(libraryFacetMatchAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -998,14 +999,22 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
  *  Filters tab's count and dot read this. Surfaces that list filters including
  *  the search use `useActiveFilters().length` instead. */
 export const libraryActiveFilterCountAtom = atom((get) => {
+  const match = get(libraryFacetMatchAtom);
+  // A facet in `missing` ignores its ticks and counts once, as its one chip.
+  const ticks = (key: string, vals: Record<string, boolean>) =>
+    match[key] === "missing" ? 1 : Object.values(vals).filter(Boolean).length;
   let n = Object.values(get(libraryTypeFiltersAtom)).filter(Boolean).length;
   if (get(libraryHasDocAtom)) n += 1;
   n += Object.values(get(libraryStatusFiltersAtom)).filter(Boolean).length;
-  n += Object.values(get(libraryCountryFiltersAtom)).filter(Boolean).length;
-  n += Object.values(get(libraryDescriptorFiltersAtom)).filter(Boolean).length;
+  n += ticks("country", get(libraryCountryFiltersAtom));
+  n += ticks("descriptor", get(libraryDescriptorFiltersAtom));
   if (get(libraryDateFromAtom) || get(libraryDateToAtom)) n += 1;
-  for (const vals of Object.values(get(libraryInheritedFiltersAtom)))
-    n += Object.values(vals).filter(Boolean).length;
+  const inherited = get(libraryInheritedFiltersAtom);
+  const keys = new Set([
+    ...Object.keys(inherited),
+    ...Object.keys(match).filter((k) => k.startsWith("inh:")).map((k) => k.slice(4)),
+  ]);
+  for (const propId of keys) n += ticks(inheritedKey(propId), inherited[propId] ?? {});
   for (const vals of Object.values(get(libraryChainFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   for (const vals of Object.values(get(libraryContentFiltersAtom)))

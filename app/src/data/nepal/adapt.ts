@@ -86,10 +86,16 @@ function geoOf(e: NepalEntity): LatLng | undefined {
  *  `verification`; a claim's `verification_status` is the outcome of the
  *  checks on it, the same three values. It is the point of the corpus, so it
  *  leads the facets. */
-export const nepalFacetDefs: { propId: string; label: string; defaultFilter: boolean; templateIds?: string[] }[] = [
-  { propId: "verification", label: "Verification", defaultFilter: true },
+export const nepalFacetDefs: {
+  propId: string;
+  label: string;
+  defaultFilter: boolean;
+  multi: boolean;
+  templateIds?: string[];
+}[] = [
+  { propId: "verification", label: "Verification", defaultFilter: true, multi: false },
   // From `rights`, which is not listed as itself (see "Rights, split").
-  { propId: "licence", label: "Licence", defaultFilter: true, templateIds: ["nepal_media"] },
+  { propId: "licence", label: "Licence", defaultFilter: true, multi: false, templateIds: ["nepal_media"] },
 ];
 
 function facetValuesOf(e: NepalEntity): Record<string, string[]> | undefined {

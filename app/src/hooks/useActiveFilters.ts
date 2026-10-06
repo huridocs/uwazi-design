@@ -14,7 +14,10 @@ import {
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
   libraryContentFiltersAtom,
+  libraryFacetMatchAtom,
+  type LibraryMatch,
 } from "../atoms/library";
+import { inheritedKey } from "../utils/libraryFilter";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
 import { getEntityType } from "../data/entities";
@@ -53,9 +56,40 @@ export function useActiveFilters(): ActiveFilter[] {
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const [contentFilters, setContentFilters] = useAtom(libraryContentFiltersAtom);
+  const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
+    const resetMatch = (key: string) => () =>
+      setFacetMatch((m) => {
+        const next = { ...m };
+        delete next[key];
+        return next;
+      });
+    /** A value-list facet's chips, read through its Match mode: `missing` is
+     *  one chip that ends the mode; `none` prefixes each value with "not";
+     *  `all` with "all of" on the first, so "a, b" reads as both. */
+    const valueChips = (
+      key: string,
+      group: string,
+      idPrefix: string,
+      vals: Record<string, boolean>,
+      removeValue: (v: string) => () => void,
+    ) => {
+      const mode: LibraryMatch = facetMatch[key] ?? "any";
+      if (mode === "missing") {
+        out.push({ id: `${idPrefix}-missing`, group, label: `No ${group.toLowerCase()}`, remove: resetMatch(key) });
+        return;
+      }
+      for (const [v, on] of Object.entries(vals))
+        if (on)
+          out.push({
+            id: `${idPrefix}-${v}`,
+            group: mode === "any" ? group : `${group} · ${mode}`,
+            label: mode === "none" ? `not ${v}` : v,
+            remove: removeValue(v),
+          });
+    };
     const drop = <T,>(set: (fn: (s: T) => T) => void, key: string) => () =>
       set((s: T) => {
         const next = { ...(s as object) } as Record<string, unknown>;
@@ -99,18 +133,8 @@ export function useActiveFilters(): ActiveFilter[] {
           remove: drop(setStatusFilters, id),
         });
 
-    for (const [c, on] of Object.entries(countryFilters))
-      if (on)
-        out.push({ id: `country-${c}`, group: "Country", label: c, remove: drop(setCountryFilters, c) });
-
-    for (const [d, on] of Object.entries(descriptorFilters))
-      if (on)
-        out.push({
-          id: `desc-${d}`,
-          group: "Descriptor",
-          label: d,
-          remove: drop(setDescriptorFilters, d),
-        });
+    valueChips("country", "Country", "country", countryFilters, (c) => drop(setCountryFilters, c));
+    valueChips("descriptor", "Descriptor", "desc", descriptorFilters, (d) => drop(setDescriptorFilters, d));
 
     if (dateFrom || dateTo)
       out.push({
@@ -140,20 +164,16 @@ export function useActiveFilters(): ActiveFilter[] {
           });
 
     const defs = libraryInheritedDefs(dataSource, language);
-    for (const [propId, vals] of Object.entries(inheritedFilters))
-      for (const [v, on] of Object.entries(vals))
-        if (on)
-          out.push({
-            id: `inh-${propId}-${v}`,
-            group: defs.find((d) => d.propId === propId)?.label ?? propId,
-            label: v,
-            remove: () =>
-              setInheritedFilters((s) => {
-                const next = { ...(s[propId] ?? {}) };
-                delete next[v];
-                return { ...s, [propId]: next };
-              }),
-          });
+    for (const def of defs) {
+      const propId = def.propId;
+      valueChips(inheritedKey(propId), def.label, `inh-${propId}`, inheritedFilters[propId] ?? {}, (v) => () =>
+        setInheritedFilters((s) => {
+          const next = { ...(s[propId] ?? {}) };
+          delete next[v];
+          return { ...s, [propId]: next };
+        }),
+      );
+    }
 
     for (const [key, vals] of Object.entries(chainFilters))
       for (const [v, on] of Object.entries(vals))
@@ -184,6 +204,7 @@ export function useActiveFilters(): ActiveFilter[] {
     chainFilters,
     contentFilters,
     setContentFilters,
+    facetMatch,
     dataSource,
     language,
     clearSearch,
@@ -196,5 +217,6 @@ export function useActiveFilters(): ActiveFilter[] {
     setDateTo,
     setInheritedFilters,
     setChainFilters,
+    setFacetMatch,
   ]);
 }
