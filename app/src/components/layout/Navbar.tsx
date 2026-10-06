@@ -70,6 +70,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // t() strings when the switcher below changes it.
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
   const guard = useDirtyGuard();
+  /** Switch collection and open the Library on it. Guarded as one step: an
+   *  open settings or metadata form asks first, and "Cancel" leaves the
+   *  collection as it was (Settings pages remount on a collection change). */
+  const switchCollection = (source: DataSource) => {
+    guard(() => {
+      selectSource(source);
+      onNavigate?.("library");
+    });
+  };
 
 
   useEffect(() => {
@@ -232,9 +241,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                           role="option"
                           aria-selected={on}
                           onClick={() => {
-                            selectSource(c.id);
                             setCollectionOpen(false);
-                            onNavigate?.("library");
+                            switchCollection(c.id);
                           }}
                           className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${
                             on ? "bg-vellum" : "hover:bg-warm"
@@ -509,9 +517,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               <Select
                 value={dataSource}
                 onChange={(v) => {
-                  selectSource(v as DataSource);
-                  onNavigate?.("library");
                   setMobileMenuOpen(false);
+                  switchCollection(v as DataSource);
                 }}
                 ariaLabel="Collection"
                 align="end"
