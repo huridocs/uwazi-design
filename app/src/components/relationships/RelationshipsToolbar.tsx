@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
-import { useSetAtom } from "jotai";
-import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
+import { useAtomValue, useSetAtom } from "jotai";
+import { relFiltersDockCountAtom, relFiltersTabRequestAtom } from "../../atoms/filters";
+import { breakpointAtom } from "../../atoms/viewport";
+import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useRelScopeKey, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
 import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
 import { ConnectButton } from "./ConnectToModal";
@@ -26,6 +28,14 @@ import { toastsAtom } from "../../atoms/notifications";
 export function RelationshipsToolbar() {
   const activeFilterCount = useActiveFilterCount();
   const [, setFiltersOpen] = useFiltersDrawerOpen();
+  // The host scope's filters are a drawer tab wherever a drawer docks them;
+  // a scoped surface (the slide-over, the Library preview) and phones open
+  // the slide-over or the sheet.
+  const scoped = useRelScopeKey() !== "";
+  const dockCount = useAtomValue(relFiltersDockCountAtom);
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const docked = dockCount > 0 && !scoped && !mobile;
+  const requestTab = useSetAtom(relFiltersTabRequestAtom);
 
   return (
     <SearchBar
@@ -40,7 +50,7 @@ export function RelationshipsToolbar() {
           <ConnectButton />
           <FiltersButton
             activeCount={activeFilterCount}
-            onClick={() => setFiltersOpen(true)}
+            onClick={() => (docked ? requestTab((n) => n + 1) : setFiltersOpen(true))}
           />
         </div>
       }

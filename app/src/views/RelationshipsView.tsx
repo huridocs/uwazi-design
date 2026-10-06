@@ -1,10 +1,12 @@
 import { useRelAtom } from "../hooks/useEntityScope";
-import { type ReactNode } from "react";
-import { useAtom } from "jotai";
+import { useState, type ReactNode } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
-import { relViewAtom } from "../atoms/filters";
+import { activeFilterCountAtom, relViewAtom } from "../atoms/filters";
+import { t } from "../utils/i18n";
+import { RelationshipsFiltersTab, useRelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -40,6 +42,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useRelAtom(relViewAtom);
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
+  const [drawerTab, setDrawerTab] = useState<"document" | "filters">("document");
+  useRelFiltersDock(() => setDrawerTab("filters"));
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
 
   const hideMinimap = view === "graph";
   const sourceLink = profile.hasDocument ? undefined : nepalSourceLink(focusedId);
@@ -71,6 +76,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             lead={evidence && <ClaimEvidenceBlock ev={evidence} />}
           />
           <RelationshipsActionBar menuSlot={menuTrigger} />
+          {/* Phones only: there the drawer is not shown, and Filters opens
+              the sheet. A desktop or tablet docks them in the drawer. */}
+          <RelationshipsFiltersPanel />
         </div>
   );
 
@@ -108,24 +116,26 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       right={
         <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
           <EntityPreviewSlideOver />
-          {/* The document projection only makes sense for document-bearing
-              entities — otherwise the viewer falls back to the sample PDF. */}
-          {profile.hasDocument && (
-            <DrawerTabs
-              tabs={[{ id: "document", label: "Document" }]}
-              activeId="document"
-              onChange={() => {}}
-            />
-          )}
-          <RelationshipsFiltersPanel width={720} />
-          {/* One `stack` step below the strip; the strip itself pads only its top. */}
-          <div className={`flex-1 min-h-0 flex flex-col ${profile.hasDocument ? "pt-stack" : ""}`}>
+          {/* The record's document (or its source's link, or the note that it
+              has none), then the filters as a tab of their own. */}
+          <DrawerTabs
+            tabs={[
+              { id: "document", label: profile.hasDocument ? "Document" : sourceLink ? "Source" : "Document" },
+              { id: "filters", label: t("System", "Filters"), dot: relFilterCount > 0 },
+            ]}
+            activeId={drawerTab}
+            onChange={(id) => setDrawerTab(id as "document" | "filters")}
+          />
+          {/* The viewer stays mounted under the Filters tab: a remounted PDF
+              paints blank canvases. One `stack` step below the strip. */}
+          <div className={`flex-1 min-h-0 flex-col pt-stack ${drawerTab === "document" ? "flex" : "hidden"}`}>
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
             <NoDocumentPane entityId={focusedId} />
           )}
           </div>
+          {drawerTab === "filters" && <RelationshipsFiltersTab />}
           {deleteDialog}
         </div>
       }

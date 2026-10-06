@@ -276,6 +276,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Toolbar: `SearchBar` with `ActiveFilterChips` inline, then `ViewControls`,
   `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
   and tree views.
+- Filters are a drawer tab where the entity view has a drawer (Metadata, Relationships and
+  Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`); the toolbar's
+  Filters button switches to it, and the tab carries the dot. The slide-over remains for scoped
+  surfaces (entity slide-over, Library preview); phones open the sheet.
 - `RelationshipRow` is a union: `kind="reference"` (prop `reference`), `"aggregate"` (prop
   `rel`), `"hub"`. Highlight comes from `activeRefIdAtom` or `activeAggregateIdAtom`.
 - Row targets: the entity pill opens the slide-over (`previewEntityIdAtom`); the page tag jumps to
@@ -305,7 +309,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   only the ticked `CopyUnit`s and does not save.
 
 ### Metadata view
-- Drawer tabs: Document, Relationships, Files, Template.
+- Drawer tabs: Relationships, Files, Template, Filters.
 - Click-to-fill: focusing an input arms it (`fillTargetAtom`), and the arm survives blur. The
   label row shows `ListeningChip`. A value is committed only by a click: "Fill <Field>" in
   `FloatingMenu`, or a value row in the record. Selecting text alone never writes.

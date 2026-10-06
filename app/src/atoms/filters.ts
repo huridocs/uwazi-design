@@ -243,3 +243,13 @@ function countFilters(get: <T>(base: Scopable<T>) => T): number {
 }
 
 export const activeFilterCountAtom = activeFilterCountFor(null);
+
+/* ── Filters docked in a drawer ───────────────────────────────────────────
+   The entity view's drawers (Metadata, Relationships and Document views) show
+   the host scope's facets as a Filters tab of their own. A drawer counts
+   itself here while it is mounted on a desktop or tablet; the toolbar's
+   Filters button then asks for that tab (`relFiltersTabRequestAtom`, a nonce)
+   instead of opening the slide-over. Scoped surfaces (the entity slide-over,
+   the Library preview) and phones keep the slide-over or the sheet. */
+export const relFiltersDockCountAtom = atom(0);
+export const relFiltersTabRequestAtom = atom(0);

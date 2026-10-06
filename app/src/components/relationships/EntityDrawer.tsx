@@ -8,6 +8,7 @@ import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { ToCPanel } from "./ToCPanel";
 import { EntityPreviewSlideOver } from "./EntityPreviewSlideOver";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
+import { RelationshipsFiltersTab, useRelFiltersDock } from "./RelationshipsFiltersTab";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
@@ -25,12 +26,14 @@ const baseDrawerTabs = [
   { id: "relationships", label: t("System", "Relationships") },
   { id: "files", label: t("System", "Files") },
   { id: "search", label: t("System", "Search") },
+  { id: "filters", label: t("System", "Filters") },
 ];
 
 export function EntityDrawer() {
   const [references] = useAtom(scopedReferencesAtom);
   const files = useAtomValue(filesAtom);
   const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
+  useRelFiltersDock(() => setActiveDrawerTab("filters"));
   // Dots, not counts: both are state the USER set that keeps acting on the
   // document while they read another tab. The relationship facets narrow what
   // the Relationships panel lists; the doc query keeps marking the page you're
@@ -66,7 +69,8 @@ export function EntityDrawer() {
       <DrawerTabs
         tabs={baseDrawerTabs.map((tab) => {
           if (tab.id === "relationships")
-            return { ...tab, count: references.length, dot: relFilterCount > 0 };
+            return { ...tab, count: references.length };
+          if (tab.id === "filters") return { ...tab, dot: relFilterCount > 0 };
           if (tab.id === "files") return { ...tab, count: files.length };
           if (tab.id === "search") return { ...tab, dot: docQuery.trim().length > 0 };
           return tab;
@@ -95,8 +99,9 @@ export function EntityDrawer() {
       {activeDrawerTab === "relationships" && <RelationshipsDrawerSection />}
       {activeDrawerTab === "files" && <DrawerFilesBody />}
       {activeDrawerTab === "search" && <DocumentSearchBody />}
+      {activeDrawerTab === "filters" && <RelationshipsFiltersTab />}
 
-      {!["metadata", "toc", "relationships", "files", "search"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "relationships", "files", "search", "filters"].includes(activeDrawerTab) && (
         <div data-part="empty" className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-tertiary capitalize">
             {activeDrawerTab} content
@@ -109,7 +114,7 @@ export function EntityDrawer() {
           with Edit/Cancel/Save), so skip the shared bar for those tabs —
           otherwise a redundant 48px bar stacks underneath. The edit form
           carries its own Copy from / Cancel / Save bar, so it takes the slot. */}
-      {activeDrawerTab !== "files" && activeDrawerTab !== "relationships" && !editing && (
+      {activeDrawerTab !== "files" && activeDrawerTab !== "relationships" && activeDrawerTab !== "filters" && !editing && (
         <DrawerActionBar activeTab={activeDrawerTab} onEdit={() => setEditing(true)} />
       )}
     </div>

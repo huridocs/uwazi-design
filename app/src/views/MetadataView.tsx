@@ -69,6 +69,7 @@ import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
+import { RelationshipsFiltersTab, useRelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
@@ -1562,18 +1563,17 @@ function MetadataDrawer() {
   const [files] = useAtom(filesAtom);
 
   const relFilterCount = useAtomValue(activeFilterCountAtom);
+  // The filters are a tab of their own: the dot marks filters set while the
+  // reader is on another tab.
   const drawerTabs = [
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: references.length,
-      dot: relFilterCount > 0,
-    },
+    { id: "relationships", label: "Relationships", count: references.length },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
+    { id: "filters", label: "Filters", dot: relFilterCount > 0 },
   ];
 
   const [activeDrawerTab, setActiveDrawerTab] = useState("relationships");
+  useRelFiltersDock(() => setActiveDrawerTab("filters"));
 
   return (
     // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
@@ -1592,6 +1592,8 @@ function MetadataDrawer() {
         <DrawerFilesBody />
       ) : activeDrawerTab === "relationships" ? (
         <RelationshipsDrawerSection />
+      ) : activeDrawerTab === "filters" ? (
+        <RelationshipsFiltersTab />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-tertiary capitalize">{activeDrawerTab} content</p>
