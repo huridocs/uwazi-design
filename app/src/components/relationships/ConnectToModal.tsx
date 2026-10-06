@@ -50,7 +50,7 @@ export function ConnectButton({ size = "md" }: { size?: "sm" | "md" }) {
  *  neighbours the two share. Each hop names its relationship, the link's
  *  status and the source's quote where the collection has them. "Show in
  *  graph" draws a path in the graph view. Intermediate nodes skip the
- *  collection's pass-through templates (Nepal's sources) unless asked. */
+ *  collection's pass-through templates (Nepal's sources and places) unless asked. */
 export function ConnectToModal({ onClose }: { onClose: () => void }) {
   const fromId = useEntityScopeId();
   const mock = useAtomValue(entitiesAtom);
@@ -58,19 +58,22 @@ export function ConnectToModal({ onClose }: { onClose: () => void }) {
   const setView = useSetRelAtom(relViewAtom);
   const corpus = entityCorpusOf(fromId);
   const graph = chainGraphFor(corpus);
-  const skipDef = pathSkipFor(corpus);
+  const skipGroups = pathSkipFor(corpus);
   const [query, setQuery] = useState("");
   const [target, setTarget] = useState<Entity | null>(null);
   const [mode, setMode] = useState<"paths" | "common">("paths");
-  const [throughSkipped, setThroughSkipped] = useState(false);
+  /** The skip groups (`pathSkipFor`) the search may pass through; none by default. */
+  const [through, setThrough] = useState<ReadonlySet<string>>(() => new Set());
 
+  /* A step change moves focus to the title; opening leaves it on the search
+     field (`autoFocus`). Compared with the last target rather than a
+     first-render flag: StrictMode runs the effect twice on mount, which spent
+     the flag and moved focus off the field. */
   const headingRef = useRef<HTMLHeadingElement | null>(null);
-  const firstRender = useRef(true);
+  const shownTarget = useRef<Entity | null>(null);
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
+    if (shownTarget.current === target) return;
+    shownTarget.current = target;
     headingRef.current?.focus();
   }, [target]);
 
@@ -81,10 +84,19 @@ export function ConnectToModal({ onClose }: { onClose: () => void }) {
     return { candidates: pool.slice(0, LIMIT), total: pool.length };
   }, [entities, fromId, query]);
 
+  const skipped = useMemo(() => skipGroups.filter((g) => !through.has(g.id)), [skipGroups, through]);
   const skip = useMemo(
-    () => (skipDef && !throughSkipped ? new Set(skipDef.typeIds) : undefined),
-    [skipDef, throughSkipped],
+    () => (skipped.length ? new Set(skipped.flatMap((g) => g.typeIds)) : undefined),
+    [skipped],
   );
+  const toggleThrough = (id: string) =>
+    setThrough((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const skippedLabel = skipped.map((g) => g.label).join(" and ");
   const result = useMemo(() => {
     if (!graph || !target) return null;
     const paths = shortestPaths(graph, fromId, target.id, { maxHops: MAX_HOPS, skipTypeIds: skip });
@@ -166,11 +178,15 @@ export function ConnectToModal({ onClose }: { onClose: () => void }) {
                 { id: "common", label: "Shared neighbours" },
               ]}
             />
-            {skipDef && (
-              <label className="inline-flex items-center gap-1.5 text-xs text-ink-secondary cursor-pointer">
-                <Checkbox checked={throughSkipped} onChange={() => setThroughSkipped((v) => !v)} />
-                Through {skipDef.label}
-              </label>
+            {skipGroups.length > 0 && (
+              <div className="inline-flex items-center gap-3">
+                {skipGroups.map((g) => (
+                  <label key={g.id} className="inline-flex items-center gap-1.5 text-xs text-ink-secondary cursor-pointer">
+                    <Checkbox checked={through.has(g.id)} onChange={() => toggleThrough(g.id)} />
+                    Through {g.label}
+                  </label>
+                ))}
+              </div>
             )}
           </div>
           {result && graph && (
@@ -182,8 +198,8 @@ export function ConnectToModal({ onClose }: { onClose: () => void }) {
                   hops={result.paths.hops}
                   truncated={result.paths.truncated}
                   withSkipped={result.withSkipped}
-                  skipLabel={skipDef?.label}
-                  onIncludeSkipped={() => setThroughSkipped(true)}
+                  skipLabel={skippedLabel}
+                  onIncludeSkipped={() => setThrough(new Set(skipGroups.map((g) => g.id)))}
                   onShow={showInGraph}
                 />
               ) : (

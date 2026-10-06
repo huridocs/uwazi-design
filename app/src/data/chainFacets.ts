@@ -47,14 +47,32 @@ const GRAPHS: Partial<Record<Corpus, () => ChainGraph | null>> = {
 
 export const chainGraphFor = (corpus: Corpus): ChainGraph | null => GRAPHS[corpus]?.() ?? null;
 
-/** Templates a path search does not pass through by default, per collection:
- *  Nepal's sources report on everything, so a path through one says only that
- *  one article mentions both ends. `label` names them in the UI. */
-const PATH_SKIP: Partial<Record<Corpus, { typeIds: string[]; label: string }>> = {
-  nepal: { typeIds: ["nepal_source"], label: "sources" },
+/** A group of templates a path search can be told not to pass through.
+ *  `label` names it in the UI ("Through sources"). */
+export interface PathSkipGroup {
+  id: string;
+  typeIds: string[];
+  label: string;
+}
+
+/** Per collection, the templates a path search does not pass through by
+ *  default:
+ *  - Nepal's sources report on everything, so a path through one says only
+ *    that one article mentions both ends.
+ *  - Nepal's places: a path through "Kathmandu" says only that two things
+ *    happened in the same city. Measured on 600 random person, organisation
+ *    and event pairs (sources skipped), a quarter of the connected pairs had a
+ *    shortest path through a place, two thirds of those through Kathmandu or
+ *    Nepal. Without places, 8% lost every path within four hops and 3% got
+ *    longer; the empty result offers to include them. */
+const PATH_SKIP: Partial<Record<Corpus, PathSkipGroup[]>> = {
+  nepal: [
+    { id: "sources", typeIds: ["nepal_source"], label: "sources" },
+    { id: "places", typeIds: ["nepal_location"], label: "places" },
+  ],
 };
 
-export const pathSkipFor = (corpus: Corpus) => PATH_SKIP[corpus] ?? null;
+export const pathSkipFor = (corpus: Corpus): PathSkipGroup[] => PATH_SKIP[corpus] ?? [];
 
 const defsCache = new WeakMap<TemplateDef[], ChainFacetDef[]>();
 
