@@ -107,9 +107,19 @@ const THESAURUS_NAMES = {
   content_warnings: "Content warnings",
   media_verification: "Media verification",
 };
+/** An open-licence file kept out of the bundle (NOT_BUNDLED below) is not
+ *  "rights reserved": its rights value names the licence and says no copy is
+ *  shipped. One linked value per Creative Commons bundled value. */
+const LINKED_RIGHTS = { "bundled-cc0": "CC0", "bundled-cc-by": "CC BY", "bundled-cc-by-sa": "CC BY-SA" };
+const linkedRightsId = (bundled) => bundled.replace(/^bundled-/, "linked-");
 const thesauri = Object.entries(seedThesauri).map(([id, values]) => {
   if (!THESAURUS_NAMES[id]) throw new Error(`Thesaurus ${id} has no name`);
-  return { _id: id, name: THESAURUS_NAMES[id], values: values.map((v) => ({ id: v.id, label: v.label })) };
+  const own = values.map((v) => ({ id: v.id, label: v.label }));
+  const linked =
+    id === "rights"
+      ? Object.entries(LINKED_RIGHTS).map(([b, licence]) => ({ id: linkedRightsId(b), label: `${licence} · linked, no copy here` }))
+      : [];
+  return { _id: id, name: THESAURUS_NAMES[id], values: [...own, ...linked] };
 });
 const labelOf = new Map(thesauri.map((t) => [t._id, new Map(t.values.map((v) => [v.id, v.label]))]));
 
@@ -311,7 +321,8 @@ for (const e of seedEntities) titleOf.set(e.id, titleFor(e));
 /** Commons photos reviewed out of the bundle (Juan, 2026-10-05): two show
  *  people who are likely minors, one a private person. The records stay, as
  *  link-only items pointing at the Commons file page: no copy is shipped and
- *  a rebuild never brings one back. */
+ *  a rebuild never brings one back. Their rights value keeps the licence
+ *  ("CC0 · linked, no copy here"), not "rights reserved". */
 const NOT_BUNDLED = new Set([
   "media:photo-2025-09-08-chitwan-protest-8-sep-1",
   "media:photo-2025-09-08-chitwan-protest-8-sep-3",
@@ -321,7 +332,8 @@ function withoutBundledCopy(e) {
   if (!NOT_BUNDLED.has(e.id)) return e.properties;
   if (!e.properties.page_url?.url) throw new Error(`${e.id}: kept link-only, but it has no page_url to link to`);
   const { file: _file, file_size_bytes: _size, ...rest } = e.properties;
-  return { ...rest, rights: "link-only" };
+  if (!LINKED_RIGHTS[rest.rights]) throw new Error(`${e.id}: kept link-only under rights "${rest.rights}", which has no linked value`);
+  return { ...rest, rights: linkedRightsId(rest.rights) };
 }
 
 const entities = seedEntities.map((e) => {
