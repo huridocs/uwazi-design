@@ -236,6 +236,8 @@ export interface LibraryFilterState {
   inherited: ActiveInherited[];
   /** Active numeric and date range facets. */
   ranges: ActiveRange[];
+  /** OR and NOT groups over the facets above. */
+  groups: FilterGroup[];
   /** Active relationship-chain filters (collections whose templates declare
    *  chains; empty otherwise). */
   chains: ActiveChain[];
@@ -351,6 +353,7 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   toMs: null,
   inherited: [],
   ranges: [],
+  groups: [],
   chains: [],
   q: "",
   searchIndex: EMPTY_SEARCH_INDEX,
@@ -397,6 +400,7 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     toMs: s.toMs ?? null,
     inherited: s.inherited ?? [],
     ranges: s.ranges ?? [],
+    groups: s.groups ?? [],
     chains: s.chains ?? [],
     q: s.q ?? "",
     searchIndex: s.searchIndex ?? EMPTY_SEARCH_INDEX,
@@ -419,15 +423,32 @@ interface FilterNode {
   test: (e: Entity) => boolean;
 }
 
-/** The filter as a list of AND-ed nodes, built once per state and holding
- *  only the facets that narrow, cheapest first. Replaces a fixed table that
- *  ran every predicate for every record, active or not. */
+/** A group in the sidebar: two facets joined by OR, or one facet negated.
+ *  The search, the match-type chips and the relationship chains (whose values
+ *  are path-coupled to each other) are not groupable. Keys are facet keys ("type", "country", `inheritedKey(…)`, `rangeKey(…)`,
+ *  …). A member that does not narrow drops out; a group with no member that
+ *  narrows does nothing. */
+export interface FilterGroup {
+  id: string;
+  op: "or" | "not";
+  keys: string[];
+}
+
+/** The filter as an expression tree: an AND of nodes, each a facet or a
+ *  group (OR of facets, or NOT of one). Built once per state, holding only the
+ *  facets that narrow, cheapest first; a group sits where its first member
+ *  would. A facet's aggregation skips the whole node that holds it, so inside
+ *  an OR group a value's count is what ticking it would add, and inside a NOT
+ *  group what it would take away. */
 const compiledStates = new WeakMap<LibraryFilterState, FilterNode[]>();
 function compile(s: LibraryFilterState): FilterNode[] {
   const hit = compiledStates.get(s);
   if (hit) return hit;
   const nodes: FilterNode[] = [];
   const leaf = (key: string, test: (e: Entity) => boolean) => nodes.push({ keys: [key], test });
+  // Search and the match-type gate go after the groups: they are the costly
+  // tests, and no group holds them.
+  const tail: FilterNode[] = [];
   if (s.typeIds.length) leaf("type", (e) => s.typeIds.includes(e.typeId));
   if (s.hasDocOnly) leaf("doc", (e) => entityIsDoc(e, s.source));
   if (s.wantPublished || s.wantRestricted)
@@ -473,21 +494,55 @@ function compile(s: LibraryFilterState): FilterNode[] {
   // with the snippet builder + highlighter keeps filter, snippets, and marks in
   // one semantics (so "torture cruel" matches an entity carrying both words in
   // different fields/pages, and both get marked).
-  if (s.q) leaf("search", (e) => matchesSearch(e, s));
+  if (s.q) tail.push({ keys: ["search"], test: (e) => matchesSearch(e, s) });
   // Where the query matched (title / properties / document). All-on is the
   // common case and adds no node, so the (blob-scanning) categorisation is
   // only paid when the user has actually narrowed.
   const { title, properties, document } = s.matchTypes;
   if (s.q && !(title && properties && document))
-    leaf("matchType", (e) =>
-      passesMatchTypes(s.matchTypes, s.q, () =>
-        // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
-        // would read `not` / `or` as words to match.
-        matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
-      ),
-    );
-  compiledStates.set(s, nodes);
-  return nodes;
+    tail.push({
+      keys: ["matchType"],
+      test: (e) =>
+        passesMatchTypes(s.matchTypes, s.q, () =>
+          // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
+          // would read `not` / `or` as words to match.
+          matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
+        ),
+    });
+  const out = [...withGroups(nodes, s.groups), ...tail];
+  compiledStates.set(s, out);
+  return out;
+}
+
+/** Does a group change the result? An OR needs two members that narrow (one
+ *  is the facet alone); a NOT needs one. What the chips and the badge count. */
+export const groupEffective = (g: FilterGroup, narrowing: (key: string) => boolean) =>
+  g.keys.filter(narrowing).length >= (g.op === "or" ? 2 : 1);
+
+/** Fold the groups into the AND list: each group's narrowing members leave
+ *  the list and come back as one node, in the first member's place. */
+function withGroups(leaves: FilterNode[], groups: readonly FilterGroup[]): FilterNode[] {
+  if (!groups.length) return leaves;
+  const byKey = new Map(leaves.map((n) => [n.keys[0], n] as const));
+  const replaced = new Map<FilterNode, FilterNode | null>();
+  for (const g of groups) {
+    const members = g.keys.map((k) => byKey.get(k)).filter((n): n is FilterNode => !!n && !replaced.has(n));
+    if (!members.length) continue;
+    const tests = members.map((n) => n.test);
+    const node: FilterNode =
+      g.op === "not"
+        ? { keys: members.map((n) => n.keys[0]), test: (e) => !tests.some((t) => t(e)) }
+        : { keys: members.map((n) => n.keys[0]), test: (e) => tests.some((t) => t(e)) };
+    replaced.set(members[0], node);
+    for (const m of members.slice(1)) replaced.set(m, null);
+  }
+  const out: FilterNode[] = [];
+  for (const n of leaves) {
+    const r = replaced.get(n);
+    if (r === undefined) out.push(n);
+    else if (r) out.push(r);
+  }
+  return out;
 }
 
 /** The match-type chip gate, as ONE definition.

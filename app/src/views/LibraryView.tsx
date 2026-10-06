@@ -50,6 +50,7 @@ import {
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
   libraryRangeFiltersAtom,
+  libraryFilterGroupsAtom,
   libraryDrawnIdsAtom,
   libraryFieldColumnsAtom,
   libraryPropertySortsAtom,
@@ -283,6 +284,7 @@ export function LibraryView() {
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const facetMatch = useAtomValue(libraryFacetMatchAtom);
   const rangeFilters = useAtomValue(libraryRangeFiltersAtom);
+  const groups = useAtomValue(libraryFilterGroupsAtom);
   const countryMode = facetMatch.country ?? "any";
   const descriptorMode = facetMatch.descriptor ?? "any";
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
@@ -653,6 +655,7 @@ export function LibraryView() {
       toMs,
       inherited: activeInherited,
       ranges: activeRanges,
+      groups,
       chains: activeChains,
       q,
       searchIndex,
@@ -680,6 +683,7 @@ export function LibraryView() {
       toMs,
       inheritedKey,
       rangesKey,
+      groups,
       activeChains,
       q,
       searchIndex,
@@ -796,7 +800,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -832,7 +836,7 @@ export function LibraryView() {
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
     () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
   // doesn't shrink the grid to that single lane.
@@ -841,7 +845,7 @@ export function LibraryView() {
       viewMode === "timeline" && !cejilLoading
         ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
         : [],
-    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
+    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
   );
 
   /* Thumbnail Auto reads how many of these results have an image. A layout

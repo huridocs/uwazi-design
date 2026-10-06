@@ -10,7 +10,7 @@ import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
-import { inheritedKey, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
+import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -355,6 +355,9 @@ export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
  *  "descriptor" or `inheritedKey(propId)`. Absent = any. */
 export type { LibraryMatch };
 export const libraryFacetMatchAtom = atom<Record<string, LibraryMatch>>({});
+
+/** OR and NOT groups over the facets (`FilterGroup`), in the order added. */
+export const libraryFilterGroupsAtom = atom<FilterGroup[]>([]);
 
 /** Range facets' bounds as typed, by property name: numbers, or "yyyy-mm-dd"
  *  days for date properties. "" = open on that side. */
@@ -953,6 +956,7 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
   set(libraryRangeFiltersAtom, {});
+  set(libraryFilterGroupsAtom, []);
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -977,6 +981,7 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
   set(libraryRangeFiltersAtom, {});
+  set(libraryFilterGroupsAtom, []);
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -997,6 +1002,7 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
   set(libraryRangeFiltersAtom, {});
+  set(libraryFilterGroupsAtom, []);
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
@@ -1007,6 +1013,9 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
  *  the search use `useActiveFilters().length` instead. */
 export const libraryActiveFilterCountAtom = atom((get) => {
   const match = get(libraryFacetMatchAtom);
+  const narrowing = facetNarrows(get);
+  // A group that changes the result counts once, as its chip.
+  const groups = get(libraryFilterGroupsAtom).filter((g) => groupEffective(g, narrowing)).length;
   // A facet in `missing` ignores its ticks and counts once, as its one chip.
   const ticks = (key: string, vals: Record<string, boolean>) =>
     match[key] === "missing" ? 1 : Object.values(vals).filter(Boolean).length;
@@ -1029,12 +1038,42 @@ export const libraryActiveFilterCountAtom = atom((get) => {
     ...Object.keys(match).filter((k) => k.startsWith("range:") && match[k] === "missing").map((k) => k.slice(6)),
   ]);
   n += names.size;
+  n += groups;
   for (const vals of Object.values(get(libraryChainFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   for (const vals of Object.values(get(libraryContentFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   return n;
 });
+
+/** Does the facet under this key narrow? The atoms' answer, for groups. */
+function facetNarrows(get: Getter): (key: string) => boolean {
+  const match = get(libraryFacetMatchAtom);
+  const ticked = (rec: Record<string, boolean> | undefined) => Object.values(rec ?? {}).some(Boolean);
+  return (key) => {
+    if (match[key] === "missing") return true;
+    switch (key) {
+      case "type":
+        return ticked(get(libraryTypeFiltersAtom));
+      case "doc":
+        return get(libraryHasDocAtom);
+      case "status":
+        return ticked(get(libraryStatusFiltersAtom));
+      case "country":
+        return ticked(get(libraryCountryFiltersAtom));
+      case "descriptor":
+        return ticked(get(libraryDescriptorFiltersAtom));
+      case "date":
+        return !!get(libraryDateFromAtom) || !!get(libraryDateToAtom);
+    }
+    if (key.startsWith("inh:")) return ticked(get(libraryInheritedFiltersAtom)[key.slice(4)]);
+    if (key.startsWith("range:")) {
+      const b = get(libraryRangeFiltersAtom)[key.slice(6)];
+      return !!b?.from || !!b?.to;
+    }
+    return false;
+  };
+}
 
 /** Is a facet or the search narrowing the results? Gates the "nothing matched"
  *  Clear buttons (map, time brush), which clear both; a facet count alone would

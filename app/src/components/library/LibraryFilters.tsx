@@ -12,7 +12,7 @@ import {
 } from "../../utils/entityContent";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
@@ -28,6 +28,7 @@ import {
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
   libraryRangeFiltersAtom,
+  libraryFilterGroupsAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
@@ -68,9 +69,11 @@ import {
   countryCarriersOf,
   descriptorCarriersOf,
   type LibraryFilterState,
+  type FilterGroup,
   type LibraryMatch,
   type RangeBounds,
 } from "../../utils/libraryFilter";
+import { useActiveFilters } from "../../hooks/useActiveFilters";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
@@ -96,6 +99,7 @@ export function LibraryFilters() {
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
   const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
+  const [groups, setGroups] = useAtom(libraryFilterGroupsAtom);
   const countryMode = facetMatch.country ?? "any";
   const descriptorMode = facetMatch.descriptor ?? "any";
   const setMatch = (key: string, mode: LibraryMatch) =>
@@ -188,6 +192,7 @@ export function LibraryFilters() {
       toMs: dateBoundMs(dateTo, "to"),
       inherited,
       ranges: activeRangesOf(rangeFilters, facetMatch, rangeDefs),
+      groups,
       chains: buildActiveChains(chainFilters, chainDefs, chainGraphFor(dataSource)),
       q: query.trim().toLowerCase(),
       searchIndex,
@@ -201,7 +206,7 @@ export function LibraryFilters() {
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, chainDefs, chainFilters, query, matchTypes,
+    dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, groups, chainDefs, chainFilters, query, matchTypes,
     contentSelection, contentMode, entities,
   ]);
 
@@ -401,6 +406,38 @@ export function LibraryFilters() {
       [propId]: { ...(s[propId] ?? {}), [value]: !s[propId]?.[value] },
     }));
 
+  // Groups pick from the facets that narrow now, named as their chips are.
+  const activeFilters = useActiveFilters();
+  const groupOptions = useMemo(() => {
+    const m = new Map<string, { name: string; values: string[] }>();
+    for (const f of activeFilters) {
+      if (!f.facetKey) continue;
+      const entry = m.get(f.facetKey) ?? { name: f.group.split(" · ")[0], values: [] };
+      entry.values.push(f.label);
+      m.set(f.facetKey, entry);
+    }
+    return [...m].map(([key, { name, values }]) => ({
+      key,
+      name,
+      // A range's chip already starts with its name ("Age 18 → 30").
+      label: values[0]?.startsWith(name) ? values.join(", ") : `${name}: ${values.join(", ")}`,
+    }));
+  }, [activeFilters]);
+  // A facet's name when it no longer narrows, so a group can still show it.
+  const facetName = (key: string) => {
+    if (key.startsWith("inh:")) return inheritedDefs.find((d) => d.propId === key.slice(4))?.label ?? key.slice(4);
+    if (key.startsWith("range:")) return rangeDefs.find((d) => d.name === key.slice(6))?.label ?? key.slice(6);
+    return FIXED_FACET_NAMES[key] ?? key;
+  };
+  const addGroup = () =>
+    setGroups((gs) => {
+      // Start from the first facets no other group holds, when there are any.
+      const taken = new Set(gs.flatMap((g) => g.keys));
+      const free = groupOptions.map((o) => o.key).filter((k) => !taken.has(k));
+      return [...gs, { id: `group-${Date.now().toString(36)}`, op: "or", keys: free.slice(0, 2) }];
+    });
+  const updateGroup = (id: string, next: Partial<FilterGroup>) =>
+    setGroups((gs) => gs.map((g) => (g.id === id ? { ...g, ...next } : g)));
   // CEJIL filter groups (e.g. "Documentos") — expanded by default.
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const groupNames =
@@ -659,6 +696,26 @@ export function LibraryFilters() {
             }}
           />
         )}
+        {groups.map((g) => (
+          <FilterGroupCard
+            key={g.id}
+            group={g}
+            options={groupOptions}
+            taken={new Set(groups.filter((x) => x.id !== g.id).flatMap((x) => x.keys))}
+            facetName={facetName}
+            onChange={(next) => updateGroup(g.id, next)}
+            onRemove={() => setGroups((gs) => gs.filter((x) => x.id !== g.id))}
+          />
+        ))}
+        <button
+          type="button"
+          data-part="add-group"
+          onClick={addGroup}
+          className="flex items-center gap-1.5 w-full h-8 px-2 rounded-md text-tab text-ink-secondary hover:text-ink hover:bg-paper transition-colors cursor-pointer"
+        >
+          <Plus size={13} aria-hidden className="shrink-0" />
+          Add group
+        </button>
       </div>
 
       {/* What's actually ON — a sheet across the foot of the panel. The facet
@@ -1201,21 +1258,53 @@ const MATCH_LABEL: Record<LibraryMatch, string> = { any: "any", all: "all", none
 function FacetMatchRow({ title, match, note }: { title: string; match: Pick<FacetMatch, "mode" | "onChange" | "multi">; note: string }) {
   const modes: LibraryMatch[] = match.multi ? ["any", "all", "none", "missing"] : ["any", "none", "missing"];
   return (
-    <div data-component="FacetMatchRow" className="flex items-center gap-0.5 h-5 px-2">
-      <span aria-hidden className="text-meta text-ink-tertiary me-1">Match</span>
-      <div role="group" aria-label={`Match mode for ${title}`} className="flex items-center gap-0.5">
-        {modes.map((m) => (
+    <SegmentRow
+      component="FacetMatchRow"
+      caption="Match"
+      groupLabel={`Match mode for ${title}`}
+      options={modes.map((m) => ({ value: m, label: MATCH_LABEL[m] }))}
+      value={match.mode}
+      onChange={match.onChange}
+      note={note}
+    />
+  );
+}
+
+/** The Match row's shape: a caption, text segments, and a note slot at the
+ *  end that is always mounted. */
+function SegmentRow<T extends string>({
+  component,
+  caption,
+  groupLabel,
+  options,
+  value,
+  onChange,
+  note,
+}: {
+  component: string;
+  caption: string;
+  groupLabel: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  note: string;
+}) {
+  return (
+    <div data-component={component} className="flex items-center gap-0.5 h-5 px-2">
+      <span aria-hidden className="text-meta text-ink-tertiary me-1">{caption}</span>
+      <div role="group" aria-label={groupLabel} className="flex items-center gap-0.5">
+        {options.map((o) => (
           <button
-            key={m}
+            key={o.value}
             type="button"
             data-part="mode"
-            aria-pressed={match.mode === m}
-            onClick={() => match.onChange(m)}
+            aria-pressed={value === o.value}
+            onClick={() => onChange(o.value)}
             className={`px-1.5 h-5 rounded-sm text-meta transition-colors cursor-pointer ${
-              match.mode === m ? "bg-warm text-ink" : "text-ink-tertiary hover:text-ink"
+              value === o.value ? "bg-warm text-ink" : "text-ink-tertiary hover:text-ink"
             }`}
           >
-            {MATCH_LABEL[m]}
+            {o.label}
           </button>
         ))}
       </div>
@@ -1223,6 +1312,104 @@ function FacetMatchRow({ title, match, note }: { title: string; match: Pick<Face
         {note}
       </span>
     </div>
+  );
+}
+
+/** Facet keys that are not property facets, by the name their chips use. */
+const FIXED_FACET_NAMES: Record<string, string> = {
+  type: "Type",
+  doc: "Document",
+  status: "Status",
+  country: "Country",
+  descriptor: "Descriptor",
+  date: "Date",
+  content: "Content",
+};
+
+/* ── Group card — two facets joined by OR, or one negated. The facets keep
+   their own cards and selections; the group only changes how they combine. ── */
+
+function FilterGroupCard({
+  group,
+  options,
+  taken,
+  facetName,
+  onChange,
+  onRemove,
+}: {
+  group: FilterGroup;
+  options: { key: string; label: string }[];
+  /** Keys another group holds. */
+  taken: ReadonlySet<string>;
+  facetName: (key: string) => string;
+  onChange: (next: Partial<FilterGroup>) => void;
+  onRemove: () => void;
+}) {
+  const slots = group.op === "or" ? 2 : 1;
+  const setSlot = (i: number, key: string) => {
+    const keys = [...group.keys];
+    keys[i] = key;
+    onChange({ keys: keys.filter(Boolean) });
+  };
+  const choices = (i: number) => {
+    const current = group.keys[i];
+    const other = new Set(group.keys.filter((_, j) => j !== i));
+    const list = options.filter((o) => !taken.has(o.key) && !other.has(o.key));
+    // A chosen facet that no longer narrows stays listed, so the box does not
+    // jump to another one.
+    if (current && !list.some((o) => o.key === current))
+      list.unshift({ key: current, label: `${facetName(current)}: nothing set` });
+    return list;
+  };
+  return (
+    <section data-component="FilterGroupCard" aria-label="Group" className={`${FACET_CARD} space-y-1.5`}>
+      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
+        <h2 data-part="title" className="text-tab font-semibold text-ink">Group</h2>
+        <button
+          type="button"
+          data-part="remove"
+          aria-label="Remove group"
+          onClick={onRemove}
+          className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+        >
+          <X size={11} aria-hidden />
+          Remove
+        </button>
+      </header>
+      <SegmentRow
+        component="GroupJoinRow"
+        caption="Join"
+        groupLabel="How the group joins its facets"
+        options={[
+          { value: "or", label: "either" },
+          { value: "not", label: "not" },
+        ]}
+        value={group.op}
+        onChange={(op) => onChange({ op, keys: group.keys.slice(0, op === "or" ? 2 : 1) })}
+        note=""
+      />
+      <div data-part="members" className="px-1 pb-0.5 flex flex-col gap-1">
+        {Array.from({ length: slots }, (_, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            {i > 0 && <span className="px-1 text-meta text-ink-tertiary">or</span>}
+            <select
+              value={group.keys[i] ?? ""}
+              onChange={(e) => setSlot(i, e.target.value)}
+              aria-label={group.op === "or" ? (i === 0 ? "First facet" : "Second facet") : "Facet to exclude"}
+              className="w-full min-w-0 h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary truncate
+                focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all cursor-pointer"
+            >
+              <option value="">{choices(i).length ? "Choose a filter" : "Set a filter above first"}</option>
+              {choices(i).map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -337,6 +337,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
   use `entityInRange`. Time fields show only where a record is timed to the hour.
+- Facets compile to an AND of nodes (`compile` in `utils/libraryFilter.ts`); a group (OR of two
+  facets, NOT of one) is one node. A facet's counts skip the whole node it sits in, so inside a
+  group they show what a tick would add or remove. Value facets and ranges have a Match mode
+  (any / all / none / missing, `libraryFacetMatchAtom`); `none` and `missing` keep only records
+  whose template carries the property. Several facets are counted in one pass with
+  `forEachFacetBase`, not one `matchesAll` pass each.
 - Search history: `atoms/savedViews.ts`, recorded on settle (1.2s, Enter, blur) with the filter
   state it ran under (`LibrarySnapshot`), per collection, last 20, in sessionStorage. The search
   box's recent list shows the first 8 distinct queries and re-runs the words only; the Views

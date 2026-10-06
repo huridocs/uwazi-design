@@ -16,9 +16,10 @@ import {
   libraryContentFiltersAtom,
   libraryFacetMatchAtom,
   libraryRangeFiltersAtom,
+  libraryFilterGroupsAtom,
   type LibraryMatch,
 } from "../atoms/library";
-import { inheritedKey, rangeKey } from "../utils/libraryFilter";
+import { groupEffective, inheritedKey, rangeKey } from "../utils/libraryFilter";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
 import { getEntityType } from "../data/entities";
@@ -31,6 +32,9 @@ export interface ActiveFilter {
   label: string;
   color?: string;
   remove: () => void;
+  /** The facet key behind it ("type", `inheritedKey(…)`, …), for the groups
+   *  picker. Absent on the search, chain values and group chips. */
+  facetKey?: string;
 }
 
 /** Every active filter, flattened and individually removable.
@@ -59,6 +63,7 @@ export function useActiveFilters(): ActiveFilter[] {
   const [contentFilters, setContentFilters] = useAtom(libraryContentFiltersAtom);
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
   const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
+  const [groups, setGroups] = useAtom(libraryFilterGroupsAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -80,7 +85,7 @@ export function useActiveFilters(): ActiveFilter[] {
     ) => {
       const mode: LibraryMatch = facetMatch[key] ?? "any";
       if (mode === "missing") {
-        out.push({ id: `${idPrefix}-missing`, group, label: `No ${group.toLowerCase()}`, remove: resetMatch(key) });
+        out.push({ id: `${idPrefix}-missing`, group, label: `No ${group.toLowerCase()}`, remove: resetMatch(key), facetKey: key });
         return;
       }
       for (const [v, on] of Object.entries(vals))
@@ -90,6 +95,7 @@ export function useActiveFilters(): ActiveFilter[] {
             group: mode === "any" ? group : `${group} · ${mode}`,
             label: mode === "none" ? `not ${v}` : v,
             remove: removeValue(v),
+            facetKey: key,
           });
     };
     const drop = <T,>(set: (fn: (s: T) => T) => void, key: string) => () =>
@@ -116,6 +122,7 @@ export function useActiveFilters(): ActiveFilter[] {
           label: getEntityType(id)?.name ?? id,
           color: getEntityType(id)?.color,
           remove: drop(setTypeFilters, id),
+          facetKey: "type",
         });
 
     if (hasDocOnly)
@@ -124,6 +131,7 @@ export function useActiveFilters(): ActiveFilter[] {
         group: "Document",
         label: "Has a document",
         remove: () => setHasDocOnly(false),
+        facetKey: "doc",
       });
 
     for (const [id, on] of Object.entries(statusFilters))
@@ -133,6 +141,7 @@ export function useActiveFilters(): ActiveFilter[] {
           group: "Status",
           label: id === "published" ? "Published" : "Restricted",
           remove: drop(setStatusFilters, id),
+          facetKey: "status",
         });
 
     valueChips("country", "Country", "country", countryFilters, (c) => drop(setCountryFilters, c));
@@ -148,6 +157,7 @@ export function useActiveFilters(): ActiveFilter[] {
           setDateFrom("");
           setDateTo("");
         },
+        facetKey: "date",
       });
 
     for (const g of CONTENT_GROUPS)
@@ -157,6 +167,7 @@ export function useActiveFilters(): ActiveFilter[] {
             id: `content-${g}-${id}`,
             group: "Content",
             label: `${CONTENT_GROUP_LABEL[g]}: ${contentRowLabel(g, id)}`,
+            facetKey: "content",
             remove: () =>
               setContentFilters((s) => {
                 const next = { ...(s[g] ?? {}) };
@@ -191,7 +202,7 @@ export function useActiveFilters(): ActiveFilter[] {
         resetMatch(key)();
       };
       if (mode === "missing") {
-        out.push({ id: `range-${def.name}`, group: def.label, label: `No ${def.label.toLowerCase()}`, remove: clear });
+        out.push({ id: `range-${def.name}`, group: def.label, label: `No ${def.label.toLowerCase()}`, remove: clear, facetKey: key });
         continue;
       }
       if (!b?.from && !b?.to) continue;
@@ -201,6 +212,7 @@ export function useActiveFilters(): ActiveFilter[] {
         group: mode === "any" ? def.label : `${def.label} · ${mode}`,
         label: mode === "none" ? `${def.label} not ${span}` : `${def.label} ${span}`,
         remove: clear,
+        facetKey: key,
       });
     }
 
@@ -219,6 +231,21 @@ export function useActiveFilters(): ActiveFilter[] {
               }),
           });
 
+    // A group that changes the result is one chip ("Cause or Age", "Not
+    // Verification"); dropping it ungroups and keeps both facets.
+    const names = new Map<string, string>();
+    for (const f of out) if (f.facetKey && !names.has(f.facetKey)) names.set(f.facetKey, f.group.split(" · ")[0]);
+    for (const g of groups) {
+      if (!groupEffective(g, (k) => names.has(k))) continue;
+      const members = g.keys.filter((k) => names.has(k)).map((k) => names.get(k)!);
+      out.push({
+        id: `group-${g.id}`,
+        group: g.op === "or" ? "Either" : "Not",
+        label: g.op === "or" ? members.join(" or ") : `Not ${members.join(", ")}`,
+        remove: () => setGroups((gs) => gs.filter((x) => x.id !== g.id)),
+      });
+    }
+
     return out;
   }, [
     query,
@@ -235,6 +262,7 @@ export function useActiveFilters(): ActiveFilter[] {
     setContentFilters,
     facetMatch,
     rangeFilters,
+    groups,
     dataSource,
     language,
     clearSearch,
@@ -249,5 +277,6 @@ export function useActiveFilters(): ActiveFilter[] {
     setChainFilters,
     setFacetMatch,
     setRangeFilters,
+    setGroups,
   ]);
 }
