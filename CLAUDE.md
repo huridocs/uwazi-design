@@ -368,7 +368,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     half of the filtered results have a preview: an image, a document's first page (CEJIL file
     records, Sample documents, Nepal PDFs) or a recording (CEJIL Audiencias, which draw the
     play tile; there are no posters). CEJIL therefore opens with thumbnails. The menu note gives
-    the answer and the count (`libraryThumbAutoAtom`, `previewCount`). Read the resolved answer
+    the answer and the count (`libraryThumbAutoAtom`, `previewCount`). Auto counts what the
+    Content card's Contains counts (`carriesContent` in `utils/entityContent.ts`); `entityContent`
+    always puts the record's `preview` kind in Contains, so the two never disagree. CEJIL media
+    values are Video or Audio by URL kind, linked or stored by host. Read the resolved answer
     from `libraryCardInfoAtom.preview`, never the stored value. Whenever thumbnails are drawn,
     by Auto or On, every card keeps the slot, with a `QuietMark` where there is no preview; a
     grid row never mixes shapes. Off drops the slot from every card.

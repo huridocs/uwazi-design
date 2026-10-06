@@ -6,8 +6,8 @@ import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
 import { cejilDocBearingIds } from "./profile";
-import { cejilCorpus, cejilFilesBySid, cejilFullText, cejilLoaded, cejilRelsByEntity } from "./load";
-import { languageName, lengthRow, registerContentProvider } from "../../utils/entityContent";
+import { cejilCorpus, cejilEsBySid, cejilFilesBySid, cejilFullText, cejilLoaded, cejilRelsByEntity } from "./load";
+import { languageName, lengthRow, registerContentProvider, type EntityContent } from "../../utils/entityContent";
 import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
 import { formatPlace } from "../../utils/geoFormat";
 import { parseMediaValue } from "../../utils/mediaValue";
@@ -461,26 +461,40 @@ let _libraryEntities: Entity[] | null = null;
 /** The Content card's answer for a CEJIL record, from its file records: a
  *  document per file, stored in the collection, by language and page count.
  *  Its text is its own when recovered by `_id`, a stand-in when it resolves
- *  through one of the six shared filenames (`BorrowedDocLine`), else none. */
+ *  through one of the six shared filenames (`BorrowedDocLine`), else none.
+ *  A media value (an Audiencia's hearing) is a video or audio by its URL, the
+ *  same reading as the card's mark; one that names neither is a video, as its
+ *  tile is. A URL on another host is linked, one in the collection stored. */
 registerContentProvider("cejil", (e) => {
-  const files = cejilFilesBySid().get(e.id);
-  if (!files?.length) return {};
-  const text = cejilFullText();
+  const contains = new Set<string>();
+  const storage = new Set<string>();
   const lang = new Set<string>();
   const length = new Set<string>();
   const source = new Set<string>();
-  for (const f of files) {
-    lang.add(languageName(f.language));
-    length.add(lengthRow(f.totalPages ?? 1));
-    source.add(text[f._id] ? "embedded" : text[f.filename] ? "stand-in" : "none");
+  const files = cejilFilesBySid().get(e.id) ?? [];
+  if (files.length) {
+    const text = cejilFullText();
+    contains.add("document");
+    storage.add("stored");
+    for (const f of files) {
+      lang.add(languageName(f.language));
+      length.add(lengthRow(f.totalPages ?? 1));
+      source.add(text[f._id] ? "embedded" : text[f.filename] ? "stand-in" : "none");
+    }
   }
-  return {
-    contains: ["document"],
-    storage: ["stored"],
-    language: [...lang],
-    length: [...length],
-    text: [...source],
-  };
+  const raw = e.mediaKeys ? cejilEsBySid().get(e.id) : undefined;
+  for (const key of new Set(Object.values(e.mediaKeys ?? {}))) {
+    for (const v of raw?.metadata?.[key] ?? []) {
+      const parsed = parseMediaValue(v.value);
+      if (!parsed) continue;
+      contains.add(parsed.kind === "audio" ? "audio" : "video");
+      storage.add(/^https?:/i.test(parsed.url) ? "linked" : "stored");
+    }
+  }
+  if (!contains.size) return {};
+  const out: EntityContent = { contains: [...contains], storage: [...storage] };
+  if (files.length) Object.assign(out, { language: [...lang], length: [...length], text: [...source] });
+  return out;
 });
 
 export function cejilLibraryEntities(): Entity[] {

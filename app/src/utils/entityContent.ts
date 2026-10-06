@@ -117,15 +117,26 @@ export const EMPTY_CONTENT: EntityContent = {};
 const EMPTY = EMPTY_CONTENT;
 
 /** The record's content. Cached by entity identity: the corpus builders return
- *  the same objects every render. */
+ *  the same objects every render. The kind the card previews (`e.preview`) is
+ *  always in Contains, so a record that draws a page, a picture or a play tile
+ *  is never one the card says carries nothing (a CEJIL record previewing a
+ *  connected record's PDF, the Sample's seeded media). */
 export function entityContent(e: Entity, source: DataSource): EntityContent {
   const hit = cache.get(e);
   if (hit) return hit;
   const read = providers[source];
-  const out = read ? read(e) : EMPTY;
+  let out = read ? read(e) : EMPTY;
+  if (e.preview && !out.contains?.includes(e.preview)) {
+    out = { ...out, contains: [...(out.contains ?? []), e.preview] };
+  }
   cache.set(e, out);
   return out;
 }
+
+/** Does the record carry a document, image or recording? Thumbnail Auto counts
+ *  these, so Auto and the Content card answer from one model. */
+export const carriesContent = (e: Entity, source: DataSource): boolean =>
+  (entityContent(e, source).contains?.length ?? 0) > 0;
 
 /** Does the content pass the selection? `skip` leaves one group out (that
  *  group's own counts). */

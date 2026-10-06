@@ -11,6 +11,8 @@ import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
+import { carriesContent } from "../utils/entityContent";
+import type { Entity } from "../data/entities";
 import {
   optionsFor,
   DEFAULT_THUMB_MODE,
@@ -744,21 +746,21 @@ export const libraryTimeHubAtom = displayOption<boolean>(
  *  answers. */
 export const libraryResultsPreviewCountAtom = atom<PreviewCount | null>(null);
 
-const corpusPreviewCountAtom = atom((get) => previewCount(get(libraryEntitiesAtom)));
+const corpusPreviewCountAtom = atom((get) => previewCount(get(libraryEntitiesAtom), get(dataSourceAtom)));
 
 export interface PreviewCount {
-  /** Results whose card draws a preview: an image, a page or a recording tile. */
+  /** Results that carry a document, image or recording. */
   withPreview: number;
   total: number;
 }
 
-/** Every preview kind counts: an image, a document's first page (CEJIL file
- *  records, Sample documents, Nepal PDFs), and a recording, which has no poster
- *  and draws a play or waveform tile (CEJIL Audiencias, Sample media). */
-export function previewCount(entities: readonly { preview?: string }[]): PreviewCount | null {
+/** Counts what the Content card counts (`carriesContent`): a document (its
+ *  first page), an image, or a recording (a play or waveform tile). One model,
+ *  so Contains: Video and Auto never disagree about an Audiencia. */
+export function previewCount(entities: readonly Entity[], source: DataSource): PreviewCount | null {
   if (entities.length === 0) return null;
   let n = 0;
-  for (const e of entities) if (e.preview) n++;
+  for (const e of entities) if (carriesContent(e, source)) n++;
   return { withPreview: n, total: entities.length };
 }
 

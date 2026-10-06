@@ -851,7 +851,7 @@ export function LibraryView() {
   /* Thumbnail Auto reads how many of these results can draw a preview. A layout
      effect, so a change of results repaints before the browser paints. */
   const setPreviewCount = useSetAtom(libraryResultsPreviewCountAtom);
-  const resultsPreviewCount = useMemo(() => previewCount(filtered), [filtered]);
+  const resultsPreviewCount = useMemo(() => previewCount(filtered, dataSource), [filtered, dataSource]);
   const withPreview = resultsPreviewCount?.withPreview ?? -1;
   const total = resultsPreviewCount?.total ?? 0;
   // Keyed on the two numbers, so a new list with the same counts stores nothing.
