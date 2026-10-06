@@ -247,7 +247,11 @@ export function RelationshipsFilterSlideOver() {
           for (const c of entityCountries(entity, language))
             country.set(c, (country.get(c) ?? 0) + 1);
         }
-        if (entity && relOk(ref) && entOk(ref) && ctyOk(ref) && !seenD.has(entity.id)) {
+        // Descriptores in AND count the targets that already hold every ticked
+        // descriptor, so a count is what ticking it returns.
+        const dscAll =
+          descriptorMode !== "AND" || [...selDsc].every((d) => entity?.descriptors?.includes(d));
+        if (entity && dscAll && relOk(ref) && entOk(ref) && ctyOk(ref) && !seenD.has(entity.id)) {
           seenD.add(entity.id);
           for (const d of entity.descriptors ?? [])
             descriptor.set(d, (descriptor.get(d) ?? 0) + 1);

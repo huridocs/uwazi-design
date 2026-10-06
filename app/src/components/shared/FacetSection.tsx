@@ -289,6 +289,9 @@ export function FacetSection({
             // A facet keeps its rows when other facets empty them: a 0 is dimmed
             // and stays tickable. Not in a form list, whose count is coverage.
             const zero = count === 0 && !renderCount && !bare;
+            // A 0 row is shown in place and cannot be ticked: nothing would be
+            // added. A ticked one stays live so it can be unticked.
+            const unavailable = zero && !checked;
             // A NON-SELECTABLE group label opens each run of grouped children —
             // the thesaurus group is context, not a filter value of its own.
             const showGroupHeader = !!row.group && row.group !== regularRows[idx - 1]?.group;
@@ -303,8 +306,12 @@ export function FacetSection({
                 )}
                 <label
                   data-part="option"
-                  className={`${bare ? "px-2 rounded-md" : "bleed"} flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
-                    checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
+                  className={`${bare ? "px-2 rounded-md" : "bleed"} flex items-center gap-2 py-1.5 transition-colors ${
+                    checked
+                      ? "cursor-pointer bg-carbon/[0.04] hover:bg-carbon/[0.07]"
+                      : unavailable
+                        ? "cursor-default"
+                        : "cursor-pointer hover:bg-warm"
                   }`}
                   style={
                     row.group
@@ -336,7 +343,11 @@ export function FacetSection({
                     <Checkbox
                       checked={checked}
                       onChange={() => onToggle(id)}
-                      ariaLabel={ariaLabelOf?.(id) ?? (row.group ? `${label(id)} (${row.group})` : label(id))}
+                      unavailable={unavailable}
+                      ariaLabel={
+                        ariaLabelOf?.(id) ??
+                        `${row.group ? `${label(id)} (${row.group})` : label(id)}${bare ? "" : `, ${count}`}`
+                      }
                     />
                   )}
                   {renderMarker?.(id)}
@@ -378,12 +389,15 @@ export function FacetSection({
           {noLabelEntry && (
             <label
               data-part="no-label"
-              className="bleed flex items-center gap-2 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft"
+              className={`bleed flex items-center gap-2 py-1.5 transition-colors border-t border-border-soft ${
+                noLabelEntry[1] === 0 && !selected[noLabelEntry[0]] ? "cursor-default" : "cursor-pointer hover:bg-warm"
+              }`}
             >
               <Checkbox
                 checked={!!selected[noLabelEntry[0]]}
                 onChange={() => onToggle(noLabelEntry[0])}
-                ariaLabel={noLabelText}
+                unavailable={noLabelEntry[1] === 0 && !selected[noLabelEntry[0]]}
+                ariaLabel={`${noLabelText}, ${noLabelEntry[1]}`}
               />
               <span className="text-xs italic text-ink-tertiary truncate flex-1">
                 {noLabelText}

@@ -78,12 +78,17 @@ import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
+import { FacetTally } from "../../utils/facetTally";
 import { BAR_GHOST } from "../shared/warmButton";
 import { DateInput } from "../shared/DateInput";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
  *  Countries card (AND/OR + search, faceted counts), and a Clear at the bottom. */
+/** The ticked values of a facet's selection record. */
+const tickedOf = (rec: Record<string, boolean>): Set<string> =>
+  new Set(Object.keys(rec).filter((k) => rec[k]));
+
 /** How many records carry each value, over the given records. */
 function tallyValues(entities: readonly Entity[], valuesOf: (e: Entity) => readonly string[]): Map<string, number> {
   const m = new Map<string, number>();
@@ -282,7 +287,11 @@ export function LibraryFilters() {
       if (!matchesAll(e, filterState, "content")) continue;
       for (const g of CONTENT_GROUPS) {
         const vals = c[g];
-        if (!vals?.length || !matchesContent(c, contentSelection, contentMode, g)) continue;
+        // Contains in AND counts the records that already hold every ticked
+        // row, so a count is what ticking the row returns; OR groups count
+        // each row over the rest of the card.
+        const skip = g === "contains" && contentMode === "AND" ? undefined : g;
+        if (!vals?.length || !matchesContent(c, contentSelection, contentMode, skip)) continue;
         for (const v of vals) counts[g].set(v, (counts[g].get(v) ?? 0) + 1);
       }
     }
@@ -297,30 +306,34 @@ export function LibraryFilters() {
   // Each keyword facet's value counts, and how many records that can carry
   // the value have none (what `missing` would keep), over the records passing
   // every other facet.
+  // Counted in the facet's Match mode (`FacetTally`), so a 0 means ticking the
+  // value cannot add a result, and the row is disabled.
   const countryCounts = useMemo(() => {
-    const m = new Map<string, number>();
     const carriers = countryCarriersOf(entities, dataSource, language);
+    const tally = new FacetTally(countryMode, tickedOf(countryFilters));
     let missing = 0;
     for (const e of entities)
       if (matchesAll(e, filterState, "country")) {
         const vals = entityCountries(e, language);
-        if (!vals.length && carriers.has(e.typeId)) missing++;
-        for (const c of vals) m.set(c, (m.get(c) ?? 0) + 1);
+        const carrier = carriers.has(e.typeId);
+        if (!vals.length && carrier) missing++;
+        tally.add(vals, carrier);
       }
-    return { values: m, missing };
-  }, [entities, filterState, language, dataSource]);
+    return { values: tally.counts(countryUniverse.keys()), missing };
+  }, [entities, filterState, language, dataSource, countryMode, countryFilters, countryUniverse]);
   const descriptorCounts = useMemo(() => {
-    const m = new Map<string, number>();
     const carriers = descriptorCarriersOf(entities, dataSource);
+    const tally = new FacetTally(descriptorMode, tickedOf(descriptorFilters));
     let missing = 0;
     for (const e of entities)
       if (matchesAll(e, filterState, "descriptor")) {
         const vals = e.descriptors ?? [];
-        if (!vals.length && carriers.has(e.typeId)) missing++;
-        for (const d of vals) m.set(d, (m.get(d) ?? 0) + 1);
+        const carrier = carriers.has(e.typeId);
+        if (!vals.length && carrier) missing++;
+        tally.add(vals, carrier);
       }
-    return { values: m, missing };
-  }, [entities, filterState, dataSource]);
+    return { values: tally.counts(descriptorUniverse.keys()), missing };
+  }, [entities, filterState, dataSource, descriptorMode, descriptorFilters, descriptorUniverse]);
   // Every shown property and range facet in one pass: a record counts towards
   // a facet when it passes all the other facets, so ticking a value in one
   // narrows the counts of the rest but never its own. A range keeps how many
@@ -333,6 +346,7 @@ export function LibraryFilters() {
       def,
       key: inheritedKey(def.propId),
       carriers: inheritedCarriers(def, entities, language, dataSource),
+      tally: new FacetTally(facetMatch[inheritedKey(def.propId)] ?? "any", tickedOf(inheritedFilters[def.propId] ?? {})),
       out: (inheritedCounts[def.propId] = { values: new Map<string, number>(), missing: 0 }),
     }));
     const ranges = shownRanges.map((def) => {
@@ -350,8 +364,9 @@ export function LibraryFilters() {
       for (const f of facets) {
         if (failed && !failed.includes(f.key)) continue;
         const vals = entityInheritedValues(e, f.def, language, dataSource);
-        if (!vals.length && f.carriers.has(e.typeId)) f.out.missing++;
-        for (const v of vals) f.out.values.set(v, (f.out.values.get(v) ?? 0) + 1);
+        const carrier = f.carriers.has(e.typeId);
+        if (!vals.length && carrier) f.out.missing++;
+        f.tally.add(vals, carrier);
       }
       for (const r of ranges) {
         if (failed && !failed.includes(r.key)) continue;
@@ -365,8 +380,10 @@ export function LibraryFilters() {
         }
       }
     });
+    for (const f of facets) f.out.values = f.tally.counts(inheritedUniverse(f.def).keys());
     return { inheritedCounts, rangeStats };
-  }, [entities, filterState, shownDefs, shownRanges, facetMatch, rangeFilters, language, dataSource]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `inheritedUniverse` reads `universeCache`
+  }, [entities, filterState, shownDefs, shownRanges, facetMatch, rangeFilters, inheritedFilters, language, dataSource, universeCache]);
   // Relationship-chain facet counts (path-coupled), for the chains on show.
   const chainCounts = useMemo(() => {
     const graph = chainGraphFor(dataSource);
@@ -921,7 +938,7 @@ function TreeChildren({ children }: { children: ReactNode }) {
  *  target, so it takes no touch-target floor of its own: `min-h-11` below `md`
  *  made Status/Type rows 44px in the sheet while the keyword rows beside them
  *  stayed 28px. */
-const FACET_ROW = "flex items-center py-1 cursor-pointer transition-colors";
+const FACET_ROW = "flex items-center py-1 transition-colors";
 
 /** Row: solid-triangle expander (expandable parents only) · checkbox · optional
  *  status icon · label · bold count. Top-level rows reserve a triangle gutter so
@@ -1076,11 +1093,14 @@ function FacetRow({
   reserveGutter?: boolean;
 }) {
   const Icon = icon;
+  // A row with nothing to add is shown, in place, and cannot be ticked; a
+  // ticked row stays live at 0 so it can always be unticked.
+  const unavailable = count === 0 && !checked;
   return (
     <label
       data-component="FacetRow"
-      data-state={checked ? "checked" : "unchecked"}
-      className={`${FACET_ROW} rounded-md pe-2 hover:bg-warm ${
+      data-state={checked ? "checked" : unavailable ? "unavailable" : "unchecked"}
+      className={`${FACET_ROW} rounded-md pe-2 ${unavailable ? "cursor-default" : "cursor-pointer hover:bg-warm"} ${
         child ? "ps-0" : expandable || reserveGutter ? "ps-0" : "ps-2"
       }`}
     >
@@ -1112,7 +1132,7 @@ function FacetRow({
           )}
         </span>
       )}
-      <Checkbox checked={checked} onChange={onToggle} ariaLabel={label} />
+      <Checkbox checked={checked} onChange={onToggle} ariaLabel={`${label}, ${count}`} unavailable={unavailable} />
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
         <span className="min-w-0 flex flex-col">
@@ -1267,16 +1287,23 @@ function KeywordFacetCard({
           visible.map((c) => {
             const checked = !!selected[c];
             const n = counts.get(c) ?? 0;
+            // Counted in the Match mode, so a 0 cannot add a result. In
+            // `missing` the whole list is inert already.
+            const unavailable = n === 0 && !checked && !missingMode;
             return (
               <label
                 key={c}
                 data-part="option"
-                data-state={checked ? "checked" : "unchecked"}
+                data-state={checked ? "checked" : unavailable ? "unavailable" : "unchecked"}
                 className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
-                  checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
+                  checked
+                    ? "cursor-pointer bg-carbon/[0.04] hover:bg-carbon/[0.07]"
+                    : unavailable
+                      ? "cursor-default"
+                      : "cursor-pointer hover:bg-warm"
                 }`}
               >
-                <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
+                <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={`${c}, ${n}`} unavailable={unavailable} />
                 <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : n === 0 ? "text-ink-muted" : "text-ink-secondary"}`}>
                   {c}
                 </span>
@@ -1644,15 +1671,27 @@ function DateRangeCard({
         <div data-part="presets" className="px-1 flex flex-col gap-0.5">
           {presets.map((p) => {
             const isActive = from === p.from && to === p.to;
+            // A preset that would return nothing stays in place and is not
+            // pressable, like a facet row at 0.
+            const unavailable = p.count === 0 && !isActive;
             return (
               <button
                 type="button"
                 key={p.label}
                 data-part="preset"
                 aria-pressed={isActive}
-                onClick={() => (isActive ? onClear() : onSetRange(p.from, p.to))}
-                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-tab transition-colors cursor-pointer ${
-                  isActive ? "bg-carbon/[0.06] text-ink font-medium" : "text-ink-secondary hover:bg-warm"
+                aria-disabled={unavailable || undefined}
+                onClick={() => {
+                  if (unavailable) return;
+                  if (isActive) onClear();
+                  else onSetRange(p.from, p.to);
+                }}
+                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-tab transition-colors ${
+                  isActive
+                    ? "cursor-pointer bg-carbon/[0.06] text-ink font-medium"
+                    : unavailable
+                      ? "cursor-default! text-ink-muted"
+                      : "cursor-pointer text-ink-secondary hover:bg-warm"
                 }`}
               >
                 <span className="truncate">{p.label}</span>
