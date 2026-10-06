@@ -77,6 +77,12 @@ const GAP_CLEAR = 8;
  *  elides at all (see `rowHeight` on Props). */
 export const GAP_H = GAP_LABEL_H + 2 * GAP_CLEAR;
 
+/** How far the canvas runs past its rows: from the top edge to the first row's
+ *  instant, and from the last row's instant to the bottom edge. Read-only, for a
+ *  host that pads its card evenly; keep in step with `raw` (origin 6), `PAD` and
+ *  `height` (24 below the last row's box) in `TimeSpine`. */
+export const spineEnds = (rowHeight: number) => ({ top: 6 + Math.ceil(rowHeight / 2), bottom: rowHeight + 24 });
+
 export interface SpineRow<T> {
   key: string;
   /** The instant this row sits at (ms). */

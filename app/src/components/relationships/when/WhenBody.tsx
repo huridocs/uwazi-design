@@ -18,7 +18,7 @@ import { getEntity, getEntityType } from "../../../data/entities";
 import { datesOf } from "../../../data/entityDates";
 import { relationLabel } from "../../../utils/inheritance";
 import { eventsAround, eventsPerYear, inYears, yearOf, type WhenEvent } from "../../../utils/entityDates";
-import { TimeSpine, type SpineRow } from "../../library/TimeSpine";
+import { spineEnds, TimeSpine, type SpineRow } from "../../library/TimeSpine";
 import { useFilteredReferences } from "../useFilteredReferences";
 import { RowEntityPill } from "../rows/RowParts";
 import { EventRow } from "./EventRow";
@@ -28,6 +28,16 @@ import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 /** Above this many events the spine would be a wall: the body lists years
  *  instead, and a year opens its own spine. */
 export const WHEN_SPINE_CAP = 240;
+
+/** A one-line row (`EventRow`, 22px) plus a stack of air, so consecutive pills
+ *  don't touch. Within `TimeSpine`'s `GAP_H + rowHeight ≤ MAX_GAP`. */
+const WHEN_ROW_H = 32;
+const EVENT_ROW_H = 22;
+/** What the spine leaves past the first and last row bodies. The body sits at the
+ *  row's instant + 1 (`TimeSpine`'s `top: y - rowHeight / 2 + 1`), centred. */
+const ENDS = spineEnds(WHEN_ROW_H);
+const SLACK_TOP = ENDS.top + 1 - EVENT_ROW_H / 2;
+const SLACK_BOTTOM = ENDS.bottom - 1 - EVENT_ROW_H / 2;
 
 export function WhenBody() {
   const selfId = useEntityScopeId();
@@ -123,13 +133,22 @@ export function WhenBody() {
               })}
             </ul>
           ) : (
-            <div className="px-1 py-2">
-              <TimeSpine
-                rows={rows}
-                dotColor={color}
-                dotActive={(e) => e.entityId === previewing}
-                renderRow={(e) => <EventRow event={e} selected={e.entityId === previewing} />}
-              />
+            // The same space above the first row and below the last, whatever the
+            // spine reserves at its ends. Clipped, so the axis stops at the card.
+            <div className="px-1 overflow-hidden" style={{ paddingTop: "var(--body-top)", paddingBottom: "var(--body-top)" }}>
+              <div style={{ marginTop: -SLACK_TOP, marginBottom: -SLACK_BOTTOM }}>
+                <TimeSpine
+                  rows={rows}
+                  rowHeight={WHEN_ROW_H}
+                  dotColor={color}
+                  dotActive={(e) => e.entityId === previewing}
+                  renderRow={(e) => (
+                    <div className="flex flex-col justify-center" style={{ height: WHEN_ROW_H }}>
+                      <EventRow event={e} selected={e.entityId === previewing} />
+                    </div>
+                  )}
+                />
+              </div>
             </div>
           )}
         </section>
