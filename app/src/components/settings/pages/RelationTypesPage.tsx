@@ -1,89 +1,94 @@
 import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
-import { Plus, Spline } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { useAtomValue } from "jotai";
+import { Spline } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { RelationTypeEditor } from "./RelationTypeEditor";
-import { seedRelationTypes, type SettingsRelationType } from "../../../data/settings";
-import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilSettingsRelationTypes } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import {
+  RelationTypeDelete,
+  RelationTypeReferenceCount,
+  RelationTypeTemplates,
+} from "../../shared/SettingsDeletes";
+import type { RelationTypeDef } from "../../../atoms/references";
+import { settingsRelationTypesAtom } from "../../../atoms/relationTypes";
 
+/** Settings › Relationship types: the collection's one registry
+ *  (`atoms/relationTypes.ts`), which the Relationships panel and the template
+ *  editor's relationship fields read too. */
 export function RelationTypesPage() {
-  const setToasts = useSetAtom(toastsAtom);
-  const dataSource = useAtomValue(dataSourceAtom);
-  const [types, setTypes] = useState<SettingsRelationType[]>(
-    dataSource === "cejil" ? cejilSettingsRelationTypes : seedRelationTypes,
-  );
-  const [confirm, setConfirm] = useState<SettingsRelationType | null>(null);
-  const [editing, setEditing] = useState<SettingsRelationType | "new" | null>(null);
+  const types = useAtomValue(settingsRelationTypesAtom);
+  const [confirm, setConfirm] = useState<RelationTypeDef | null>(null);
+  const [editing, setEditing] = useState<string | "new" | null>(null);
+  const search = useSettingsSearch(types, (r) => r.label);
 
-  if (editing) return <RelationTypeEditor relationType={editing} onClose={() => setEditing(null)} />;
+  if (editing) return <RelationTypeEditor typeId={editing} onClose={() => setEditing(null)} />;
 
-  const columns: Column<SettingsRelationType>[] = [
+  const columns: Column<RelationTypeDef>[] = [
     {
       id: "name",
-      header: "Relationship type",
+      header: "Label",
       cell: (r) => (
         <div className="flex items-center gap-2">
           <Spline size={14} className="text-ink-muted shrink-0" />
-          <span className="font-medium text-ink truncate">{r.name}</span>
+          <span className="font-medium text-ink truncate">{r.label}</span>
         </div>
       ),
     },
     {
+      id: "templates",
+      header: "Templates",
+      cell: (r) => <RelationTypeTemplates id={r.id} />,
+    },
+    {
       id: "usage",
-      header: "Used by",
+      header: "References",
       width: "9rem",
       cell: (r) => (
-        <span className="text-ink-secondary tabular-nums">
-          {r.usageCount} <span className="text-ink-tertiary">relationships</span>
+        <span className="text-xs text-ink-tertiary tabular-nums">
+          <RelationTypeReferenceCount id={r.id} />
         </span>
       ),
     },
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (r) => <RowActions label={r.name} onEdit={() => setEditing(r)} onDelete={() => setConfirm(r)} />,
+      cell: (r) => <RowActions label={r.label} onDelete={() => setConfirm(r)} />,
     },
   ];
 
   return (
-    <SettingsContent>
-      <SettingsContent.Header title="Relationship types" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          The labels available when connecting entities. Deleting a type re-labels its connections as
-          unlabeled.
-        </p>
-        <Table columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} rowAriaLabel={(r) => `Edit ${r.name}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add type
-        </Button>
-      </SettingsContent.Footer>
-
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Delete relationship type?"
-        message={`Its ${confirm?.usageCount} relationships lose their type and become unlabeled. This can’t be undone.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirm) {
-            setTypes((prev) => prev.filter((r) => r.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.name} deleted`, type: "success" as const }]);
-          }
-          setConfirm(null);
-        }}
-        onCancel={() => setConfirm(null)}
+    <SettingsListPage
+      component="RelationTypesPage"
+      title="Relationship types"
+      intro="The labels available when connecting entities."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search relationship types" }}
+      lead={{ label: "Add relationship type", onClick: () => setEditing("new") }}
+      overlays={
+        <RelationTypeDelete type={confirm} onCancel={() => setConfirm(null)} />
+      }
+    >
+      <SettingsTable
+        corpusScoped
+        columns={columns}
+        data={search.rows}
+        getRowId={(r) => r.id}
+        onRowClick={(r) => setEditing(r.id)}
+        rowAriaLabel={(r) => `Edit ${r.label}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<Spline size={16} />}
+            title="No relationship types yet"
+            hint="A relationship type is the label on a connection between two entities."
+            action={{ label: "Add relationship type", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }

@@ -1,70 +1,91 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
-import { type SettingsRelationType } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { useAtomValue, useSetAtom } from "jotai";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsSection } from "../SettingsSection";
+import { SettingsField, TextInput } from "../SettingsField";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { relationTypeUsageAtom } from "../../../atoms/settingsUsage";
+import {
+  relationTypeNameIssue,
+  saveRelationTypeAtom,
+  settingsRelationTypesAtom,
+} from "../../../atoms/relationTypes";
+import { LastSavedLine } from "../../shared/LastSavedLine";
+import { MissingRecord } from "../../shared/MissingRecord";
 
-/** A relationship type may optionally carry a label for its reverse direction
- *  (forward "appealed to" / inverse "ruled on"). The shared SettingsRelationType
- *  stays minimal, so this seam lives locally. */
-type WithInverse = SettingsRelationType & { inverseName?: string };
+/** Relationship-type detail/editor — opened from the list (list → detail).
+ *  A type is a name and nothing else: Uwazi stores one `type` per
+ *  relationship, with no inverse label (CLAUDE.md › Known gaps). Saves go to
+ *  the registry by id, so a rename reaches every reference and field. */
+export function RelationTypeEditor({ typeId, onClose }: { typeId: string | "new"; onClose: () => void }) {
+  const { record } = useSettingsNotify();
+  const types = useAtomValue(settingsRelationTypesAtom);
+  const saveType = useSetAtom(saveRelationTypeAtom);
+  const isNew = typeId === "new";
+  const base = isNew ? undefined : types.find((t) => t.id === typeId);
+  const missing = !isNew && !base;
 
-/** Relationship-type detail/editor — opened from the list (list → detail). */
-export function RelationTypeEditor({
-  relationType,
-  onClose,
-}: {
-  relationType: SettingsRelationType | "new";
-  onClose: () => void;
-}) {
-  const setToasts = useSetAtom(toastsAtom);
-  const isNew = relationType === "new";
-  const base = isNew ? undefined : (relationType as WithInverse);
-
-  const [name, setName] = useState(base?.name ?? "");
-  const [inverseName, setInverseName] = useState(base?.inverseName ?? "");
-
-  const dirty = name !== (base?.name ?? "") || inverseName !== (base?.inverseName ?? "");
-
-  // Show the usage stat only when the record actually carries a count.
-  const usageCount = typeof base?.usageCount === "number" ? base.usageCount : undefined;
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `relation-type:${typeId}`,
+    label: "Relationship type edits",
+    saved: { name: base?.label ?? "" },
+  });
+  const { name } = draft;
+  const setName = setField("name");
+  // Uwazi validates on Save (`mode: 'onSubmit'`); after a refused Save the
+  // message follows the input.
+  const [attempted, setAttempted] = useState(false);
+  const issue = relationTypeNameIssue(types, isNew ? null : typeId, name);
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Relationship type created" : `${name || "Type"} saved`, type: "success" as const },
-    ]);
+    setAttempted(true);
+    if (issue || missing) return;
+    const id = saveType({ id: isNew ? null : typeId, name });
+    if (!id) return;
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: name.trim(),
+    });
     onClose();
   };
 
   return (
-    <SettingsContent>
-      <SettingsContent.Header path={["Relationship types"]} title={isNew ? "New relationship type" : base!.name} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-4 max-w-lg">
-          <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Name" hint="The label shown when connecting two entities.">
-              <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Appealed to" />
-            </Field>
-            <Field label="Inverse name" hint="Optional — the label for the reverse direction.">
-              <TextInput value={inverseName} onChange={(e) => setInverseName(e.target.value)} placeholder="e.g. Ruled on" />
-            </Field>
-          </section>
-          {usageCount !== undefined && (
-            <p className="text-xs text-ink-tertiary">
-              Used by <span className="font-semibold text-ink-secondary tabular-nums">{usageCount}</span> connections.
-            </p>
-          )}
+    <SettingsEditor
+      component="RelationTypeEditor"
+      path={["Relationship types"]}
+      title={isNew ? "Add relationship type" : base?.label ?? ""}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Create relationship type"
+      dirty={dirty}
+      valid={!missing}
+      saveBlocked={attempted && !!issue}
+      onSave={save}
+      footerStart={<LastSavedLine domain="relationType" id={base?.id} />}
+    >
+      {missing && <MissingRecord noun="relationship type" />}
+      <SettingsSection>
+        <div className="max-w-sm">
+          <SettingsField label="Name" issue={attempted && issue ? { severity: "error", message: issue } : null}>
+            <TextInput id="relationship-type-name" value={name} onChange={(e) => setName(e.target.value)} />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
-          {isNew ? "Create type" : "Save"}
-        </Button>
-      </SettingsContent.Footer>
-    </SettingsContent>
+        {base && <UsageLine id={base.id} />}
+      </SettingsSection>
+    </SettingsEditor>
+  );
+}
+
+/** What uses the type: the same facts its delete dialog lists. */
+function UsageLine({ id }: { id: string }) {
+  const usage = useAtomValue(relationTypeUsageAtom(id));
+  return (
+    <p className="text-xs text-ink-tertiary">
+      {usage.lines.length ? usage.lines.join(" ") : "No references or relationship fields use it."}
+    </p>
   );
 }

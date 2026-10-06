@@ -1,28 +1,36 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
-import { useAtom, useSetAtom } from "jotai";
+import { Modal } from "../shared/Modal";
+import { MODAL_INPUT, ModalList, ModalListRow } from "../shared/ModalParts";
+import { Plus, Trash2 } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   manageRelationTypesOpenAtom,
   referencesAtom,
   relationTypesAtom,
-  toastsAtom,
 } from "../../atoms/references";
-import {
-  NO_LABEL_RELATION_TYPE,
-  registerRelationType,
-  unregisterRelationType,
-} from "../../data/references";
+import { NO_LABEL_RELATION_TYPE } from "../../data/references";
+import { deleteRelationTypeAtom, relationTypeNameIssue, saveRelationTypeAtom } from "../../atoms/relationTypes";
+import { useRelationTypeUndo } from "../../hooks/useRelationTypeUndo";
+import { relationTypeUsageInAtom } from "../../atoms/settingsUsage";
+import { useSettingsNotify } from "../../hooks/useSettingsNotify";
 import { t } from "../../utils/i18n";
 
-/** CRUD for the relation-type registry. Add: label input → derived snake_case
- *  id; duplicates are blocked. Delete: orphaned references are reassigned to
- *  `no_label` so the prototype stays usable (no dangling typeIds). The
- *  `no_label` type itself is non-deletable since it's the fallback target. */
+/** The Relationships panel's view of the Sample's relationship-type registry.
+ *  Add and Delete go through the same actions and rules as Settings ›
+ *  Relationship types (`atoms/relationTypes.ts`): a name is required and
+ *  unique ignoring case; a type a template field uses is refused; a type only
+ *  references use is deleted after moving them to `no_label` (this modal's
+ *  path, decision G6), with an Undo in the Beacon and a log entry. `no_label`
+ *  itself stays, as the fallback. */
 export function ManageRelationTypesModal() {
   const [open, setOpen] = useAtom(manageRelationTypesOpenAtom);
-  const [types, setTypes] = useAtom(relationTypesAtom);
-  const [references, setReferences] = useAtom(referencesAtom);
-  const setToasts = useSetAtom(toastsAtom);
+  const types = useAtomValue(relationTypesAtom);
+  const references = useAtomValue(referencesAtom);
+  const store = useStore();
+  const saveType = useSetAtom(saveRelationTypeAtom);
+  const removeType = useSetAtom(deleteRelationTypeAtom);
+  const prepareUndo = useRelationTypeUndo();
+  const { record, fail } = useSettingsNotify();
   const [draftLabel, setDraftLabel] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -40,163 +48,69 @@ export function ManageRelationTypesModal() {
     setPendingDelete(null);
   };
 
-  const slugify = (label: string) =>
-    label
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
-
   const handleAdd = () => {
     const label = draftLabel.trim();
-    if (!label) return;
-    const id = slugify(label);
-    if (!id) return;
-    if (types.some((tdef) => tdef.id === id)) {
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          message: `Type "${label}" already exists`,
-          type: "error" as const,
-        },
-      ]);
+    const issue = relationTypeNameIssue(
+      types.filter((x) => x.id !== NO_LABEL_RELATION_TYPE),
+      null,
+      label,
+    );
+    if (issue) {
+      fail(issue === "Already exists" ? `Relationship type “${label}” already exists` : issue);
       return;
     }
-    const def = { id, label };
-    // Write-through to the static registry (see registerRelationType's contract)
-    // so utils reading `relationTypes` statically resolve the new label too.
-    registerRelationType(def);
-    setTypes((prev) => [...prev, def]);
+    const id = saveType({ id: null, name: label, corpus: "mock" });
+    if (!id) return;
     setDraftLabel("");
-    setToasts((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        message: `Relationship type “${label}” added`,
-        type: "success" as const,
-      },
-    ]);
+    record({
+      method: "CREATE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: label,
+      message: `Relationship type “${label}” added`,
+    });
   };
 
   const handleDelete = (id: string) => {
-    const def = types.find((tdef) => tdef.id === id);
-    if (!def) return;
-    const usage = refCountByType.get(id) ?? 0;
-    if (usage > 0) {
-      setReferences((prev) =>
-        prev.map((r) =>
-          r.relationType === id
-            ? { ...r, relationType: NO_LABEL_RELATION_TYPE }
-            : r,
-        ),
-      );
-    }
-    setTypes((prev) => prev.filter((tdef) => tdef.id !== id));
-    unregisterRelationType(id);
     setPendingDelete(null);
-    setToasts((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        message:
-          usage > 0
-            ? `“${def.label}” deleted; ${usage} relationship${usage === 1 ? "" : "s"} reassigned to “No label”`
-            : `“${def.label}” deleted`,
-        type: "success" as const,
-      },
-    ]);
+    const usage = store.get(relationTypeUsageInAtom(`mock|${id}`));
+    if (usage.block) {
+      fail(usage.block);
+      return;
+    }
+    const d = removeType({ id, to: usage.references ? NO_LABEL_RELATION_TYPE : null, corpus: "mock" });
+    if (!d) return;
+    record({
+      method: "DELETE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: d.def.label,
+      message: `“${d.def.label}” deleted`,
+      detail: d.moved
+        ? `${d.moved.refIds.length.toLocaleString()} references moved to “No label”. Undo puts the type and its references back.`
+        : "Undo puts the type back.",
+      action: prepareUndo(d),
+    });
   };
 
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("System", "Manage relationship types")}
-    >
-      <div className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <div>
-            <h3 className="text-base font-semibold text-ink">
-              {t("System", "Manage relationship types")}
-            </h3>
-            <p className="text-xs text-ink-muted mt-0.5">
-              {t(
-                "System",
-                "Add or remove the relation labels available across this entity.",
-              )}
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
-            aria-label={t("System", "Close")}
-          >
-            <X size={18} className="text-ink-muted" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-auto px-5 py-3 space-y-1">
-          {types.map((tdef) => {
-            const usage = refCountByType.get(tdef.id) ?? 0;
-            const isNoLabel = tdef.id === NO_LABEL_RELATION_TYPE;
-            const confirming = pendingDelete === tdef.id;
-            return (
-              <div
-                key={tdef.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-warm transition-colors"
-              >
-                <span className="text-sm text-ink flex-1 truncate">
-                  {tdef.label}
-                </span>
-                <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
-                  {usage} {usage === 1 ? "ref" : "refs"}
-                </span>
-                {isNoLabel ? (
-                  <span
-                    className="text-meta uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
-                    title={t(
-                      "System",
-                      "Fallback type: relationships whose type is deleted move here",
-                    )}
-                  >
-                    {t("System", "Fallback")}
-                  </span>
-                ) : confirming ? (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => handleDelete(tdef.id)}
-                      className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
-                    >
-                      {usage > 0
-                        ? t("System", "Delete & reassign")
-                        : t("System", "Delete")}
-                    </button>
-                    <button
-                      onClick={() => setPendingDelete(null)}
-                      className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-                    >
-                      {t("System", "Cancel")}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setPendingDelete(tdef.id)}
-                    aria-label={`Delete ${tdef.label}`}
-                    className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="px-5 py-4 border-t border-border flex items-center gap-2">
+    <Modal
+      component="ManageRelationTypesModal"
+      size="md"
+      maxHeight="md:max-h-[80vh]"
+      portal={false}
+      dismissOnScrim={false}
+      onClose={handleClose}
+      title={t("System", "Manage relationship types")}
+      subtitle={t("System", "Add or remove the relation labels available across this entity.")}
+      closeLabel={t("System", "Close")}
+      flush
+      footer={
+        <div data-part="add" className="flex-1 flex items-center gap-2">
           <input
             type="text"
             value={draftLabel}
@@ -205,19 +119,84 @@ export function ManageRelationTypesModal() {
               if (e.key === "Enter") handleAdd();
             }}
             placeholder={t("System", "New relationship type label…")}
-            className="flex-1 px-3 py-2 text-sm bg-warm border border-border rounded-md
-              placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
+            aria-label={t("System", "New relationship type label")}
+            className={`flex-1 ${MODAL_INPUT}`}
           />
           <button
+            type="button"
             onClick={handleAdd}
             disabled={!draftLabel.trim()}
-            className="flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-md bg-ink text-parchment
+            className="flex items-center gap-1 h-9 px-3 text-xs font-medium rounded-md bg-ink text-parchment
               hover:bg-ink/90 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Plus size={12} /> {t("System", "Add")}
           </button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <ModalList data-part="types">
+        {types.map((tdef) => {
+          const usage = refCountByType.get(tdef.id) ?? 0;
+          const isNoLabel = tdef.id === NO_LABEL_RELATION_TYPE;
+          const confirming = pendingDelete === tdef.id;
+          return (
+            <ModalListRow
+              key={tdef.id}
+              part="type"
+              title={<span data-part="label">{tdef.label}</span>}
+              meta={
+                <>
+                  <span data-part="usage" className="tabular-nums">
+                    {usage} {usage === 1 ? "ref" : "refs"}
+                  </span>
+                  {isNoLabel ? (
+                    <span
+                      className="text-meta uppercase tracking-wider text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
+                      title={t(
+                        "System",
+                        "Fallback type: relationships whose type is deleted move here",
+                      )}
+                    >
+                      {t("System", "Fallback")}
+                    </span>
+                  ) : confirming ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        data-part="confirm-delete"
+                        onClick={() => handleDelete(tdef.id)}
+                        className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
+                      >
+                        {usage > 0
+                          ? t("System", "Delete & reassign")
+                          : t("System", "Delete")}
+                      </button>
+                      <button
+                        type="button"
+                        data-part="cancel-delete"
+                        onClick={() => setPendingDelete(null)}
+                        className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                      >
+                        {t("System", "Cancel")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-part="delete"
+                      onClick={() => setPendingDelete(tdef.id)}
+                      aria-label={`Delete ${tdef.label}`}
+                      className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </>
+              }
+            />
+          );
+        })}
+      </ModalList>
+    </Modal>
   );
 }

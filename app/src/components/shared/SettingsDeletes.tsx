@@ -1,7 +1,17 @@
+import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ConfirmDelete } from "./ConfirmDelete";
+import { Select } from "./Select";
 import { useSettingsNotify } from "../../hooks/useSettingsNotify";
-import { groupUsageAtom, thesaurusUsageAtom, userUsageAtom } from "../../atoms/settingsUsage";
+import { useRelationTypeUndo } from "../../hooks/useRelationTypeUndo";
+import { groupUsageAtom, relationTypeUsageAtom, thesaurusUsageAtom, userUsageAtom } from "../../atoms/settingsUsage";
+import {
+  deleteRelationTypeAtom,
+  settingsRelationTypesAtom,
+  type RelationTypeDeletion,
+} from "../../atoms/relationTypes";
+import type { RelationTypeDef } from "../../atoms/references";
+import { NO_LABEL_RELATION_TYPE } from "../../data/references";
 import { deleteThesaurusAtom } from "../../atoms/thesauri";
 import { deleteGroupAtom, deleteUserAtom, type GroupWithMembers } from "../../atoms/users";
 import { removeAccessMemberAtom } from "../../atoms/entityOverlay";
@@ -11,8 +21,8 @@ import type { SettingsThesaurus, SettingsUser } from "../../data/settings";
 /** One delete dialog per Settings domain: each reads its usage selector
  *  (`atoms/settingsUsage.ts`), refuses where Uwazi refuses, performs the
  *  delete it describes, and records it (`useSettingsNotify`). Each mounts
- *  only while open, so its selector runs only then. Relationship types,
- *  languages and pages join with their stores. */
+ *  only while open, so its selector runs only then. Languages and pages join
+ *  with their stores. */
 
 export function ThesaurusDelete({ thesaurus, onCancel }: { thesaurus: SettingsThesaurus | null; onCancel: () => void }) {
   return thesaurus ? <ThesaurusDeleteOpen thesaurus={thesaurus} onCancel={onCancel} /> : null;
@@ -39,6 +49,92 @@ function ThesaurusDeleteOpen({ thesaurus, onCancel }: { thesaurus: SettingsThesa
     />
   );
 }
+
+export function RelationTypeDelete({
+  type,
+  onCancel,
+  onDeleted,
+}: {
+  type: RelationTypeDef | null;
+  onCancel: () => void;
+  /** After the delete, what it removed. */
+  onDeleted?: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
+}) {
+  return type ? <RelationTypeDeleteOpen type={type} onCancel={onCancel} onDeleted={onDeleted} /> : null;
+}
+
+function RelationTypeDeleteOpen({
+  type,
+  onCancel,
+  onDeleted,
+}: {
+  type: RelationTypeDef;
+  onCancel: () => void;
+  onDeleted?: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
+}) {
+  const usage = useAtomValue(relationTypeUsageAtom(type.id));
+  const registry = useAtomValue(settingsRelationTypesAtom);
+  const remove = useSetAtom(deleteRelationTypeAtom);
+  const prepareUndo = useRelationTypeUndo();
+  const { record } = useSettingsNotify();
+  const [to, setTo] = useState("");
+  // Move-to choices: every other type, and No label (the Relationships
+  // panel's fallback for an untyped reference).
+  const options = [
+    ...registry.filter((t) => t.id !== type.id).map((t) => ({ value: t.id, label: t.label })),
+    { value: NO_LABEL_RELATION_TYPE, label: "No label" },
+  ];
+  const target = options.find((o) => o.value === to);
+  const n = usage.references;
+  return (
+    <ConfirmDelete
+      open
+      title="Delete relationship type"
+      message={
+        usage.reassignable
+          ? `Delete ${type.label}? Its ${n.toLocaleString()} ${n === 1 ? "reference moves" : "references move"} to the type you choose, then the type is deleted. Undo in the notifications puts both back.`
+          : `Delete ${type.label}? No references or relationship fields use it.`
+      }
+      impact={usage}
+      confirmLabel={usage.reassignable ? "Move and delete" : "Delete"}
+      confirmDisabled={usage.reassignable && !target}
+      onCancel={onCancel}
+      onConfirm={() => {
+        const deletion = remove({ id: type.id, to: usage.reassignable ? to : null });
+        if (!deletion) return onCancel();
+        // One notification, carrying the registry's Undo (it works from
+        // anywhere, not only while this page is open).
+        record({
+          method: "DELETE",
+          domain: "relationType",
+          noun: "relationship type",
+          id: type.id,
+          name: type.label,
+          detail:
+            deletion.moved && target
+              ? `${deletion.moved.refIds.length.toLocaleString()} references moved to ${target.label}. Undo puts the type and its references back.`
+              : "Undo puts the type back.",
+          action: prepareUndo(deletion),
+        });
+        onDeleted?.(deletion, usage.reassignable && target ? target.label : null);
+        onCancel();
+      }}
+    >
+      {usage.reassignable && (
+        <div className="space-y-1">
+          <span className="block text-xs font-medium text-ink-secondary">Move references to</span>
+          <Select
+            value={to}
+            options={[{ value: "", label: "Choose a type", disabled: true }, ...options]}
+            onChange={setTo}
+            ariaLabel="Move references to"
+          />
+        </div>
+      )}
+    </ConfirmDelete>
+  );
+}
+
 
 export function UserDelete({ user, onCancel }: { user: SettingsUser | null; onCancel: () => void }) {
   return user ? <UserDeleteOpen user={user} onCancel={onCancel} /> : null;
@@ -93,5 +189,30 @@ function GroupDeleteOpen({ group, onCancel }: { group: GroupWithMembers; onCance
         onCancel();
       }}
     />
+  );
+}
+
+/** A relationship type's reference count and templates, from the selector
+ *  its delete reads. */
+export function RelationTypeReferenceCount({ id }: { id: string }) {
+  const usage = useAtomValue(relationTypeUsageAtom(id));
+  return (
+    <>
+      {usage.pending ? "…" : usage.references.toLocaleString()}{" "}
+      <span className="text-ink-tertiary">{!usage.pending && usage.references === 1 ? "reference" : "references"}</span>
+    </>
+  );
+}
+
+export function RelationTypeTemplates({ id }: { id: string }) {
+  const usage = useAtomValue(relationTypeUsageAtom(id));
+  return (
+    <span className="flex flex-wrap gap-1">
+      {usage.templates.map((t) => (
+        <span key={t} className="text-meta text-ink-secondary bg-vellum px-1.5 py-px rounded-md w-fit whitespace-nowrap">
+          {t}
+        </span>
+      ))}
+    </span>
   );
 }
