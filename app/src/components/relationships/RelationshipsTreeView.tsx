@@ -1,5 +1,5 @@
 import { useIsScopedSurface, useRelAtom } from "../../hooks/useEntityScope";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { activeRefIdAtom } from "../../atoms/references";
@@ -25,7 +25,7 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
-export function RelationshipsTreeView() {
+export function RelationshipsTreeView({ lead }: { lead?: ReactNode } = {}) {
   const [groupBy] = useRelAtom(relGroupByAtom);
   const [subGroupBy] = useRelAtom(relSubGroupByAtom);
   // Group headers carry the match when the leaves suppress that label (a
@@ -75,6 +75,7 @@ export function RelationshipsTreeView() {
       {/* A scroll lane: `bleed` takes the warm ground and the scrollbar to the
           panel edge and puts the rows back on the host's gutter. */}
       <div className="bleed flex-1 overflow-auto bg-warm">
+        {lead && <div className="pt-stack">{lead}</div>}
         {filtered.length === 0 ? (
           <div data-part="empty" className="flex flex-col items-center justify-center py-20 text-center">
             <Link2 size={36} className="text-ink-tertiary/40 mb-3" aria-hidden />

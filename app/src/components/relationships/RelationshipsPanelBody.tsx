@@ -24,13 +24,17 @@ import { RowStack } from "./rows/RowShell";
 interface Props {
   onDelete?: (id: string) => void;
   scrollBgClass?: string;
+  /** A block drawn first in the list and tree lanes, scrolling with them (the
+   *  Claim record's evidence matrix). The graph and When views own their
+   *  canvas and do not show it. */
+  lead?: ReactNode;
 }
 
 /** How many flat reference rows to render before "Show more". */
 const LIST_CAP = 100;
 
 /** Body of the merged Relationships panel — toolbar lives above. */
-export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
+export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props) {
   const [view] = useRelAtom(relViewAtom);
   const [groupBy] = useRelAtom(relGroupByAtom);
   const [subGroupBy] = useRelAtom(relSubGroupByAtom);
@@ -48,7 +52,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   useEffect(() => setListLimit(LIST_CAP), [filtered]);
 
   if (view === "tree") {
-    return <RelationshipsTreeView />;
+    return <RelationshipsTreeView lead={lead} />;
   }
   if (view === "when") {
     return (
@@ -184,6 +188,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
       data-component="RelationshipsPanelBody"
       data-view={view}
       className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
+      {lead}
       {body}
     </div>
   );

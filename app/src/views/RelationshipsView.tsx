@@ -21,6 +21,8 @@ import { RelationshipsActionBar } from "../components/relationships/Relationship
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { NoDocumentPane } from "../components/entity/NoDocumentPane";
 import { nepalSourceLink } from "../data/nepal/sourceLink";
+import { nepalClaimEvidence } from "../data/nepal/claimEvidence";
+import { ClaimEvidenceBlock } from "../components/relationships/ClaimEvidence";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -41,6 +43,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
 
   const hideMinimap = view === "graph";
   const sourceLink = profile.hasDocument ? undefined : nepalSourceLink(focusedId);
+  // A claim opens on its evidence; undefined for every record no source takes
+  // a stance on, so the block is not drawn.
+  const evidence = nepalClaimEvidence(focusedId);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
         // The narrow-tier gutter host: tabs, DocMeta, toolbar, lane and action
@@ -63,6 +68,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           <RelationshipsPanelBody
             onDelete={handleDelete}
             scrollBgClass="bg-warm"
+            lead={evidence && <ClaimEvidenceBlock ev={evidence} />}
           />
           <RelationshipsActionBar menuSlot={menuTrigger} />
         </div>
