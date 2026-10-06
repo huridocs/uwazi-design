@@ -738,28 +738,37 @@ export const libraryTimeHubAtom = displayOption<boolean>(
   (get) => DEFAULT_TIME_HUB && get(breakpointAtom) !== "mobile",
 );
 
-/** Share of the current results that have an image (0–1), set by the Library
+/** How many of the current results can draw a preview, set by the Library
  *  from its filtered list in a layout effect, so cards paint with the right
  *  answer. null before the Library has measured; then the whole corpus
  *  answers. */
-export const libraryResultsImageShareAtom = atom<number | null>(null);
+export const libraryResultsPreviewCountAtom = atom<PreviewCount | null>(null);
 
-const corpusImageShareAtom = atom((get) => imageShare(get(libraryEntitiesAtom)));
+const corpusPreviewCountAtom = atom((get) => previewCount(get(libraryEntitiesAtom)));
 
-/** Only images count. A document's thumbnail is its first page, which at
- *  card size is mostly a letterhead, and a video or audio slot is a drawn
- *  mark: neither is a reason to give every card a picture band. */
-export function imageShare(entities: readonly { preview?: string }[]): number | null {
-  if (entities.length === 0) return null;
-  let n = 0;
-  for (const e of entities) if (e.preview === "image") n++;
-  return n / entities.length;
+export interface PreviewCount {
+  /** Results whose card draws a picture: an image or a document's first page. */
+  withPreview: number;
+  total: number;
 }
 
-/** What Thumbnail Auto resolves to: on when most results have an image. */
+/** Kinds that draw a picture. A document is its first page (CEJIL file
+ *  records, Sample documents, Nepal PDFs). Video and audio count only once a
+ *  record carries a poster; today none does and the slot is a drawn glyph. */
+const PICTURE_KINDS = new Set(["image", "document"]);
+
+export function previewCount(entities: readonly { preview?: string }[]): PreviewCount | null {
+  if (entities.length === 0) return null;
+  let n = 0;
+  for (const e of entities) if (e.preview && PICTURE_KINDS.has(e.preview)) n++;
+  return { withPreview: n, total: entities.length };
+}
+
+/** What Thumbnail Auto resolves to: on when at least half the results can
+ *  draw a preview. `count` is what the menu note reports. */
 export const libraryThumbAutoAtom = atom((get) => {
-  const share = get(libraryResultsImageShareAtom) ?? get(corpusImageShareAtom);
-  return share === null || share > 0.5;
+  const count = get(libraryResultsPreviewCountAtom) ?? get(corpusPreviewCountAtom);
+  return { on: count === null || count.withPreview * 2 >= count.total, count };
 });
 
 /** What a card carries, for whichever mode is drawing cards. */
@@ -769,7 +778,7 @@ export const libraryCardInfoAtom = atom((get) => {
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
   const thumbRaw = readOption(state, mode, "preview", "mode", DEFAULT_THUMB_MODE);
   const thumbMode: ThumbMode = thumbRaw === "on" || thumbRaw === "off" ? thumbRaw : "auto";
-  const thumbAuto = get(libraryThumbAutoAtom);
+  const { on: thumbAuto, count: thumbCount } = get(libraryThumbAutoAtom);
   const fieldsRaw = readOption(state, mode, "cardFields", "mode", DEFAULT_CARD_FIELDS);
   const fields: CardFields =
     fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all" ? fieldsRaw : DEFAULT_CARD_FIELDS;
@@ -778,6 +787,7 @@ export const libraryCardInfoAtom = atom((get) => {
     preview: thumbMode === "auto" ? thumbAuto : thumbMode === "on",
     thumbMode,
     thumbAuto,
+    thumbCount,
     /** Off hides every property; `fields` is the count while it is on. */
     metadata: read("metadata"),
     fields,

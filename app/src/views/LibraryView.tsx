@@ -40,8 +40,8 @@ import {
   defaultSortDir,
   libraryActiveFilterCountAtom,
   libraryCardInfoAtom,
-  libraryResultsImageShareAtom,
-  imageShare,
+  libraryResultsPreviewCountAtom,
+  previewCount,
   libraryCardSideAtom,
   libraryChainFiltersAtom,
   libraryCountryFiltersAtom,
@@ -848,15 +848,18 @@ export function LibraryView() {
     [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
   );
 
-  /* Thumbnail Auto reads how many of these results have an image. A layout
+  /* Thumbnail Auto reads how many of these results can draw a preview. A layout
      effect, so a change of results repaints before the browser paints. */
-  const setImageShare = useSetAtom(libraryResultsImageShareAtom);
-  const resultsImageShare = useMemo(() => imageShare(filtered), [filtered]);
+  const setPreviewCount = useSetAtom(libraryResultsPreviewCountAtom);
+  const resultsPreviewCount = useMemo(() => previewCount(filtered), [filtered]);
+  const withPreview = resultsPreviewCount?.withPreview ?? -1;
+  const total = resultsPreviewCount?.total ?? 0;
+  // Keyed on the two numbers, so a new list with the same counts stores nothing.
   // Cleared on unmount, so the next mount answers from its own corpus until it measures.
   useLayoutEffect(() => {
-    setImageShare(resultsImageShare);
-    return () => setImageShare(null);
-  }, [resultsImageShare, setImageShare]);
+    setPreviewCount(withPreview < 0 ? null : { withPreview, total });
+    return () => setPreviewCount(null);
+  }, [withPreview, total, setPreviewCount]);
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.

@@ -189,12 +189,12 @@ const LANGUAGE: DisplaySection = {
   },
 };
 
-/** Thumbnail: Auto shows thumbnails only when most of the current results
- *  have an image (`imageShare` in atoms/library.ts), so a corpus of records and
- *  documents opens as text cards. On draws every slot there is (images, media,
- *  document pages); a record with none is a text card either way. The menu
- *  says what Auto resolved to. Stored `true` / `false` from the old switch read
- *  as On / Off. */
+/** Thumbnail: Auto shows thumbnails when at least half of the current results
+ *  can draw a preview, an image or a document's first page (`previewCount` in
+ *  atoms/library.ts). On keeps a slot on every card, a `QuietMark` where there
+ *  is nothing to draw; under Auto a record with none is a text card. The menu
+ *  says what Auto resolved to and the count behind it. Stored `true` / `false`
+ *  from the old switch read as On / Off. */
 export type ThumbMode = "auto" | "on" | "off";
 export const DEFAULT_THUMB_MODE: ThumbMode = "auto";
 

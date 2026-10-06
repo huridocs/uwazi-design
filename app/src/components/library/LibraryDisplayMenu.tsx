@@ -21,6 +21,7 @@ import {
   libraryCardInfoAtom,
   defaultSortDir,
   type LibraryDisplayState,
+  type PreviewCount,
 } from "../../atoms/library";
 import {
   sectionsFor,
@@ -136,7 +137,7 @@ export function LibraryDisplayMenu() {
                   label={o.label}
                   value={current}
                   choices={o.choices}
-                  note={o.id === "preview" ? thumbNote(current, cardInfo.thumbAuto) : o.detail}
+                  note={o.id === "preview" ? thumbNote(current, cardInfo.thumbAuto, cardInfo.thumbCount) : o.detail}
                   disabled={!live}
                   onChange={(id) => write(o.id, scope, id)}
                 />
@@ -330,10 +331,12 @@ export function LibraryDisplayMenu() {
 
 /** What Thumbnail is doing, under its control. Auto names its answer and
  *  why; On and Off say what they do to a record with nothing to preview. */
-function thumbNote(mode: string, auto: boolean): string {
-  if (mode === "on") return "Text cards where there is none";
+function thumbNote(mode: string, auto: boolean, count: PreviewCount | null): string {
+  if (mode === "on") return "A slot on every card";
   if (mode === "off") return "Text cards for every result";
-  return auto ? "On: most results have images" : "Off: under half have images";
+  if (!count) return "On";
+  const n = `${count.withPreview.toLocaleString()} of ${count.total.toLocaleString()}`;
+  return `${auto ? "On" : "Off"}: ${n} have a preview`;
 }
 
 /** A toggle row whose answer is one of a few short choices (Auto / On / Off):

@@ -364,11 +364,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:
-  - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when more than
-    half of the filtered results have an image (`libraryThumbAutoAtom`; documents and media do
-    not count). Read the resolved answer from `libraryCardInfoAtom.preview`, never the stored
-    value. With thumbnails on, an entity with no preview is a text card: no slot, its title and
-    metadata span the slot's track (`TextRows` in `EntityCard`).
+  - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when at least
+    half of the filtered results can draw a preview: an image or a document's first page (CEJIL
+    file records, Sample documents, Nepal PDFs). Video and audio have no poster and do not count.
+    CEJIL therefore opens with thumbnails. The menu note gives the answer and the count
+    (`libraryThumbAutoAtom`, `previewCount`). Read the resolved answer from
+    `libraryCardInfoAtom.preview`, never the stored value. Under Auto, an entity with no preview
+    is a text card: no slot, its title and metadata span the slot's track (`TextRows` in
+    `EntityCard`). On keeps the slot on every card, with a `QuietMark` where there is none.
   - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]` with
     narrower columns (`cardGridCols`); Size sets the column count.
   - Fit (`libraryThumbFitAtom`): `auto` covers when the image's orientation matches the frame
