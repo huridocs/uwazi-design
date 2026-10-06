@@ -38,7 +38,7 @@ function nativeProperties(typeId: string): PropertyDef[] {
     ...(thesaurus ? { content: thesaurus } : {}),
     // Every native property is a card line, as the Sample's cards have always
     // shown; its selects are what its Library facets.
-    ...(type !== "multiline" ? { showInCard: true } : {}),
+    showInCard: true,
     ...(type === "select" || type === "multiselect" ? { filter: true } : {}),
   }));
 }

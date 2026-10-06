@@ -5,10 +5,13 @@ import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./d
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
-import { distinctFieldLabels } from "../utils/entityFields";
+import { propertyColumns } from "../utils/entityFields";
+import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
 import {
+  LIBRARY_SORTS,
   optionsFor,
+  type Choice,
   type DisplayContext,
   type DisplayValue,
   type DisplayValues,
@@ -551,13 +554,19 @@ export interface LibraryDisplayState {
 }
 export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
 
-/** The property labels the current corpus carries, for the list's optional
- *  metadata columns. Derived, so it recomputes only when the source's entity
- *  array or the language changes — never per keystroke — and capped, because
- *  this is a MENU and menus must be stable and cheap. */
-export const libraryFieldLabelsAtom = atom((get) =>
-  distinctFieldLabels(get(libraryEntitiesAtom), get(languageAtom)),
-);
+/** The list's optional metadata columns: one per template property of the
+ *  templates in view (the selected Types, else the whole corpus), keyed by
+ *  name (spec §6.3), as Uwazi's table view offers the selected templates'
+ *  properties. Derived from the templates and the Type selection only, so it
+ *  does not recompute per keystroke, and a label renamed in Settings retitles
+ *  its column without losing the choice. */
+export const libraryFieldColumnsAtom = atom((get) => {
+  const templates = get(templatesAtom(get(dataSourceAtom)));
+  const types = get(libraryTypeFiltersAtom);
+  const ids = new Set(Object.keys(types).filter((k) => types[k]));
+  const inView = ids.size ? templates.filter((t) => ids.has(t.id)) : templates;
+  return propertyColumns(inView.length ? inView : templates);
+});
 
 /** What the registry needs to know that it can't: the viewport, whether a query
  *  is running, and the columns this corpus can offer. One atom, so the menu, the
@@ -567,7 +576,8 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   return {
     isMobile: get(breakpointAtom) === "mobile",
     hasQuery,
-    listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
+    listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom) }),
+    sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],
   };
 });
 
@@ -718,11 +728,89 @@ export type LibrarySort =
   | "title"
   | "connections"
   | "type"
-  | "country";
+  | "country"
+  // A template property with Uwazi's `prioritySorting` (spec §6.4).
+  | `prop:${string}`;
 export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";
-export const librarySortAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
 export type LibrarySortDir = "asc" | "desc";
-export const librarySortDirAtom = atom<LibrarySortDir>("desc");
+
+/** The sort keys the Library's templates add: one per property flagged
+ *  `prioritySorting` (Uwazi: "the system will try to pick up the best fit"),
+ *  by name, labelled as the first template has it. */
+export const libraryPropertySortsAtom = atom<Choice[]>((get) => propertySorts(get(templatesAtom(get(dataSourceAtom)))));
+const sortsCache = new WeakMap<object, Choice[]>();
+function propertySorts(templates: { properties: { name: string; label: string; prioritySorting?: boolean }[] }[]): Choice[] {
+  const hit = sortsCache.get(templates);
+  if (hit) return hit;
+  const seen = new Set<string>();
+  const out: Choice[] = [];
+  for (const t of templates)
+    for (const p of t.properties)
+      if (p.prioritySorting && !seen.has(p.name)) {
+        seen.add(p.name);
+        out.push({ id: `prop:${p.name}`, label: p.label });
+      }
+  sortsCache.set(templates, out);
+  return out;
+}
+
+/** The sort the reader picked, and its direction. */
+const sortStateAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
+const sortDirStateAtom = atom<LibrarySortDir>("desc");
+/** Whether the reader picked the sort. Until they do, a view narrowed to
+ *  templates sorts by their priority-sorting property. */
+const userSortedAtom = atom(false);
+
+/** Uwazi's default sort for the templates in view
+ *  (`utils/prioritySortingCriteria.js`): the `prioritySorting` property most
+ *  of them share (the first on a tie), common properties first; custom ones
+ *  count when they are filters of type text, date, numeric or select. Dates
+ *  sort newest first, the rest A to Z. Only with a Type selection: with none,
+ *  the Library keeps its own default. */
+const prioritySortAtom = atom((get): { key: LibrarySort; dir: LibrarySortDir } | null => {
+  const types = get(libraryTypeFiltersAtom);
+  const ids = new Set(Object.keys(types).filter((k) => types[k]));
+  if (!ids.size) return null;
+  const counts = new Map<LibrarySort, { n: number; date: boolean }>();
+  const add = (key: LibrarySort, date: boolean) => {
+    const c = counts.get(key);
+    counts.set(key, { n: (c?.n ?? 0) + 1, date });
+  };
+  for (const t of get(templatesAtom(get(dataSourceAtom)))) {
+    if (!ids.has(t.id)) continue;
+    for (const p of t.commonProperties)
+      if (p.prioritySorting && p.name === "title") add("title", false);
+      else if (p.prioritySorting && p.name === "creationDate") add("recent", true);
+    for (const p of t.properties)
+      if (p.prioritySorting && p.filter && ["text", "date", "numeric", "select"].includes(p.type))
+        add(`prop:${p.name}`, p.type === "date");
+  }
+  let best: [LibrarySort, { n: number; date: boolean }] | null = null;
+  for (const entry of counts) if (!best || entry[1].n > best[1].n) best = entry;
+  return best ? { key: best[0], dir: best[1].date ? "desc" : "asc" } : null;
+});
+
+const resolveUpdate = <T,>(next: T | ((prev: T) => T), prev: T): T =>
+  typeof next === "function" ? (next as (prev: T) => T)(prev) : next;
+
+/** The Library's sort: the reader's pick, else the templates' priority sort. */
+export const librarySortAtom = atom(
+  (get): LibrarySort => (!get(userSortedAtom) && get(prioritySortAtom)?.key) || get(sortStateAtom),
+  (get, set, next: LibrarySort | ((prev: LibrarySort) => LibrarySort)) => {
+    set(sortStateAtom, resolveUpdate(next, get(librarySortAtom)));
+    set(userSortedAtom, true);
+  },
+);
+export const librarySortDirAtom = atom(
+  (get): LibrarySortDir => (!get(userSortedAtom) && get(prioritySortAtom)?.dir) || get(sortDirStateAtom),
+  (get, set, next: LibrarySortDir | ((prev: LibrarySortDir) => LibrarySortDir)) => {
+    // Turning the direction keeps the sort in view, priority default or not.
+    const dir = resolveUpdate(next, get(librarySortDirAtom));
+    set(sortStateAtom, get(librarySortAtom));
+    set(sortDirStateAtom, dir);
+    set(userSortedAtom, true);
+  },
+);
 /** Natural direction for a freshly-picked sort key: text → A→Z, value → high→low. */
 export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
   key === "title" || key === "type" || key === "country" ? "asc" : "desc";
@@ -735,7 +823,7 @@ export const selectDataSourceAtom = atom(null, (get, set, source: DataSource) =>
   // The WHOLE switch is guarded, not just its selection clear: held
   // half-way, "Keep editing" left the new collection on screen with the old
   // one's selection and bulk form still up.
-  whenBulkClean(get, set, () => switchDataSource(set, source)),
+  whenBulkClean(get, set, () => switchDataSource(get, set, source)),
 );
 
 /** Run `run` now, or — while the bulk form holds changes — behind the
@@ -751,8 +839,10 @@ export function whenBulkClean(get: Getter, set: Setter, run: () => void) {
 /** `whenBulkClean`, for callers outside an atom (the selection's Delete). */
 export const whenBulkCleanAtom = atom(null, (get, set, run: () => void) => whenBulkClean(get, set, run));
 
-function switchDataSource(set: Setter, source: DataSource) {
+function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   set(dataSourceAtom, source);
+  // A property sort belongs to the collection whose templates offer it.
+  if (get(sortStateAtom).startsWith("prop:")) set(sortStateAtom, DEFAULT_LIBRARY_SORT);
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});

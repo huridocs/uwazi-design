@@ -11,6 +11,10 @@ import { overlayCreated, overlayPatch, patchedEntity } from "./entityOverlay";
  *  record can rewrite the card line it feeds (`adapterPatch`). */
 export interface CardField {
   key?: string;
+  /** The template property this line is, always, even where `key` is left
+   *  out because the record has nothing to focus. The card picks its lines by
+   *  it: the template's `showInCard` properties (`entityCardFields`). */
+  prop?: string;
   label: string;
   value: string;
   /** The first few values of a MULTI-valued property. */

@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
+import { templatesAtom } from "../../atoms/templates";
 import { getEntityType } from "../../data/entities";
 import type { ChainFacetDef } from "../../data/cejil/chainFacets";
 import { languageAtom } from "../../atoms/language";
@@ -71,10 +72,26 @@ export function LibraryFilters() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const matchTypes = useAtomValue(matchTypeFiltersAtom);
 
+  const templates = useAtomValue(templatesAtom(dataSource));
   const inheritedDefs = useMemo(
     () => libraryInheritedDefs(dataSource, language),
-    [dataSource, language],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `templates` is the store the defs are read from
+    [dataSource, language, templates],
   );
+  // Which template property facets show, by Uwazi's rule
+  // (Library/helpers/libraryFilters.js, shared/commonProperties.js): with no
+  // Type selected, only `defaultfilter` properties; with Types selected, the
+  // properties every selected template filters on. The curated facets always
+  // show, and so does a facet holding a selection, so it can be cleared.
+  const shownDefs = useMemo(() => {
+    const typeIds = Object.keys(typeFilters).filter((k) => typeFilters[k]);
+    return inheritedDefs.filter(
+      (d) =>
+        !d.templateIds ||
+        (typeIds.length ? typeIds.every((id) => d.templateIds!.includes(id)) : !!d.defaultFilter) ||
+        Object.values(inheritedFilters[d.propId] ?? {}).some(Boolean),
+    );
+  }, [inheritedDefs, typeFilters, inheritedFilters]);
   const chainDefs = useMemo(
     () => (dataSource === "cejil" ? cejilChainFacetDefs() : []),
     [dataSource],
@@ -156,15 +173,16 @@ export function LibraryFilters() {
   }, [entities, filterState]);
   const inheritedCounts = useMemo(() => {
     const m: Record<string, Map<string, number>> = {};
-    for (const { propId } of inheritedDefs) m[propId] = new Map();
+    // Only the facets on show: a hidden one draws no rows.
+    for (const { propId } of shownDefs) m[propId] = new Map();
     for (const e of entities) {
       if (!matchesAll(e, filterState, "inherited")) continue;
-      for (const def of inheritedDefs)
+      for (const def of shownDefs)
         for (const v of entityInheritedValues(e, def, language, dataSource))
           m[def.propId].set(v, (m[def.propId].get(v) ?? 0) + 1);
     }
     return m;
-  }, [entities, filterState, inheritedDefs, language, dataSource]);
+  }, [entities, filterState, shownDefs, language, dataSource]);
   // Relationship-chain facet counts (path-coupled). CEJIL only; empty otherwise.
   const chainCounts = useMemo(() => {
     const graph = dataSource === "cejil" ? cejilChainGraph() : null;
@@ -404,7 +422,7 @@ export function LibraryFilters() {
           sort="alpha"
         />
 
-        {inheritedDefs.map(({ propId, label }) => (
+        {shownDefs.map(({ propId, label }) => (
           <KeywordFacetCard
             key={propId}
             title={label}

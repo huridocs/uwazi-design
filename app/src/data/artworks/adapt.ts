@@ -47,9 +47,9 @@ export function artworkLibraryEntities(): Entity[] {
       // it is shown as a field and deliberately NOT written to `country`, which
       // feeds the Countries facet and the map's geocoding.
       fields: ([
-        artist ? { key: "artist", label: "Artist", value: artist.name } : null,
-        w.genres.length ? { key: "genres", label: "Genre", value: w.genres[0], more: w.genres.length - 1 } : null,
-        w.nationalities.length ? { key: "nationalities", label: "Nationality", value: w.nationalities[0] } : null,
+        artist ? { key: "artist", prop: "artist", label: "Artist", value: artist.name } : null,
+        w.genres.length ? { key: "genres", prop: "genres", label: "Genre", value: w.genres[0], more: w.genres.length - 1 } : null,
+        w.nationalities.length ? { key: "nationalities", prop: "nationalities", label: "Nationality", value: w.nationalities[0] } : null,
       ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
       // The movement is the keyword worth faceting on.
       descriptors: w.genres,
@@ -62,11 +62,13 @@ export function artworkLibraryEntities(): Entity[] {
     typeId: ARTIST_TYPE_ID,
     published: true,
     fields: ([
+      // One line for two properties: it stands for `born` (and `died`) when
+      // the card picks its lines by property name.
       a.bornYear
-        ? { label: "Lived", value: a.diedYear ? `${a.bornYear}–${a.diedYear}` : `b. ${a.bornYear}` }
+        ? { prop: "born", label: "Lived", value: a.diedYear ? `${a.bornYear}–${a.diedYear}` : `b. ${a.bornYear}` }
         : null,
-      a.nationalities.length ? { key: "nationalities", label: "Nationality", value: a.nationalities[0] } : null,
-      a.paintings ? { key: "paintings", label: "Paintings", value: String(a.paintings) } : null,
+      a.nationalities.length ? { key: "nationalities", prop: "nationalities", label: "Nationality", value: a.nationalities[0] } : null,
+      a.paintings ? { key: "paintings", prop: "paintings", label: "Paintings", value: String(a.paintings) } : null,
     ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
     descriptors: a.genres,
   }));

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { HighlightedText } from "../shared/HighlightedText";
 import { EntityTypeChip } from "../shared/EntityTypeChip";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
-import { entityFieldValue } from "../../utils/entityFields";
+import { entityPropertyValue, type PropertyColumn } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
 import type { Language } from "../../atoms/language";
 import type { Column } from "../shared/DataTable";
@@ -138,24 +138,25 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
   },
 ];
 
-/** The id a metadata column takes. Prefixed so a property called "Date" can
- *  never collide with the built-in track of that name. */
-export const metaColumnId = (label: string) => `meta:${label}`;
+/** The id a metadata column takes: the property's name. Prefixed so a
+ *  property called "date" can never collide with the built-in track. A label
+ *  renamed in Settings keeps the id, so a column choice survives. */
+export const metaColumnId = (name: string) => `meta:${name}`;
 
 /** One of the corpus's own properties as a column.
  *
  *  Off by default, always: the table's shape today has no metadata tracks, and a
  *  corpus that carries a dozen properties would otherwise open as a spreadsheet
- *  nobody asked for. Values are addressed by LABEL — see `entityFieldValue` for
- *  why that is the only key the corpora share. */
-export function metaColumn(label: string): ListColumnSpec {
+ *  nobody asked for. Values are addressed by the template property's name
+ *  (`entityPropertyValue`, spec §6.3). */
+export function metaColumn(col: PropertyColumn): ListColumnSpec {
   return {
-    id: metaColumnId(label),
-    label,
+    id: metaColumnId(col.name),
+    label: col.label,
     default: false,
     width: "10rem",
     cell: (e, ctx) => {
-      const field = entityFieldValue(e, label, ctx.language);
+      const field = entityPropertyValue(e, col.name, ctx.language);
       if (!field) return <span className="text-ink-tertiary">—</span>;
       return (
         <span className="flex items-baseline gap-1 min-w-0 text-ink-secondary">
@@ -174,14 +175,14 @@ export function metaColumn(label: string): ListColumnSpec {
 }
 
 /** Every column on offer right now: the built-ins the context allows, then one
- *  per property the corpus carries. */
+ *  per property of the templates in view. */
 export function listColumnSpecs(ctx: {
   hasQuery: boolean;
-  fieldLabels: string[];
+  fieldColumns: PropertyColumn[];
 }): ListColumnSpec[] {
   return [
     ...LIST_COLUMNS.filter((c) => !c.requiresQuery || ctx.hasQuery),
-    ...ctx.fieldLabels.map(metaColumn),
+    ...ctx.fieldColumns.map(metaColumn),
   ];
 }
 
@@ -189,7 +190,7 @@ export function listColumnSpecs(ctx: {
  *  never be drawable-but-unlistable (or the reverse). */
 export function listColumnOptions(ctx: {
   hasQuery: boolean;
-  fieldLabels: string[];
+  fieldColumns: PropertyColumn[];
 }): ToggleOption[] {
   return listColumnSpecs(ctx).map((c) => ({
     id: c.id,

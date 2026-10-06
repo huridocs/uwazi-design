@@ -56,7 +56,8 @@ import {
   libraryThumbSizeAtom,
   libraryListColumnsAtom,
   libraryListDensityAtom,
-  libraryFieldLabelsAtom,
+  libraryFieldColumnsAtom,
+  libraryPropertySortsAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
@@ -101,6 +102,8 @@ import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDr
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
+import { entityPropertyValues } from "../utils/propertyValues";
+import { parseDateValue } from "../utils/dateValue";
 // Lazy: Leaflet and markercluster load with the map view, not with the Library.
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
@@ -132,6 +135,18 @@ const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 /** Sort keys — shared by the toolbar Select and (on mobile, where the Select
  *  steps aside for the view switcher) the Display popover. */
 export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
+
+/** Two property values in sort order: as numbers where both are numbers, as
+ *  dates where both read as dates, else as text. */
+function compareValues(a: string, b: string): number {
+  const na = Number(a);
+  const nb = Number(b);
+  if (a.trim() !== "" && b.trim() !== "" && Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+  const da = parseDateValue(a);
+  const db = parseDateValue(b);
+  if (da && db) return da.getTime() - db.getTime();
+  return a.localeCompare(b);
+}
 
 /** How long the search box must sit still before the query counts as a search
  *  worth remembering. Long enough to cover typing and a pause to read, short
@@ -233,7 +248,8 @@ export function LibraryView() {
   const cardInfo = useAtomValue(libraryCardInfoAtom);
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
-  const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
+  const fieldColumns = useAtomValue(libraryFieldColumnsAtom);
+  const propertySorts = useAtomValue(libraryPropertySortsAtom);
   // Landscape grows with the display: 1 / sm 2 / xl 3, then 4 at a 1920px
   // viewport (120rem) and 5 at 2560px (160rem). Portrait cards are made
   // portrait by the GRID: the 3:4 slot spans the card's width, so the column
@@ -502,7 +518,18 @@ export function LibraryView() {
         case "connections":
           r = (countByEntity.get(a.id) ?? 0) - (countByEntity.get(b.id) ?? 0);
           break;
-        default: // recent / date
+        default:
+          if (sort.startsWith("prop:")) {
+            // A prioritySorting property: dates and numbers by value, the rest
+            // by text; an entity without a value sorts last either way.
+            const name = sort.slice(5);
+            const va = entityPropertyValues(a, name, language)[0];
+            const vb = entityPropertyValues(b, name, language)[0];
+            if (!va || !vb) return va ? -1 : vb ? 1 : 0;
+            r = compareValues(va, vb);
+            break;
+          }
+          // recent / date
           r = (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
       }
       return sortDir === "asc" ? r : -r;
@@ -834,8 +861,8 @@ export function LibraryView() {
   // column used to risk). The Match cell is handed in rather than imported by
   // that module: see `ListCellContext.renderMatch`.
   const listSpecs = useMemo(
-    () => listColumnSpecs({ hasQuery, fieldLabels }),
-    [hasQuery, fieldLabels],
+    () => listColumnSpecs({ hasQuery, fieldColumns }),
+    [hasQuery, fieldColumns],
   );
   const tableColumns = buildListColumns(listSpecs, listColumnOn, {
     query,
@@ -1015,7 +1042,10 @@ export function LibraryView() {
             }}
             ariaLabel={t("System", "Sort")}
             // Same rows, chrome-language labels; values stay the sort keys.
-            options={SORTS.map((s) => ({ ...s, label: t("System", s.label) }))}
+            options={[...SORTS, ...propertySorts.map((c) => ({ value: c.id, label: c.label }))].map((s) => ({
+              ...s,
+              label: t("System", s.label),
+            }))}
             // Same row, same reason as the switcher: this trigger swung 47px
             // between "Title" and "Connections", shoving View, Display and
             // Language sideways on every sort change.

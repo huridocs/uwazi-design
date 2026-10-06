@@ -108,7 +108,7 @@ export function buildRecord({
 export function adapterFieldsOf(fields: MetadataField[]): NonNullable<Entity["fields"]> {
   return fields
     .filter((f) => f.value && f.value.trim())
-    .map((f) => ({ key: f.id, label: f.label, value: f.value }));
+    .map((f) => ({ key: f.id, prop: f.id, label: f.label, value: f.value }));
 }
 
 /** Today, in the ISO date form the corpora's `createdAt` uses. */

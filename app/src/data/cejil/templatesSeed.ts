@@ -7,8 +7,8 @@
 //   - filter: thesaurus-backed select / multiselect (what the Library has always
 //     faceted), plus `pa_s`, the relationship the Country facet hoists;
 //   - showInCard: every property the Library's card has always shown (all
-//     but paragraphs, pictures, previews, tables and recordings, which ride the
-//     card's footer as marks or are its thumbnail);
+//     but pictures, previews, tables and recordings, which are its thumbnail
+//     or have no line; main's card prints a paragraph's first words);
 //   - required: false everywhere.
 // Property ids are synthesized `${templateId}:${name}` (propertyIdOf).
 import type { PropertyDef, PropertyType, TemplateDef } from "../templates/types";
@@ -18,7 +18,7 @@ import { cejilTypeById } from "./typesAdapter";
 import type { CejilTemplateProperty } from "./types";
 
 const COUNTRY_PROPERTY = "pa_s";
-const NOT_CARDED = new Set(["markdown", "image", "preview", "nested", "media"]);
+const NOT_CARDED = new Set(["image", "preview", "nested", "media"]);
 
 const isThesaurusBacked = (p: CejilTemplateProperty) =>
   (p.type === "select" || p.type === "multiselect") && !!p.content;

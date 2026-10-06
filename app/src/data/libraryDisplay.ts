@@ -71,6 +71,9 @@ export interface DisplayContext {
    *  column is one entry there and appears here, in the menu and in the table
    *  without a second edit. */
   listColumns: ToggleOption[];
+  /** The sort keys on offer: the fixed ones and the templates'
+   *  `prioritySorting` properties. */
+  sortChoices?: Choice[];
 }
 
 interface SectionBase {

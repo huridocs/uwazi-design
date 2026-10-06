@@ -7,7 +7,7 @@ import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { getEntityType } from "../../data/entities";
-import { entityScalarFields } from "../../utils/entityFields";
+import { entityCardFields } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
@@ -128,10 +128,9 @@ export const EntityCard = memo(function EntityCard({
     </span>
   );
 
-  // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
-  // entityMetadata profile. Only fields that resolved to a value. Shared with
-  // the list table's metadata columns, which ask the identical question.
-  const scalarFields = entityScalarFields(entity, language);
+  // The template's showInCard properties that hold a value, in template order
+  // (utils/entityFields).
+  const scalarFields = entityCardFields(entity, language);
   // At most THREE fields, and no appended "Language" row: the card is a
   // scan-target, not a record. Language repeats the toolbar's own selector on
   // every card, and beyond three rows the grid stops reading as cards and starts

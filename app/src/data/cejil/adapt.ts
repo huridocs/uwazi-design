@@ -47,7 +47,11 @@ function formatVals(
   return none;
 }
 
-/** First few non-empty metadata fields (label + display value), in template order. */
+/** A card's candidate lines: every non-empty metadata field (label + display
+ *  value), in template order, each tagged with its property name. The card
+ *  shows the ones its template marks `showInCard` (`entityCardFields`), read
+ *  at render, so a flag changed in Settings reaches the card without
+ *  rebuilding the corpus. */
 function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
@@ -58,8 +62,7 @@ function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unk
     const { value, more } = formatVals(p.type, vals);
     if (!value) continue;
     // `key`: the template property name, the id the record's field carries.
-    out.push(more > 0 ? { key: p.name, label: p.label, value, more } : { key: p.name, label: p.label, value });
-    if (out.length >= 3) break;
+    out.push(more > 0 ? { key: p.name, prop: p.name, label: p.label, value, more } : { key: p.name, prop: p.name, label: p.label, value });
   }
   return out.length ? out : undefined;
 }
