@@ -57,9 +57,15 @@ const UNIT_WORD: Record<string, string> = {
   missing: "missing",
 };
 
-/** "At least 76", "About 2,000", "NPR 11,000,000,000". */
+/** "At least 76", "About 2,000", "NPR 11 billion". Amounts of a million or
+ *  more are written in words, as the sources write them, and fit the figure
+ *  column ("NPR 3,000,000,000,000" ran into the title). */
 export function figureValue(f: ClaimFigure): string {
-  const n = f.figure.toLocaleString("en");
+  const n =
+    f.unit === "damage-NPR" && f.figure >= 1e6
+      ? // "3 trillion" stays together on a wrap.
+        f.figure.toLocaleString("en", { notation: "compact", compactDisplay: "long", maximumSignificantDigits: 4 }).replace(" ", "\u00a0")
+      : f.figure.toLocaleString("en");
   const value = f.unit === "damage-NPR" ? `NPR ${n}` : n;
   return f.qualifier === "at-least" ? `At least ${value}` : f.qualifier === "about" ? `About ${value}` : value;
 }
@@ -70,17 +76,25 @@ export function figureUnit(f: ClaimFigure): string {
   return UNIT_WORD[f.unit] ?? f.unitDetail ?? f.unit;
 }
 
-/** Where and when: "national · as of 2025/09/08, night". A publication date
- *  standing in for the count's day says so. */
-export function figureContext(f: ClaimFigure): string {
+/** Where, and when: ["Nationwide", "as of 2025/09/08, night"]. A
+ *  publication date standing in for the count's day says so. The words of the
+ *  when are bound with no-break spaces, so "as of" never ends a line. */
+export function figureContextParts(f: ClaimFigure): string[] {
   const parts: string[] = [];
   if (f.scope) parts.push(f.scope === "national" ? "Nationwide" : f.scope);
   if (f.asOf !== undefined) {
     const day = formatAtPrecision(new Date(f.asOf * 1000), "day");
     const when = f.asOfTime ? `${day}, ${f.asOfTime}` : day;
-    parts.push(f.asOfBasis === "published" ? `reported ${when}` : `as of ${when}`);
+    parts.push(f.asOfBasis === "published" ? `reported\u00a0${when}` : `as\u00a0of\u00a0${when}`);
   } else parts.push("date not known");
-  return parts.join(" · ");
+  return parts;
+}
+
+/** The same on one line: "Nationwide · as of 2025/09/08". The separator's
+ *  space after the dot does not break, so a wrap leaves "Nationwide" at the
+ *  line end, never "Nationwide ·". */
+export function figureContext(f: ClaimFigure): string {
+  return figureContextParts(f).join(" ·\u00a0");
 }
 
 /** Other claims counting the same thing, place and day with a figure both
@@ -134,7 +148,12 @@ export function FigureCell({ f }: { f?: ClaimFigure }) {
     <div data-part="figure-cell" className="flex flex-col min-w-0">
       <span className="text-sm font-semibold text-ink tabular-nums">{figureValue(f)}</span>
       <span className="text-xs text-ink-secondary">{figureUnit(f)}</span>
-      <span className="text-meta text-ink-tertiary">{figureContext(f)}</span>
+      {/* Narrow: where and when on lines of their own. */}
+      {figureContextParts(f).map((part) => (
+        <span key={part} className="text-meta text-ink-tertiary">
+          {part}
+        </span>
+      ))}
     </div>
   );
 }

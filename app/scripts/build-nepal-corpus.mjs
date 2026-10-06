@@ -145,6 +145,11 @@ const templates = seedTemplates.map((t) => ({
     return out;
   }),
 }));
+// A claim's figure and its as-of day are sort keys (Uwazi's prioritySorting),
+// so the Library's Evidence view can order claims by count or by day.
+const SORTABLE = { nepal_claim: ["figure", "as_of"] };
+for (const t of templates)
+  for (const p of t.properties) if (SORTABLE[t.id]?.includes(p.name)) p.prioritySorting = true;
 const templateById = new Map(templates.map((t) => [t.id, t]));
 
 /* ── Dates ──────────────────────────────────────────────────────────── */

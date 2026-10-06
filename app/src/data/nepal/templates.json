@@ -599,7 +599,8 @@
     "name": "figure",
     "label": "Figure",
     "type": "numeric",
-    "filter": true
+    "filter": true,
+    "prioritySorting": true
    },
    {
     "id": "nepal_claim:unit",
@@ -634,7 +635,8 @@
     "name": "as_of",
     "label": "Figure as of",
     "type": "date",
-    "filter": true
+    "filter": true,
+    "prioritySorting": true
    },
    {
     "id": "nepal_claim:as_of_time",
