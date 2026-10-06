@@ -393,7 +393,7 @@ export const libraryInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
-/** Relationship-chain facet selections (CEJIL only), keyed `${chainId}:${seg}`
+/** Relationship-chain facet selections (chains the templates declare), keyed `${chainId}:${seg}`
  *  → (value → on). Keys of one chain are path-coupled: a single traversed path
  *  must satisfy them all. See utils/chainTraversal.ts. */
 export const libraryChainFiltersAtom = atom<

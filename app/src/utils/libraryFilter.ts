@@ -42,6 +42,9 @@ export interface ActiveChain {
   segments: ChainSegment[];
   graph: ChainGraph;
   maxPaths: number;
+  /** Walk only as deep as the deepest node an active constraint reads (see
+   *  `ChainDecl.partialPaths`). */
+  partialPaths?: boolean;
   constraints: ActiveChainConstraint[];
 }
 
@@ -62,7 +65,8 @@ export interface LibraryFilterState {
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
-  /** Active relationship-chain filters (CEJIL only; empty otherwise). */
+  /** Active relationship-chain filters (collections whose templates declare
+   *  chains; empty otherwise). */
   chains: ActiveChain[];
   q: string;
   searchIndex: Map<string, string>;
@@ -297,6 +301,11 @@ export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];
 
+/** How deep to walk a chain: every segment, or with `partialPaths` only as
+ *  far as the deepest node the tested facets read. */
+const chainDepth = (partial: boolean | undefined, segments: ChainSegment[], indices: number[]) =>
+  partial ? Math.max(1, ...indices) : segments.length;
+
 /** Path-coupled chain predicate. For each active chain, the entity must be of
  *  the chain's root type and have at least ONE traversed path that satisfies
  *  every active segment constraint jointly. `except` skips one segment facet (by
@@ -310,7 +319,8 @@ function chainMatches(e: Entity, s: LibraryFilterState, except?: string): boolea
     // A chain narrows results to its root type — like an inherited facet, an
     // entity that can't carry the value is filtered out, not passed through.
     if (e.typeId !== ac.rootTypeId) return false;
-    const { tuples } = chains(ac.graph, e.id, ac.segments, { maxPaths: ac.maxPaths });
+    const maxDepth = chainDepth(ac.partialPaths, ac.segments, active.map((c) => c.segmentIndex));
+    const { tuples } = chains(ac.graph, e.id, ac.segments, { maxPaths: ac.maxPaths, maxDepth });
     const ok = tuples.some((t) =>
       active.every((c) =>
         valueAt(ac.graph, t, c.segmentIndex, c.property).some((v) => c.values.has(v)),
@@ -353,6 +363,7 @@ export function chainFacetCounts(
     segmentIndex: number;
     property: string;
     maxPaths: number;
+    partialPaths?: boolean;
   },
   graph: ChainGraph,
 ): Map<string, number> {
@@ -362,10 +373,14 @@ export function chainFacetCounts(
   const others = ac
     ? ac.constraints.filter((c) => c.facetKey !== def.key && c.values.size > 0)
     : [];
+  const maxDepth = chainDepth(def.partialPaths, def.segments, [
+    def.segmentIndex,
+    ...others.map((c) => c.segmentIndex),
+  ]);
   for (const e of entities) {
     if (e.typeId !== def.rootTypeId) continue;
     if (!matchesAll(e, s, def.key)) continue;
-    const { tuples } = chains(graph, e.id, def.segments, { maxPaths: def.maxPaths });
+    const { tuples } = chains(graph, e.id, def.segments, { maxPaths: def.maxPaths, maxDepth });
     const reached = new Set<string>();
     for (const t of tuples) {
       if (

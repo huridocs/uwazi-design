@@ -97,7 +97,8 @@ import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDr
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
-import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
+import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
+import { templatesAtom } from "../atoms/templates";
 import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
@@ -610,10 +611,12 @@ export function LibraryView() {
   const inheritedKey = activeInherited
     .map((f) => `${f.def.propId}:${[...f.values].join("|")}`)
     .join(";");
-  // Relationship-chain filters (CEJIL only — needs the loaded graph).
+  // Relationship-chain filters: the chains the templates declare, over the
+  // collection's graph (null until its corpus has loaded).
+  const chainTemplates = useAtomValue(templatesAtom(dataSource));
   const activeChains = useMemo(
-    () => (dataSource === "cejil" ? buildActiveChains(chainFilters, cejilChainGraph()) : []),
-    [dataSource, chainFilters, cejilReady],
+    () => buildActiveChains(chainFilters, chainFacetDefsFor(dataSource, chainTemplates), chainGraphFor(dataSource)),
+    [dataSource, chainFilters, chainTemplates, cejilReady, nepalReady],
   );
   const chainKey = JSON.stringify(chainFilters);
 

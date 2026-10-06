@@ -5,7 +5,6 @@ import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } fr
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
-import type { ChainFacetDef } from "../../data/cejil/chainFacets";
 import { languageAtom } from "../../atoms/language";
 import {
   libraryQueryAtom,
@@ -34,10 +33,12 @@ import {
   entityInheritedValues,
 } from "../../utils/libraryFacets";
 import {
-  cejilChainFacetDefs,
+  chainFacetDefsFor,
   buildActiveChains,
-  cejilChainGraph,
-} from "../../data/cejil/chainFacets";
+  chainGraphFor,
+  chainGroups,
+  type ChainFacetDef,
+} from "../../data/chainFacets";
 import {
   matchesAll,
   buildSearchIndex,
@@ -95,10 +96,18 @@ export function LibraryFilters() {
         Object.values(inheritedFilters[d.propId] ?? {}).some(Boolean),
     );
   }, [inheritedDefs, typeFilters, inheritedFilters]);
-  const chainDefs = useMemo(
-    () => (dataSource === "cejil" ? cejilChainFacetDefs() : []),
-    [dataSource],
-  );
+  // Relationship chains the templates declare. A chain shows by the same rule
+  // as a property facet: `defaultFilter` with no Type selected, or when every
+  // selected Type is its template; and while it holds a selection.
+  const chainDefs = useMemo(() => chainFacetDefsFor(dataSource, templates), [dataSource, templates]);
+  const shownChains = useMemo(() => {
+    const typeIds = Object.keys(typeFilters).filter((k) => typeFilters[k]);
+    return chainGroups(chainDefs).filter(
+      (g) =>
+        (typeIds.length ? typeIds.every((id) => id === g[0].rootTypeId) : g[0].defaultFilter) ||
+        g.some((d) => Object.values(chainFilters[d.key] ?? {}).some(Boolean)),
+    );
+  }, [chainDefs, typeFilters, chainFilters]);
   const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
 
   // The shared filter state — each facet's aggregation counts entities passing
@@ -130,7 +139,7 @@ export function LibraryFilters() {
       fromMs: dateFrom ? Date.parse(dateFrom) : null,
       toMs: dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null,
       inherited,
-      chains: buildActiveChains(chainFilters, dataSource === "cejil" ? cejilChainGraph() : null),
+      chains: buildActiveChains(chainFilters, chainDefs, chainGraphFor(dataSource)),
       q: query.trim().toLowerCase(),
       searchIndex,
       searchTerms: highlightTerms(query), // folded
@@ -141,7 +150,7 @@ export function LibraryFilters() {
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, chainFilters, query, matchTypes,
+    dateFrom, dateTo, inheritedFilters, chainDefs, chainFilters, query, matchTypes,
   ]);
 
   const typeCounts = useMemo(() => {
@@ -186,19 +195,21 @@ export function LibraryFilters() {
     }
     return m;
   }, [entities, filterState, shownDefs, language, dataSource]);
-  // Relationship-chain facet counts (path-coupled). CEJIL only; empty otherwise.
+  // Relationship-chain facet counts (path-coupled), for the chains on show.
   const chainCounts = useMemo(() => {
-    const graph = dataSource === "cejil" ? cejilChainGraph() : null;
+    const graph = chainGraphFor(dataSource);
     const m: Record<string, Map<string, number>> = {};
     if (!graph) return m;
-    for (const def of chainDefs) m[def.key] = chainFacetCounts(entities, filterState, def, graph);
+    for (const group of shownChains)
+      for (const def of group) m[def.key] = chainFacetCounts(entities, filterState, def, graph);
     return m;
-  }, [entities, filterState, chainDefs, dataSource]);
-  const chainHasAny = chainDefs.some(
-    (d) =>
-      (chainCounts[d.key]?.size ?? 0) > 0 ||
-      Object.values(chainFilters[d.key] ?? {}).some(Boolean),
-  );
+  }, [entities, filterState, shownChains, dataSource]);
+  const chainHasAny = (group: ChainFacetDef[]) =>
+    group.some(
+      (d) =>
+        (chainCounts[d.key]?.size ?? 0) > 0 ||
+        Object.values(chainFilters[d.key] ?? {}).some(Boolean),
+    );
 
   // The Template facet follows Settings › Filters: only the templates it
   // shows, in its order. CEJIL also takes its groups; the Sample keeps its
@@ -455,21 +466,21 @@ export function LibraryFilters() {
           />
         ))}
 
-        {chainHasAny && (
-          <section data-part="chain-group" className="space-y-1.5">
+        {shownChains.filter(chainHasAny).map((group) => (
+          <section key={group[0].chainId} data-part="chain-group" className="space-y-1.5">
             {/* Chain-filter group: a relationship path the facets traverse. The
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
             <header data-part="chain-header" className="px-1.5 pt-1 space-y-1">
               <h2 className="block text-tab font-semibold text-ink">
-                {chainDefs[0].groupLabel}
+                {group[0].groupLabel}
               </h2>
               <p className="text-meta text-ink-tertiary leading-snug">
-                {chainDefs[0].groupDescription}
+                {group[0].groupDescription}
               </p>
-              <ChainPathHelper defs={chainDefs} />
+              <ChainPathHelper defs={group} />
             </header>
-            {chainDefs.map((def) => (
+            {group.map((def) => (
               <KeywordFacetCard
                 key={def.key}
                 title={def.label}
@@ -483,7 +494,7 @@ export function LibraryFilters() {
               />
             ))}
           </section>
-        )}
+        ))}
 
         {hasDates && (
           <DateRangeCard

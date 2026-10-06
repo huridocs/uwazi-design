@@ -15,6 +15,7 @@ import type { PropertyDef, PropertyType, TemplateDef } from "../templates/types"
 import { propertyIdOf } from "../templates/types";
 import { cejilTemplates } from "./templates";
 import { cejilTypeById } from "./typesAdapter";
+import { CEJIL_PERPETRATOR_CHAIN } from "./graph";
 import type { CejilTemplateProperty } from "./types";
 
 const COUNTRY_PROPERTY = "pa_s";
@@ -64,6 +65,29 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
  *  published view (`TemplateDef.publishedView`). */
 const PUBLISHED_VIEW_TEMPLATES = new Set(["58b2f3a35d59f31e1345b4b6", "58b2f3a35d59f31e1345b48a"]);
 
+/** The relationship chain the Library filters Causas by (`TemplateDef.chains`):
+ *  Causa → Sentencia → Juez → País, exposing the signing judge (node 2) and
+ *  that judge's country (node 3) as path-coupled facets. */
+function chainsOf(templateId: string): Pick<TemplateDef, "chains"> {
+  const c = CEJIL_PERPETRATOR_CHAIN;
+  if (templateId !== c.rootTypeId) return {};
+  return {
+    chains: [
+      {
+        id: c.id,
+        label: c.label,
+        description: c.description,
+        segments: c.segments,
+        facets: [
+          { segmentIndex: 2, label: "Juez firmante", property: "title" },
+          { segmentIndex: 3, label: "País del juez", property: "title" },
+        ],
+        defaultFilter: true,
+      },
+    ],
+  };
+}
+
 let built: TemplateDef[] | null = null;
 /** Built on first read (see data/sample/templates.ts). */
 export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.map((t) => ({
@@ -75,4 +99,5 @@ export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.
   commonProperties: (t.commonProperties ?? []).map((p) => propertyOf(t._id, p)),
   properties: t.properties.map((p) => propertyOf(t._id, p)),
   ...(PUBLISHED_VIEW_TEMPLATES.has(t._id) ? { publishedView: true } : {}),
+  ...chainsOf(t._id),
 })));

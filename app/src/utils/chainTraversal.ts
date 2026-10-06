@@ -54,11 +54,11 @@ export interface ChainGraph {
 }
 
 /** One hop of a chain. `relationType` is matched against an edge's type
- *  (`ANY_RELATION` matches all). `toTypeId` pins the far end's template — REQUIRED
+ *  (`ANY_RELATION` matches all; a list matches any of its types). `toTypeId` pins the far end's template — REQUIRED
  *  in practice for overloaded relation types (e.g. CEJIL's `País` links from
  *  Causa, Resolución *and* Juez; without the pin, hops cross-contaminate). */
 export interface ChainSegment {
-  relationType: string;
+  relationType: string | string[];
   direction: SegmentDirection;
   /** Optional template id the neighbor must match. */
   toTypeId?: string;
@@ -108,7 +108,8 @@ export interface ChainResult {
   truncated: boolean;
 }
 
-function relTypeMatches(edgeType: string | null, want: string): boolean {
+function relTypeMatches(edgeType: string | null, want: string | string[]): boolean {
+  if (Array.isArray(want)) return want.some((w) => relTypeMatches(edgeType, w));
   if (want === ANY_RELATION) return true;
   // Untyped edges only match the wildcard — they can't be claimed to BE a
   // specific named type. They stay traversable via ANY_RELATION segments and,

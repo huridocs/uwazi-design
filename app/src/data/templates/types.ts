@@ -70,6 +70,29 @@ export interface PropertyDef {
   origin?: "uwazi" | "prototype";
 }
 
+/** A relationship chain declared on a template, read by the Library as
+ *  filters: the Uwazi v2 relationship property, whose query is a chain of hops
+ *  and whose value is a property of the entities it reaches. Each facet tests
+ *  one node of the path; facets of one chain are path-coupled (one traversed
+ *  path must satisfy them all). Prototype-only; see
+ *  docs/relationship-chain-filters.md. */
+export interface ChainDecl {
+  /** Stable id; facet keys start `${id}:${segmentIndex}`. */
+  id: string;
+  label: string;
+  /** One line under the group's heading: what the group filters. */
+  description: string;
+  segments: ChainSegment[];
+  facets: { segmentIndex: number; label: string; property: string }[];
+  /** Shown with no Type selected. Otherwise the group shows when every
+   *  selected Type is this template, as Uwazi shows a property's filter. */
+  defaultFilter?: boolean;
+  /** A facet tests the path only as far as the deepest node a selection
+   *  reads, so an entity whose path stops early still matches a facet nearer
+   *  the root. Absent: every path must reach the last segment. */
+  partialPaths?: boolean;
+}
+
 export interface TemplateDef {
   id: string;
   name: string;
@@ -84,6 +107,9 @@ export interface TemplateDef {
    *  open in the published view, with a toggle to the entity view. Seeded, not
    *  edited in Settings. */
   publishedView?: boolean;
+  /** Relationship chains the Library filters this template's entities by.
+   *  Seeded, not edited in Settings. */
+  chains?: ChainDecl[];
 }
 
 /** The id rule for corpora whose properties carry no `_id` (Sample, CEJIL,
