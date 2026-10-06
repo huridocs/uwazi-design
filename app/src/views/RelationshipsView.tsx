@@ -42,12 +42,17 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useRelAtom(relViewAtom);
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
-  const [drawerTab, setDrawerTab] = useState<"document" | "filters">("document");
+  const [chosenDrawerTab, setDrawerTab] = useState<"document" | "filters">("document");
   useRelFiltersDock(() => setDrawerTab("filters"));
   const relFilterCount = useAtomValue(activeFilterCountAtom);
 
   const hideMinimap = view === "graph";
   const sourceLink = profile.hasDocument ? undefined : nepalSourceLink(focusedId);
+  // A record with no file and no source link has nothing for a Document tab
+  // to show: the drawer drops the tab and opens on Filters, whatever tab the
+  // previous record left open.
+  const hasDocTab = profile.hasDocument || !!sourceLink;
+  const drawerTab = hasDocTab ? chosenDrawerTab : "filters";
   // A claim opens on its evidence; undefined for every record no source takes
   // a stance on, so the block is not drawn.
   const evidence = nepalClaimEvidence(focusedId);
@@ -120,7 +125,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
               has none), then the filters as a tab of their own. */}
           <DrawerTabs
             tabs={[
-              { id: "document", label: profile.hasDocument ? "Document" : sourceLink ? "Source" : "Document" },
+              ...(hasDocTab ? [{ id: "document", label: profile.hasDocument ? "Document" : "Source" }] : []),
               { id: "filters", label: t("System", "Filters"), dot: relFilterCount > 0 },
             ]}
             activeId={drawerTab}
@@ -132,7 +137,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
-            <NoDocumentPane entityId={focusedId} />
+            sourceLink && <NoDocumentPane entityId={focusedId} />
           )}
           </div>
           {drawerTab === "filters" && <RelationshipsFiltersTab />}
