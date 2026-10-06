@@ -1,195 +1,44 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import { ImportCSVLayout } from "../components/import-csv/ImportCSVLayout";
-import { ImportListView } from "../components/import-csv/ImportListView";
-import { ImportDetailView } from "../components/import-csv/ImportDetailView";
+import { ImportList } from "../components/import-csv/ImportList";
+import { ImportStatusPage } from "../components/import-csv/ImportStatusPage";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
-import { ToolsActionBar } from "../components/layout/ToolsActionBar";
-import { ConfirmDialog } from "../components/shared/ConfirmDialog";
-import { defaultImports, type ImportEntry } from "../data/imports";
-import type { AppView } from "../atoms/navigation";
+import { csvImports } from "../atoms/csvImports";
+import { useRegisterCsvImport } from "../hooks/useRegisterCsvImport";
+import { openNewImportOnArrivalAtom, type AppView } from "../atoms/navigation";
 
-type Screen = "list" | "detail";
-
+/** Tools › Import CSV (Uwazi's `/settings/csv` and `/settings/csv/:id`): the
+ *  imports list, one import's status page, and the upload modal. Imports run
+ *  in the background (`atoms/csvImports.ts`), so leaving the view does not
+ *  stop them. */
 export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
-  const [screen, setScreen] = useState<Screen>("list");
-  const [imports, setImports] = useState<ImportEntry[]>(defaultImports);
-  const [activeImportId, setActiveImportId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleteCurrentConfirmOpen, setDeleteCurrentConfirmOpen] = useState(false);
-
-  const activeEntry = imports.find((i) => i.id === activeImportId) ?? null;
-
-  const handleView = useCallback((id: string) => {
-    setActiveImportId(id);
-    setScreen("detail");
-  }, []);
-
-  const handleBack = useCallback(() => {
-    setScreen("list");
-    setActiveImportId(null);
-  }, []);
-
-  const handleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const handleSelectAll = useCallback(() => {
-    setSelectedIds((prev) => {
-      const allSelected = imports.length > 0 && imports.every((i) => prev.has(i.id));
-      if (allSelected) return new Set();
-      return new Set(imports.map((i) => i.id));
-    });
-  }, [imports]);
-
-  const handleDeleteSelected = useCallback(() => {
-    setImports((prev) => prev.filter((i) => !selectedIds.has(i.id)));
-    setSelectedIds(new Set());
-    setDeleteConfirmOpen(false);
-  }, [selectedIds]);
-
-  const handleImport = useCallback(
-    (filename: string, template: string) => {
-      const newEntry: ImportEntry = {
-        id: `imp-${Date.now()}`,
-        filename,
-        template,
-        status: "uploading",
-        progress: 0,
-        entities: 0,
-        failed: 0,
-        warnings: 0,
-        errors: 0,
-        date: new Date().toISOString().slice(0, 10),
-        issues: [],
-      };
-      setImports((prev) => [newEntry, ...prev]);
-      setModalOpen(false);
-      setActiveImportId(newEntry.id);
-      setScreen("detail");
-    },
-    []
-  );
-
-  // Upload/processing simulation — ticks every in-flight import (not just the
-  // one open in the detail view), so a row's progress keeps running on the
-  // list after "Back to list" instead of freezing mid-bar.
+  const imports = useAtomValue(csvImports.listAtom);
+  const [openId, setOpenId] = useState<string | null>(null);
+  // Arriving from the Library's "Import CSV" opens the modal straight away.
+  const [openNewOnArrival, setOpenNewOnArrival] = useAtom(openNewImportOnArrivalAtom);
+  const [modalOpen, setModalOpen] = useState(openNewOnArrival);
   useEffect(() => {
-    const inFlight = imports.some(
-      (i) => i.status === "uploading" || i.status === "processing"
-    );
-    if (!inFlight) return;
+    if (openNewOnArrival) setOpenNewOnArrival(false);
+  }, [openNewOnArrival, setOpenNewOnArrival]);
+  const register = useRegisterCsvImport();
 
-    const interval = setInterval(() => {
-      setImports((prev) =>
-        prev.map((entry) => {
-          if (entry.status === "uploading") {
-            const next = Math.min(100, entry.progress + 3 + Math.random() * 5);
-            if (next >= 100) {
-              return { ...entry, status: "processing", progress: 0 };
-            }
-            return { ...entry, progress: next };
-          }
-          if (entry.status === "processing") {
-            const next = Math.min(100, entry.progress + 2 + Math.random() * 4);
-            const entities = Math.round((next / 100) * (300 + Math.random() * 200));
-            if (next >= 100) {
-              const willWarn = Math.random() > 0.5;
-              return {
-                ...entry,
-                status: willWarn ? "completed_warnings" : "completed",
-                progress: 100,
-                entities,
-                warnings: willWarn ? 3 : 0,
-                issues: willWarn
-                  ? [
-                      { id: "w1", field: "description", issue: "Truncated to 255 characters in 3 rows", type: "warning" as const, date: entry.date },
-                    ]
-                  : [],
-              };
-            }
-            return { ...entry, progress: next, entities };
-          }
-          return entry;
-        })
-      );
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [imports]);
-
-  const handleDeleteCurrent = useCallback(() => {
-    if (!activeImportId) return;
-    setImports((prev) => prev.filter((i) => i.id !== activeImportId));
-    setDeleteCurrentConfirmOpen(false);
-    setScreen("list");
-    setActiveImportId(null);
-  }, [activeImportId]);
+  const open = imports.find((i) => i.id === openId) ?? null;
 
   return (
-    <ImportCSVLayout
-      onNavigate={onNavigate}
-      actionBar={
-        screen === "detail" && activeEntry ? (
-          <ToolsActionBar
-            mode="detail"
-            onBack={handleBack}
-            onDeleteCurrent={() => setDeleteCurrentConfirmOpen(true)}
-          />
-        ) : (
-          <ToolsActionBar
-            mode="list"
-            selectedCount={selectedIds.size}
-            totalCount={imports.length}
-            onNewImport={() => setModalOpen(true)}
-            onDeleteSelected={() => setDeleteConfirmOpen(true)}
-          />
-        )
-      }
-    >
-      {screen === "list" ? (
-        <ImportListView
-          imports={imports}
-          selectedIds={selectedIds}
-          onSelect={handleSelect}
-          onSelectAll={handleSelectAll}
-          onView={handleView}
-          onNewImport={() => setModalOpen(true)}
-        />
-      ) : activeEntry ? (
-        <ImportDetailView entry={activeEntry} onBack={handleBack} />
-      ) : null}
-
+    <ImportCSVLayout onNavigate={onNavigate}>
+      {open ? (
+        <ImportStatusPage entry={open} onBack={() => setOpenId(null)} />
+      ) : (
+        <ImportList imports={imports} onView={setOpenId} onNewImport={() => setModalOpen(true)} />
+      )}
       <NewImportModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onImport={handleImport}
-      />
-
-      <ConfirmDialog
-        open={deleteConfirmOpen}
-        title={`Delete ${selectedIds.size} import${selectedIds.size !== 1 ? "s" : ""}?`}
-        message="The selected imports are removed from the list. This can’t be undone."
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={handleDeleteSelected}
-        onCancel={() => setDeleteConfirmOpen(false)}
-      />
-
-      <ConfirmDialog
-        open={deleteCurrentConfirmOpen}
-        title="Delete import?"
-        message={`${activeEntry ? `“${activeEntry.filename}”` : "This import"} is removed from the list. This can’t be undone.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={handleDeleteCurrent}
-        onCancel={() => setDeleteCurrentConfirmOpen(false)}
+        onImport={(filename, templateId) => {
+          register(filename, templateId);
+          setModalOpen(false);
+        }}
       />
     </ImportCSVLayout>
   );

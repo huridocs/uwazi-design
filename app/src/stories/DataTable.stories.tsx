@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { DataTable, type Column, type SortDir } from "../components/shared/DataTable";
 import { StatusBadge } from "../components/shared/StatusBadge";
-import type { ImportStatus } from "../data/imports";
+import type { CsvStatus } from "../data/imports";
 
 /** The canonical data table (Files view + every Settings list). Real ARIA
  *  table semantics (row/columnheader/cell + aria-sort); clickable rows use the
@@ -13,14 +13,14 @@ interface DemoRow {
   id: string;
   file: string;
   template: string;
-  status: ImportStatus;
+  status: CsvStatus;
   entities: number;
 }
 
 const DATA: DemoRow[] = [
   { id: "1", file: "violations.csv", template: "Violation", status: "completed", entities: 412 },
-  { id: "2", file: "testimonies.csv", template: "Testimonio", status: "processing", entities: 128 },
-  { id: "3", file: "rulings.csv", template: "Sentencia", status: "completed_warnings", entities: 634 },
+  { id: "2", file: "testimonies.csv", template: "Testimonio", status: "entities", entities: 128 },
+  { id: "3", file: "rulings.csv", template: "Sentencia", status: "cancelled", entities: 634 },
   { id: "4", file: "organizations.csv", template: "Organization", status: "failed", entities: 0 },
 ];
 

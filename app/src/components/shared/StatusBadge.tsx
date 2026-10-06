@@ -1,28 +1,38 @@
-import type { ImportStatus } from "../../data/imports";
+import { csvTitle, type CsvStatus } from "../../data/imports";
 
-const config: Record<ImportStatus, { label: string; bg: string; text: string }> = {
-  completed: { label: "Completed", bg: "bg-success-light", text: "text-success-label" },
-  completed_warnings: { label: "Warnings", bg: "bg-warning-light", text: "text-warning-label" },
-  completed_errors: { label: "Errors", bg: "bg-seal-tint", text: "text-seal-label" },
-  processing: { label: "Processing", bg: "bg-carbon-tint", text: "text-carbon-label" },
-  uploading: { label: "Uploading", bg: "bg-carbon-tint", text: "text-carbon-label" },
-  pending: { label: "Pending", bg: "bg-warm", text: "text-ink-secondary" },
-  failed: { label: "Failed", bg: "bg-seal-tint", text: "text-seal-label" },
+type Tone = "running" | "neutral" | "success" | "warning" | "error";
+
+const tones: Record<Tone, string> = {
+  running: "bg-carbon-tint text-carbon-label",
+  neutral: "bg-warm text-ink-secondary",
+  success: "bg-success-light text-success-label",
+  warning: "bg-warning-light text-warning-label",
+  error: "bg-seal-tint text-seal-label",
 };
 
-interface StatusBadgeProps {
-  status: ImportStatus;
+function toneOf(status: CsvStatus, rowsFailed: number): Tone {
+  if (status === "completed") return rowsFailed > 0 ? "warning" : "success";
+  if (status === "failed") return "error";
+  if (status === "queued" || status === "cancelled") return "neutral";
+  return "running";
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
-  const { label, bg, text } = config[status];
+interface StatusBadgeProps {
+  status: CsvStatus;
+  /** A completed import with failed rows reads "Completed with errors". */
+  rowsFailed?: number;
+}
+
+/** An import's status (Import CSV), in Uwazi's words: the stage while it
+ *  runs, then Completed, Completed with errors, Failed or Cancelled. */
+export function StatusBadge({ status, rowsFailed = 0 }: StatusBadgeProps) {
   return (
     <span
       data-component="StatusBadge"
       data-status={status}
-      className={`inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md whitespace-nowrap ${bg} ${text}`}
+      className={`inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md whitespace-nowrap ${tones[toneOf(status, rowsFailed)]}`}
     >
-      {label}
+      {csvTitle({ status, rowsFailed }).title}
     </span>
   );
 }

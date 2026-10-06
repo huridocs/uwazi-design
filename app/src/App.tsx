@@ -3,6 +3,8 @@ import { useAtom, useAtomValue } from "jotai";
 import { collectionSettings } from "./atoms/settingsSingletons";
 import { uploadsAtom } from "./atoms/uploads";
 import { setActiveDatePattern } from "./utils/dateFormat";
+import { settingsAccessAtom } from "./atoms/settings";
+import { useCsvImportRunner } from "./atoms/csvImports";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
@@ -35,6 +37,15 @@ export function App() {
   useEffect(() => {
     document.documentElement.dir = rtl ? "rtl" : "ltr";
   }, [rtl]);
+
+  // Import CSV jobs run whatever view is open.
+  useCsvImportRunner();
+  // Import CSV is an admin page (Uwazi: adminsOnlyRoute); a session on it for
+  // another role lands on the Library.
+  const canImport = useAtomValue(settingsAccessAtom)("import-csv");
+  useEffect(() => {
+    if (appView === "import-csv" && !canImport) setAppView("library");
+  }, [appView, canImport, setAppView]);
 
   // The window title is the collection's name (Settings › Collection).
   const collection = useAtomValue(collectionSettings.valueAtom);
@@ -106,7 +117,7 @@ export function App() {
       {/* Before the view in the tab order, floating over the navbar's edge. */}
       {appView === "entity" && <PublishedViewToggle />}
       <div className="flex-1 min-h-0 flex flex-col">
-        {appView === "import-csv" ? (
+        {appView === "import-csv" && canImport ? (
           <ImportCSVView onNavigate={handleNavigate} />
         ) : appView === "settings" ? (
           <SettingsView onNavigate={handleNavigate} />

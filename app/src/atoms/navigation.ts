@@ -14,3 +14,7 @@ try {
 } catch {
   /* storage blocked */
 }
+
+/** One-shot: the Import CSV view opens its New Import dialog on arrival. Set by
+ *  the Library's "Import CSV" action, consumed (and cleared) by the view. */
+export const openNewImportOnArrivalAtom = atom(false);

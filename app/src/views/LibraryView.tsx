@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
-import { activitiesAtom } from "../atoms/notifications";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
@@ -129,6 +128,8 @@ import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { useTapGuard } from "../hooks/useTapGuard";
+import { useRegisterCsvImport } from "../hooks/useRegisterCsvImport";
+import { settingsAccessAtom } from "../atoms/settings";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -612,17 +613,13 @@ export function LibraryView() {
   // Import CSV opens its modal over the Library; the import then runs as a
   // Beacon task instead of taking the reader to the Import CSV screen.
   const [importOpen, setImportOpen] = useState(false);
-  const setImportActivities = useSetAtom(activitiesAtom);
-  const handleImportCsv = useCallback(
-    (filename: string, template: string) => {
-      setImportOpen(false);
-      setImportActivities((prev) => [
-        ...prev,
-        { id: `imp-${Date.now()}`, label: "Importing CSV", detail: `${filename} → ${template}`, current: 0, total: 100 },
-      ]);
-    },
-    [setImportActivities],
-  );
+  // Import CSV is for admins (Uwazi: adminsOnlyRoute and an admin-only link).
+  const canImport = useAtomValue(settingsAccessAtom)("import-csv");
+  const registerImport = useRegisterCsvImport();
+  const handleImportCsv = (filename: string, templateId: string) => {
+    setImportOpen(false);
+    registerImport(filename, templateId);
+  };
   const [createOpen, setCreateOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -1259,11 +1256,13 @@ export function LibraryView() {
               onClick={() => uploadInputRef.current?.click()}
             />
             {/* No divider between Import and Export: one group, the CSV pair. */}
-            <FooterButton
-              icon={<FileUp size={13} className="text-ink-tertiary" />}
-              label="Import CSV"
-              onClick={() => guard(() => setImportOpen(true))}
-            />
+            {canImport && (
+              <FooterButton
+                icon={<FileUp size={13} className="text-ink-tertiary" />}
+                label="Import CSV"
+                onClick={() => guard(() => setImportOpen(true))}
+              />
+            )}
             {/* With a selection, the bar's own Export CSV exports the
                 selection; without one, this exports the current results. */}
             <FooterButton
@@ -1327,7 +1326,9 @@ export function LibraryView() {
               { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
               { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
               { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
-              { label: "Import CSV", icon: <FileUp size={14} />, onClick: () => guard(() => setImportOpen(true)) },
+              ...(canImport
+                ? [{ label: "Import CSV", icon: <FileUp size={14} />, onClick: () => guard(() => setImportOpen(true)) }]
+                : []),
               { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
             ]}
           />

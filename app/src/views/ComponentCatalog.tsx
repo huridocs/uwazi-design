@@ -969,22 +969,22 @@ sendFill(selection.text);                                    // commits, then di
               <div id="csv-status-badge" ref={reg("csv-status-badge")}>
                 <CatalogEntry
                   name="StatusBadge"
-                  description="Colored pill showing import status — completed, processing, failed, etc."
-                  code={`<StatusBadge status="completed" />
-<StatusBadge status="processing" />
+                  description="An import's status in Uwazi's words: the stage while it runs, then Completed, Completed with errors, Failed or Cancelled."
+                  code={`<StatusBadge status="queued" />
+<StatusBadge status="entities" />
+<StatusBadge status="completed" />
+<StatusBadge status="completed" rowsFailed={2} />
 <StatusBadge status="failed" />
-<StatusBadge status="completed_warnings" />
-<StatusBadge status="completed_errors" />
-<StatusBadge status="uploading" />`}
-                  tailwind="inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-full"
+<StatusBadge status="cancelled" />`}
+                  tailwind="inline-flex w-fit px-2 py-0.5 text-meta font-medium rounded-md"
                 >
                   <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status="queued" />
+                    <StatusBadge status="entities" />
                     <StatusBadge status="completed" />
-                    <StatusBadge status="processing" />
-                    <StatusBadge status="uploading" />
+                    <StatusBadge status="completed" rowsFailed={2} />
                     <StatusBadge status="failed" />
-                    <StatusBadge status="completed_warnings" />
-                    <StatusBadge status="completed_errors" />
+                    <StatusBadge status="cancelled" />
                   </div>
                 </CatalogEntry>
               </div>
