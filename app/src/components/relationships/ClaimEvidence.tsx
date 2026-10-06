@@ -11,6 +11,7 @@ import {
   type Stance,
 } from "../../data/nepal/claimEvidence";
 import { formatAtPrecision } from "../../utils/dateFormat";
+import { noWidow } from "../../utils/typography";
 import { SectionLabel } from "../shared/SectionLabel";
 import { RefStatus } from "./rows/RefStatus";
 
@@ -208,7 +209,7 @@ function EvidenceCellItem({ item, onOpen }: { item: EvidenceItem; onOpen: (id: s
           focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
       >
         {item.quote ? (
-          <span className="text-ink">“{item.quote}”</span>
+          <span className="text-ink">“{noWidow(item.quote)}”</span>
         ) : (
           <span className="text-ink-secondary">{item.sourceTitle}</span>
         )}

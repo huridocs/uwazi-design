@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffe
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
+import { CheckSquare, FileDown, FileUp, Filter, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
@@ -1597,13 +1597,29 @@ export function LibraryView() {
           />
         )}
         {/* With a selection the bar places it, before its end group. */}
-        {!selectionActive && <ActiveFiltersButton className="ms-2 shrink-0" />}
+        {/* Phones carry Filters as a button of their own (below), with the count. */}
+        {!selectionActive && !menuTrigger && <ActiveFiltersButton className="ms-2 shrink-0" />}
         {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
             the bar's END, where the entity view's bar keeps it: in thumb reach,
             and a menu at the bottom opens upward. Only the drawer nav moved;
             search, view mode, Display and the readout stay on top. */}
         {menuTrigger && (
-          <div data-part="sheets" className="ms-auto shrink-0">
+          <div data-part="sheets" className="ms-auto shrink-0 flex items-center gap-1">
+            {/* Filters one tap away, not behind the menu. */}
+            <button
+              type="button"
+              data-part="filters"
+              onClick={() => setOpenSection("filters")}
+              aria-haspopup="dialog"
+              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
+            >
+              <Filter size={13} className="text-ink-tertiary" aria-hidden />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="min-w-4 px-1 rounded-md bg-warm text-ink text-meta font-semibold tabular-nums">{activeFilterCount}</span>
+              )}
+            </button>
             {menuTrigger}
           </div>
         )}
