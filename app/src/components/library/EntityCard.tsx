@@ -373,7 +373,7 @@ export const EntityCard = memo(function EntityCard({
       {showMetadata && (
         <div className="relative min-w-0 space-y-1.5">
           {fields.map((f) => (
-            <div key={f.id} className="min-w-0">
+            <div key={f.id} data-field={f.id} className="min-w-0">
               <span className="block text-meta text-ink-tertiary leading-tight">{f.label}</span>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
