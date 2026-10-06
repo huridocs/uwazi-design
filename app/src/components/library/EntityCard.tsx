@@ -408,10 +408,12 @@ export const EntityCard = memo(function EntityCard({
 
   /** One track per row drawn; see `ROW_SPAN`. */
   const rowCount = 2 + (showPreview && !side ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
-  /** Thumbnails are on but this entity has no image, media or document: no
-   *  slot and no placeholder art. Known from the data, before anything loads,
-   *  so the card never changes shape. */
-  const textCard = showPreview && !entity.preview;
+  /** Thumbnails drawn by Auto, and this entity has no image, media or document:
+   *  no slot and no placeholder art. With Thumbnail set to On every card keeps
+   *  the slot (a `QuietMark` when there is nothing to show), so the grid holds
+   *  one shape. Known from the data, before anything loads, so the card never
+   *  changes shape. */
+  const textCard = showPreview && !entity.preview && info.thumbMode !== "on";
 
   /** Landscape is the fixed band, portrait the card's width at 3:4. How the
    *  picture sits inside is `ImageThumb`'s object-fit. */
