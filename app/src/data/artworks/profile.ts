@@ -14,14 +14,14 @@
 // entity in this corpus, and the JPEG's own geometry. This is where all of it
 // lands.
 import type { Language } from "../../atoms/language";
-import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../metadata";
+import type { AnyMetadataField, RelationshipMetadataField } from "../metadata";
 import type { EntityProfile } from "../entityProfiles";
 import type { DocumentGroup, FileEntry } from "../files";
 import { asset } from "../../utils/asset";
 import { artworks, artworkArtists, ARTWORK_IMAGE_BASE } from "./artworks";
 import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID } from "./typesAdapter";
 import { templateMirror } from "../templates/mirror";
-import { fieldsOverTemplate } from "../../utils/templateProjection";
+import { blankField, legacyTypeOf } from "../../utils/templateProjection";
 import type { Artwork, ArtworkArtist } from "./types";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -32,13 +32,6 @@ const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
  *  multilingual one. CEJIL does the same with its Spanish labels. */
 const byLang = <T,>(v: T): Record<Language, T> =>
   LANGS.reduce((acc, l) => ((acc[l] = v), acc), {} as Record<Language, T>);
-
-const text = (id: string, label: string, value: string): MetadataField => ({
-  id,
-  label,
-  type: "text",
-  value,
-});
 
 let _artworkById: Map<string, Artwork> | null = null;
 let _artistById: Map<string, ArtworkArtist> | null = null;
@@ -73,68 +66,82 @@ export function isArtworkEntity(id: string): boolean {
 const fileSize = (bytes: number): string =>
   bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 
-function artworkFields(w: Artwork): AnyMetadataField[] {
-  const { artistById } = index();
-  const out: AnyMetadataField[] = [];
-
-  // The artist is an ENTITY in this corpus, not a string, so it connects rather
-  // than reads — the pill previews them, and their own record lists the works.
-  const artist = w.artistId ? artistById.get(w.artistId) : undefined;
-  if (artist) {
-    const field: RelationshipMetadataField = {
-      id: "artist",
-      label: "Artist",
-      type: "relationship",
-      relationType: "Painted by",
-      targetTypeId: ARTIST_TYPE_ID,
-      connectedEntityIds: [artist.id],
-    };
-    out.push(field);
-  } else if (w.artistName) {
-    // Named upstream but not among the artists we sampled — the name is still
-    // true, it just has nothing to point at.
-    out.push(text("artist", "Artist", w.artistName));
+/** One property's value on an artwork or an artist, as the record has always
+ *  printed it: every genre and nationality as one comma list (the card shows
+ *  the first and counts the rest, because it is a card), years and counts as
+ *  strings. */
+function valueOf(e: Artwork | ArtworkArtist, name: string): string | undefined {
+  const w = e as Artwork;
+  const a = e as ArtworkArtist;
+  switch (name) {
+    case "genres":
+      return e.genres.length ? e.genres.join(", ") : undefined;
+    case "nationalities":
+      return e.nationalities.length ? e.nationalities.join(", ") : undefined;
+    case "dataset-number":
+      return w.datasetNumber != null ? String(w.datasetNumber) : undefined;
+    // Born and died as separate rows, not the card's "1471–1528": the card has
+    // one line to spend and the record doesn't, and a painter who is still
+    // alive has a birth year and no dash.
+    case "born":
+      return a.bornYear != null ? String(a.bornYear) : undefined;
+    case "died":
+      return a.diedYear != null ? String(a.diedYear) : undefined;
+    case "paintings":
+      return a.paintings != null ? String(a.paintings) : undefined;
+    case "wikipedia":
+      return a.wikipedia || undefined;
+    default:
+      return undefined;
   }
-
-  // ALL of them. The card shows the first and counts the rest, because it is a
-  // card; a record that did the same would be a card in a different font.
-  if (w.genres.length) out.push(text("genres", "Genre", w.genres.join(", ")));
-  if (w.nationalities.length)
-    out.push(text("nationalities", "Nationality", w.nationalities.join(", ")));
-  if (w.datasetNumber != null)
-    out.push(text("dataset-number", "Dataset number", String(w.datasetNumber)));
-  return out;
 }
 
-function artistFields(a: ArtworkArtist): AnyMetadataField[] {
-  const { worksByArtist } = index();
-  const out: AnyMetadataField[] = [];
-  // Born and died as separate rows, not the card's "1471–1528": the card has one
-  // line to spend and the record doesn't, and a painter who is still alive has a
-  // birth year and no dash.
-  if (a.bornYear != null) out.push(text("born", "Born", String(a.bornYear)));
-  if (a.diedYear != null) out.push(text("died", "Died", String(a.diedYear)));
-  if (a.nationalities.length)
-    out.push(text("nationalities", "Nationality", a.nationalities.join(", ")));
-  if (a.genres.length) out.push(text("genres", "Movement", a.genres.join(", ")));
-  if (a.paintings != null)
-    out.push(text("paintings", "Paintings in the dataset", String(a.paintings)));
-  if (a.wikipedia) out.push({ id: "wikipedia", label: "Wikipedia", type: "link", value: a.wikipedia });
+/** The entities a relationship property connects, by name. The artist is an
+ *  ENTITY in this corpus, not a string, so it connects rather than reads: the
+ *  pill previews them, and their own record lists the works. */
+function connectionsOf(e: Artwork | ArtworkArtist, name: string): string[] {
+  const { artistById, worksByArtist } = index();
+  if (name === "artist") {
+    const w = e as Artwork;
+    return w.artistId && artistById.has(w.artistId) ? [w.artistId] : [];
+  }
+  if (name === "works") return worksByArtist.get(e.id) ?? [];
+  return [];
+}
 
-  const works = worksByArtist.get(a.id) ?? [];
-  if (works.length) {
-    const field: RelationshipMetadataField = {
-      id: "works",
-      // Not "Works": this corpus is a capped sample (a few paintings per
-      // artist), so a label promising their catalogue would be answered by
-      // three pills. The row above says how many the dataset holds.
-      label: "Works in this collection",
-      type: "relationship",
-      relationType: "Painted",
-      targetTypeId: ARTWORK_TYPE_ID,
-      connectedEntityIds: works,
-    };
-    out.push(field);
+/** A record as its template's projection (step M4): every property in
+ *  template order, typed by the template, empty ones included for the form.
+ *  Replaces the per-type field builders. */
+function recordFields(e: Artwork | ArtworkArtist, typeId: string): AnyMetadataField[] {
+  const out: AnyMetadataField[] = [];
+  for (const p of templateMirror("artworks", typeId)?.properties ?? []) {
+    if (p.type === "relationship") {
+      const ids = connectionsOf(e, p.name);
+      if (ids.length) {
+        const field: RelationshipMetadataField = {
+          id: p.name,
+          label: p.label,
+          type: "relationship",
+          relationType: p.relationType ?? "",
+          targetTypeId: p.content ?? "",
+          connectedEntityIds: ids,
+        };
+        out.push(field);
+        continue;
+      }
+      // Named upstream but not among the artists we sampled: the name is
+      // still true, it just has nothing to point at.
+      const name = p.name === "artist" ? (e as Artwork).artistName : undefined;
+      if (name) out.push({ id: p.name, label: p.label, propertyType: "text", type: "text", value: name });
+      continue;
+    }
+    const value = valueOf(e, p.name);
+    const type = legacyTypeOf(p.type);
+    if (value && type) out.push({ id: p.name, label: p.label, propertyType: p.type, type, value });
+    else {
+      const blank = blankField("artworks", p, "EN");
+      if (blank) out.push(blank);
+    }
   }
   return out;
 }
@@ -162,11 +169,6 @@ function imageFile(w: Artwork): { files: FileEntry[]; groups: DocumentGroup[] } 
   };
 }
 
-/** A record's fields over its template (stage 2b): the template's order and
- *  blank fields for the form, the values as this corpus builds them. */
-const overTemplate = (typeId: string, fields: AnyMetadataField[]) =>
-  byLang(fieldsOverTemplate("artworks", templateMirror("artworks", typeId), fields, "EN"));
-
 export function buildArtworkProfile(id: string): EntityProfile {
   const { artworkById, artistById } = index();
 
@@ -176,7 +178,7 @@ export function buildArtworkProfile(id: string): EntityProfile {
       id,
       typeId: ARTIST_TYPE_ID,
       hasDocument: false,
-      metadata: overTemplate(ARTIST_TYPE_ID, artistFields(artist)),
+      metadata: byLang(recordFields(artist, ARTIST_TYPE_ID)),
       documentGroups: [],
       files: [],
       relationships: { kind: "references" },
@@ -189,7 +191,7 @@ export function buildArtworkProfile(id: string): EntityProfile {
     id,
     typeId: ARTWORK_TYPE_ID,
     hasDocument: false,
-    metadata: overTemplate(ARTWORK_TYPE_ID, artworkFields(w)),
+    metadata: byLang(recordFields(w, ARTWORK_TYPE_ID)),
     // The painting. `EntityProfile.image` is what the record's leading card
     // renders, the same way `files` is what the document card renders.
     image: {

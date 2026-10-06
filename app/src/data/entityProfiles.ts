@@ -1,8 +1,8 @@
 import type { Language } from "../atoms/language";
 import type { DocumentMeta } from "./document";
 import { documentsByLanguage } from "./document";
-import type { AnyMetadataField, MetadataField } from "./metadata";
-import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "./metadata";
+import type { AnyMetadataField } from "./metadata";
+import { pdfMetadataByLanguage } from "./metadata";
 import type { DocRendition } from "./documentRenditions";
 import { renditionsByLanguage } from "./documentRenditions";
 import type { FileEntry, DocumentGroup } from "./files";
@@ -13,8 +13,7 @@ import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
-import { templateMirror } from "./templates/mirror";
-import { fieldsOverTemplate } from "../utils/templateProjection";
+import { sampleRecordFields } from "./sample/values";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -79,11 +78,12 @@ const mainProfile: EntityProfile = {
   renditions: renditionsByLanguage,
   documentGroups,
   files,
-  // Over the Court Case template, built on first read: the template store
-  // reads `data/entities`, which may still be loading when this module is.
+  // Court Case's projection over the case record (step M4), built on first
+  // read: the template store reads `data/entities`, which may still be
+  // loading when this module is.
   get metadata() {
     return (caseMetadata ??= LANGS.reduce((acc, lang) => {
-      acc[lang] = fieldsOverTemplate("mock", templateMirror("mock", "court_case"), metadataFieldsByLanguage[lang], lang);
+      acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
       return acc;
     }, {} as Record<Language, AnyMetadataField[]>));
   },
@@ -92,145 +92,6 @@ const mainProfile: EntityProfile = {
 };
 
 /* ── Lightweight profile synthesis ──────────────────────────────────────── */
-
-/** Localized labels for the handful of synthesized fields, so AR/RTL renders. */
-const FIELD_LABELS: Record<string, Record<Language, string>> = {
-  country: { EN: "Country", ES: "País", FR: "Pays", AR: "البلد" },
-  role: { EN: "Role", ES: "Rol", FR: "Rôle", AR: "الدور" },
-  region: { EN: "Region", ES: "Región", FR: "Région", AR: "المنطقة" },
-  born: { EN: "Date of birth", ES: "Fecha de nacimiento", FR: "Date de naissance", AR: "تاريخ الميلاد" },
-  summary: { EN: "Summary", ES: "Resumen", FR: "Résumé", AR: "ملخص" },
-  article: { EN: "Convention article", ES: "Artículo de la Convención", FR: "Article de la Convention", AR: "مادة الاتفاقية" },
-  instrument: { EN: "Source instrument", ES: "Instrumento fuente", FR: "Instrument source", AR: "الصك المصدر" },
-  founded: { EN: "Founded", ES: "Fundación", FR: "Fondation", AR: "التأسيس" },
-  headquarters: { EN: "Headquarters", ES: "Sede", FR: "Siège", AR: "المقر" },
-  date: { EN: "Date", ES: "Fecha", FR: "Date", AR: "التاريخ" },
-  citation: { EN: "Citation", ES: "Cita", FR: "Référence", AR: "المرجع" },
-  issuingBody: { EN: "Issuing body", ES: "Órgano emisor", FR: "Organe émetteur", AR: "الجهة المصدرة" },
-};
-
-/** English labels for the broader property set (localized labels above win). */
-const ENGLISH_LABELS: Record<string, string> = {
-  country: "Country",
-  role: "Role",
-  profession: "Profession",
-  born: "Date of birth",
-  region: "Region",
-  achrRatified: "Ratified ACHR",
-  courtJurisdiction: "Accepts Court jurisdiction",
-  caseNumber: "Case number",
-  dateFiled: "Date filed",
-  respondent: "Respondent State",
-  status: "Status",
-  instrument: "Legal instrument",
-  article: "Article",
-  category: "Category",
-  date: "Date",
-  court: "Court",
-  series: "Series",
-  outcome: "Outcome",
-  orgType: "Type",
-  founded: "Founded",
-  headquarters: "Headquarters",
-  relatedRight: "Related right",
-  definition: "Definition",
-  docType: "Type",
-  adopted: "Date of adoption",
-  source: "Source",
-};
-
-function lbl(key: string, lang: Language): string {
-  return FIELD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? key;
-}
-
-function field(
-  id: string,
-  labelKey: string,
-  type: MetadataField["type"],
-  value: string,
-  lang: Language,
-  thesaurus?: string,
-): MetadataField {
-  const f: MetadataField = { id, label: lbl(labelKey, lang), type, value };
-  if (type === "select" || type === "multiselect") {
-    if (thesaurus) f.thesaurus = thesaurus;
-    if (type === "multiselect") f.values = value ? [value] : [];
-  }
-  return f;
-}
-
-/** Per-type property order + field type for the Library/Metadata display.
- *
- *  `type: "link"` means the VALUE IS A URL — the read view anchors it and the
- *  editor validates it with `new URL()`, an ERROR that blocks save. Four props
- *  here were typed `link` while every seeded value is a proper noun
- *  ("El Salvador", "Inter-American Court"), so the edit form on a court_case,
- *  right, judgment or violation opened already invalid and could never be
- *  saved — the only way out was Cancel or Discard. They are names; they are
- *  `text`. Type a prop `link` only when its values really are addresses. */
-/*  `select` / `multiselect` name their thesaurus (`data/settings` seed ids):
- *  Case status t3, Regions t5, Document types t4, Legal instruments t2. The
- *  organisation type is a select the template binds to NO thesaurus, the case
- *  the form's "New thesaurus" exists for. */
-const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"]; thesaurus?: string }[]> = {
-  person: [
-    { prop: "country", type: "text" },
-    { prop: "role", type: "text" },
-    { prop: "profession", type: "text" },
-    { prop: "born", type: "text" },
-  ],
-  country: [
-    { prop: "region", type: "select", thesaurus: "t5" },
-    { prop: "achrRatified", type: "text" },
-    { prop: "courtJurisdiction", type: "text" },
-  ],
-  court_case: [
-    { prop: "caseNumber", type: "text" },
-    { prop: "dateFiled", type: "text" },
-    { prop: "respondent", type: "text" },
-    { prop: "status", type: "select", thesaurus: "t3" },
-    { prop: "region", type: "select", thesaurus: "t5" },
-  ],
-  right: [
-    { prop: "instrument", type: "multiselect", thesaurus: "t2" },
-    { prop: "article", type: "text" },
-    { prop: "category", type: "text" },
-  ],
-  judgment: [
-    { prop: "date", type: "text" },
-    { prop: "court", type: "text" },
-    { prop: "series", type: "text" },
-    { prop: "outcome", type: "text" },
-  ],
-  organization: [
-    { prop: "orgType", type: "select" },
-    { prop: "founded", type: "text" },
-    { prop: "headquarters", type: "text" },
-  ],
-  violation: [
-    { prop: "category", type: "text" },
-    { prop: "relatedRight", type: "text" },
-    { prop: "definition", type: "multiline" },
-  ],
-  document: [
-    { prop: "docType", type: "select", thesaurus: "t4" },
-    { prop: "adopted", type: "text" },
-    { prop: "source", type: "text" },
-  ],
-};
-
-/** Type-appropriate scalar fields from the entity's populated native props.
- *  Only props that have a value are rendered (no em-dash placeholders). */
-function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {
-  const props = getEntityProps(entity.id, lang);
-  const spec = TYPE_FIELDS[entity.typeId] ?? [];
-  const out: AnyMetadataField[] = [];
-  for (const { prop, type, thesaurus } of spec) {
-    const value = props[prop];
-    if (value) out.push(field(prop, prop, type, value, lang, thesaurus));
-  }
-  return out;
-}
 
 /** A stub document header so doc-bearing entities have something in the viewer. */
 function stubDocByLang(entity: Entity): Record<Language, DocumentMeta> {
@@ -257,8 +118,9 @@ function entityDocDate(entity: Entity): string {
 
 function buildLightweightProfile(entity: Entity): EntityProfile {
   const hasDocument = typeHasDocument(entity.typeId);
+  // The template's projection over the entity's values (step M4).
   const metadata = LANGS.reduce((acc, lang) => {
-    acc[lang] = fieldsOverTemplate("mock", templateMirror("mock", entity.typeId), synthFields(entity, lang), lang);
+    acc[lang] = sampleRecordFields(entity.id, entity.typeId, lang);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 
@@ -351,10 +213,9 @@ function baseProfile(id: string): EntityProfile {
   const cached = lightweightCache.get(id);
   if (cached) return cached;
   // A corpus with real records builds a real profile (metadata / files /
-  // relationships); everything else gets the synthesized lightweight one, whose
-  // `TYPE_FIELDS` table only knows the mock's types — which is why an adapter
-  // corpus that doesn't answer here renders as an entity with no metadata at
-  // all, however much the seed holds.
+  // relationships); the Sample gets the lightweight one, its template's
+  // projection — which is why an adapter corpus that doesn't answer here
+  // renders as an entity with no metadata at all, however much the seed holds.
   const built = isCejilEntity(id)
     ? buildCejilProfile(id)
     : isArtworkEntity(id)
