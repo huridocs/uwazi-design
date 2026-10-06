@@ -6,6 +6,7 @@ import { evidenceProviderFor, evidenceVersionAtom, fieldEvidence } from "../../d
 import type { Verification } from "../../data/references";
 import { getEntity, getEntityType } from "../../data/entities";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
+import { sheetStackAtom, sheetZ } from "../../atoms/sheetStack";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { RefStatus, VerificationDot } from "../relationships/rows/RefStatus";
 
@@ -96,23 +97,26 @@ function EvidencePopover({
   const titleId = useId();
   const setPreview = useSetAtom(previewEntityIdAtom);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  // On a phone the trigger may sit inside a sheet (z 70 and up); the popover
+  // goes above the top layer instead of behind it.
+  const sheets = useAtomValue(sheetStackAtom).length;
+  const z = sheets ? sheetZ(sheets) : 60;
 
-  // Beside the field's card, never over it: the popover explains a value, so
-  // the value stays in view. Right of the card when there is room, else left,
-  // else (a phone) under the card.
+  // From the trigger, not the card: under "N sources", its right edge on the
+  // trigger's, kept inside the viewport. Above the trigger when the space
+  // below cannot hold the panel and the space above can.
   useLayoutEffect(() => {
     const place = () => {
-      const trigger = anchor.current;
-      const card = trigger?.closest<HTMLElement>("section") ?? trigger;
-      const r = card?.getBoundingClientRect();
+      const r = anchor.current?.getBoundingClientRect();
       if (!r) return;
       const width = Math.min(352, window.innerWidth - EDGE * 2);
       const height = panelRef.current?.offsetHeight ?? 0;
-      const top = Math.max(EDGE, Math.min(r.top, window.innerHeight - height - EDGE));
-      if (r.right + 8 + width <= window.innerWidth - EDGE) return setPos({ top, left: r.right + 8, width });
-      if (r.left - 8 - width >= EDGE) return setPos({ top, left: r.left - 8 - width, width });
-      const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - width - EDGE));
-      setPos({ top: r.bottom + 6, left, width });
+      const left = Math.max(EDGE, Math.min(r.right - width, window.innerWidth - width - EDGE));
+      const below = r.bottom + 6;
+      const above = r.top - 6 - height;
+      const fitsBelow = below + height <= window.innerHeight - EDGE;
+      const top = !fitsBelow && above >= EDGE ? above : Math.max(EDGE, Math.min(below, window.innerHeight - height - EDGE));
+      setPos({ top, left, width });
     };
     place();
     window.addEventListener("resize", place);
@@ -142,14 +146,15 @@ function EvidencePopover({
 
   return createPortal(
     <>
-      <div data-part="scrim" aria-hidden className="fixed inset-0 z-[60]" onClick={onClose} />
+      <div data-part="scrim" aria-hidden className="fixed inset-0" style={{ zIndex: z }} onClick={onClose} />
       <div
         ref={panelRef}
         role="dialog"
         aria-labelledby={titleId}
         data-component="EvidencePopover"
-        className="fixed z-[61] max-h-[min(28rem,70vh)] overflow-y-auto rounded-md bg-paper p-3 animate-fade-in-up"
+        className="fixed max-h-[min(28rem,70vh)] overflow-y-auto rounded-md bg-paper p-3 animate-fade-in-up"
         style={{
+          zIndex: z + 1,
           top: pos?.top ?? -9999,
           left: pos?.left ?? 0,
           width: pos?.width ?? 352,
