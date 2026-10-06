@@ -80,6 +80,10 @@
   "name": "concerns"
  },
  {
+  "_id": "conflicts_with",
+  "name": "conflicts with"
+ },
+ {
   "_id": "issued_by",
   "name": "issued by"
  },

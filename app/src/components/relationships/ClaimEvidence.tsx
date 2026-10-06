@@ -116,7 +116,7 @@ function FigureConflicts({ ev, onOpen }: { ev: ClaimEvidence; onOpen: (id: strin
           >
             {c.title}
           </button>
-          <span className="text-ink-tertiary tabular-nums"> ({figureValue(c.figure).toLowerCase()})</span>
+          {c.figure && <span className="text-ink-tertiary tabular-nums"> ({figureValue(c.figure).toLowerCase()})</span>}
           {i < ev.conflicts.length - 1 ? ", " : ""}
         </span>
       ))}

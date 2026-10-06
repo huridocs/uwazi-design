@@ -62,12 +62,13 @@ export interface ClaimFigure {
   more?: string;
 }
 
-/** Another claim counting the same thing, at the same place, for the same
- *  day, with a figure both cannot hold. */
+/** Another claim the claim cannot stand beside: one counting the same thing,
+ *  at the same place, for the same day, with a figure both cannot hold; or one
+ *  Research linked to it with `conflicts_with` (which may carry no figure). */
 export interface FigureConflict {
   claimId: string;
   title: string;
-  figure: ClaimFigure;
+  figure?: ClaimFigure;
 }
 
 export interface ClaimEvidence {
@@ -185,15 +186,23 @@ function figuresByKey() {
 }
 
 function conflictsOf(claimId: string, f: ClaimFigure | undefined): FigureConflict[] {
+  const out = new Map<string, FigureConflict>();
   const key = f && comparableKey(f);
-  if (!f || !key) return [];
-  const out: FigureConflict[] = [];
-  for (const id of figuresByKey().get(key) ?? []) {
-    if (id === claimId) continue;
-    const other = nepalClaimFigure(id)!;
-    if (!compatible(f, other)) out.push({ claimId: id, title: nepalEntity(id)?.title ?? id, figure: other });
+  if (f && key)
+    for (const id of figuresByKey().get(key) ?? []) {
+      if (id === claimId) continue;
+      const other = nepalClaimFigure(id)!;
+      if (!compatible(f, other)) out.set(id, { claimId: id, title: nepalEntity(id)?.title ?? id, figure: other });
+    }
+  // `conflicts_with`, either direction: a dispute between claims.
+  for (const r of nepalRefsByEntity().get(claimId) ?? []) {
+    if (r.type !== "conflicts_with") continue;
+    const id = r.from === claimId ? r.to : r.from;
+    if (id === claimId || out.has(id)) continue;
+    const other = nepalClaimFigure(id);
+    out.set(id, { claimId: id, title: nepalEntity(id)?.title ?? id, ...(other ? { figure: other } : {}) });
   }
-  return out.sort((a, b) => a.figure.figure - b.figure.figure);
+  return [...out.values()].sort((a, b) => (a.figure?.figure ?? Infinity) - (b.figure?.figure ?? Infinity));
 }
 
 const cache = new Map<string, ClaimEvidence | null>();

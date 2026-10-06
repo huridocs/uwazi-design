@@ -686,6 +686,17 @@
     "x": {
      "connectionKey": "concerns:"
     }
+   },
+   {
+    "id": "nepal_claim:conflicts_with",
+    "name": "conflicts_with",
+    "label": "Conflicts with",
+    "type": "relationship",
+    "content": "nepal_claim",
+    "relationType": "conflicts_with",
+    "x": {
+     "connectionKey": "conflicts_with:nepal_claim"
+    }
    }
   ]
  },
