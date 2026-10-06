@@ -101,6 +101,12 @@
   color: var(--bg-surface);
 }
 
+/* A point picker places where it is clicked; leaflet.css would show a grab hand. */
+.leaflet-container.map-crosshair,
+.leaflet-container.map-crosshair.leaflet-grab {
+  cursor: crosshair;
+}
+
 /* OpenStreetMap's standard tiles, toned down to sit under
    the data; dark mode inverts them and turns the hues back. */
 .map-tiles-osm {

@@ -16,8 +16,7 @@ import { lbl } from "../data/sample/typeFields";
  *  type, and the legacy `type` is derived from it. */
 
 /** The editor a property type gets today. `null`: no editor yet, so a blank
- *  form leaves it out. On main the media, geolocation and image editors arrive
- *  with the typed editors (stage 2c), so those are null until then. */
+ *  form leaves it out (relationship, preview, nested). */
 const LEGACY_TYPE: Record<PropertyType, MetadataField["type"] | null> = {
   text: "text",
   markdown: "multiline",
@@ -29,11 +28,11 @@ const LEGACY_TYPE: Record<PropertyType, MetadataField["type"] | null> = {
   select: "select",
   multiselect: "multiselect",
   link: "link",
-  media: null,
+  media: "media",
   generatedid: "text",
   relationship: null,
-  geolocation: null,
-  image: null,
+  geolocation: "text",
+  image: "text",
   preview: null,
   nested: null,
 };
@@ -366,7 +365,9 @@ export function fieldsOverTemplate(
   const out: AnyMetadataField[] = [];
   for (const p of template.properties) {
     const f = byName.get(p.name);
-    if (f) out.push(f);
+    // The template's type rides along, so the form gives the field its typed
+    // editor (numeric, link, …); a country or file list keeps its own field.
+    if (f) out.push(f.type === "relationship" || f.type === "country" || f.type === "file-list" || f.propertyType ? f : { ...f, propertyType: p.type });
     else if (p.type !== "relationship") {
       const blank = blankField(corpus, p, lang);
       if (blank) out.push(blank);

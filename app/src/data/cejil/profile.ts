@@ -396,8 +396,6 @@ function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMet
     .map((x) => x.field);
 }
 
-const NO_EDITOR_YET = new Set(["media", "image", "geolocation"]);
-
 /** What the record projection needs to know about CEJIL: relationship types
  *  by their dump name and its templates. */
 const recordCtx: RecordContext = {
@@ -414,11 +412,7 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
     // Scalar properties through the template projection (template-schema
     // step M3); the relationship fields stay as this corpus builds them.
-    // Media, images and places wait for their editors (stage 2c): the form
-    // would write them back as text.
-    const scalars = recordFieldsFor(template, doc.metadata, recordCtx).filter(
-      (f) => f.type !== "relationship" && !NO_EDITOR_YET.has(f.propertyType ?? ""),
-    );
+    const scalars = recordFieldsFor(template, doc.metadata, recordCtx).filter((f) => f.type !== "relationship");
     acc[lang] = orderByTemplate(es.template, [...scalars, ...relFields]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);

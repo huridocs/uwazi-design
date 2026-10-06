@@ -73,6 +73,9 @@ import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
 import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
+import { TypedFieldEditor } from "../components/metadata/TypedFieldEditors";
+import { MediaFieldEditor } from "../components/metadata/MediaFieldEditor";
+import { armsOnFocus } from "../utils/typedValues";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
@@ -402,11 +405,16 @@ function EntityEditBody({
   const scalarEditable = fields.filter(
     (f) => !["description", "country"].includes(f.id) && f.type !== "file-list",
   );
+  /** The media editor validates its own value and reports here. A ref, so a
+   *  save reads the result of the same keystroke, not the last render. Unset
+   *  for an untouched value: stored data does not block a save. */
+  const mediaIssues = useRef<Record<string, ValidationIssue | null>>({});
   const issueFor = (id: string, value: string): ValidationIssue | null => {
     if (id === "title") return validateValue("text", value, { required: true, label: "Title" });
     if (id === "description")
       return validateValue("multiline", value, { required: true, label: "Description" });
     const f = fields.find((x) => x.id === id);
+    if (f?.type === "media") return mediaIssues.current[id] ?? null;
     return f ? validateValue(kindOf(f.type), value, { label: f.label }) : null;
   };
   const [issues, setIssues] = useState<Record<string, ValidationIssue | null>>({});
@@ -649,6 +657,46 @@ function EntityEditBody({
     onClick: arm(fieldId, label),
   });
 
+  /* ── Typed editors ── A property type with its own value shape (numeric,
+     date lists and ranges, link, place, generated id, image) gets its editor
+     from TypedFieldEditors. Its value is the same in every language, so a
+     change is written into each language's copy, as a thesaurus choice is. */
+  const isTyped = (f: MetadataField) =>
+    !!f.propertyType &&
+    ["numeric", "generatedid", "multidate", "daterange", "multidaterange", "link", "geolocation", "image"].includes(
+      f.propertyType,
+    );
+  const updateTyped = (id: string, patch: Partial<MetadataField>) => {
+    setFieldsByLang(
+      (prev) =>
+        Object.fromEntries(
+          LANGUAGES.map((l) => [
+            l,
+            prev[l].some((f) => f.id === id)
+              ? prev[l].map((f) => (f.id === id ? { ...f, ...patch } : f))
+              : [...prev[l], { ...(fields.find((f) => f.id === id) as MetadataField), ...patch }],
+          ]),
+        ) as Record<Language, MetadataField[]>,
+    );
+    if (patch.value !== undefined) reflag(id, patch.value);
+  };
+  const imageFiles = (profile.files ?? [])
+    .filter((f) => f.type === "image" && f.url)
+    .map((f) => ({ id: f.id, name: f.name, url: f.url! }));
+  const typedEditor = (field: MetadataField) =>
+    isTyped(field) ? (
+      <TypedFieldEditor
+        field={field}
+        inputId={inputId(field.id)}
+        onPatch={(patch) => updateTyped(field.id, patch)}
+        inputClass={fieldClass(field.id)}
+        armProps={armsOnFocus(field) ? armProps(field.id, field.label) : undefined}
+        aria={fieldAria(field.id)}
+        onBlur={(v) => flag(field.id, v)}
+        images={imageFiles}
+      />
+    ) : null;
+
   // Relationship fields → one editor per connection. The connection (entity
   // set) is the source of truth, keyed so multi-inheritance siblings sync.
   // Read-only fields (CEJIL projections, chain-traversed inheritance) are NOT
@@ -827,13 +875,17 @@ function EntityEditBody({
       prev.map((f) => {
         const u = taking.find((x) => x.kind === "value" && x.key === f.id);
         if (!u) return f;
-        // A multiselect's copy arrives as its display string; its set is
-        // rebuilt from it so the list and the string agree.
+        // A multiselect copies its set (labels and ids); splitting the display
+        // string on ", " would break a label that contains one.
         return f.type === "multiselect"
-          ? withLabels(f, (u.row.sourceValue ?? "").split(", ").filter(Boolean))
-          : { ...f, value: u.row.sourceValue ?? "" };
+          ? withLabels(f, u.row.sourceValues ?? [], u.row.sourceValueIds)
+          : { ...f, ...u.row.sourceTyped, value: u.row.sourceValue ?? "" };
       }),
     );
+    // A typed value is the same in every language: it lands in each copy.
+    for (const u of taking)
+      if (u.kind === "value" && isTyped(fields.find((f) => f.id === u.key) ?? ({} as MetadataField)))
+        updateTyped(u.key, { ...u.row.sourceTyped, value: u.row.sourceValue ?? "" });
     setConnections((prev) => {
       const next = { ...prev };
       for (const u of taking) {
@@ -1117,7 +1169,22 @@ function EntityEditBody({
               listening={fillTarget?.fieldId === field.id}
               onStopListening={() => setFillTarget(null)}
             >
-              {field.type === "date" ? (
+              {typedEditor(field) ?? (field.type === "media" ? (
+                // Keyed per language: chapter titles are translated and the
+                // editor seeds its rows at mount. Not armed for click-to-fill.
+                <MediaFieldEditor
+                  key={`${language}:${field.id}`}
+                  inputId={inputId(field.id)}
+                  label={field.label}
+                  value={field.value}
+                  onChange={(raw) => updateField(field.id, raw)}
+                  describedBy={issues[field.id] ? msgId(field.id) : undefined}
+                  onIssue={(issue) => {
+                    mediaIssues.current[field.id] = issue;
+                    setIssues((prev) => ({ ...prev, [field.id]: issue }));
+                  }}
+                />
+              ) : field.type === "date" ? (
                 // A date input takes `yyyy-mm-dd` and nothing else, so it is not
                 // armed: a passage of prose is not a date, and quietly dropping
                 // the fill would be worse than never offering it.
@@ -1162,16 +1229,16 @@ function EntityEditBody({
                   {...fieldAria(field.id)}
                   className={fieldClass(field.id)}
                 />
-              )}
+              ))}
               {/* Only prose is translated. A date, a link and a file list are the
                   same string in every language, and a control offering to render
                   them in French would be a promise nothing behind it can keep —
                   and those keep their own reserved message line, because they
                   have no languages row to fold it into. */}
-              {field.type !== "text" && field.type !== "multiline" && (
+              {(isTyped(field) || (field.type !== "text" && field.type !== "multiline")) && (
                 <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
               )}
-              {(field.type === "text" || field.type === "multiline") && (
+              {!isTyped(field) && (field.type === "text" || field.type === "multiline") && (
                 <MultiLanguageField
                   messageSlot={<FieldMessage id={msgId(field.id)} issue={issues[field.id]} />}
                   label={field.label}
