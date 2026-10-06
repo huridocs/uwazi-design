@@ -84,6 +84,15 @@ import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { FacetTally } from "../../utils/facetTally";
 import { BAR_GHOST } from "../shared/warmButton";
 import { DateInput } from "../shared/DateInput";
+import {
+  FILTER_CARD,
+  FILTER_FOOTER_BUTTON,
+  FILTER_ROW,
+  FilterCard,
+  FilterClearAll,
+  FilterListCard,
+  SegmentRow,
+} from "../shared/FilterCard";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -839,52 +848,25 @@ export function LibraryFilters() {
         >
           Expand all
         </button>
-        <button
-          type="button"
-          data-part="clear"
-          data-gutter-align="box"
-          onClick={clearAll}
-          disabled={activeFilterCount === 0}
-          className={`ms-auto ${FOOTER_BUTTON} disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-ink-secondary`}
-        >
-          Clear
-        </button>
+        <FilterClearAll onClick={clearAll} disabled={activeFilterCount === 0} />
       </footer>
     </div>
   );
 }
 
-const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${BAR_GHOST} transition-colors cursor-pointer`;
+const FOOTER_BUTTON = FILTER_FOOTER_BUTTON;
 
 /* ── Cards & rows ── */
 
-/** `bg-paper` on the warm rail, and nothing else — no border, no shadow. The
- *  paper-against-warm step is the whole definition; a stack of these reads as a
- *  column of blocks rather than a column of outlined boxes, which is the calmer
- *  of the two on a rail that already carries the pane's own `border-l`.
- *
- *  Both of the other treatments were tried and dropped. `shadow-sm` claimed to
- *  match "the app's other cards" and didn't — every other `shadow-sm` here is a
- *  floating or media surface (the SegmentedTabs thumb, DocPlaceholder,
- *  the EntityTypeTag swatch, the file thumbnails and modal media) — and it barely read in
- *  dark, where `--shadow-sm` is one 20%-black pixel over a near-black rail. The
- *  hairline border that replaced it read as too much fence for a filter list. */
-const FACET_CARD = "bg-paper rounded-lg p-1.5";
+const FACET_CARD = FILTER_CARD;
 
-/** `title` gives the card the same bold header the keyword cards (Countries,
- *  Descriptores) carry, so every filter block reads as one titled system. */
+/** `title` gives the card the same bold header the keyword cards carry, so
+ *  every filter block reads as one titled system. */
 function FacetCard({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section data-component="FacetCard" className={FACET_CARD}>
-      {title && (
-        <header data-part="header" className="px-2 pt-1 pb-1.5">
-          {/* `pb-1.5`: the same 6px from header to first item as the keyword
-              cards, whose `space-y-1.5` puts their search box there. */}
-          <h2 data-part="title" className="text-tab font-semibold text-ink">{title}</h2>
-        </header>
-      )}
+    <FilterCard component="FacetCard" title={title}>
       {children}
-    </section>
+    </FilterCard>
   );
 }
 
@@ -939,13 +921,9 @@ function TreeChildren({ children }: { children: ReactNode }) {
   );
 }
 
-/** ONE row metric for every facet list in this panel — Status, Type (and its
- *  tree), and the keyword cards (Countries, Descriptores, inherited props) — in
- *  the drawer and the phone sheet alike. The whole label + checkbox row is the
- *  target, so it takes no touch-target floor of its own: `min-h-11` below `md`
- *  made Status/Type rows 44px in the sheet while the keyword rows beside them
- *  stayed 28px. */
-const FACET_ROW = "flex items-center py-1 transition-colors";
+/** ONE row metric for every facet list (`FILTER_ROW`): Status, Type and its
+ *  tree here, and every `FilterListCard`, in the drawer and the phone sheet. */
+const FACET_ROW = FILTER_ROW;
 
 /** Row: solid-triangle expander (expandable parents only) · checkbox · optional
  *  status icon · label · bold count. Top-level rows reserve a triangle gutter so
@@ -1189,11 +1167,6 @@ function KeywordFacetCard({
   /** 3 inside the chain-filter group, which carries its own `h2`. */
   headingLevel?: 2 | 3;
 }) {
-  const Heading = headingLevel === 3 ? "h3" : "h2";
-  const [search, setSearch] = useState("");
-  const [showAll, setShowAll] = useState(false);
-  const q = search.trim().toLowerCase();
-
   // The collection's values, plus a ticked one it no longer holds, in an order
   // set by the collection (its counts, or the name), never by the live counts:
   // a tick elsewhere changes numbers, not rows.
@@ -1209,141 +1182,40 @@ function KeywordFacetCard({
     return extra.length ? [...ordered, ...extra.sort()] : ordered;
   }, [ordered, selected, universe]);
 
-  const matched = q ? list.filter((c) => c.toLowerCase().includes(q)) : list;
-  const cap = q || showAll ? Infinity : KEYWORD_CAP;
-  const visible = matched.slice(0, cap);
-  const hidden = matched.length - visible.length;
   const missingMode = match?.mode === "missing";
   // In `missing` the ticks are kept but ignored, so they are not counted.
   const selectedCount = missingMode ? 0 : Object.values(selected).filter(Boolean).length;
   const narrowing = selectedCount > 0 || (!!match && match.mode !== "any");
+  const entries = useMemo(() => list.map((c) => [c, counts.get(c) ?? 0] as [string, number]), [list, counts]);
 
   if (hideWhenEmpty && list.length === 0 && !narrowing) return null;
 
   return (
-    <section data-component="KeywordFacetCard" className={`${FACET_CARD} space-y-1.5`}>
-      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
-        <span className="flex items-center gap-1.5 min-w-0">
-          <Heading data-part="title" className="text-tab font-semibold text-ink truncate">{title}</Heading>
-          {selectedCount > 0 && (
-            <span data-part="selected-count" className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
-              {selectedCount}
-            </span>
-          )}
-        </span>
-        <span className="flex items-center gap-1.5 shrink-0">
-          {narrowing && (
-            <button
-              type="button"
-              data-part="clear"
-              onClick={onClear}
-              aria-label={`Clear ${title}`}
-              className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
-            >
-              <X size={11} aria-hidden />
-              Clear
-            </button>
-          )}
-        </span>
-      </header>
-
-      {match && (
-        <FacetMatchRow
-          title={title}
-          match={match}
-          note={missingMode ? `${match.missing.toLocaleString()} without` : ""}
-        />
-      )}
-
-      {/* In `missing` the list stays in place, dimmed and inert: the ticks are
-          kept for the way back and do not take part. */}
-      <div
-        data-part="values"
-        className={`space-y-1.5 transition-opacity ${missingMode ? "opacity-40" : ""}`}
-        ref={(el) => el?.toggleAttribute("inert", missingMode)}
-      >
-      <div data-part="search" className="px-1">
-        <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            aria-label={`Search ${title.toLowerCase()}`}
-            className="flex-1 min-w-0 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
+    <FilterListCard
+      component="KeywordFacetCard"
+      title={title}
+      headingLevel={headingLevel}
+      entries={entries}
+      selected={selected}
+      onToggle={onToggle}
+      onClear={onClear}
+      searchable
+      cap={KEYWORD_CAP}
+      selectedCount={selectedCount}
+      narrowing={narrowing}
+      // In `missing` the list stays in place, dimmed and inert: the ticks are
+      // kept for the way back and do not take part.
+      inert={missingMode}
+      match={
+        match && (
+          <FacetMatchRow
+            title={title}
+            match={match}
+            note={missingMode ? `${match.missing.toLocaleString()} without` : ""}
           />
-          {search ? (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-              className="shrink-0 text-ink-muted hover:text-ink cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          ) : (
-            <Search size={14} className="text-ink-muted shrink-0" />
-          )}
-        </div>
-      </div>
-
-      <div data-part="options" className="max-h-64 overflow-auto">
-        {visible.length === 0 ? (
-          q && <p className="px-2 py-1 text-xs text-ink-tertiary">No matches.</p>
-        ) : (
-          visible.map((c) => {
-            const checked = !!selected[c];
-            const n = counts.get(c) ?? 0;
-            // Counted in the Match mode, so a 0 cannot add a result. In
-            // `missing` the whole list is inert already.
-            const unavailable = n === 0 && !checked && !missingMode;
-            return (
-              <label
-                key={c}
-                data-part="option"
-                data-state={checked ? "checked" : unavailable ? "unavailable" : "unchecked"}
-                className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
-                  checked
-                    ? "cursor-pointer bg-carbon/[0.04] hover:bg-carbon/[0.07]"
-                    : unavailable
-                      ? "cursor-default"
-                      : "cursor-pointer hover:bg-warm"
-                }`}
-              >
-                <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={`${c}, ${n}`} unavailable={unavailable} />
-                <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : n === 0 ? "text-ink-muted" : "text-ink-secondary"}`}>
-                  {c}
-                </span>
-                <span className={`shrink-0 text-tab font-semibold tabular-nums ${n === 0 ? "text-ink-muted" : "text-ink-secondary"}`}>
-                  {n}
-                </span>
-              </label>
-            );
-          })
-        )}
-        {hidden > 0 && (
-          <button
-            type="button"
-            data-part="load-more"
-            onClick={() => setShowAll(true)}
-            className="px-2 py-1 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
-          >
-            Load {hidden} more
-          </button>
-        )}
-        {showAll && !q && matched.length > KEYWORD_CAP && (
-          <button
-            type="button"
-            data-part="show-less"
-            onClick={() => setShowAll(false)}
-            className="px-2 py-1 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
-          >
-            Show less
-          </button>
-        )}
-      </div>
-      </div>
-    </section>
+        )
+      }
+    />
   );
 }
 
@@ -1375,51 +1247,6 @@ function FacetMatchRow({ title, match, note }: { title: string; match: Pick<Face
       onChange={match.onChange}
       note={note}
     />
-  );
-}
-
-/** The Match row's shape: a caption, text segments, and a note slot at the
- *  end that is always mounted. */
-function SegmentRow<T extends string>({
-  component,
-  caption,
-  groupLabel,
-  options,
-  value,
-  onChange,
-  note,
-}: {
-  component: string;
-  caption: string;
-  groupLabel: string;
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-  note: string;
-}) {
-  return (
-    <div data-component={component} className="flex items-center gap-0.5 h-5 px-2">
-      <span aria-hidden className="text-meta text-ink-tertiary me-1">{caption}</span>
-      <div role="group" aria-label={groupLabel} className="flex items-center gap-0.5">
-        {options.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            data-part="mode"
-            aria-pressed={value === o.value}
-            onClick={() => onChange(o.value)}
-            className={`px-1.5 h-5 rounded-sm text-meta transition-colors cursor-pointer ${
-              value === o.value ? "bg-warm text-ink" : "text-ink-tertiary hover:text-ink"
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <span data-part="missing" aria-live="polite" className="ms-auto text-meta tabular-nums text-ink-tertiary">
-        {note}
-      </span>
-    </div>
   );
 }
 

@@ -120,6 +120,7 @@ import {
   BulkFieldRowsDemo,
   RadioGroupDemo,
   DataTableDemo,
+  FilterCardDemo,
 } from "./catalog/demos";
 
 import { DevPanel } from "./catalog/DevPanel";
@@ -1804,6 +1805,27 @@ const textColor = typeLabelColor(type.color);`}
                       </ul>
                     </div>
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-filter-card" ref={reg("sh-filter-card")}>
+                <CatalogEntry
+                  name="FilterCard"
+                  description="The filter panel's parts: paper cards on a warm rail (FILTER_RAIL), one header (title, ticked count, Clear while the card narrows), one 28px value row (checkbox, marker, label, count; a 0 row is dimmed and cannot be ticked, a ticked one stays live), the search box, the Match line (SegmentRow) and Load N more. The Library's Filters and the Relationships filters (drawer tab, slide-over, phone sheet) both draw with these, so the two panels cannot drift. FilterListCard also takes a pinned No label row and thesaurus groups."
+                  code={`<div className={FILTER_RAIL}>
+  <FilterListCard
+    title="Target country"
+    entries={entries}          // [id, count][], in the collection's order
+    selected={selected}
+    onToggle={toggle}
+    onClear={clear}
+    searchable
+    match={<SegmentRow caption="Match" … />}
+  />
+  <FilterCard title="As of" stack>{dateField}</FilterCard>
+</div>`}
+                >
+                  <FilterCardDemo />
                 </CatalogEntry>
               </div>
 

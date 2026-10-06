@@ -3,6 +3,7 @@ import { YearStrip } from "../../components/relationships/when/YearStrip";
 import { EventRow } from "../../components/relationships/when/EventRow";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
+import { FILTER_RAIL, FilterListCard, SegmentRow } from "../../components/shared/FilterCard";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
 import { BulkFieldRow } from "../../components/metadata/BulkFieldRow";
 import { SelectionActionsMenu } from "../../components/library/SelectionActionsMenu";
@@ -1098,5 +1099,36 @@ export function EventRowDemo() {
         <EventRow event={demoEvent("e22", false, "Mandate", "1986-01-01", ["Signed by"], "1997-12-31")} />
       </div>
     </Provider>
+  );
+}
+
+/** The shared filter card parts (`shared/FilterCard.tsx`), live. */
+export function FilterCardDemo() {
+  const [selected, setSelected] = useState<Record<string, boolean>>({ "Perú": true });
+  const [mode, setMode] = useState<"OR" | "AND">("OR");
+  return (
+    <div data-gutter-host className="gutter-host w-full max-w-sm">
+      <div className={FILTER_RAIL}>
+        <FilterListCard
+          title="Target country"
+          entries={[["Guatemala", 41], ["Perú", 37], ["Colombia", 29], ["Chile", 14], ["Bolivia", 0]]}
+          selected={selected}
+          onToggle={(id) => setSelected((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => { setSelected({}); setMode("OR"); }}
+          narrowing={Object.values(selected).some(Boolean) || mode !== "OR"}
+          searchable
+          match={
+            <SegmentRow
+              component="FacetMatchRow"
+              caption="Match"
+              groupLabel="Match mode for Target country"
+              options={[{ value: "OR", label: "any" }, { value: "AND", label: "all" }]}
+              value={mode}
+              onChange={setMode}
+            />
+          }
+        />
+      </div>
+    </div>
   );
 }

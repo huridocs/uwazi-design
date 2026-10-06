@@ -11,6 +11,7 @@ import { ViewControls } from "./ViewControls";
 import { RelationshipsFilterSlideOver } from "./RelationshipsFilterSlideOver";
 import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersSlideOver } from "../shared/FiltersSlideOver";
+import { FilterClearAll } from "../shared/FilterCard";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { toastsAtom } from "../../atoms/notifications";
 
@@ -58,7 +59,7 @@ export function RelationshipsToolbar() {
   );
 }
 
-/** The facet slide-over and its "Clear all filters" footer. `width` is the
+/** The facet slide-over and its Clear footer (the Library Filters footer). `width` is the
  *  main view's wider pane; the drawer flavour takes the default. */
 export function RelationshipsFiltersPanel({ width }: { width?: number }) {
   const [filtersOpen, setFiltersOpen] = useFiltersDrawerOpen();
@@ -70,18 +71,7 @@ export function RelationshipsFiltersPanel({ width }: { width?: number }) {
       open={filtersOpen}
       onClose={() => setFiltersOpen(false)}
       width={width}
-      footer={
-        activeFilterCount > 0 ? (
-          <button
-            type="button"
-            data-part="clear-all"
-            onClick={() => clearAllFilters()}
-            className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-          >
-            Clear all filters
-          </button>
-        ) : null
-      }
+      footer={<FilterClearAll onClick={() => clearAllFilters()} disabled={activeFilterCount === 0} />}
     >
       <RelationshipsFilterSlideOver />
     </FiltersSlideOver>

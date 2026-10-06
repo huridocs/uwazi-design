@@ -5,7 +5,7 @@ import { relFiltersDockCountAtom, relFiltersTabRequestAtom } from "../../atoms/f
 import { breakpointAtom } from "../../atoms/viewport";
 import { useActiveFilterCount, useClearRelFilters } from "../../hooks/useEntityScope";
 import { RelationshipsFilterSlideOver } from "./RelationshipsFilterSlideOver";
-import { BAR_GHOST } from "../shared/warmButton";
+import { FilterClearAll } from "../shared/FilterCard";
 
 /** Dock the Relationships filters in this drawer: while mounted on a desktop
  *  or tablet, the toolbar's Filters button calls `show` (switch to the
@@ -33,8 +33,8 @@ export function useRelFiltersDock(show: () => void) {
 }
 
 /** The drawer's Filters tab: the same facets as the slide-over, for the open
- *  entity, with Clear in a footer that is always there (disabled with nothing
- *  set), so setting the first filter moves nothing. No count: the tab's dot
+ *  entity, drawn like the Library's Filters (cards on the warm rail, Clear in
+ *  a footer that is always there, disabled with nothing set). No count: the tab's dot
  *  says filters are set, and the Relationships tab count is the surface's
  *  only number. Sits directly in the
  *  drawer's gutter host. */
@@ -45,24 +45,17 @@ export function RelationshipsFiltersTab() {
   useKeepClickedInPlace(bodyRef);
   return (
     <>
-      <div ref={bodyRef} data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
+      <div ref={bodyRef} data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto bg-warm">
         <RelationshipsFilterSlideOver />
       </div>
+      {/* The Library Filters footer: Clear at the end, always mounted. No
+          Collapse / Expand all: no card here folds. */}
       <footer
         data-part="footer"
-        className="bleed flex items-center justify-end gap-2 h-12 shrink-0 bg-paper"
+        className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <button
-          type="button"
-          data-part="clear-all"
-          onClick={() => clear()}
-          disabled={count === 0}
-          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${BAR_GHOST}
-            disabled:opacity-40 disabled:pointer-events-none`}
-        >
-          Clear all filters
-        </button>
+        <FilterClearAll onClick={() => clear()} disabled={count === 0} />
       </footer>
     </>
   );

@@ -60,13 +60,14 @@ function FiltersSheet({ open, onClose, title = "Filters", children, footer }: Fi
     <MobileBottomSheet open={open} onClose={onClose} title={title}>
       {/* The same narrow gutter host the slide-over is. */}
       <div data-gutter-host data-component="FiltersSlideOver" className="gutter-host flex flex-col h-full min-h-0">
-        <div ref={bodyRef} data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
+        <div ref={bodyRef} data-part="body" className="bleed flex-1 min-h-0 overflow-auto bg-warm">
           {children}
         </div>
         {footer && (
           <footer
             data-part="footer"
-            className="bleed shrink-0 py-2"
+            // The Library Filters footer: 3rem, paper, its buttons on the gutter.
+            className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
             style={{ borderTop: "1px solid var(--border-primary)" }}
           >
             {footer}
@@ -184,14 +185,15 @@ function PaneFiltersDrawer({
           </button>
         </header>
 
-        <div ref={bodyRef} data-part="body" className="bleed flex-1 overflow-auto">
+        <div ref={bodyRef} data-part="body" className="bleed flex-1 overflow-auto bg-warm">
           {children}
         </div>
 
         {footer && (
           <footer
             data-part="footer"
-            className="bleed shrink-0 py-2"
+            // The Library Filters footer: 3rem, paper, its buttons on the gutter.
+            className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
             style={{ borderTop: "1px solid var(--border-primary)" }}
           >
             {footer}

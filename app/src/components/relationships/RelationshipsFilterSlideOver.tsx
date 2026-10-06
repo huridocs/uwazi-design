@@ -32,10 +32,9 @@ import { inheritedFilterProps } from "../../data/metadata";
 import { thesaurusParentOf } from "../../utils/thesauri";
 import { relationLabel } from "../../utils/inheritance";
 import { entityCountries } from "../../utils/libraryFacets";
-import { FacetSection } from "../shared/FacetSection";
+import { FILTER_RAIL, FilterCard, FilterListCard, SegmentRow } from "../shared/FilterCard";
 import { DateInput } from "../shared/DateInput";
 import { VerificationDot } from "./rows/RefStatus";
-import { X } from "lucide-react";
 import { t } from "../../utils/i18n";
 
 /**
@@ -165,7 +164,7 @@ export function RelationshipsFilterSlideOver() {
   // Faceted counts: each facet's numbers reflect the OTHER active facets, so the
   // counts stay trustworthy as you narrow (a facet never counts against its own
   // selection, so its options don't vanish). Mirrors the Library's faceted counts.
-  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, byVerification, totalRels } =
+  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, byVerification } =
     useMemo(() => {
       const ids = (rec: Record<string, boolean>) =>
         new Set(Object.entries(rec).filter(([, v]) => v).map(([k]) => k));
@@ -274,7 +273,6 @@ export function RelationshipsFilterSlideOver() {
         byEntityType: ent,
         byCountry: country,
         byDescriptor: descriptor,
-        totalRels: references.length,
       };
     }, [
       references,
@@ -317,43 +315,37 @@ export function RelationshipsFilterSlideOver() {
     () => stableEntries(universe.descriptor, byDescriptor, descriptorFilters),
     [universe, byDescriptor, descriptorFilters],
   );
-  const targetCount = useMemo(
-    () => new Set(references.map((r) => r.targetEntityId)).size,
-    [references],
-  );
 
+  // Drawn with the Library's filter parts (`shared/FilterCard.tsx`): paper
+  // cards on a warm rail. Order: what a link is (verification, its day, its
+  // anchoring and direction), then what it points to.
   return (
-    <>
+    <div data-component="RelationshipsFilters" className={`${FILTER_RAIL} min-h-full`}>
       {showVerification && (
-        <FacetSection
+        <FilterListCard
           title={t("System", "Verification")}
-          total={totalRels}
           entries={facetEntries(VERIFICATION_LABEL, byVerification, verificationFilters, universe.verification)}
           selected={verificationFilters}
           onToggle={(id) => setVerificationFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setVerificationFilters({})}
           label={(id) => VERIFICATION_LABEL[id as keyof typeof VERIFICATION_LABEL] ?? id}
           renderMarker={(id) => <VerificationDot status={id as keyof typeof VERIFICATION_LABEL} />}
-          defaultExpanded
         />
       )}
-      {showAsOf && <AsOfSection value={asOf} onChange={setAsOf} dated={datedCount} />}
+      {showAsOf && <AsOfCard value={asOf} onChange={setAsOf} dated={datedCount} />}
       {showAnchoring && (
-        <FacetSection
+        <FilterListCard
           title={t("System", "Anchoring")}
-          total={totalRels}
           entries={facetEntries(ANCHORING_LABEL, byAnchoring, anchoringFilters, universe.anchoring)}
           selected={anchoringFilters}
           onToggle={(id) => setAnchoringFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setAnchoringFilters({})}
           label={(id) => ANCHORING_LABEL[id as Anchoring] ?? id}
-          defaultExpanded
         />
       )}
       {showDirection && (
-        <FacetSection
+        <FilterListCard
           title={t("System", "Direction")}
-          total={totalRels}
           entries={facetEntries(DIRECTION_LABEL, byDirection, directionFilters, universe.direction)}
           selected={directionFilters}
           onToggle={(id) => setDirectionFilters((s) => ({ ...s, [id]: !s[id] }))}
@@ -365,75 +357,70 @@ export function RelationshipsFilterSlideOver() {
               <DirectionGlyph direction={id as DirectionFacet} />
             </span>
           )}
-          defaultExpanded
         />
       )}
-      <FacetSection
+      <FilterListCard
         title={t("System", "Relationship type")}
-        total={totalRels}
         entries={stableEntries(universe.rel, byRelType, relTypeFilters)}
         selected={relTypeFilters}
         onToggle={(id) => setRelTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
         onClear={() => setRelTypeFilters({})}
         label={(id) => relationLabel(id)}
         noLabelId="no_label"
-        defaultExpanded
       />
-      <FacetSection
+      <FilterListCard
         title={t("System", "Target entity type")}
-        total={totalRels}
         entries={stableEntries(universe.ent, byEntityType, entityTypeFilters)}
         selected={entityTypeFilters}
-        onToggle={(id) =>
-          setEntityTypeFilters((s) => ({ ...s, [id]: !s[id] }))
-        }
+        onToggle={(id) => setEntityTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
         onClear={() => setEntityTypeFilters({})}
         label={(id) => getEntityType(id)?.name ?? id}
         noLabelId="unknown"
         renderMarker={(id) => {
           const type = getEntityType(id);
           return type ? (
-            <span
-              className="rounded-[2px] shrink-0"
-              style={{
-                backgroundColor: type.color,
-                width: 6,
-                height: 6,
-              }}
-            />
+            <span aria-hidden className="w-1.5 h-1.5 rounded-[2px] shrink-0" style={{ backgroundColor: type.color }} />
           ) : null;
         }}
       />
       {countryEntries.length > 0 && (
-        <FacetSection
+        <FilterListCard
           title={t("System", "Target country")}
-          total={targetCount}
           entries={countryEntries}
           selected={countryFilters}
-          onToggle={(id) =>
-            setCountryFilters((s) => ({ ...s, [id]: !s[id] }))
-          }
+          onToggle={(id) => setCountryFilters((s) => ({ ...s, [id]: !s[id] }))}
           onClear={() => setCountryFilters({})}
-          label={(id) => id}
           searchable
-          defaultExpanded={false}
         />
       )}
       {descriptorEntries.length > 0 && (
-        <FacetSection
+        <FilterListCard
           title={t("System", "Descriptores")}
-          total={targetCount}
           entries={descriptorEntries}
           selected={descriptorFilters}
-          onToggle={(id) =>
-            setDescriptorFilters((s) => ({ ...s, [id]: !s[id] }))
-          }
-          onClear={() => setDescriptorFilters({})}
-          mode={descriptorMode}
-          onModeChange={setDescriptorMode}
-          label={(id) => id}
+          onToggle={(id) => setDescriptorFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => {
+            setDescriptorFilters({});
+            setDescriptorMode("OR");
+          }}
+          narrowing={Object.values(descriptorFilters).some(Boolean) || descriptorMode !== "OR"}
           searchable
-          defaultExpanded={false}
+          // The Library's Match line, with the two modes this model has: a
+          // target may hold several descriptors, so `all` is offered; `none`
+          // and `missing` have no counterpart here.
+          match={
+            <SegmentRow
+              component="FacetMatchRow"
+              caption="Match"
+              groupLabel={`Match mode for ${t("System", "Descriptores")}`}
+              options={[
+                { value: "OR", label: "any" },
+                { value: "AND", label: "all" },
+              ]}
+              value={descriptorMode}
+              onChange={setDescriptorMode}
+            />
+          }
         />
       )}
       {inheritedProps.map(({ propId, label }) => {
@@ -441,71 +428,53 @@ export function RelationshipsFilterSlideOver() {
           (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
         );
         if (entries.length === 0) return null;
-        const selected = inheritedFilters[propId] ?? {};
         return (
-          <FacetSection
+          <FilterListCard
             key={propId}
             title={label}
-            total={targetCount}
             entries={entries}
-            selected={selected}
+            selected={inheritedFilters[propId] ?? {}}
             onToggle={(value) =>
               setInheritedFilters((s) => ({
                 ...s,
                 [propId]: { ...(s[propId] ?? {}), [value]: !s[propId]?.[value] },
               }))
             }
-            onClear={() =>
-              setInheritedFilters((s) => ({ ...s, [propId]: {} }))
-            }
-            label={(value) => value}
-            // Inherited values come from thesauri (e.g. Region) — nested child
+            onClear={() => setInheritedFilters((s) => ({ ...s, [propId]: {} }))}
+            // Inherited values come from thesauri (e.g. Region): nested child
             // values gather under their group as a non-selectable label.
             groupOf={thesaurusParentOf}
             searchable
-            defaultExpanded={false}
           />
         );
       })}
-    </>
+    </div>
   );
 }
 
 /** "As of": one day. A link with a period (an office, a membership) shows only
  *  if it held that day; a link with no period is not time-bound and stays. Not
- *  a facet, so no checkbox rows: a date field under the same header as one. */
-function AsOfSection({ value, onChange, dated }: { value: string; onChange: (iso: string) => void; dated: number }) {
+ *  a facet, so no checkbox rows: a date field in a card like the others. */
+function AsOfCard({ value, onChange, dated }: { value: string; onChange: (iso: string) => void; dated: number }) {
   return (
-    <div data-component="AsOfSection" className="bleed" style={{ borderBottom: "1px solid var(--border-soft)" }}>
-      <div data-part="header" className="flex items-center gap-2 py-2.5">
-        <span data-part="title" className="flex-1 text-tab font-semibold text-ink">
-          {t("System", "As of")}
-        </span>
-        {value ? (
-          <button
-            type="button"
-            data-part="clear"
-            onClick={() => onChange("")}
-            className="shrink-0 inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
-          >
-            <X size={11} />
-            Clear
-          </button>
-        ) : (
-          <span data-part="total" className="shrink-0 text-meta text-ink-tertiary tabular-nums">
-            {dated} dated
-          </span>
-        )}
-      </div>
-      <div data-part="body" className="pb-3 space-y-1.5">
+    <FilterCard
+      component="AsOfCard"
+      title={t("System", "As of")}
+      onClear={() => onChange("")}
+      narrowing={!!value}
+      stack
+    >
+      <div className="px-1 space-y-1.5">
         <DateInput
           value={value}
           onChange={onChange}
           aria-label="Show links that held on"
           className="w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
         />
-        <p className="text-meta text-ink-tertiary">Dated links show only if they held that day. Undated links stay.</p>
+        <p className="px-1 text-meta text-ink-tertiary">
+          {dated.toLocaleString()} dated {dated === 1 ? "link" : "links"} show only if they held that day. Undated links stay.
+        </p>
       </div>
-    </div>
+    </FilterCard>
   );
 }
