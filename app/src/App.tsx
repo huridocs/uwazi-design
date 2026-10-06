@@ -1,5 +1,8 @@
 import { useEffect } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
+import { collectionSettings } from "./atoms/settingsSingletons";
+import { uploadsAtom } from "./atoms/uploads";
+import { setActiveDatePattern } from "./utils/dateFormat";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
@@ -32,6 +35,30 @@ export function App() {
   useEffect(() => {
     document.documentElement.dir = rtl ? "rtl" : "ltr";
   }, [rtl]);
+
+  // The window title is the collection's name (Settings › Collection).
+  const collection = useAtomValue(collectionSettings.valueAtom);
+  const collectionName = collection.name;
+  useEffect(() => {
+    document.title = collectionName ? `${collectionName} · Uwazi` : "Uwazi";
+  }, [collectionName]);
+  // Dates print in the collection's format. Set during render, before the
+  // children that print dates render with it (`utils/dateFormat.ts`).
+  setActiveDatePattern(collection.dateFormat);
+  // The favicon is the chosen upload, else the Uwazi mark. Uwazi needs a
+  // reload for this; the prototype swaps it on Save.
+  const faviconSrc = useAtomValue(uploadsAtom).find((u) => u.id === collection.favicon)?.src;
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) return;
+    if (faviconSrc) {
+      link.removeAttribute("type");
+      link.href = faviconSrc;
+    } else {
+      link.type = "image/svg+xml";
+      link.href = "/favicon.svg";
+    }
+  }, [faviconSrc]);
 
   const handleToggleRtl = () => {
     setLanguage(rtl ? "EN" : "AR");

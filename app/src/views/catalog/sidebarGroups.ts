@@ -139,6 +139,8 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "sh-typed-confirm", label: "TypedConfirmModal" },
       { id: "sh-password-confirm", label: "PasswordConfirmModal" },
       { id: "sh-date-input", label: "DateInput" },
+      { id: "set-map-point", label: "MapPointPicker" },
+      { id: "set-image-picker", label: "ImagePickerModal" },
       { id: "sh-typed-editor", label: "TypedFieldEditor" },
       { id: "sh-media-field", label: "MediaField" },
       { id: "sh-image-lightbox", label: "ImageLightbox" },

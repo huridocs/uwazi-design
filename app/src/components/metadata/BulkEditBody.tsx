@@ -35,6 +35,7 @@ import { FacetSection } from "../shared/FacetSection";
 import { BAR_GHOST } from "../shared/warmButton";
 import { BulkFieldRow } from "./BulkFieldRow";
 import { AddThesaurusValueModal, ThesaurusPicker } from "./ThesaurusPicker";
+import { DateInput } from "../shared/DateInput";
 
 /** The metadata edit form in BULK mode — `MetadataEditBody` with a
  *  `{ kind: "bulk" }` subject renders this. One form over many entities:
@@ -303,11 +304,10 @@ export function BulkEditBody({
                   fresh={fresh}
                 />
               ) : f.type === "date" ? (
-                <input
+                <DateInput
                   id={inputId}
-                  type="date"
                   value={toDateInputValue(value)}
-                  onChange={(ev) => set(fromDateInputValue(ev.target.value, value))}
+                  onChange={(iso) => set(fromDateInputValue(iso, value))}
                   className={inputClass}
                 />
               ) : f.type === "multiline" ? (

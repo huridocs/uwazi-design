@@ -13,6 +13,9 @@ export interface EntityScalarField {
   label: string;
   value: string;
   more?: number;
+  /** The template property is a date (or several, or a range): the card
+   *  prints it in the collection's format (Settings › Collection). */
+  date?: boolean;
 }
 
 /** Every non-empty scalar property of an entity, in template order.
@@ -61,6 +64,18 @@ const NOT_A_LINE = new Set(["image", "preview"]);
 /** The names a template shows on cards, in order. Cached per template object
  *  (the store hands out a new one on change). */
 const shownCache = new WeakMap<TemplateDef, string[]>();
+const DATE_TYPES = new Set(["date", "multidate", "daterange", "multidaterange"]);
+const dateCache = new WeakMap<TemplateDef, Set<string>>();
+/** The names of a template's date properties. */
+function dateNames(t: TemplateDef): Set<string> {
+  let names = dateCache.get(t);
+  if (!names) {
+    names = new Set(t.properties.filter((p) => DATE_TYPES.has(p.type)).map((p) => p.name));
+    dateCache.set(t, names);
+  }
+  return names;
+}
+
 function shownNames(t: TemplateDef): string[] {
   let names = shownCache.get(t);
   if (!names) {
@@ -110,7 +125,10 @@ export function entityCardFields(entity: Entity, language: Language): EntityScal
   const precomputed = !!entity.fields?.some((f) => f.prop);
   const source = precomputed ? entity.fields : getEntityProfile(entity.id).metadata[language];
   if (hit && hit.template === template && hit.language === language && hit.source === source) return hit.lines;
-  const lines = cardLines(entity, shownNames(template), precomputed, source as AnyMetadataField[] | undefined);
+  const dates = dateNames(template);
+  const lines = cardLines(entity, shownNames(template), precomputed, source as AnyMetadataField[] | undefined).map((l) =>
+    dates.has(l.id) ? { ...l, date: true } : l,
+  );
   cardCache.set(entity, { corpus, template, language, source, lines });
   return lines;
 }

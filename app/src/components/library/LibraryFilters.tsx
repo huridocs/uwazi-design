@@ -48,6 +48,7 @@ import { highlightTerms } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 import { BAR_GHOST } from "../shared/warmButton";
+import { DateInput } from "../shared/DateInput";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -923,12 +924,11 @@ function DateBox({
   ariaLabel: string;
 }) {
   return (
-    <input
-      type="date"
+    <DateInput
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={onChange}
       aria-label={ariaLabel}
-      className="flex-1 min-w-0 h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all cursor-pointer"
+      className="flex-1 min-w-0 w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
     />
   );
 }

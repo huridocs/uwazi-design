@@ -339,17 +339,34 @@ export const seedPreserveTokens: SettingsPreserveToken[] = [
 ];
 
 // ── Uploads (custom uploads) ────────────────────────────────────────────────
+/** A custom upload. `filename` is the stored name and fixes the URL
+ *  (`/assets/<filename>`); `name` is what the list shows and Edit renames, as
+ *  in Uwazi, where renaming a file keeps its URL. `src` is the file's content
+ *  as a data URL, for images (thumbnails, the favicon, `<img>` in Pages). */
 export interface SettingsUpload {
   id: string;
   name: string;
-  type: "image" | "pdf" | "font" | "other";
-  size: string;
-  url: string;
+  filename: string;
+  mimetype: string;
+  kind: "image" | "pdf" | "font" | "other";
+  /** bytes */
+  size: number;
+  src?: string;
+  width?: number;
+  height?: number;
 }
 
+const svgData = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+const LOGO_SVG = svgData(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><rect width="160" height="160" rx="24" fill="#1c1712"/><path d="M40 48h22v52c0 10 8 16 18 16s18-6 18-16V48h22v54c0 22-18 36-40 36s-40-14-40-36z" fill="#f5f0e8"/></svg>`,
+);
+const BANNER_SVG = svgData(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9cdb8"/><stop offset="1" stop-color="#7a6a55"/></linearGradient></defs><rect width="1200" height="400" fill="url(#g)"/><circle cx="930" cy="140" r="70" fill="#f5f0e8" opacity=".7"/><path d="M0 330 L260 210 L470 300 L720 170 L1200 320 L1200 400 L0 400z" fill="#3b3128" opacity=".75"/></svg>`,
+);
+
 export const seedUploads: SettingsUpload[] = [
-  { id: "up1", name: "logo-iachr.svg", type: "image", size: "12 KB", url: "/uploads/logo-iachr.svg" },
-  { id: "up2", name: "cover-banner.jpg", type: "image", size: "248 KB", url: "/uploads/cover-banner.jpg" },
-  { id: "up3", name: "style-guide.pdf", type: "pdf", size: "1.4 MB", url: "/uploads/style-guide.pdf" },
-  { id: "up4", name: "Inter-brand.woff2", type: "font", size: "64 KB", url: "/uploads/Inter-brand.woff2" },
+  { id: "up1", name: "logo-iachr.svg", filename: "logo-iachr.svg", mimetype: "image/svg+xml", kind: "image", size: 12_288, src: LOGO_SVG, width: 160, height: 160 },
+  { id: "up2", name: "cover-banner.jpg", filename: "cover-banner.jpg", mimetype: "image/jpeg", kind: "image", size: 253_952, src: BANNER_SVG, width: 1200, height: 400 },
+  { id: "up3", name: "style-guide.pdf", filename: "style-guide.pdf", mimetype: "application/pdf", kind: "pdf", size: 1_468_006 },
+  { id: "up4", name: "Inter-brand.woff2", filename: "Inter-brand.woff2", mimetype: "font/woff2", kind: "font", size: 65_536 },
 ];

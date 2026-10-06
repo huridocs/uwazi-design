@@ -8,6 +8,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { MediaFieldValue } from "./MediaFieldValue";
 import { isImageUrl, safeHref } from "../../utils/typedValues";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
+import { formatDateText } from "../../utils/dateFormat";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 
@@ -82,6 +83,8 @@ export function isLongField(f: MetadataField): boolean {
 export function fieldItem(f: MetadataField, style?: "cover" | "contain"): MetadataItem {
   const kind = fieldKind(f);
   const long = kind === "long";
+  // Dates print in the collection's format (Settings › Collection).
+  const isDate = f.type === "date" || !!f.propertyType?.includes("date");
   return {
     id: f.id,
     label: f.label,
@@ -95,7 +98,7 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
         <ul data-part="value-list" className="space-y-0.5">
           {f.displayValues!.map((v, i) => (
             <li key={i} className="text-sm font-medium text-ink leading-relaxed tabular-nums">
-              {v}
+              {isDate ? formatDateText(v) : v}
             </li>
           ))}
         </ul>
@@ -136,6 +139,8 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
             <span className="font-medium truncate">{f.link?.label || f.value}</span>
           )}
         </span>
+      ) : isDate && !long ? (
+        <span className="text-sm font-medium text-ink leading-relaxed tabular-nums">{formatDateText(f.value)}</span>
       ) : long ? (
         <p className="text-sm text-ink leading-relaxed">{f.value}</p>
       ) : (

@@ -82,6 +82,7 @@ import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { TemplateSelect } from "../components/shared/TemplateSelect";
 import { flashElement } from "../utils/flash";
+import { DateInput } from "../components/shared/DateInput";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -1198,13 +1199,10 @@ function EntityEditBody({
                 // `dd/mm/yyyy` (CEJIL) or prose (the curated entity), and bound
                 // straight to `value` the browser blanked the control, leaving a
                 // seeded date looking empty and saving as empty.
-                <input
+                <DateInput
                   id={inputId(field.id)}
-                  type="date"
                   value={toDateInputValue(field.value)}
-                  onChange={(e) =>
-                    updateField(field.id, fromDateInputValue(e.target.value, field.value))
-                  }
+                  onChange={(iso) => updateField(field.id, fromDateInputValue(iso, field.value))}
                   onBlur={() => flag(field.id, field.value)}
                   {...fieldAria(field.id)}
                   className={fieldClass(field.id)}

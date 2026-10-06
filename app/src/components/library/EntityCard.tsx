@@ -8,6 +8,8 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { getEntityType } from "../../data/entities";
 import { entityCardFields } from "../../utils/entityFields";
+import { formatDateText } from "../../utils/dateFormat";
+import { dateFormatAtom } from "../../atoms/settingsSingletons";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
@@ -131,6 +133,9 @@ export const EntityCard = memo(function EntityCard({
   // The template's showInCard properties that hold a value, in template order
   // (utils/entityFields).
   const scalarFields = entityCardFields(entity, language);
+  // Date lines print in the collection's format; subscribing re-renders the
+  // card when Settings › Collection changes it.
+  const datePattern = useAtomValue(dateFormatAtom);
   // At most THREE fields, and no appended "Language" row: the card is a
   // scan-target, not a record. Language repeats the toolbar's own selector on
   // every card, and beyond three rows the grid stops reading as cards and starts
@@ -226,7 +231,7 @@ export const EntityCard = memo(function EntityCard({
                     <span className="shrink-0 text-ink-muted">·</span>
                     <span className="truncate">
                       <ThesaurusValueLabel value={f.value}>
-                        <HighlightedText text={f.value} query={query} />
+                        <HighlightedText text={f.date ? formatDateText(f.value, datePattern) : f.value} query={query} />
                       </ThesaurusValueLabel>
                     </span>
                   </Fragment>
@@ -384,7 +389,7 @@ export const EntityCard = memo(function EntityCard({
               <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
                 <span className="truncate" title={f.value}>
                   <ThesaurusValueLabel value={f.value}>
-                    <HighlightedText text={f.value} query={query} />
+                    <HighlightedText text={f.date ? formatDateText(f.value, datePattern) : f.value} query={query} />
                   </ThesaurusValueLabel>
                 </span>
                 {!!f.more && (

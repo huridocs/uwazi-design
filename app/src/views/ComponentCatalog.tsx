@@ -105,6 +105,7 @@ import { PasswordConfirmModal } from "../components/shared/PasswordConfirmModal"
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { DateInput } from "../components/shared/DateInput";
+import { MapPointPickerDemo, ImagePickerModalDemo } from "./catalog/collectionDemos";
 import { TypedFieldEditor } from "../components/metadata/TypedFieldEditors";
 import { MediaFieldValue } from "../components/metadata/MediaFieldValue";
 import { ImageLightbox } from "../components/shared/ImageLightbox";
@@ -1715,6 +1716,26 @@ const textColor = typeLabelColor(type.color);`}
                   code={`<DateInput value={iso} onChange={setIso} aria-label="Date filed" className={inputClass} />`}
                 >
                   <DateInputDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-map-point" ref={reg("set-map-point")}>
+                <CatalogEntry
+                  name="MapPointPicker"
+                  description="A world map that places one point where it is clicked or tapped. The latitude and longitude inputs beside it are the keyboard path."
+                  code={`<MapPointPicker point={point} onPick={setPoint} label="Map starting point" />`}
+                >
+                  <MapPointPickerDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-image-picker" ref={reg("set-image-picker")}>
+                <CatalogEntry
+                  name="ImagePickerModal"
+                  description="Pick an image from Settings › Uploads, or drop one to upload it at once. Lists only images that pass the size rule; a dropped file that fails it is refused with the actual and expected size."
+                  code={`<ImagePickerModal title="Select favicon image" rule={FAVICON_RULE} value={id} onPick={pick} onClose={close} />`}
+                >
+                  <ImagePickerModalDemo />
                 </CatalogEntry>
               </div>
 

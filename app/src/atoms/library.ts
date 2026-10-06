@@ -7,6 +7,7 @@ import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { propertyColumns } from "../utils/entityFields";
 import { templatesAtom } from "./templates";
+import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { listColumnOptions } from "../components/library/listColumns";
 import {
   LIBRARY_SORTS,
@@ -474,9 +475,21 @@ export const submitLibrarySearchAtom = atom(null, (get, set) => {
   set(libraryResultsSheetOpenAtom, true);
 });
 
+/** The view the reader picked, or null: until they pick one, the Library
+ *  opens on the collection's default view (Settings › Collection). */
+const viewModeChosenAtom = atom<LibraryViewMode | null>(null);
+const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = { cards: "cards", table: "list", map: "map" };
+
 /** The library's view mode. A search does not write it (see
  *  `librarySearchDraftAtom`); Results is a mode you pick. */
-export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
+export const libraryViewModeAtom = atom(
+  (get): LibraryViewMode =>
+    get(viewModeChosenAtom) ?? DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards",
+  (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
+);
+/** Forget the reader's pick, so the Library opens on the saved default view
+ *  again (Settings › Collection writes this when it saves a new default). */
+export const resetLibraryViewChoiceAtom = atom(null, (_get, set) => set(viewModeChosenAtom, null));
 
 /** Results body flavour — four readings of the same snippets:
  *  - `grouped`   one wide card per entity: its matched properties beside its
