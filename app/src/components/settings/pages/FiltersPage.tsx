@@ -1,67 +1,64 @@
-import { useState } from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
+import { templatesAtom } from "../../../atoms/templates";
 import { useSetAtom, useAtomValue } from "jotai";
-import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
-import { DragGrip } from "../DragGrip";
+import { FolderPlus, Trash2 } from "lucide-react";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsFormPage } from "../SettingsEditor";
+import { SettingsSection } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
+import { SettingsTable, type Column } from "../SettingsTable";
+import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
 import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
-import { seedFilterConfig, seedTemplates } from "../../../data/settings";
-import { dataSourceAtom } from "../../../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../../atoms/dataSource";
+import { libraryTypeFiltersAtom } from "../../../atoms/library";
+import { cejilFilterMeta } from "../../../data/cejil/settingsAdapt";
 import {
-  cejilFilterRows,
-  cejilFilterGroups,
-  cejilFilterMeta,
-} from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+  filterSettings,
+  type FilterGroup,
+  type FilterRow,
+  type FilterSettings,
+} from "../../../atoms/settingsSingletons";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { LastSavedLine } from "../../shared/LastSavedLine";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { newSettingsId } from "../../../atoms/settingsCollection";
 
-interface FilterGroup {
-  id: string;
-  name: string;
-}
-interface FilterRow {
-  templateId: string;
-  active: boolean;
-  groupId: string; // "" = ungrouped
-}
 
-/** name / colour / entity-count per template, by id, for the active source. */
-const mockMeta: Record<string, { name: string; color: string; count: number }> =
-  Object.fromEntries(
-    seedFilterConfig.map((f) => [
-      f.templateId,
-      { name: f.name, color: f.color, count: seedTemplates.find((t) => t.id === f.templateId)?.entityCount ?? 0 },
-    ]),
-  );
 
-const mockRows = (): FilterRow[] =>
-  seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" }));
-
-function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
-  const j = i + dir;
-  if (j < 0 || j >= arr.length) return arr;
-  const next = [...arr];
-  [next[i], next[j]] = [next[j], next[i]];
-  return next;
-}
 
 export function FiltersPage() {
-  const setToasts = useSetAtom(toastsAtom);
-  const cejil = useAtomValue(dataSourceAtom) === "cejil";
-  const meta = cejil ? cejilFilterMeta : mockMeta;
-  const initialRows = cejil ? cejilFilterRows : mockRows();
-  const initialGroups: FilterGroup[] = cejil ? cejilFilterGroups : [];
-
-  const [groups, setGroups] = useState<FilterGroup[]>(initialGroups);
-  const [rows, setRows] = useState<FilterRow[]>(initialRows);
+  const { record } = useSettingsNotify();
+  const dataSource = useAtomValue(dataSourceAtom);
+  const cejil = dataSource === "cejil";
+  // name / colour / entity count per template: CEJIL's from its Settings
+  // adapter, every other corpus's from its own types and entities.
+  const types = useAtomValue(libraryTypesAtom);
+  const entities = useAtomValue(libraryEntitiesAtom);
+  const corpusMeta = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of entities) counts.set(e.typeId, (counts.get(e.typeId) ?? 0) + 1);
+    return Object.fromEntries(types.map((t) => [t.id, { name: t.name, color: t.color, count: counts.get(t.id) ?? 0 }]));
+  }, [types, entities]);
+  const meta = cejil ? cejilFilterMeta : corpusMeta;
+  const setTypeFilters = useSetAtom(libraryTypeFiltersAtom);
+  // The corpus's saved filters (`atoms/settingsSingletons.ts`), which the
+  // Library's Template facet reads. Compared with the last save.
+  const stored = useAtomValue(filterSettings.valueAtom);
+  const saveFilters = useSetAtom(filterSettings.saveAtom);
+  const { draft, setField, dirty, markSaved, discard } = useSettingsDraft<FilterSettings>({
+    id: "filters",
+    label: "Filter changes",
+    saved: stored,
+  });
+  const { groups, rows } = draft;
+  const setGroups = setField("groups");
+  const setRows = setField("rows");
   const { dragIdx, rowProps, gripProps } = useReorder(setRows);
 
   const activeCount = rows.filter((r) => r.active).length;
-  const dirty =
-    JSON.stringify(groups) !== JSON.stringify(initialGroups) ||
-    JSON.stringify(rows) !== JSON.stringify(initialRows);
   const groupOptions = [
     { value: "", label: "No group" },
     ...groups.map((g) => ({ value: g.id, label: g.name || "Untitled group" })),
@@ -71,19 +68,49 @@ export function FiltersPage() {
     setRows((prev) => prev.map((r) => (r.templateId === templateId ? { ...r, active: !r.active } : r)));
   const setGroup = (templateId: string, groupId: string) =>
     setRows((prev) => prev.map((r) => (r.templateId === templateId ? { ...r, groupId } : r)));
-  const move = (i: number, dir: -1 | 1) => setRows((prev) => swap(prev, i, dir));
 
   const addGroup = () =>
-    setGroups((prev) => [...prev, { id: `g-${prev.length}-${rows.length}`, name: `Group ${prev.length + 1}` }]);
+    setGroups((prev) => [...prev, { id: newSettingsId("fg"), name: `Group ${prev.length + 1}` }]);
   const renameGroup = (id: string, name: string) =>
     setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, name } : g)));
+  /** A removed group gets an Undo in the Beacon (UX5): it puts the group
+   *  back with the templates it held. */
+  const offerUndo = useSettingsUndo<{ group: FilterGroup; index: number; members: string[] }>(
+    ({ group, index, members }) => {
+      setGroups((prev) => (prev.some((g) => g.id === group.id) ? prev : [...prev.slice(0, index), group, ...prev.slice(index)]));
+      setRows((prev) => prev.map((r) => (members.includes(r.templateId) && !r.groupId ? { ...r, groupId: group.id } : r)));
+    },
+  );
   const removeGroup = (id: string) => {
+    const index = groups.findIndex((g) => g.id === id);
+    if (index < 0) return;
+    const group = groups[index];
+    const members = rows.filter((r) => r.groupId === id).map((r) => r.templateId);
     setGroups((prev) => prev.filter((g) => g.id !== id));
     setRows((prev) => prev.map((r) => (r.groupId === id ? { ...r, groupId: "" } : r)));
+    offerUndo(
+      { group, index, members },
+      `${group.name || "Group"} removed`,
+      `${members.length ? `${members.length} ${members.length === 1 ? "filter moves" : "filters move"} out of the group. ` : ""}Nothing is saved until you save the filters.`,
+    );
   };
 
-  const save = () =>
-    setToasts((p) => [...p, { id: Date.now().toString(), message: "Library filters updated", type: "success" as const }]);
+  const save = () => {
+    // Empty groups are dropped on save, as Uwazi does.
+    const value = { ...draft, groups: groups.filter((g) => rows.some((r) => r.groupId === g.id)) };
+    saveFilters({ value });
+    markSaved(value);
+    offerUndo.end();
+    // A type filter set on a template the facet no longer shows could not be
+    // cleared from the Library: drop it.
+    // With none ticked the Library lists them all (Uwazi), so nothing is hidden.
+    const hidden = new Set(
+      value.rows.some((r) => r.active) ? value.rows.filter((r) => !r.active).map((r) => r.templateId) : [],
+    );
+    if (hidden.size)
+      setTypeFilters((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !hidden.has(id))));
+    record({ method: "UPDATE", domain: "filters", noun: "settings", id: "filters", name: "Library filters", message: "Library filters updated" });
+  };
 
   const columns: Column<FilterRow>[] = [
     {
@@ -91,10 +118,16 @@ export function FiltersPage() {
       header: "Filter",
       cell: (r, i) => (
         <div className="flex items-center gap-2 w-full min-w-0">
-          <DragGrip {...gripProps(i)} />
+          <ReorderGrip
+            {...gripProps(i)}
+            label={meta[r.templateId]?.name ?? "filter"}
+            index={i}
+            count={rows.length}
+            onMove={(to) => setRows((prev) => moveTo(prev, i, to))}
+          />
           <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${meta[r.templateId]?.name}`} />
           <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
-          <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
+          <span className={`truncate text-sm font-medium ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
             {meta[r.templateId]?.name}
           </span>
           <span className="sr-only">{`row ${i + 1}`}</span>
@@ -115,59 +148,80 @@ export function FiltersPage() {
         groupOptions.length > 1 ? (
           <Select value={r.groupId} options={groupOptions} onChange={(g) => setGroup(r.templateId, g)} ariaLabel="Move to group" />
         ) : (
-          <span className="text-xs text-ink-muted">—</span>
+          <span className="text-xs text-ink-tertiary">—</span>
         ),
     },
+    orderColumn(setRows, rows.length, (r) => meta[r.templateId]?.name ?? "filter"),
+  ];
+
+  /* The Properties table is a read view over the templates' own flags
+     (decision G13, check FLT-23): one row per property flagged "Use as filter",
+     with the templates that flag it. It writes nothing; the flags are edited on
+     each template, in Settings › Templates. */
+  const templates = useAtomValue(templatesAtom(dataSource));
+  const filterProperties = useMemo(() => {
+    const byName = new Map<string, { name: string; label: string; templates: string[]; defaultfilter: boolean }>();
+    for (const t of templates)
+      for (const p of t.properties) {
+        if (!p.filter) continue;
+        const row = byName.get(p.name) ?? { name: p.name, label: p.label, templates: [], defaultfilter: false };
+        row.templates.push(t.name);
+        row.defaultfilter ||= !!p.defaultfilter;
+        byName.set(p.name, row);
+      }
+    return [...byName.values()];
+  }, [templates]);
+  type FilterPropertyRow = (typeof filterProperties)[number];
+  const propertyColumns: Column<FilterPropertyRow>[] = [
     {
-      id: "order",
-      header: "",
-      width: "5rem",
-      align: "right",
-      cell: (r, i) => (
-        <div className="flex items-center justify-end">
-          <button
-            onClick={() => move(i, -1)}
-            disabled={i === 0}
-            aria-label="Move up"
-            className="p-0.5 rounded text-ink-tertiary hover:bg-warm hover:text-ink transition-colors disabled:opacity-30 cursor-pointer disabled:cursor-default"
-          >
-            <ChevronUp size={14} />
-          </button>
-          <button
-            onClick={() => move(i, 1)}
-            disabled={i === rows.length - 1}
-            aria-label="Move down"
-            className="p-0.5 rounded text-ink-tertiary hover:bg-warm hover:text-ink transition-colors disabled:opacity-30 cursor-pointer disabled:cursor-default"
-          >
-            <ChevronDown size={14} />
-          </button>
-        </div>
+      id: "property",
+      header: "Property",
+      cell: (r) => (
+        <span className="truncate text-sm font-medium text-ink">
+          {r.label}
+          {r.defaultfilter && <span className="ms-1.5 text-meta text-ink-tertiary">Default filter</span>}
+        </span>
       ),
+    },
+    {
+      id: "templates",
+      header: "Templates",
+      cell: (r) => <span className="text-xs text-ink-secondary truncate">{r.templates.join(", ")}</span>,
     },
   ];
 
   return (
-    <SettingsContent>
-      <SettingsContent.Header title="Filters" />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">
-          <p className="text-xs text-ink-tertiary min-w-0 sm:max-w-md">
-            Choose which entity types appear as filters in the library sidebar, group them, and set
-            their order — exactly how readers will see them.
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<FolderPlus size={14} />}
-            onClick={addGroup}
-            className="shrink-0 whitespace-nowrap"
-          >
+    <SettingsFormPage
+      component="FiltersPage"
+      title="Filters"
+      intro="Choose which entity types and properties appear as filters in the library sidebar, group the types, and set the order of each — exactly how readers will see them."
+      dirty={dirty}
+      onSave={save}
+      onDiscard={() => {
+        // The draft returns to the last save, so a removed group's Undo
+        // would restore into a clean draft and dirty it.
+        discard();
+        offerUndo.end();
+      }}
+      footerStart={
+        <span className="text-xs text-ink-tertiary">
+          {rows.some((r) => r.active)
+            ? `${activeCount} filters shown`
+            : "No template ticked: the Library lists every template"}
+        </span>
+      }
+      footerStatus={<LastSavedLine domain="filters" id="filters" />}
+    >
+      <SettingsSection
+        title="Types"
+        action={
+          <SettingsButton variant="secondary" size="sm" icon={<FolderPlus size={14} />} onClick={addGroup} className="whitespace-nowrap">
             New group
-          </Button>
-        </div>
-
+          </SettingsButton>
+        }
+      >
         {groups.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2">
             {groups.map((g) => (
               <div key={g.id} className="flex items-center gap-1 rounded-md bg-warm px-2 py-1">
                 <input
@@ -188,7 +242,8 @@ export function FiltersPage() {
           </div>
         )}
 
-        <Table
+        <SettingsTable
+          corpusScoped
           columns={columns}
           data={rows}
           getRowId={(r) => r.templateId}
@@ -196,14 +251,41 @@ export function FiltersPage() {
             ...rowProps(i),
             className: dragIdx === i ? "opacity-60" : undefined,
           })}
+          emptyState={<SettingsEmptyState title="No templates yet" hint="Each template can be a filter once it exists." />}
         />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
-          Save
-        </Button>
-      </SettingsContent.Footer>
-    </SettingsContent>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Properties"
+        description="Properties a template marks “Use as filter” appear in the Library's filters. Change them on the template."
+      >
+        <SettingsTable
+          corpusScoped
+          columns={propertyColumns}
+          data={filterProperties}
+          getRowId={(r) => r.name}
+          emptyState={
+            <SettingsEmptyState
+              title="No filterable properties"
+              hint="Tick “Use as filter” on a template property to list it here."
+            />
+          }
+        />
+      </SettingsSection>
+    </SettingsFormPage>
   );
+}
+
+/** Move up / down within ONE section's rows: each section is its own list, so
+ *  a row can never cross into the other. */
+function orderColumn<T>(setList: Dispatch<SetStateAction<T[]>>, length: number, nameOf: (row: T) => string): Column<T> {
+  return {
+    id: "order",
+    header: <span className="sr-only">Order</span>,
+    width: "5rem",
+    align: "right",
+    cell: (r, i) => (
+      <MoveButtons label={nameOf(r)} index={i} count={length} onMove={(to) => setList((prev) => moveTo(prev, i, to))} />
+    ),
+  };
 }

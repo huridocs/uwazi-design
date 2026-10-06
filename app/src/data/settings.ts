@@ -68,9 +68,9 @@ export interface SettingsTemplate {
   isDefault: boolean;
 }
 
-/** The Sample's templates as the Filters and extraction pages list them, until
- *  those pages read the template store (`atoms/templates.ts`). Settings ›
- *  Templates and every other reader use the store. */
+/** The Sample's templates as the extraction pages list them, until those
+ *  pages read the template store (`atoms/templates.ts`). Settings › Templates
+ *  and every other reader use the store. */
 export const seedTemplates: SettingsTemplate[] = entityTypes.map((t, i) => ({
   id: t.id,
   name: t.name,
@@ -289,22 +289,6 @@ export const seedMenuLinks: SettingsMenuLink[] = [
   { id: "m4", title: "Methodology", url: "/page/methodology", type: "link" },
   { id: "m5", title: "Contact", url: "/page/contact", type: "link" },
 ];
-
-// ── Filters configuration ───────────────────────────────────────────────────
-// Which templates surface as library filters (reuses the template list).
-export interface SettingsFilterConfig {
-  templateId: string;
-  name: string;
-  color: string;
-  active: boolean;
-}
-
-export const seedFilterConfig: SettingsFilterConfig[] = seedTemplates.map((t) => ({
-  templateId: t.id,
-  name: t.name,
-  color: t.color,
-  active: !["document", "organization"].includes(t.id),
-}));
 
 // ── Metadata extraction (IX) ────────────────────────────────────────────────
 export type ExtractorStatus = "ready" | "training" | "processing" | "error";
