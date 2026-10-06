@@ -9,6 +9,7 @@ import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { chainGraphFor } from "../../data/chainFacets";
+import { edgesBetween } from "../../utils/pathFinding";
 import { Direction } from "../../data/references";
 import { currentDocument } from "../../data/document";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
@@ -69,6 +70,9 @@ const GRAPH_CAP = 150;
 /** Spacing of a "Connect to…" path's further nodes, out along the first
  *  hop's ray. */
 const PATH_STEP = 120;
+/** The step when the path runs across the canvas: its names then sit above
+ *  and below the line, centred on their nodes, and need the width. */
+const PATH_STEP_WIDE = 220;
 /** Label type size, in user units AND the rendered floor it must never fall under.
  *  The 11px floor is a CSS-px rule, and SVG text inside the zoom group is not
  *  measured in CSS px: it passes through TWO scales — the viewBox fit
@@ -417,7 +421,8 @@ export function RelationshipsGraphView() {
     const dy = pathAnchor.y - CY;
     const len = Math.hypot(dx, dy) || 1;
     const outer = Math.max(...nodes.map((n) => Math.hypot(n.x - CX, n.y - CY)));
-    const start = Math.max(len, outer) + PATH_STEP * 0.6;
+    const step = Math.abs(dx / len) > 0.5 ? PATH_STEP_WIDE : PATH_STEP;
+    const start = Math.max(len, outer) + step * 0.6;
     return path.slice(2).map((id, k) => {
       const e = getEntity(id);
       const type = getEntityType(e?.typeId ?? graph?.templateOf(id) ?? "");
@@ -426,11 +431,53 @@ export function RelationshipsGraphView() {
         title: e?.title ?? graph?.titleOf(id) ?? id,
         color: type?.color ?? "#9ca3af",
         typeName: type?.name ?? "",
-        x: CX + (dx / len) * (start + PATH_STEP * k),
-        y: CY + (dy / len) * (start + PATH_STEP * k),
+        x: CX + (dx / len) * (start + step * k),
+        y: CY + (dy / len) * (start + step * k),
       };
     });
   }, [path, pathAnchor, focusedId, nodes]);
+
+  // The path's names and the relation of each hop. Names go on one side of
+  // the line and relations on the other, so neither lands on the fan's group
+  // pills (which sit between the source and the first ring) or on each other.
+  const pathLabels = useMemo(() => {
+    if (!path || !pathAnchor) return null;
+    const graph = chainGraphFor(entityCorpusOf(focusedId));
+    const dx = pathAnchor.x - CX;
+    const dy = pathAnchor.y - CY;
+    const len = Math.hypot(dx, dy) || 1;
+    // The perpendicular, turned to point right (or down on a vertical-ish
+    // normal), so names read on a stable side.
+    let px = -dy / len;
+    let py = dx / len;
+    if (px < 0 || (Math.abs(px) < 1e-6 && py < 0)) ((px = -px), (py = -py));
+    const across = Math.abs(px) < 0.5; // the line runs across: names above/below
+    const points = [
+      { id: focusedId, x: CX, y: CY, r: 0 },
+      { id: path[1], x: pathAnchor.x, y: pathAnchor.y, r: pathAnchor.r, title: pathAnchor.title },
+      ...pathExtras.map((x, i) => ({ id: x.id, x: x.x, y: x.y, r: i === pathExtras.length - 1 ? 9 : 7, title: x.title })),
+    ];
+    // A pill out along the ray as well: the first hop's name otherwise
+    // sits level with the group pills around it.
+    const ux = dx / len;
+    const uy = dy / len;
+    const names = points.slice(1).map((pt, i) => ({
+      key: pt.id,
+      x: pt.x + px * (pt.r + 8) + ux * PILL_H,
+      y: pt.y + py * (pt.r + 8) + uy * PILL_H,
+      text: pt.title ?? "",
+      strong: i === points.length - 2,
+    }));
+    // The first hop's relation is the name of the group pill it leaves from,
+    // so only the hops past it are labelled.
+    const relations = points.slice(2).map((pt, i) => {
+      const prev = points[i + 1];
+      const edges = graph ? edgesBetween(graph, prev.id, pt.id) : [];
+      const text = [...new Set(edges.map((e) => e.label ?? e.relationType ?? "related"))].join(", ");
+      return { key: `${prev.id}>${pt.id}`, x: (prev.x + pt.x) / 2 - px * 8, y: (prev.y + pt.y) / 2 - py * 8, text };
+    });
+    return { names, relations, across, side: px > 0 ? "start" : "end" } as const;
+  }, [path, pathAnchor, pathExtras, focusedId]);
 
   useEffect(() => {
     const el = svgRef.current;
@@ -870,10 +917,7 @@ export function RelationshipsGraphView() {
                 />
               )}
               {pathAnchor?.id === n.id && (
-                <>
-                  <circle cx={n.x} cy={n.y} r={n.r + 4} fill="none" stroke="var(--accent-blue)" strokeWidth={2} />
-                  <PathLabel x={n.x} y={n.y + n.r + 6} text={n.title} scale={labelScale} />
-                </>
+                <circle cx={n.x} cy={n.y} r={n.r + 4} fill="none" stroke="var(--accent-blue)" strokeWidth={2} />
               )}
               {focusedNodeId === n.id && !n.selected && (
                 <circle
@@ -958,10 +1002,35 @@ export function RelationshipsGraphView() {
                   style={{ cursor: "pointer", outline: "none" }}
                 />
                 <title>{x.title}</title>
-                <PathLabel x={x.x} y={x.y + 12} text={x.title} scale={labelScale} strong={last} />
               </g>
             );
           })}
+
+          {/* Names and relations last, over the fan. */}
+          {pathLabels?.relations.map((r) =>
+            r.text ? (
+              <PathLabel
+                key={r.key}
+                x={r.x}
+                y={r.y}
+                text={r.text}
+                scale={labelScale}
+                align={pathLabels.across ? "above" : pathLabels.side === "start" ? "end" : "start"}
+                quiet
+              />
+            ) : null,
+          )}
+          {pathLabels?.names.map((n) => (
+            <PathLabel
+              key={n.key}
+              x={n.x}
+              y={n.y}
+              text={n.text}
+              scale={labelScale}
+              strong={n.strong}
+              align={pathLabels.across ? "below" : pathLabels.side}
+            />
+          ))}
 
         </g>
       </svg>
@@ -1052,15 +1121,52 @@ export function RelationshipsGraphView() {
   );
 }
 
-/** A node's name on a "Connect to…" path: a pill under the node, held at the
- *  label floor like the branch pills. */
-function PathLabel({ x, y, text, scale, strong = false }: { x: number; y: number; text: string; scale: number; strong?: boolean }) {
+/** A name on a "Connect to…" path, held at the label floor like the branch
+ *  pills. `align` says where the pill sits from (x, y): beside it (`start`
+ *  runs right, `end` runs left, centred on y) or `above`/`below` it, centred
+ *  on x. `quiet` is a hop's relation: no outline, secondary ink. */
+function PathLabel({
+  x,
+  y,
+  text,
+  scale,
+  strong = false,
+  align = "below",
+  quiet = false,
+}: {
+  x: number;
+  y: number;
+  text: string;
+  scale: number;
+  strong?: boolean;
+  align?: "start" | "end" | "above" | "below";
+  quiet?: boolean;
+}) {
   const shown = truncate(text, 28);
-  const w = Math.max(72, pillWidth(shown) - 8);
+  const w = quiet ? pillWidth(shown) - 12 : Math.max(72, pillWidth(shown) - 8);
+  const left = align === "start" ? x : align === "end" ? x - w : x - w / 2;
+  const top = align === "above" ? y - PILL_H : align === "below" ? y : y - PILL_H / 2;
   return (
     <g pointerEvents="none" transform={`translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`}>
-      <rect x={x - w / 2} y={y} width={w} height={PILL_H} rx={4} fill="var(--bg-surface)" stroke="var(--accent-blue)" strokeWidth={1} />
-      <text x={x} y={y + 15} textAnchor="middle" fontSize={LABEL_PX} fontWeight={strong ? 600 : 500} fill="var(--text-primary)">
+      <rect
+        x={left}
+        y={top}
+        width={w}
+        height={PILL_H}
+        rx={4}
+        fill="var(--bg-surface)"
+        stroke={quiet ? "none" : "var(--accent-blue)"}
+        strokeWidth={1}
+        opacity={quiet ? 0.9 : 1}
+      />
+      <text
+        x={left + w / 2}
+        y={top + 15}
+        textAnchor="middle"
+        fontSize={LABEL_PX}
+        fontWeight={strong ? 600 : 500}
+        fill={quiet ? "var(--text-secondary)" : "var(--text-primary)"}
+      >
         {shown}
       </text>
     </g>
