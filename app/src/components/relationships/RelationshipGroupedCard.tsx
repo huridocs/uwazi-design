@@ -2,7 +2,7 @@ import { ReactNode, useId } from "react";
 import { ChevronDown } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
-import { useGroupExpansion } from "../../hooks/useGroupExpansion";
+import { ObeyedCommandContext, useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { CountBadge } from "../shared/CountBadge";
 import { HighlightedText } from "../shared/HighlightedText";
 
@@ -56,7 +56,7 @@ export function RelationshipGroupedCard({
   // The shared group state machine (see `useGroupExpansion`). This flavour is
   // the LEAF for a jump — it clears the signal once it has opened — and it can
   // be driven from outside (`expanded`/`onToggle`) or run inert (`standalone`).
-  const { expanded, toggle } = useGroupExpansion({
+  const { expanded, toggle, obeyed } = useGroupExpansion({
     defaultExpanded,
     refIdsToWatch,
     standalone,
@@ -120,7 +120,7 @@ export function RelationshipGroupedCard({
       </h3>
       {expanded && (
         <div id={bodyId} data-part="body" className="border-t border-border/40">
-          {children}
+          <ObeyedCommandContext.Provider value={obeyed}>{children}</ObeyedCommandContext.Provider>
         </div>
       )}
     </section>

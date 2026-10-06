@@ -31,9 +31,15 @@ export const relSubGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
 
 export const relSearchQueryAtom = atom("");
 
-/** Counters: each increment expands or collapses every group. */
-export const relExpandAllSignalAtom = atom(0);
-export const relCollapseAllSignalAtom = atom(0);
+/** The last Expand all / Collapse all. Each press bumps `nonce`; a group mounted
+ *  before the press obeys it, and a group mounted later obeys it only when its
+ *  parent group did (the sub-groups and evidence an Expand all reveals). Scoped
+ *  like the facets, so one panel's pair never drives another panel's groups. */
+export type ExpansionCommand = { kind: "expand" | "collapse"; nonce: number } | null;
+export const relExpansionCommandAtom = atom<ExpansionCommand>(null);
+export const nextExpansionCommand =
+  (kind: "expand" | "collapse") =>
+  (prev: ExpansionCommand): ExpansionCommand => ({ kind, nonce: (prev?.nonce ?? 0) + 1 });
 
 /** `evidence` puts the targets with the most backing references first. */
 export type SortOrder = "none" | "appearance" | "evidence" | "asc" | "desc";
@@ -46,9 +52,13 @@ export function defaultSortFor(view: View): SortOrder {
  *  follows each view's default until the user picks a sort. */
 export const relSortOrderAtom = atom<SortOrder | null>(null);
 
-/** Group counts that disable the collapse/expand buttons. */
-export const relExpandedGroupCountAtom = atom(0);
-export const relTotalGroupCountAtom = atom(0);
+/** Every mounted group's open state, by scope (`""` = the host) then group id.
+ *  The collapse pair reads its enablement from here. Each group writes its own
+ *  entry and removes it on unmount, so the totals are always the groups on
+ *  screen; counters adjusted by each transition drifted whenever an open group
+ *  unmounted (a collapsed parent's sub-groups, a search that dropped a group).
+ *  Kept out of `scopedRelStateAtom`, which the overlay clears on open. */
+export const relGroupStatesAtom = atom<Record<string, Record<string, boolean>>>({});
 
 /** IDs of refs in the expanded minimap cluster. */
 export const activeClusterRefIdsAtom = atom<string[] | null>(null);

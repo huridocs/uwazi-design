@@ -1,13 +1,6 @@
-import { useRelAtomValue } from "../../hooks/useEntityScope";
-import { useAtom, useSetAtom } from "jotai";
-import {
-  relExpandedGroupCountAtom,
-  relTotalGroupCountAtom,
-  relViewAtom,
-  relGroupByAtom,
-  relExpandAllSignalAtom,
-  relCollapseAllSignalAtom, isUngroupedView
-} from "../../atoms/filters";
+import { useSetRelAtom } from "../../hooks/useEntityScope";
+import { useGroupTotals } from "../../hooks/useGroupExpansion";
+import { nextExpansionCommand, relExpansionCommandAtom } from "../../atoms/filters";
 
 export function CollapseControls({
   onCollapseAll,
@@ -19,20 +12,18 @@ export function CollapseControls({
   onCollapseAll?: () => void;
   onExpandAll?: () => void;
   disabled?: boolean;
-  /** Override the group counts (default: the relationships-panel atoms). Pass
+  /** Override the group counts (default: the Relationships panel's groups). Pass
    *  these when reusing outside that panel — e.g. the Library Results tab, whose
    *  cards are standalone and keep their own expand state. */
   expandedCount?: number;
   totalCount?: number;
 }) {
-  const [expandedAtom] = useAtom(relExpandedGroupCountAtom);
-  const [totalAtom] = useAtom(relTotalGroupCountAtom);
-  const expandedCount = expandedProp ?? expandedAtom;
-  const totalCount = totalProp ?? totalAtom;
+  const groups = useGroupTotals();
+  const expandedCount = expandedProp ?? groups.expanded;
+  const totalCount = totalProp ?? groups.total;
 
   const collapseDisabled = disabled || expandedCount === 0;
-  const expandDisabled =
-    disabled || (totalCount > 0 && expandedCount >= totalCount);
+  const expandDisabled = disabled || expandedCount >= totalCount;
 
   return (
     /* Ghost TEXT buttons: no fill at rest or on hover, so the text is their
@@ -70,32 +61,16 @@ export function CollapseControls({
 }
 
 /** `CollapseControls` wired to the Relationships panel — the version every host
- *  on that surface should render.
- *
- *  The pair used to be wired twice, in two `ListInfoRow`s that had nothing else
- *  left to carry: the list body's and the tree's, each computing its own
- *  `showCollapse` from a different expression (`view === "list" && groupBy !==
- *  "none"` against a bare `groupBy !== "none"`) for what is one question. Both
- *  rows are gone and the controls moved to the footer, so the rule lives here
- *  once — and the answer is the same in every view because it is the same code
- *  answering.
- *
- *  Graph is the view with no groups to collapse, and it now says so with a
- *  DISABLED pair rather than by not being there: the body used to return early
- *  before the row, so the controls vanished in graph and reappeared in list,
- *  which reads as the bar losing a control rather than the view not having
- *  groups. */
+ *  on that surface renders. Enablement comes from the groups on screen in this
+ *  scope (`useGroupTotals`), so a view with nothing to open (graph, when, an
+ *  ungrouped list, a tree of leaves with no evidence) shows the pair disabled
+ *  rather than removing it. */
 export function RelationshipsCollapseControls() {
-  const view = useRelAtomValue(relViewAtom);
-  const groupBy = useRelAtomValue(relGroupByAtom);
-  const setExpandSignal = useSetAtom(relExpandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
-
+  const setCommand = useSetRelAtom(relExpansionCommandAtom);
   return (
     <CollapseControls
-      disabled={isUngroupedView(view) || groupBy === "none"}
-      onExpandAll={() => setExpandSignal((s) => s + 1)}
-      onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+      onExpandAll={() => setCommand(nextExpansionCommand("expand"))}
+      onCollapseAll={() => setCommand(nextExpansionCommand("collapse"))}
     />
   );
 }

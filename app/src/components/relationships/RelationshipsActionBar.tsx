@@ -4,15 +4,14 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import { manageRelationTypesOpenAtom, scopedReferencesAtom } from "../../atoms/references";
 import {
-  relCollapseAllSignalAtom,
+  nextExpansionCommand,
   relEditModeAtom,
-  relExpandAllSignalAtom,
-  relGroupByAtom,
+  relExpansionCommandAtom,
   selectedRefIdsAtom,
-  relViewAtom, isUngroupedView
 } from "../../atoms/filters";
 import { breakpointAtom } from "../../atoms/viewport";
-import { useRelAtomValue } from "../../hooks/useEntityScope";
+import { useSetRelAtom } from "../../hooks/useEntityScope";
+import { useGroupTotals } from "../../hooks/useGroupExpansion";
 import { MobileActionMenu } from "../layout/MobileActionMenu";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
@@ -49,10 +48,8 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   // Delete as icons, Cancel and Save as words, and moves the rest into a More
   // menu. Compact (drawer) already fits and is unchanged.
   const mobile = useAtomValue(breakpointAtom) === "mobile";
-  const view = useRelAtomValue(relViewAtom);
-  const groupBy = useRelAtomValue(relGroupByAtom);
-  const setExpandSignal = useSetAtom(relExpandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
+  const setExpansionCommand = useSetRelAtom(relExpansionCommandAtom);
+  const groups = useGroupTotals();
 
   const totalCount = references.length;
   const selectedCount = selected.size;
@@ -135,7 +132,6 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   );
 
   if (mobile && !compact && editMode) {
-    const noGroups = isUngroupedView(view) || groupBy === "none";
     const icon = "inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors cursor-pointer";
     return (
       <>
@@ -196,8 +192,8 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                 { id: "manage-types", label: "Manage types", icon: <Settings2 size={12} />, onSelect: () => setManageOpen(true) },
                 { id: "select-all", label: "Select all", disabled: totalCount === 0 || allSelected, onSelect: handleSelectAll },
                 { id: "deselect-all", label: "Deselect all", disabled: !hasSelection, onSelect: handleDeselectAll },
-                { id: "collapse-all", label: "Collapse all", disabled: noGroups, onSelect: () => setCollapseSignal((s) => s + 1) },
-                { id: "expand-all", label: "Expand all", disabled: noGroups, onSelect: () => setExpandSignal((s) => s + 1) },
+                { id: "collapse-all", label: "Collapse all", disabled: groups.expanded === 0, onSelect: () => setExpansionCommand(nextExpansionCommand("collapse")) },
+                { id: "expand-all", label: "Expand all", disabled: groups.expanded >= groups.total, onSelect: () => setExpansionCommand(nextExpansionCommand("expand")) },
               ]}
             />
             {menuSlot}

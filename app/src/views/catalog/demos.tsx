@@ -539,8 +539,8 @@ export function CollapseControlsDemo() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-6">
-        <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} />
-        <span className="text-meta text-ink-muted">default (atom-driven)</span>
+        <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} expandedCount={1} totalCount={3} />
+        <span className="text-meta text-ink-muted">1 of 3 groups open</span>
       </div>
       <div className="flex items-center gap-6">
         <CollapseControls

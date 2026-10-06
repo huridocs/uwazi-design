@@ -115,6 +115,12 @@ export function useFiltersDrawerOpen(): [boolean, (open: boolean) => void] {
   return [!!scoped[override], setScopedOpen];
 }
 
+/** The scope key this subtree's panel state is stored under: the override's
+ *  entity id, or `""` for the host. */
+export function useRelScopeKey(): string {
+  return useContext(EntityScopeContext) ?? "";
+}
+
 /** This surface's copy of a Relationships panel atom (facets, search, view,
  *  grouping, sort — see `relAtomFor`). With no scope override it IS the atom,
  *  so the entity view's panel and its drawer section keep sharing one state; a

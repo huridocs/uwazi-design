@@ -9,7 +9,7 @@ import {
   relSubGroupByAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
-import { useAutoExpandOnRefJump } from "../../hooks/useGroupExpansion";
+import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { Hub, Relationship, countOf, deriveHubs, deriveRelationships } from "../../utils/relationships";
@@ -212,18 +212,23 @@ function HubNode({
   // with no quoted passage) has nothing to reveal, and offering a chevron that
   // opens an empty box is a promise the row can't keep.
   const evidence = refs.filter((ref) => !!ref.sourceSelection);
-  const { expanded, toggle } = useAutoExpandOnRefJump(hub.refIds);
+  const { expanded, toggle } = useGroupExpansion({
+    refIdsToWatch: hub.refIds,
+    clearJumpSignal: true,
+    countable: evidence.length > 0,
+  });
+  const open = expanded && evidence.length > 0;
 
   return (
     <div data-part="hub-node">
       <RelationshipRow
         kind="hub"
         hub={hub}
-        expanded={expanded}
+        expanded={open}
         onToggleExpand={evidence.length > 0 ? toggle : undefined}
         hideRelLabel={hideRelLabel}
       />
-      {expanded && (
+      {open && (
         <ul data-part="evidence-list" className="ms-[14px]">
           {evidence
             .map((ref) => (
@@ -253,21 +258,27 @@ function AggregateNode({
   const evidence = refs.filter((ref) => !!ref.sourceSelection);
   // Minimap dot click sets expandGroupForRef to the ref id. The chain of
   // TreeBranches above us auto-expand; we — the leaf holding the actual ref —
-  // auto-expand too and clear the signal (see `useAutoExpandOnRefJump`).
-  const { expanded, toggle } = useAutoExpandOnRefJump(rel.refIds);
+  // auto-expand too and clear the signal. A leaf with evidence is a group to
+  // Expand all and Collapse all like the branches above it.
+  const { expanded, toggle } = useGroupExpansion({
+    refIdsToWatch: rel.refIds,
+    clearJumpSignal: true,
+    countable: evidence.length > 0,
+  });
+  const open = expanded && evidence.length > 0;
 
   return (
     <div data-part="aggregate-node">
       <RelationshipRow
         kind="aggregate"
         rel={rel}
-        expanded={expanded}
+        expanded={open}
         onToggleExpand={evidence.length > 0 ? toggle : undefined}
         hidePill={hidePill}
         hideRelLabel={hideRelLabel}
         hideTypePill={hideTypePill}
       />
-      {expanded && (
+      {open && (
         <ul data-part="evidence-list" className="ms-[14px]">
           {evidence
             .map((ref) => (

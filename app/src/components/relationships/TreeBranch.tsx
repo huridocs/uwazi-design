@@ -2,7 +2,7 @@ import { Children, ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { ChevronRight } from "lucide-react";
 import { relZoomAtom } from "../../atoms/filters";
-import { useGroupExpansion } from "../../hooks/useGroupExpansion";
+import { ObeyedCommandContext, useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
@@ -40,7 +40,7 @@ export function TreeBranch({
   // The shared group state machine — counters, expand-all, collapse-all, jump.
   // A BRANCH doesn't clear the jump signal: the leaf that actually holds the
   // ref does, and it is below us.
-  const { expanded, toggle } = useGroupExpansion({
+  const { expanded, toggle, obeyed } = useGroupExpansion({
     defaultExpanded,
     refIdsToWatch,
   });
@@ -88,11 +88,13 @@ export function TreeBranch({
         // header above (chevron is at px-2 + ~6px = ~14px from the wrapper's
         // start edge; ms-[14px] keeps the line continuous across nested
         // branches, and follows the chevron to the right under RTL).
-        <ul data-part="children" className="ms-[14px]">
-          {items.map((child, i) => (
-            <TreeNode key={i}>{child}</TreeNode>
-          ))}
-        </ul>
+        <ObeyedCommandContext.Provider value={obeyed}>
+          <ul data-part="children" className="ms-[14px]">
+            {items.map((child, i) => (
+              <TreeNode key={i}>{child}</TreeNode>
+            ))}
+          </ul>
+        </ObeyedCommandContext.Provider>
       )}
     </div>
   );

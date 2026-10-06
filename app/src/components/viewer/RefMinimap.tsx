@@ -6,7 +6,7 @@ import {
   activeRefIdAtom,
   expandGroupForRefAtom,
 } from "../../atoms/references";
-import { relCollapseAllSignalAtom, relSearchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
+import { relExpansionCommandAtom, nextExpansionCommand, relSearchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { activePrimaryGroupIdAtom } from "../../atoms/files";
 import { getEntity, getEntityType } from "../../data/entities";
@@ -40,7 +40,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const setScrollToRef = useSetAtom(scrollToRefAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setExpandGroupForRef = useSetAtom(expandGroupForRefAtom);
-  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
+  const setExpansionCommand = useSetAtom(relExpansionCommandAtom);
   const [expandedCluster, setExpandedCluster] = useState<number | null>(null);
   const [hoveredDot, setHoveredDot] = useState<string | null>(null);
   const [mode, setMode] = useState<"global" | "page">("global");
@@ -170,7 +170,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
     }
     setActiveRefId(refId);
     setActiveDrawerTab("relationships");
-    setCollapseSignal((s) => s + 1);
+    setExpansionCommand(nextExpansionCommand("collapse"));
     setExpandGroupForRef(refId);
     setScrollToRef(refId);
     setScrollToHighlight(refId);

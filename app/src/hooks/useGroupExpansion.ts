@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
-import {
-  relExpandAllSignalAtom,
-  relCollapseAllSignalAtom,
-  relExpandedGroupCountAtom,
-  relTotalGroupCountAtom,
-} from "../atoms/filters";
+import { relExpansionCommandAtom, relGroupStatesAtom } from "../atoms/filters";
 import { expandGroupForRefAtom } from "../atoms/references";
+import { useRelAtomValue, useRelScopeKey } from "./useEntityScope";
+
+/** The command nonce the enclosing group last obeyed, or null when it was
+ *  opened by hand, by a jump, or by default. A group mounting under a parent
+ *  that obeyed the current command obeys it too: that is how one Expand all
+ *  reaches sub-groups and evidence that only mount once their parent opens,
+ *  while a top-level group mounted later (a view switch, a search) keeps its
+ *  own default. */
+export const ObeyedCommandContext = createContext<number | null>(null);
 
 interface GroupExpansionOptions {
   /** Open on mount. Branches default open, cards default closed. */
@@ -20,6 +24,9 @@ interface GroupExpansionOptions {
    *  CollapseControls counters — so those cards neither obey another surface's
    *  controls nor pollute its totals. */
   standalone?: boolean;
+  /** Register in the collapse pair's totals (default true). A tree leaf with no
+   *  evidence has no chevron, so it is not a group the pair can open. */
+  countable?: boolean;
   /** Clear the jump signal once this group has answered it. The LEAF that
    *  actually holds the ref clears it; a branch on the way down must not, or
    *  the leaves below never see it. */
@@ -29,72 +36,75 @@ interface GroupExpansionOptions {
   onToggle?: () => void;
 }
 
-/** Expand/collapse state for a group in the Relationships panel, and its four
- *  ties to the shared signal atoms: register in the CollapseControls counts on
- *  mount, obey expand-all, obey collapse-all, open on a jump-to-ref.
+/** Expand/collapse state for a group in the Relationships panel, and its ties
+ *  to the panel: register its open state for the collapse pair, obey Expand all
+ *  and Collapse all, open on a jump-to-ref.
  *
- *  `TreeBranch` and `RelationshipGroupedCard` each carried their own copy of
- *  all four — the same effects, the same counter arithmetic, the same
- *  eslint-disabled dependency lists — differing only in the connector visuals
- *  around them and in whether they clear the jump signal. Two copies of a
- *  state machine wired to five atoms is how one of them silently stops
- *  answering a control the other still obeys.
- *
- *  The counters are incremented and decremented by the caller's own
- *  transitions, never recomputed, so this hook must own every path that flips
- *  `expanded` — which is why `toggle` comes back from here too. */
+ *  `TreeBranch`, `RelationshipGroupedCard` and the tree's aggregate and hub
+ *  leaves all use it, so every chevron on the surface answers the same pair.
+ *  Wrap the group's children in `ObeyedCommandContext.Provider value={obeyed}`
+ *  so groups that mount inside it inherit the command. */
 export function useGroupExpansion({
   defaultExpanded = false,
   refIdsToWatch,
   standalone = false,
+  countable = true,
   clearJumpSignal = false,
   expanded: controlledExpanded,
   onToggle,
 }: GroupExpansionOptions = {}) {
-  const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
+  const command = useRelAtomValue(relExpansionCommandAtom);
+  const parentObeyed = useContext(ObeyedCommandContext);
+  const inherits = !standalone && command !== null && parentObeyed === command.nonce;
+  const [localExpanded, setLocalExpanded] = useState(() =>
+    inherits ? command.kind === "expand" : defaultExpanded,
+  );
+  const [obeyed, setObeyed] = useState<number | null>(inherits ? command.nonce : null);
+  // The command in force at mount has already been answered (or, for a group
+  // that did not inherit it, was issued before this group existed).
+  const answered = useRef(command?.nonce ?? 0);
   const expanded = controlledExpanded ?? localExpanded;
-  const [expandSignal] = useAtom(relExpandAllSignalAtom);
-  const [collapseSignal] = useAtom(relCollapseAllSignalAtom);
-  const setExpandedCount = useSetAtom(relExpandedGroupCountAtom);
-  const setTotalCount = useSetAtom(relTotalGroupCountAtom);
+
+  const id = useId();
+  const scopeKey = useRelScopeKey();
+  const setStates = useSetAtom(relGroupStatesAtom);
+  const registered = !standalone && countable;
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
 
   // Hooks stay unconditional; only the bodies gate on `standalone`.
   useEffect(() => {
-    if (standalone) return;
-    setTotalCount((c) => c + 1);
-    if (defaultExpanded) setExpandedCount((c) => c + 1);
-    return () => {
-      setTotalCount((c) => c - 1);
-      if (expanded) setExpandedCount((c) => c - 1);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!registered) return;
+    setStates((all) =>
+      all[scopeKey]?.[id] === expanded
+        ? all
+        : { ...all, [scopeKey]: { ...all[scopeKey], [id]: expanded } },
+    );
+  }, [registered, expanded, scopeKey, id, setStates]);
 
   useEffect(() => {
-    if (standalone) return;
-    if (expandSignal > 0 && !expanded) {
-      setLocalExpanded(true);
-      setExpandedCount((c) => c + 1);
-    }
-  }, [expandSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!registered) return;
+    return () =>
+      setStates((all) => {
+        if (!all[scopeKey] || !(id in all[scopeKey])) return all;
+        const rest = { ...all[scopeKey] };
+        delete rest[id];
+        return { ...all, [scopeKey]: rest };
+      });
+  }, [registered, scopeKey, id, setStates]);
 
   useEffect(() => {
-    if (standalone) return;
-    if (collapseSignal > 0 && expanded) {
-      setLocalExpanded(false);
-      setExpandedCount((c) => c - 1);
-    }
-  }, [collapseSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (standalone || !command || command.nonce === answered.current) return;
+    answered.current = command.nonce;
+    setLocalExpanded(command.kind === "expand");
+    setObeyed(command.nonce);
+  }, [command, standalone]);
 
   useEffect(() => {
     if (standalone) return;
     if (!expandForRef || !refIdsToWatch || refIdsToWatch.length === 0) return;
     if (refIdsToWatch.includes(expandForRef)) {
-      setLocalExpanded((prev) => {
-        if (!prev) setExpandedCount((c) => c + 1);
-        return true;
-      });
+      setLocalExpanded(true);
+      setObeyed(null);
       if (clearJumpSignal) setExpandForRef(null);
     }
   }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,36 +114,17 @@ export function useGroupExpansion({
       onToggle();
       return;
     }
-    if (standalone) {
-      setLocalExpanded((prev) => !prev);
-      return;
-    }
-    setLocalExpanded((prev) => {
-      setExpandedCount((c) => (prev ? c - 1 : c + 1));
-      return !prev;
-    });
+    setLocalExpanded((prev) => !prev);
+    setObeyed(null);
   };
 
-  return { expanded, toggle };
+  return { expanded, toggle, obeyed };
 }
 
-/** A tree LEAF's answer to the same jump: open, then clear the signal so the
- *  next jump starts clean. No counters — a leaf's inline evidence is not one of
- *  the groups CollapseControls counts, and never was.
- *
- *  `HubNode` and `AggregateNode` hand-rolled this identically, one per node
- *  type, differing only in which id list they matched against. */
-export function useAutoExpandOnRefJump(refIds: string[]) {
-  const [expanded, setExpanded] = useState(false);
-  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
-
-  useEffect(() => {
-    if (!expandForRef) return;
-    if (refIds.includes(expandForRef)) {
-      if (!expanded) setExpanded(true);
-      setExpandForRef(null);
-    }
-  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return { expanded, toggle: () => setExpanded((e) => !e) };
+/** The collapse pair's view of this scope's groups. */
+export function useGroupTotals(): { expanded: number; total: number } {
+  const scopeKey = useRelScopeKey();
+  const [all] = useAtom(relGroupStatesAtom);
+  const states = Object.values(all[scopeKey] ?? {});
+  return { expanded: states.filter(Boolean).length, total: states.length };
 }
