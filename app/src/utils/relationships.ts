@@ -187,7 +187,17 @@ export function deriveHubs(refs: Reference[]): Hub[] {
  *  The list counts references (one row each); the tree counts connections
  *  (aggregates plus hubs), so the same group reads 123 in one and 51 in the
  *  other, and the unit is what says so. */
-export function countOf(n: number, unit: "reference" | "connection"): string {
+/** THE relationship count: references merged by (target, relationship
+ *  type), a hub's members counted as the relationships they are. The tree's
+ *  headers, the graph and the published view all count with it, so their
+ *  numbers agree; the tab and the list count references (`refs.length`).
+ *  The two differ where references repeat a (target, type), most often an
+ *  edge stored in both directions. */
+export function relationshipCount(refs: Reference[]): number {
+  return deriveRelationships(refs, { includeHubMembers: true }).length;
+}
+
+export function countOf(n: number, unit: "reference" | "relationship"): string {
   return `${n.toLocaleString()} ${unit}${n === 1 ? "" : "s"}`;
 }
 

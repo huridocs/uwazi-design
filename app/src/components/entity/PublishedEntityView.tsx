@@ -104,7 +104,7 @@ export function PublishedEntityView() {
   // the main column as a grid.
   const narrative = reading.length > 0;
   const factsInSide = narrative && facts.length > 0;
-  const hasSide = factsInSide || rels.entities > 0;
+  const hasSide = factsInSide || rels.listed > 0;
   const edited = entity?.updatedAt ?? entity?.createdAt;
 
   const factList = (
@@ -246,7 +246,7 @@ export function PublishedEntityView() {
               {hasFiles && <SupportingFiles profile={profile} language={language} />}
             </div>
 
-            {rels.entities > 0 && (
+            {rels.listed > 0 && (
               <aside
                 data-part="side"
                 aria-labelledby="published-relationships"
@@ -397,27 +397,29 @@ type RelRow = { entityId: string; types: RelationType[] };
 /** The entity's relationships as the entities they reach: one row per entity
  *  with every relationship type that links it, grouped by the entity's
  *  template, in first-seen order. Relationships the page already shows as a
- *  fact or a table (`shown`) are left out; an entity left with no type is
- *  dropped. Hub members are listed as the entities they are. */
+ *  fact or a table (`shown`) are left out of the rows; an entity left with no
+ *  type is dropped. Hub members are listed as the entities they are. The
+ *  summary counts every relationship (`relationshipCount`, as the tree and the
+ *  graph do), the ones shown as facts included. */
 function relationshipGroups(references: Reference[], shown: Set<string>) {
   const rows = new Map<string, RelRow>();
-  for (const rel of deriveRelationships(references, { includeHubMembers: true })) {
+  const all = deriveRelationships(references, { includeHubMembers: true });
+  for (const rel of all) {
     if (shown.has(linkKey(rel.relationType, rel.targetEntityId))) continue;
     const row = rows.get(rel.targetEntityId) ?? { entityId: rel.targetEntityId, types: [] };
     if (!row.types.includes(rel.relationType)) row.types.push(rel.relationType);
     rows.set(rel.targetEntityId, row);
   }
   const byTemplate = new Map<string, RelRow[]>();
-  let links = 0;
   for (const row of rows.values()) {
     const typeId = getEntity(row.entityId)?.typeId ?? "";
     byTemplate.set(typeId, [...(byTemplate.get(typeId) ?? []), row]);
-    links += row.types.length;
   }
   return {
     groups: [...byTemplate].map(([typeId, list]) => ({ typeId, rows: list })),
-    links,
-    entities: rows.size,
+    links: all.length,
+    entities: new Set(all.map((r) => r.targetEntityId)).size,
+    listed: rows.size,
   };
 }
 

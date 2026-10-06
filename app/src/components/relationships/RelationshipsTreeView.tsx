@@ -12,7 +12,7 @@ import { useFilteredReferences } from "./useFilteredReferences";
 import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
-import { Hub, Relationship, countOf, deriveHubs, deriveRelationships } from "../../utils/relationships";
+import { Hub, Relationship, countOf, deriveHubs, deriveRelationships, relationshipCount } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -97,8 +97,8 @@ export function RelationshipsTreeView() {
                   title={getGroupLabel(key, groupBy)}
                   highlight={query}
                   color={getGroupColor(key, groupBy)}
-                  count={deriveRelationships(refs).length + deriveHubs(refs).length}
-                  countLabel={countOf(deriveRelationships(refs).length + deriveHubs(refs).length, "connection")}
+                  count={relationshipCount(refs)}
+                  countLabel={countOf(relationshipCount(refs), "relationship")}
                   refIdsToWatch={refs.map((r) => r.id)}
                   defaultExpanded
                 >
@@ -114,8 +114,8 @@ export function RelationshipsTreeView() {
                           title={getGroupLabel(subKey, subGroupBy)}
                           highlight={query}
                           color={getGroupColor(subKey, subGroupBy)}
-                          count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
-                          countLabel={countOf(deriveRelationships(subRefs).length + deriveHubs(subRefs).length, "connection")}
+                          count={relationshipCount(subRefs)}
+                          countLabel={countOf(relationshipCount(subRefs), "relationship")}
                           refIdsToWatch={subRefs.map((r) => r.id)}
                           defaultExpanded
                         >
