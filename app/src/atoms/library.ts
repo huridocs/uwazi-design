@@ -595,10 +595,22 @@ export const libraryFieldColumnsAtom = atom((get) => {
   return propertyColumns(inView.length ? inView : templates);
 });
 
-/** The sort keys the Library's templates add: one per property flagged
- *  `prioritySorting` (Uwazi: "the system will try to pick up the best fit"),
- *  by name, labelled as the first template has it. */
-export const libraryPropertySortsAtom = atom<Choice[]>((get) => propertySorts(get(templatesAtom(get(dataSourceAtom)))));
+/** The sort keys a collection adds to the fixed ones: Date modified where its
+ *  records carry an edit date (the Sample; CEJIL and Nepal record none), then
+ *  one per property flagged `prioritySorting` (Uwazi: "the system will try to
+ *  pick up the best fit"), by name, labelled as the first template has it. */
+const MODIFIED_SORT: Choice = { id: "modified", label: "Date modified" };
+const libraryHasEditDatesAtom = atom((get) => get(libraryEntitiesAtom).some((e) => !!e.updatedAt));
+export const libraryPropertySortsAtom = atom<Choice[]>((get) => {
+  const props = propertySorts(get(templatesAtom(get(dataSourceAtom))));
+  return get(libraryHasEditDatesAtom) ? withModified(props) : props;
+});
+const modifiedCache = new WeakMap<Choice[], Choice[]>();
+function withModified(props: Choice[]): Choice[] {
+  let hit = modifiedCache.get(props);
+  if (!hit) modifiedCache.set(props, (hit = [MODIFIED_SORT, ...props]));
+  return hit;
+}
 const sortsCache = new WeakMap<object, Choice[]>();
 function propertySorts(templates: { properties: { name: string; label: string; prioritySorting?: boolean }[] }[]): Choice[] {
   const hit = sortsCache.get(templates);
@@ -844,6 +856,8 @@ export type LibrarySort =
   | "connections"
   | "type"
   | "country"
+  // The last edit, or creation for a record never edited (Uwazi's editDate).
+  | "modified"
   // A template property with Uwazi's `prioritySorting` (spec §6.4).
   | `prop:${string}`;
 export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";

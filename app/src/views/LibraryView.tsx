@@ -757,6 +757,9 @@ export function LibraryView() {
         case "connections":
           r = (countByEntity.get(a.id) ?? 0) - (countByEntity.get(b.id) ?? 0);
           break;
+        case "modified":
+          r = (a.updatedAt ?? a.createdAt ?? "").localeCompare(b.updatedAt ?? b.createdAt ?? "");
+          break;
         default:
           if (sort.startsWith("prop:")) {
             // A prioritySorting property: dates and numbers by value, the rest
