@@ -52,13 +52,15 @@ export const librarySearchDraftAtom = atom(
     // The commit runs filter, rank, count and snippets over the whole corpus
     // (multi-second main-thread tasks when synchronous). As a transition React can
     // abandon it on the next keystroke; see `useDeferredValue` in `LibraryView`.
+    // A search does not change the view: the view in front keeps its place and
+    // marks the matches, and the drawer's Results tab lists them.
     if (next.trim())
       startTransition(() => {
-        // Switch views only when the first character commits; later keystrokes
-        // refine the query and must not move the view again.
+        // The moment a search becomes active: on a phone, arm its Results
+        // sheet, which opens on submit (`submitLibrarySearchAtom`).
         const becomingActive = !get(libraryQueryAtom).trim();
         set(libraryQueryAtom, next);
-        if (becomingActive) set(enterSearchResultsAtom);
+        if (becomingActive && get(breakpointAtom) === "mobile") set(resultsSheetArmedAtom, true);
       });
   },
 );
@@ -156,17 +158,11 @@ export const librarySearchMatchInputAtom = atom(
   },
 );
 
-/** Ends the search: empties the box and the committed query, and restores the
- *  view the search replaced. The only route back to no search; the box's own X
- *  clears just the text. */
-export const clearLibrarySearchAtom = atom(null, (get, set) => {
+/** Ends the search: empties the box and the committed query. The view stays.
+ *  The only route back to no search; the box's own X clears just the text. */
+export const clearLibrarySearchAtom = atom(null, (_get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
-  const prior = get(preSearchViewModeAtom);
-  // Restore only if the user is still on Results; a view they chose themselves stays.
-  if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
-  set(preSearchViewModeAtom, null);
-  set(searchModeOverriddenAtom, false);
   set(libraryResultsSheetOpenAtom, false);
   set(resultsSheetArmedAtom, false);
   // A sort picked during the search applies to that search only (see `librarySortAtom`).
@@ -498,11 +494,6 @@ export const libraryChainFiltersAtom = atom<
  *  registry; declare new modes there. */
 export type { LibraryViewMode };
 
-/** The view before a search switched to Results, and whether the user overruled
- *  that for the current query. Both reset when the search is dismissed. */
-const preSearchViewModeAtom = atom<LibraryViewMode | null>(null);
-const searchModeOverriddenAtom = atom(false);
-
 /** The view the reader picked, or null: until they pick one, the Library
  *  opens on the collection's default view (Settings › Collection). */
 const viewModeChosenAtom = atom<LibraryViewMode | null>(null);
@@ -539,37 +530,12 @@ export const submitLibrarySearchAtom = atom(null, (get, set) => {
   set(libraryResultsSheetOpenAtom, true);
 });
 
-/** The library's view mode. Leaving Results while a query runs overrules the
- *  search: it stops switching the view and does not restore the prior view when
- *  it ends. The next search after a dismissal switches again. */
+/** The library's view mode. A search does not write it (see
+ *  `librarySearchDraftAtom`); Adv. Search is a view the reader picks. */
 export const libraryViewModeAtom = atom(
   (get) => get(viewModeStateAtom),
-  (get, set, next: LibraryViewMode) => {
-    if (next !== "results" && get(libraryQueryAtom).trim()) {
-      set(searchModeOverriddenAtom, true);
-      set(preSearchViewModeAtom, null);
-    }
-    set(viewModeStateAtom, next);
-  },
+  (_get, set, next: LibraryViewMode) => set(viewModeStateAtom, next),
 );
-
-/** A query became active: switch to Results and remember the displaced mode for
- *  `clearLibrarySearchAtom`. Called from the commit, not from a component effect,
- *  so the switch does not depend on which views are mounted. */
-const enterSearchResultsAtom = atom(null, (get, set) => {
-  // Phones keep the current view and open the Results sheet over it on submit;
-  // here it is only armed (see `submitLibrarySearchAtom`).
-  if (get(breakpointAtom) === "mobile") {
-    set(resultsSheetArmedAtom, true);
-    return;
-  }
-  if (get(searchModeOverriddenAtom)) return;
-  const mode = get(viewModeStateAtom);
-  // The Network view dims what a search leaves out, in place, so it keeps the view.
-  if (mode === "results" || mode === "network") return;
-  set(preSearchViewModeAtom, mode);
-  set(viewModeStateAtom, "results");
-});
 
 /** Results body layout, four readings of the same snippets:
  *  - `grouped`   one wide card per entity: its matched properties beside its
@@ -1227,13 +1193,11 @@ export const libraryHasNarrowingAtom = atom(
 
 /** The Library's private state, for `atoms/savedViews.ts` only: a saved view
  *  must restore the sort and view exactly as the reader left them (whether
- *  they picked the sort, the view a search displaced), which the public atoms
+ *  they picked the sort and the view), which the public atoms
  *  derive and cannot be written back through. */
 export const libraryStateInternals = {
   searchDraftStateAtom,
   viewModeChosenAtom,
-  preSearchViewModeAtom,
-  searchModeOverriddenAtom,
   sortStateAtom,
   sortDirStateAtom,
   userSortedAtom,

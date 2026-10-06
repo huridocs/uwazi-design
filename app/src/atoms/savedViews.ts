@@ -91,9 +91,6 @@ export interface LibrarySnapshot {
   searchMatch?: QueryMatchMode;
   /** The view the reader picked; null = the collection's default view. */
   viewMode: LibraryViewMode | null;
-  /** The view a running search displaced, and whether the reader overruled it. */
-  preSearchView: LibraryViewMode | null;
-  searchOverridden: boolean;
   display: LibraryDisplayState;
   sort: {
     key: LibrarySort;
@@ -140,8 +137,6 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     ...(get(librarySearchScopeAtom) !== "all" ? { searchScope: get(librarySearchScopeAtom) } : {}),
     ...(get(librarySearchMatchAtom) !== "partial" ? { searchMatch: get(librarySearchMatchAtom) } : {}),
     viewMode: get(L.viewModeChosenAtom),
-    preSearchView: get(L.preSearchViewModeAtom),
-    searchOverridden: get(L.searchModeOverriddenAtom),
     display: get(libraryDisplayAtom),
     sort: {
       key: get(L.sortStateAtom),
@@ -198,8 +193,6 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   // evidence; before it loads, `libraryViewModeAtom` reads it as the default.
   const noEvidence = s.viewMode === "evidence" && get(libraryCorpusReadyAtom) && !get(libraryHasClaimEvidenceAtom);
   set(L.viewModeChosenAtom, noEvidence ? null : s.viewMode);
-  set(L.preSearchViewModeAtom, s.query ? s.preSearchView : null);
-  set(L.searchModeOverriddenAtom, s.query ? s.searchOverridden : false);
   set(libraryResultsSheetOpenAtom, false);
   set(L.resultsSheetArmedAtom, false);
   set(libraryDisplayAtom, s.display);
