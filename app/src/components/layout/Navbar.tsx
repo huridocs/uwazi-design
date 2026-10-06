@@ -26,6 +26,8 @@ import {
   settingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsToolsItems,
+  settingsAccessAtom,
+  settingsItemLabelAtom,
   settingsEntryOf,
   settingsDocumentation,
 } from "../../atoms/settings";
@@ -113,10 +115,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
-  // The Tools dropdown IS the Tools settings group — one list, not a hardcoded
-  // copy of it that had drifted into five mostly-disabled placeholders while the
-  // real pages sat unreachable in the settings rail.
-  const toolsItems = settingsToolsItems();
+  // The Tools dropdown reads the Tools settings group, so the two lists cannot drift.
+  // Only what the signed-in role reaches: a collaborator has no Tools
+  // (`atoms/settings.ts`), and Import CSV is for admins.
+  const settingsAllowed = useAtomValue(settingsAccessAtom);
+  const itemLabel = useAtomValue(settingsItemLabelAtom);
+  const toolsItems = settingsToolsItems()
+    .filter((i) => settingsAllowed(i.id))
+    .map((i) => ({ ...i, label: itemLabel(i) }));
 
   /** Open a settings destination. The rail scopes itself to the group the
    *  section belongs to, so this is also what picks User vs System vs Tools.
