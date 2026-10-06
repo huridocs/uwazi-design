@@ -93,7 +93,7 @@ export function CardValue({
   if (field.kind === "dateSpan" || field.kind === "date") {
     return (
       <span data-component="CardValue" data-kind={field.kind} className="truncate tabular-nums" title={field.value}>
-        {marked(field.kind === "date" ? formatDateText(field.value) : field.value)}
+        {marked(formatDateText(field.value))}
       </span>
     );
   }

@@ -24,6 +24,9 @@ import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
 import { getEntityType } from "../data/entities";
 import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
+import { formatDateDisplay, formatMomentSpan } from "../utils/dateFormat";
+import { dateBoundMs } from "../utils/timeline";
+import { dateFormatAtom } from "../atoms/settingsSingletons";
 
 export interface ActiveFilter {
   id: string;
@@ -48,6 +51,8 @@ export interface ActiveFilter {
 export function useActiveFilters(): ActiveFilter[] {
   const dataSource = useAtomValue(dataSourceAtom);
   const language = useAtomValue(languageAtom);
+  // Date chips print in the collection's format: a change re-labels them.
+  const datePattern = useAtomValue(dateFormatAtom);
   // The chip shows — and drops — the COMMITTED query, not the box's text.
   const query = useAtomValue(libraryQueryAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
@@ -151,8 +156,12 @@ export function useActiveFilters(): ActiveFilter[] {
       out.push({
         id: "date",
         group: "Date",
-        // A timed bound reads "2025-09-08 12:30".
-        label: `${dateFrom.replace("T", " ") || "…"} → ${dateTo.replace("T", " ") || "…"}`,
+        // In the collection's date format; a timed bound adds ", 12:30".
+        label: formatMomentSpan(
+          dateBoundMs(dateFrom, "from"),
+          dateBoundMs(dateTo, "from"),
+          dateFrom.includes("T") || dateTo.includes("T"),
+        ),
         remove: () => {
           setDateFrom("");
           setDateTo("");
@@ -206,7 +215,8 @@ export function useActiveFilters(): ActiveFilter[] {
         continue;
       }
       if (!b?.from && !b?.to) continue;
-      const span = `${b.from || "…"} → ${b.to || "…"}`;
+      const end = (v: string | undefined) => (v ? (def.kind === "date" ? formatDateDisplay(v) : v) : "…");
+      const span = `${end(b.from)} – ${end(b.to)}`;
       out.push({
         id: `range-${def.name}`,
         group: mode === "any" ? def.label : `${def.label} · ${mode}`,
@@ -265,6 +275,7 @@ export function useActiveFilters(): ActiveFilter[] {
     groups,
     dataSource,
     language,
+    datePattern,
     clearSearch,
     setTypeFilters,
     setHasDocOnly,

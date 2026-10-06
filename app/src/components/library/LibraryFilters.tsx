@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
 import type { Entity } from "../../data/entities";
 import {
@@ -1612,7 +1612,9 @@ function DateRangeCard({
 const withTime = (day: string, time: string) => (day && time ? `${day}T${time}` : day);
 
 /** Hours and minutes for a bound, in UTC like the records. Empty = the whole
- *  day. */
+ *  day. A text field, 24-hour ("16:00"): a native time input follows the
+ *  browser's locale and printed "04:00 PM" beside dates in the collection's
+ *  format. Text that is not a time is kept as typed and dropped on blur. */
 function TimeBox({
   value,
   onChange,
@@ -1624,12 +1626,33 @@ function TimeBox({
   ariaLabel: string;
   disabled?: boolean;
 }) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const parse = (t: string) => {
+    const m = /^(\d{1,2}):?(\d{2})$/.exec(t.trim());
+    if (!m || +m[1] > 23 || +m[2] > 59) return null;
+    return `${m[1].padStart(2, "0")}:${m[2]}`;
+  };
   return (
     <input
-      type="time"
-      value={value}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="hh:mm"
+      value={text}
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => {
+        setText(e.target.value);
+        if (!e.target.value.trim()) return onChange("");
+        // While typing, only "h:mm" commits; "1630" waits for the blur.
+        const t = e.target.value.includes(":") ? parse(e.target.value) : null;
+        if (t) onChange(t);
+      }}
+      onBlur={() => {
+        const t = parse(text);
+        if (t && t !== value) onChange(t);
+        setText(t ?? (text.trim() ? value : ""));
+      }}
       aria-label={ariaLabel}
       className="flex-1 min-w-0 w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary tabular-nums
         focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all disabled:opacity-50"

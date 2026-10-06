@@ -48,6 +48,7 @@ export function kindOfUwaziType(type: string): PropertyKind | undefined {
       return "chips";
     case "date":
     case "datasection":
+    case "daterange":
       return "date";
     case "multidate":
     case "multidaterange":

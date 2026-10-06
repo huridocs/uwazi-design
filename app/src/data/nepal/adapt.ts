@@ -7,14 +7,15 @@ import type { LatLng } from "../geo";
 import type { PropertyDef, TemplateDef } from "../templates/types";
 import { kindOfUwaziType } from "../../utils/propertyKind";
 import { asset } from "../../utils/asset";
-import { displayStrings, latLngOf } from "../../utils/templateProjection";
+import { displayStrings, hourPrecise, latLngOf } from "../../utils/templateProjection";
 import { nepalTemplateById } from "./schema";
 import { nepalCorpus, nepalDoc, nepalEntity, nepalRefsByEntity } from "./load";
 import { languageName, lengthRow, quoteRows, registerContentProvider, type EntityContent } from "../../utils/entityContent";
 import type { NepalEntity, NepalReference } from "./types";
 
 /** One property's values as display strings. */
-export const displayValues = (p: PropertyDef, e: NepalEntity): string[] => displayStrings(p.type, e.metadata[p.name]);
+export const displayValues = (p: PropertyDef, e: NepalEntity): string[] =>
+  displayStrings(p.type, e.metadata[p.name], hourPrecise(e.metadata));
 
 /** A card's candidate lines: every displayable property, in template order.
  *  The card shows the ones its template marks `showInCard`

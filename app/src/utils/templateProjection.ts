@@ -107,20 +107,30 @@ export interface RecordContext {
   template: (id: string) => TemplateDef | undefined;
 }
 
-/** Dates are epoch seconds in both dumps; the record prints dd/mm/yyyy. */
-export function fmtDate(v: unknown): string {
+/** Dates are epoch seconds in both dumps; the record prints dd/mm/yyyy, and
+ *  "dd/mm/yyyy HH:mm" when the record is timed to the hour (`hourPrecise`).
+ *  The display (`formatDateText`) puts it in the collection's format. */
+export function fmtDate(v: unknown, withTime = false): string {
   if (typeof v !== "number" || !Number.isFinite(v) || v <= 0) return "";
   const d = new Date(v * 1000);
   const p = (n: number) => String(n).padStart(2, "0");
-  return `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+  const day = `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+  return withTime ? `${day} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}` : day;
 }
 
-function fmtRange(v: unknown): string {
+function fmtRange(v: unknown, withTime = false): string {
   const r = v as { from?: unknown; to?: unknown } | undefined;
-  const a = fmtDate(r?.from);
-  const b = fmtDate(r?.to);
+  const a = fmtDate(r?.from, withTime);
+  const b = fmtDate(r?.to, withTime);
   if (a && b) return `${a} – ${b}`;
   return a ? `${a} –` : b ? `– ${b}` : "";
+}
+
+/** A record whose `precision` property says Hour (the Nepal collection's
+ *  events, "Police fire on protesters…" 12:37–16:00) prints its dates with
+ *  the time of day. Uwazi stores no precision of its own. */
+export function hourPrecise(values: Record<string, RawValue[] | undefined>): boolean {
+  return values.precision?.[0]?.value === "hour";
 }
 
 /** `{lat, lon}` as both dumps write it (`lng` accepted). */
@@ -132,18 +142,18 @@ export function latLngOf(v: unknown): { lat: number; lng: number } | undefined {
 
 /** One property's values as display strings, by its type. A thesaurus or
  *  relationship value prints its label. */
-export function displayStrings(type: PropertyType, vals: RawValue[] | undefined): string[] {
+export function displayStrings(type: PropertyType, vals: RawValue[] | undefined, withTime = false): string[] {
   const out: string[] = [];
   for (const v of vals ?? []) {
     let s = "";
     switch (type) {
       case "date":
       case "multidate":
-        s = fmtDate(v.value);
+        s = fmtDate(v.value, withTime);
         break;
       case "daterange":
       case "multidaterange":
-        s = fmtRange(v.value);
+        s = fmtRange(v.value, withTime);
         break;
       case "geolocation": {
         const c = latLngOf(v.value);
@@ -201,6 +211,7 @@ export function recordFieldsFor(
   ctx: RecordContext,
 ): AnyMetadataField[] {
   const out: AnyMetadataField[] = [];
+  const withTime = hourPrecise(values);
   for (const p of template?.properties ?? []) {
     const vals = (values[p.name] ?? []).filter((v) => v && v.value !== null && v.value !== undefined && v.value !== "");
     if (p.type === "preview" || p.type === "nested") continue;
@@ -239,7 +250,7 @@ export function recordFieldsFor(
       });
       continue;
     }
-    const strings = displayStrings(p.type, vals);
+    const strings = displayStrings(p.type, vals, withTime);
     if (!strings.length) {
       const blank = blankField(ctx.corpus, p, "EN");
       if (blank) out.push({ ...blank, label: base.label });

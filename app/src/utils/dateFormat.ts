@@ -66,24 +66,73 @@ export const activeDatePattern = () => active;
 const FULL_DATE =
   /^(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|\d{1,2}\s+(?:de\s+)?\p{L}+\s+(?:de\s+)?\d{4}|\p{L}+\s+\d{1,2},\s*\d{4})$/u;
 
-/** A stored date value as the collection prints dates. Anything that is not
- *  a whole day is returned unchanged. */
-export function formatDateDisplay(raw: string | null | undefined, pattern: DatePattern = active): string {
-  const value = (raw ?? "").trim();
-  if (!FULL_DATE.test(value)) return raw ?? "";
-  const d = parseDateValue(value);
-  return d ? formatWithPattern(d, pattern) : value;
+/** A day with a time of day after it ("08/09/2025 12:37", "2025-09-08T12:37"):
+ *  what a record whose precision is Hour stores. */
+const WITH_TIME = /^(.+?)[ T](\d{2}:\d{2})$/;
+
+/** "12:37": hours and minutes, 24-hour, UTC like the stored values. */
+export function formatTime(ms: number): string {
+  const d = new Date(ms);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
-/** A date or a date range ("a – b") as the collection prints dates. */
+/** An instant as the collection prints dates, with ", 12:37" when the time
+ *  matters. Every surface that prints a moment (the brush, the date chip, a
+ *  timed field) goes through this, so one collection has one date format. */
+export function formatMoment(ms: number, withTime: boolean, pattern: DatePattern = active): string {
+  const day = formatWithPattern(new Date(ms), pattern);
+  return withTime ? `${day}, ${formatTime(ms)}` : day;
+}
+
+/** Two instants as one span: a single day prints once ("2025/09/08, 12:37–16:00"
+ *  or "2025/09/08"), an open end reads "Since …" / "Until …". */
+export function formatMomentSpan(from: number | null, to: number | null, withTime: boolean, pattern: DatePattern = active): string {
+  if (from !== null && to !== null) {
+    const a = formatWithPattern(new Date(from), pattern);
+    const b = formatWithPattern(new Date(to), pattern);
+    if (a === b) return withTime ? `${a}, ${formatTime(from)}–${formatTime(to)}` : a;
+    return `${formatMoment(from, withTime, pattern)} – ${formatMoment(to, withTime, pattern)}`;
+  }
+  if (from !== null) return `Since ${formatMoment(from, withTime, pattern)}`;
+  if (to !== null) return `Until ${formatMoment(to, withTime, pattern)}`;
+  return "";
+}
+
+/** A stored date value as the collection prints dates, with its time of day
+ *  when it has one. Anything that is not a whole day is returned unchanged. */
+export function formatDateDisplay(raw: string | null | undefined, pattern: DatePattern = active): string {
+  const value = (raw ?? "").trim();
+  const timed = WITH_TIME.exec(value);
+  const day = timed ? timed[1] : value;
+  if (!FULL_DATE.test(day)) return raw ?? "";
+  const d = parseDateValue(day);
+  if (!d) return value;
+  return timed ? `${formatWithPattern(d, pattern)}, ${timed[2]}` : formatWithPattern(d, pattern);
+}
+
+/** A date or a date range ("a – b") as the collection prints dates. A range
+ *  inside one day prints the day once; an open range ("a –", "– b") reads
+ *  "Since a" / "Until b" instead of ending on a dash. */
 export function formatDateText(raw: string | null | undefined, pattern: DatePattern = active): string {
-  const value = raw ?? "";
-  return value.includes(" – ")
-    ? value
-        .split(" – ")
-        .map((p) => formatDateDisplay(p, pattern))
-        .join(" – ")
-    : formatDateDisplay(value, pattern);
+  const value = (raw ?? "").trim();
+  const open = /^(.+?)\s+–$/.exec(value);
+  if (open) return `Since ${formatDateDisplay(open[1], pattern)}`;
+  const until = /^–\s+(.+)$/.exec(value);
+  if (until) return `Until ${formatDateDisplay(until[1], pattern)}`;
+  if (!value.includes(" – ")) return formatDateDisplay(raw, pattern);
+  const [a, b] = value.split(" – ");
+  const ta = WITH_TIME.exec(a);
+  const tb = WITH_TIME.exec(b);
+  const dayA = formatDateDisplay(ta ? ta[1] : a, pattern);
+  const dayB = formatDateDisplay(tb ? tb[1] : b, pattern);
+  if (dayA === dayB && FULL_DATE.test((ta ? ta[1] : a).trim())) {
+    if (ta && tb) return ta[2] === tb[2] ? `${dayA}, ${ta[2]}` : `${dayA}, ${ta[2]}–${tb[2]}`;
+    return ta ? `${dayA}, ${ta[2]}` : dayA;
+  }
+  return value
+    .split(" – ")
+    .map((p) => formatDateDisplay(p, pattern))
+    .join(" – ");
 }
 
 /** Text typed in the active pattern → `yyyy-mm-dd`, or "" when it is not a
