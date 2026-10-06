@@ -166,8 +166,9 @@ export const seedCsvImports: CsvImport[] = [
   },
   {
     id: "imp5",
-    filename: "hearings-2026.csv",
-    templateId: "hearing",
+    // Main's Sample has no Hearing template (playground's Sample v4 does).
+    filename: "judgments-2026.csv",
+    templateId: "judgment",
     status: "queued",
     created: at("2026-02-20T11:17:26"),
     updated: at("2026-02-20T11:17:26"),

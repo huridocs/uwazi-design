@@ -71,7 +71,8 @@ export interface IxExtractor {
 export const seedIxExtractors: IxExtractor[] = [
   { id: "ix1", name: "Date filed", property: "dateFiled", templates: ["court_case"], source: "pdf", status: "ready" },
   { id: "ix2", name: "Respondent state", property: "respondent", templates: ["court_case"], source: "pdf", status: "ready" },
-  { id: "ix3", name: "Hearing and judgment date", property: "date", templates: ["hearing", "judgment"], source: "pdf", status: "ready" },
+  // Main's Sample has no Hearing template (playground's Sample v4 does).
+  { id: "ix3", name: "Judgment date", property: "date", templates: ["judgment"], source: "pdf", status: "ready" },
   { id: "ix4", name: "Country region", property: "region", templates: ["country"], source: "title", status: "ready" },
   {
     id: "ix5",
