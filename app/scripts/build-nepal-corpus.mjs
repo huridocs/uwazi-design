@@ -308,10 +308,26 @@ function titleFor(e) {
 }
 for (const e of seedEntities) titleOf.set(e.id, titleFor(e));
 
+/** Commons photos reviewed out of the bundle (Juan, 2026-10-05): two show
+ *  people who are likely minors, one a private person. The records stay, as
+ *  link-only items pointing at the Commons file page: no copy is shipped and
+ *  a rebuild never brings one back. */
+const NOT_BUNDLED = new Set([
+  "media:photo-2025-09-08-chitwan-protest-8-sep-1",
+  "media:photo-2025-09-08-chitwan-protest-8-sep-3",
+  "media:photo-2025-08-16-singha-durbar-august-2025",
+]);
+function withoutBundledCopy(e) {
+  if (!NOT_BUNDLED.has(e.id)) return e.properties;
+  if (!e.properties.page_url?.url) throw new Error(`${e.id}: kept link-only, but it has no page_url to link to`);
+  const { file: _file, file_size_bytes: _size, ...rest } = e.properties;
+  return { ...rest, rights: "link-only" };
+}
+
 const entities = seedEntities.map((e) => {
   const tpl = templateById.get(tplId(e.template));
   if (!tpl) throw new Error(`${e.id}: unknown template ${e.template}`);
-  const props = e.properties;
+  const props = withoutBundledCopy(e);
   if (e.template === "casualty") {
     const minor = typeof props.age === "number" && props.age < 18;
     if ((minor || props.identity_status === "withheld") && props.full_name)
