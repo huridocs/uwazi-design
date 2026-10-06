@@ -54,16 +54,11 @@ function swallowNextClick() {
   document.addEventListener("pointercancel", onUp, true);
 }
 
-/** Layers narrow by this much per level from the start edge, so the layers
- *  beneath show as edges; deeper than MAX_STEP levels they stop narrowing. */
-const STEP_REM = 1;
-const MAX_STEP = 3;
-
 /** One layer of the desktop preview stack (`overlayStackBase`, the model the
  *  phone's sheets use). Layer 0 covers its host; each deeper layer is mounted
  *  in the layer below's `overlay` slot, so it starts under that layer's title
  *  row (the titles read as a hierarchy, top to bottom) and runs to the bottom
- *  edge, 1rem narrower from the start edge. A pill inside a layer pushes the
+ *  edge, at the same width and edges as the layer it covers. A pill inside a layer pushes the
  *  next one; Back, × and Escape pop one; "Close all" appears from the second
  *  layer; a click on a covered title returns to that layer. */
 function OverlayLayer({ depth }: { depth: number }) {
@@ -156,13 +151,14 @@ function OverlayLayer({ depth }: { depth: number }) {
     };
   });
 
-  const step = Math.min(depth, MAX_STEP);
   const width =
     depth === 0
       ? drawerWidth === null
         ? "calc(100% - 0.75rem)"
         : `calc(${drawerWidth}px - 0.75rem)`
-      : `calc(100% - ${step > 0 && depth <= MAX_STEP ? STEP_REM : 0}rem)`;
+      : // The slot sits inside the layer below's start border; 1px more puts
+        // this layer's border on top of it instead of beside it.
+        "calc(100% + 1px)";
 
   return (
     <>
@@ -195,8 +191,8 @@ function OverlayLayer({ depth }: { depth: number }) {
         }`}
         style={{
           /* Layer 0: the remembered drawer width, less the 0.75rem strip that
-             shows the panel is stacked on something. Deeper layers: 1rem
-             narrower than the layer below, from the start edge, capped. */
+             shows the panel is stacked on something. Deeper layers: the full
+             width of the layer below, so only the titles above them step. */
           width,
           maxWidth: depth === 0 ? "calc(100% - 0.75rem)" : undefined,
           zIndex: 21,
