@@ -365,20 +365,24 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:
   - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when at least
-    half of the filtered results can draw a preview: an image or a document's first page (CEJIL
-    file records, Sample documents, Nepal PDFs). Video and audio have no poster and do not count.
-    CEJIL therefore opens with thumbnails. The menu note gives the answer and the count
-    (`libraryThumbAutoAtom`, `previewCount`). Read the resolved answer from
-    `libraryCardInfoAtom.preview`, never the stored value. Under Auto, an entity with no preview
-    is a text card: no slot, its title and metadata span the slot's track (`TextRows` in
-    `EntityCard`). On keeps the slot on every card, with a `QuietMark` where there is none.
+    half of the filtered results have a preview: an image, a document's first page (CEJIL file
+    records, Sample documents, Nepal PDFs) or a recording (CEJIL Audiencias, which draw the
+    play tile; there are no posters). CEJIL therefore opens with thumbnails. The menu note gives
+    the answer and the count (`libraryThumbAutoAtom`, `previewCount`). Read the resolved answer
+    from `libraryCardInfoAtom.preview`, never the stored value. Whenever thumbnails are drawn,
+    by Auto or On, every card keeps the slot, with a `QuietMark` where there is no preview; a
+    grid row never mixes shapes. Off drops the slot from every card.
   - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]` with
     narrower columns (`cardGridCols`); Size sets the column count.
   - Fit (`libraryThumbFitAtom`): `auto` covers when the image's orientation matches the frame
     and mats otherwise; `cover` fills; `contain` mats.
   - Every box has a definite size before load. The list chip is always square.
-  - A document shows its whole first page, filling the portrait slot from the top.
-  - `PdfPageThumb` rasterises at the live box width and records it in `data-thumb-w`.
+  - A document shows its whole first page, filling the portrait slot from the top. In the
+    landscape band and the list chip (`fromText`) the sheet starts just above the page's first
+    line, measured per bitmap (`pdfThumbInk`), because the band otherwise showed blank margin.
+  - `PdfPageThumb` rasterises at the live box width and records it in `data-thumb-w`. Its
+    IntersectionObserver uses the nearest scroller as root; with the viewport as root the
+    600px margin never applied inside the Library pane. A failed render is not cached.
   - PDF thumbnails do not render in a background tab; use `scripts/check-thumbs.ts`.
 
 ### Notifications and Bert

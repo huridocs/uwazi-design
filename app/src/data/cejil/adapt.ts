@@ -1,6 +1,6 @@
 // Heavy adapter: maps CEJIL entities → the prototype's `Entity` shape for the
 // Library. Imported only by the library-data atom (pulls the full entity list).
-import type { CardField, CardMark, Entity, MediaMark } from "../entities";
+import type { CardField, CardMark, Entity, MediaMark, PreviewKind } from "../entities";
 import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
@@ -240,6 +240,17 @@ function fieldsOf(
     marks: marks.length ? marks : undefined,
     mediaKeys: Object.keys(mediaKeys).length ? mediaKeys : undefined,
   };
+}
+
+/** A card's preview: its document's first page, else its recording (an
+ *  Audiencia's hearing video), else nothing. A media value that names neither
+ *  video nor audio draws the video tile. */
+function previewOf(hasDoc: boolean, marks: CardMark[] | undefined): PreviewKind | undefined {
+  if (hasDoc) return "document";
+  if (!marks) return undefined;
+  if (marks.includes("video") || marks.includes("media")) return "video";
+  if (marks.includes("audio")) return "audio";
+  return undefined;
 }
 
 /** Does this property hold anything at all? The mark tier only needs presence —
@@ -530,7 +541,7 @@ export function cejilLibraryEntities(): Entity[] {
         title: e.title.trim(),
         typeId: e.template,
         published: e.published,
-        preview: docBearing.has(e.sharedId) ? ("document" as const) : undefined,
+        preview: previewOf(docBearing.has(e.sharedId), card.marks),
         country,
         geo,
         createdAt: createdOf(e, geo, causaDateBySid),

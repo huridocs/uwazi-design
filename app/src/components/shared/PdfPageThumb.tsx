@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { pdfThumb } from "../../utils/pdfThumb";
+import { pdfThumb, pdfThumbInk } from "../../utils/pdfThumb";
 import { DocPlaceholder } from "./DocPlaceholder";
 import { usePageLoupe } from "./PageLoupe";
 
@@ -31,6 +31,7 @@ export function PdfPageThumb({
   peek = false,
   lift = false,
   loupe = false,
+  fromText = false,
   className = "",
   style,
 }: {
@@ -47,6 +48,11 @@ export function PdfPageThumb({
   /** A loupe that magnifies the page under the pointer (`PageLoupe`). With
    *  `lift` it waits for the rise; otherwise only for a short beat. */
   loupe?: boolean;
+  /** Stack frame only: start the sheet just above the page's first line of
+   *  text instead of at its top edge. CEJIL pages open on 9% to 35% of blank
+   *  margin, so in the Library's wide band the top edge showed white paper and
+   *  at most the letterhead. */
+  fromText?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -56,6 +62,8 @@ export function PdfPageThumb({
   const [src, setSrc] = useState<string | null>(null);
   /** The rendered page's own ratio (w/h), once the bitmap is decoded. */
   const [pageAspect, setPageAspect] = useState<number | null>(null);
+  /** Where the page's text starts, as a fraction of its height. */
+  const [ink, setInk] = useState(0);
   /** The width to rasterise at, in CSS px, QUANTISED to 32.
    *
    *  It follows the box, because the box moves: switching frame or size re-lays
@@ -68,6 +76,10 @@ export function PdfPageThumb({
   useEffect(() => {
     const el = sheetRef.current;
     if (!el || visible || !url) return;
+    // The root is the nearest scroller. `rootMargin` grows only the root, and a
+    // scroller between the thumb and the viewport clips the target first, so
+    // with the viewport as root the margin did nothing: a card started
+    // rasterising only once it was inside the Library's pane.
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -75,7 +87,7 @@ export function PdfPageThumb({
           io.disconnect();
         }
       },
-      { rootMargin: "600px" },
+      { root: scrollParent(el), rootMargin: "600px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -124,7 +136,9 @@ export function PdfPageThumb({
     // `pdfThumb` keeps the framing path (and its cache key) so treatments can be
     // rendered and compared with `npm run check:thumbs`; nothing ships it.
     pdfThumb(url, w).then((data) => {
-      if (live) setSrc(data);
+      if (!live) return;
+      setSrc(data);
+      setInk(pdfThumbInk(url, w) ?? 0);
     });
     return () => {
       live = false;
@@ -138,6 +152,10 @@ export function PdfPageThumb({
   // the vellum ground instead. Anchored to the TOP because a page's masthead is
   // what identifies it — the trim comes off the footer.
   const matted = pageAspect !== null && pageAspect > 0.95;
+  const onLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.naturalHeight) setPageAspect(img.naturalWidth / img.naturalHeight);
+  };
 
   return (
     <div data-component="PdfPageThumb" className={className} style={style}>
@@ -153,7 +171,9 @@ export function PdfPageThumb({
           ref={sheetRef}
           data-part="page"
           data-thumb-w={renderW || undefined}
-          className="w-full h-full"
+          // `flow-root` keeps the image's negative top margin (`fromText`) from
+          // collapsing through to this box.
+          className="w-full h-full flow-root"
           {...(loupe ? lens.handlers : {})}
         >
           {src &&
@@ -164,21 +184,45 @@ export function PdfPageThumb({
                 data-part="image"
                 alt=""
                 aria-hidden
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  if (img.naturalHeight) setPageAspect(img.naturalWidth / img.naturalHeight);
-                }}
+                onLoad={onLoad}
                 className="w-full h-full"
                 style={{ objectFit: matted ? "contain" : "cover", objectPosition: "top" }}
               />
             ) : (
               /* Full width, natural height, running off the sheet's bottom the
-                 way a page in a stack does — the frame crops it. */
-              <img ref={lens.imgRef} src={src} data-part="image" alt="" aria-hidden className="w-full block" />
+                 way a page in a stack does — the frame crops it. With
+                 `fromText` the page is drawn from just above its first line. */
+              <img
+                ref={lens.imgRef}
+                src={src}
+                data-part="image"
+                alt=""
+                aria-hidden
+                onLoad={onLoad}
+                className="w-full block"
+                style={fromText && pageAspect ? { marginTop: textStartMargin(ink, pageAspect) } : undefined}
+              />
             ))}
         </div>
       </DocPlaceholder>
       {lens.lens}
     </div>
   );
+}
+
+/** The page's offset so its first line sits 0.375rem below the sheet's top
+ *  edge. A percentage margin resolves against the sheet's width, which is the
+ *  page's drawn width, so `ink / aspect` is the blank margin's height in it.
+ *  Never positive: a page with text at the very top stays where it is. */
+function textStartMargin(ink: number, pageAspect: number): string {
+  return `min(0px, calc(${(-(ink / pageAspect) * 100).toFixed(2)}% + 0.375rem))`;
+}
+
+/** The nearest ancestor that scrolls, or null for the viewport. */
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  for (let a = el.parentElement; a; a = a.parentElement) {
+    const { overflowY } = getComputedStyle(a);
+    if (overflowY === "auto" || overflowY === "scroll") return a;
+  }
+  return null;
 }

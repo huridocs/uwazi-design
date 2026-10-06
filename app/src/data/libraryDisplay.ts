@@ -191,8 +191,8 @@ const LANGUAGE: DisplaySection = {
 
 /** Thumbnail: Auto shows thumbnails when at least half of the current results
  *  can draw a preview, an image or a document's first page (`previewCount` in
- *  atoms/library.ts). On keeps a slot on every card, a `QuietMark` where there
- *  is nothing to draw; under Auto a record with none is a text card. The menu
+ *  atoms/library.ts). Whenever thumbnails are drawn, by On or by Auto, every
+ *  card keeps the slot, with a `QuietMark` where there is nothing to draw. The menu
  *  says what Auto resolved to and the count behind it. Stored `true` / `false`
  *  from the old switch read as On / Off. */
 export type ThumbMode = "auto" | "on" | "off";

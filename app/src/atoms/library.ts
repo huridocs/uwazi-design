@@ -747,20 +747,18 @@ export const libraryResultsPreviewCountAtom = atom<PreviewCount | null>(null);
 const corpusPreviewCountAtom = atom((get) => previewCount(get(libraryEntitiesAtom)));
 
 export interface PreviewCount {
-  /** Results whose card draws a picture: an image or a document's first page. */
+  /** Results whose card draws a preview: an image, a page or a recording tile. */
   withPreview: number;
   total: number;
 }
 
-/** Kinds that draw a picture. A document is its first page (CEJIL file
- *  records, Sample documents, Nepal PDFs). Video and audio count only once a
- *  record carries a poster; today none does and the slot is a drawn glyph. */
-const PICTURE_KINDS = new Set(["image", "document"]);
-
+/** Every preview kind counts: an image, a document's first page (CEJIL file
+ *  records, Sample documents, Nepal PDFs), and a recording, which has no poster
+ *  and draws a play or waveform tile (CEJIL Audiencias, Sample media). */
 export function previewCount(entities: readonly { preview?: string }[]): PreviewCount | null {
   if (entities.length === 0) return null;
   let n = 0;
-  for (const e of entities) if (e.preview && PICTURE_KINDS.has(e.preview)) n++;
+  for (const e of entities) if (e.preview) n++;
   return { withPreview: n, total: entities.length };
 }
 

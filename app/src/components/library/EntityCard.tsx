@@ -1,5 +1,5 @@
 import { PinToggle } from "../shared/PinToggle";
-import { Fragment, memo, type ReactNode } from "react";
+import { Fragment, memo } from "react";
 import {
   AudioLines,
   CirclePlay,
@@ -139,22 +139,6 @@ const ROW_SPAN: Record<number, string> = {
   3: "row-span-3",
   4: "row-span-4",
 };
-
-/** A text card (thumbnails on, nothing to preview) puts its title and
- *  metadata in one block over every track above the footer, slot track
- *  included: the text starts at the top and the footer still lines up with
- *  its neighbours'. */
-const TEXT_SPAN: Record<number, string> = {
-  1: "row-span-1",
-  2: "row-span-2",
-  3: "row-span-3",
-};
-
-/** Wraps the title and metadata of a text card in that block; on any other
- *  card both stay direct subgrid items. */
-function TextRows({ wrap, className, children }: { wrap: boolean; className: string; children: ReactNode }) {
-  return wrap ? <div data-part="text" className={className}>{children}</div> : <>{children}</>;
-}
 
 /** A Library result for one entity: title, metadata label/value pairs, footer
  *  (template tag · Open). Clicking the card previews it in the drawer; Open
@@ -409,12 +393,6 @@ export const EntityCard = memo(function EntityCard({
 
   /** One track per row drawn; see `ROW_SPAN`. */
   const rowCount = 2 + (showPreview && !side ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
-  /** Thumbnails drawn by Auto, and this entity has no image, media or document:
-   *  no slot and no placeholder art. With Thumbnail set to On every card keeps
-   *  the slot (a `QuietMark` when there is nothing to show), so the grid holds
-   *  one shape. Known from the data, before anything loads, so the card never
-   *  changes shape. */
-  const textCard = showPreview && !entity.preview && info.thumbMode !== "on";
 
   /** Landscape is the fixed band, portrait the card's width at 3:4. How the
    *  picture sits inside is `ImageThumb`'s object-fit. */
@@ -423,7 +401,7 @@ export const EntityCard = memo(function EntityCard({
     : `w-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize]}`;
   /** Side layout: text rows are placed explicitly in column 2 so child order
    *  can never put one under the slot. */
-  const textCol = side ? (textCard ? "col-span-full" : "col-start-2") : "";
+  const textCol = side ? "col-start-2" : "";
   /** A landscape document peeks out of its band on hover (`docPeek.ts`), so its
    *  wrapper must not clip. */
   const peekDoc = entity.preview === "document" && thumbFrame === "landscape";
@@ -449,9 +427,10 @@ export const EntityCard = memo(function EntityCard({
     >
       {primaryAction}
       {selectBox}
-      {/* The slot only for an entity with something to preview; a text card
-          spans its track instead (`TextRows`). */}
-      {showPreview && !textCard && (
+      {/* With thumbnails drawn, Auto or On, every card keeps the slot: a
+          `QuietMark` where there is nothing to preview, so a grid row never
+          mixes shapes. */}
+      {showPreview && (
         <span
           data-part="preview"
           className={`relative min-w-0 shrink-0 ${slotShape}`}
@@ -532,10 +511,6 @@ export const EntityCard = memo(function EntityCard({
           )}
         </span>
       )}
-      <TextRows
-        wrap={textCard}
-        className={`relative min-w-0 ${textCol} ${TEXT_SPAN[rowCount - 1]} self-start grid content-start gap-y-2.5`}
-      >
       {/* Up to two lines; the subgrid track aligns titles across a row. Without
           subgrid support, `not-supports-…` reserves the second line instead. */}
       <span
@@ -650,7 +625,6 @@ export const EntityCard = memo(function EntityCard({
           )}
         </dl>
       )}
-      </TextRows>
 
       {/* Its own row track aligns footers across a grid row; `self-end` keeps it
           at the bottom in the no-subgrid fallback. */}

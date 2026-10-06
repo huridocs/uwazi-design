@@ -14,6 +14,15 @@ export type { ThumbFrame };
  *  Cached per (url, width, frame), so cards sharing a file cost one render.
  *  pdf.js renders off requestAnimationFrame, so nothing resolves in a hidden tab. */
 const cache = new Map<string, Promise<string | null>>();
+/** Where the text starts on page one (fraction of page height, from
+ *  `inkStart`), per cache key, measured on the whole-page bitmap itself. */
+const inks = new Map<string, number>();
+
+/** The ink start of a whole-page thumbnail `pdfThumb(url, width)` has drawn;
+ *  undefined until it has. */
+export function pdfThumbInk(url: string, width: number): number | undefined {
+  return inks.get(`${url}@${width}`);
+}
 
 export function pdfThumb(url: string, width: number, frame?: ThumbFrame): Promise<string | null> {
   // Cache key includes every input that changes the bitmap: url, width, and the
@@ -23,9 +32,12 @@ export function pdfThumb(url: string, width: number, frame?: ThumbFrame): Promis
     : `${url}@${width}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const p = render(url, width, frame).catch((err) => {
+  const p = render(url, width, frame, key).catch((err) => {
     // A failed thumbnail resolves null; warn so it is distinguishable from "no preview".
     console.warn("[pdfThumb] failed", url, err);
+    // Not cached: CEJIL's cards share six PDFs, so a cached failure blanked
+    // every card on that file until reload. The next mount tries again.
+    cache.delete(key);
     return null;
   });
   cache.set(key, p);
@@ -36,7 +48,7 @@ export function pdfThumb(url: string, width: number, frame?: ThumbFrame): Promis
  *  detail is not visible at thumbnail size. */
 const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
 
-async function render(url: string, width: number, frame?: ThumbFrame): Promise<string | null> {
+async function render(url: string, width: number, frame: ThumbFrame | undefined, key: string): Promise<string | null> {
   const doc = await pdfjs.getDocument(url).promise;
   try {
     const page = await doc.getPage(1);
@@ -48,7 +60,7 @@ async function render(url: string, width: number, frame?: ThumbFrame): Promise<s
       // `return await`, not `return`: without it the `finally` destroys the
       // document while the render is in flight, pdf.js cancels it, and every
       // thumbnail resolves null. Do not remove it for `no-return-await`.
-      return await paint(page, viewport, Math.ceil(viewport.width), Math.ceil(viewport.height));
+      return await paint(page, viewport, Math.ceil(viewport.width), Math.ceil(viewport.height), key);
     }
 
     // Where the page's text begins, measured per document because blank top
@@ -81,6 +93,8 @@ async function paint(
   viewport: PageViewport,
   w: number,
   h: number,
+  /** Whole-page renders pass their cache key so the ink start is recorded. */
+  inkKey?: string,
 ): Promise<string | null> {
   const canvas = document.createElement("canvas");
   canvas.width = w;
@@ -90,6 +104,7 @@ async function paint(
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, w, h);
   await page.render({ canvasContext: ctx, viewport }).promise;
+  if (inkKey) inks.set(inkKey, inkStart(ctx.getImageData(0, 0, w, h).data, w, h));
   // Quality 0.9 rather than a photo's ~0.82: the content is small text, and JPEG
   // artefacts land on high-contrast letter edges.
   return canvas.toDataURL("image/jpeg", 0.9);

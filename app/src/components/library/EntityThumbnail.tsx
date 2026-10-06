@@ -11,7 +11,8 @@ import { PdfPageThumb } from "../shared/PdfPageThumb";
  *  A document entity shows page one of its own document, the same preview the
  *  Metadata card shows. An image entity shows its asset (`Entity.image`, passed
  *  in by the caller, which already holds the entity) and falls back to a glyph
- *  without one. Video and audio have no assets, so they draw a glyph.
+ *  without one. Video and audio have no poster assets, so they draw a tile: a
+ *  play mark on ink, or a waveform.
  */
 export function EntityThumbnail({
   kind,
@@ -54,7 +55,8 @@ export function EntityThumbnail({
     const file = entityId ? primaryFile(entityId) : null;
     // The portrait slot is 3:4 and a page is ~0.77, so the page fills it. The
     // wide band keeps the inset sheet frame so a page that can't fill the box
-    // doesn't read as a crop.
+    // doesn't read as a crop, and starts the sheet at the page's first line:
+    // from the top edge, a band showed blank margin and the letterhead.
     return (
       <PdfPageThumb
         url={file?.url}
@@ -64,6 +66,7 @@ export function EntityThumbnail({
         peek={peek}
         lift={lift}
         loupe={loupe}
+        fromText
         className={className}
       />
     );
@@ -72,18 +75,18 @@ export function EntityThumbnail({
     return <ImageThumb image={image} size={size} fit={fit} frame={frame} className={className} />;
   }
   if (kind === "video") {
-    // Ink ground, paper puck, ink triangle, each sized as a fraction of the slot
-    // so it reads the same in the portrait slot and the list chip.
+    // Warm ground like audio, paper puck, ink triangle, each sized as a fraction
+    // of the slot so it reads the same in the portrait slot and the list chip.
+    // An ink ground turned a list of CEJIL hearings into a column of black bars.
     return (
       <div
         data-component="EntityThumbnail"
         data-kind="video"
-        className={`flex items-center justify-center ${className}`}
-        style={{ backgroundColor: "var(--text-primary)" }}
+        className={`flex items-center justify-center bg-warm ${className}`}
       >
         {/* Sized off the box's height, not its width: the slots differ by ratio,
             not scale. Height plus min/max caps keeps one apparent size in both. */}
-        <span data-part="puck" className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper/90">
+        <span data-part="puck" className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper shadow-sm">
           <Play aria-hidden className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
         </span>
       </div>
