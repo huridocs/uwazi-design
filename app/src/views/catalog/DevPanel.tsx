@@ -7,6 +7,8 @@ import { appViewAtom } from "../../atoms/navigation";
 import { settingsSectionAtom } from "../../atoms/settings";
 import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
+import { clearSavedViewsAndHistoryAtom } from "../../atoms/savedViews";
+import { clearAllCasesAtom } from "../../atoms/caseFile";
 import {
   FAIL_SCOPES,
   emptyDomainAtom,
@@ -42,6 +44,9 @@ export function DevPanel() {
   const openThesaurus = useSetAtom(openThesaurusRequestAtom);
   const setAppView = useSetAtom(appViewAtom);
   const setSection = useSetAtom(settingsSectionAtom);
+  const clearViews = useSetAtom(clearSavedViewsAndHistoryAtom);
+  const clearCases = useSetAtom(clearAllCasesAtom);
+  const [researchCleared, setResearchCleared] = useState(false);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -140,6 +145,29 @@ export function DevPanel() {
         </div>
         <p role="status" className="min-h-4 text-meta text-ink-secondary">
           {emptied ? `${emptied}: done. Reset demo data brings the seed back.` : ""}
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Saved views, cases and search history</h3>
+        <p className="text-xs text-ink-tertiary text-pretty">
+          Kept in this browser for every collection: saved views and cases in local storage, the search history for the session.
+        </p>
+        <div>
+          <button
+            type="button"
+            onClick={() => {
+              clearViews();
+              clearCases();
+              setResearchCleared(true);
+            }}
+            className="h-8 px-3 text-xs font-medium rounded-md bg-warm text-ink hover:bg-parchment cursor-pointer"
+          >
+            Clear saved views, cases and history
+          </button>
+        </div>
+        <p role="status" className="min-h-4 text-meta text-ink-secondary">
+          {researchCleared ? "Cleared in every collection." : ""}
         </p>
       </section>
 

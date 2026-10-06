@@ -337,8 +337,22 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
   use `entityInRange`. Time fields show only where a record is timed to the hour.
-- Recent searches: `librarySearchHistoryAtom`, recorded on settle (1.2s, Enter, blur), deduped,
-  capped at 8, in sessionStorage.
+- Search history: `atoms/savedViews.ts`, recorded on settle (1.2s, Enter, blur) with the filter
+  state it ran under (`LibrarySnapshot`), per collection, last 20, in sessionStorage. The search
+  box's recent list shows the first 8 distinct queries and re-runs the words only; the Views
+  menu's history restores the filters too.
+- Saved views: the masthead's Views menu (`SavedViewsMenu`). A `LibrarySnapshot` lists every
+  atom that decides what the Library lists and how it draws it (`captureLibrarySnapshot`,
+  `applyLibrarySnapshotAtom`); a new filter atom joins both and `snapshotFilterCount`. Views are
+  per collection in localStorage; "Copy link" puts the snapshot in `#view=…`, which `useViewLink`
+  applies on load and then removes.
+- Case: one per collection (`atoms/caseFile.ts`, localStorage): pinned records and markdown
+  notes. `PinToggle` pins from a card footer, the entity header (`DocMeta`) and a relationship
+  pill. `CasePanel` (navbar Case button; a sheet on phones) lists the pins, the notes and the
+  citation list built by `utils/caseCitations.ts` (Nepal: the quoting source's URL, publisher and
+  date, the link's status, the PDF page; CEJIL: the summa.cejil.org record and its anchored
+  quotes). Exports: copy as text, Markdown, CSV. Reset demo data and the Dev panel clear saved
+  views, cases and history.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:

@@ -138,6 +138,9 @@ export const sidebarGroups: SidebarGroup[] = [
     label: "Shared",
     items: [
       { id: "sh-section-label", label: "SectionLabel" },
+      { id: "sh-pin-toggle", label: "PinToggle" },
+      { id: "sh-saved-views", label: "SavedViewsMenu" },
+      { id: "sh-case-panel", label: "CasePanel" },
       { id: "sh-match-mode-toggle", label: "MatchModeToggle" },
       { id: "sh-highlighted-text", label: "HighlightedText" },
       { id: "sh-field-message", label: "FieldMessage" },

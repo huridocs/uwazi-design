@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDelete } from "../components/shared/ConfirmDelete";
 import { TypedConfirmModal } from "../components/shared/TypedConfirmModal";
 import { PasswordConfirmModal } from "../components/shared/PasswordConfirmModal";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { appViewAtom } from "../atoms/navigation";
 import { LoginView } from "./LoginView";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
+import { PinToggle } from "../components/shared/PinToggle";
+import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
+import { CaseBody } from "../components/case/CasePanel";
+import { libraryEntitiesAtom } from "../atoms/dataSource";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
 
@@ -1601,6 +1605,43 @@ sendFill(selection.text);                                    // commits, then di
                 </CatalogEntry>
               </div>
 
+              <div id="sh-pin-toggle" ref={reg("sh-pin-toggle")}>
+                <CatalogEntry
+                  name="PinToggle"
+                  description="Pins a record to the collection's case, or takes it out. `icon` sits in a Library card's footer and beside a relationship row's entity pill: hidden until the card or row is hovered or focused, always shown once pinned, and always shown on a phone. `label` is the entity header's Pin / Pinned, both words held in one slot so the button keeps its width. The pins here are live: they land in the case of the collection shown."
+                  code={`<PinToggle entityId={id} title={title} reveal />
+<PinToggle entityId={id} title={title} variant="label" />`}
+                >
+                  <PinToggleDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-saved-views" ref={reg("sh-saved-views")}>
+                <CatalogEntry
+                  name="SavedViewsMenu · SavedViewsPanel"
+                  description="The Library masthead's Views menu: save the filters, search, sort, view and display as a named view per collection (localStorage), open one to restore it exactly, rename, delete, or copy a link whose hash (#view=…) restores it on load. Below, the last 20 searches with the filters they ran under (sessionStorage), each opening that state. On phones it is a bottom sheet."
+                  code={`<SavedViewsMenu />   // masthead, beside Display
+<SavedViewsPanel onDone={close} />`}
+                >
+                  <div className="w-80 rounded-md border border-border bg-paper p-1">
+                    <SavedViewsPanel />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-case-panel" ref={reg("sh-case-panel")}>
+                <CatalogEntry
+                  name="CasePanel · CaseBody"
+                  description="The case: a named set of pinned records and markdown notes per collection, kept in localStorage. Pinned lists each record with its template, status and how many passages it is quoted in; Citations is the list the exports carry (title, address, publisher, date, status, quote, page anchor). Footer: Copy citations as text, Markdown download, CSV of the pinned records. A slide-over from the navbar's Case button on desktop, a sheet on phones. Live: it shows the case of the collection shown."
+                  code={`<CaseButton rtl={rtl} compact={isMobile} />   // navbar; mounts CasePanel
+<CaseBody onClose={close} />`}
+                >
+                  <div data-gutter-host className="gutter-host-main flex flex-col h-[32rem] w-[26rem] max-w-full rounded-md border border-border bg-paper overflow-hidden">
+                    <CaseBody />
+                  </div>
+                </CatalogEntry>
+              </div>
+
               <div id="sh-pages-editor" ref={reg("sh-pages-editor")}>
                 <CatalogEntry
                   name="Pages editor · LangSwitch + SyntaxBadge"
@@ -2554,5 +2595,22 @@ function BulkPickDemo() {
         />
       )}
     </>
+  );
+}
+
+/** Two of the collection's records, each with both PinToggle variants. */
+function PinToggleDemo() {
+  const entities = useAtomValue(libraryEntitiesAtom).slice(0, 2);
+  if (!entities.length) return <p className="text-xs text-ink-tertiary">The collection is still loading.</p>;
+  return (
+    <div className="flex flex-col gap-3">
+      {entities.map((e) => (
+        <div key={e.id} className="group flex items-center gap-3 rounded-md border border-border-soft bg-paper px-3 py-2">
+          <span className="flex-1 min-w-0 truncate text-sm text-ink">{e.title}</span>
+          <PinToggle entityId={e.id} title={e.title} reveal />
+          <PinToggle entityId={e.id} title={e.title} variant="label" />
+        </div>
+      ))}
+    </div>
   );
 }
