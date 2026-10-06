@@ -5,6 +5,7 @@ import {
   STANCES,
   STANCE_LABEL,
   type ClaimEvidence,
+  type ClaimFigure,
   type EvidenceItem,
   type PublisherRow,
   type Stance,
@@ -43,7 +44,99 @@ export function evidenceSentence(ev: ClaimEvidence): string {
   if (r) parts.push(`${plural(r, "publisher")} ${r === 1 ? "reports" : "report"} on it without taking a side.`);
   const folded = ev.rows.filter((x) => x.via.length).map((x) => `${x.via.join(", ")} under ${x.publisher}`);
   if (folded.length) parts.push(`Wire copies count once: ${folded.join("; ")}.`);
-  return parts.join(" ");
+  // A sentence's first word is bound to the next, so none is left alone at
+  // the end of a line after a full stop.
+  return parts.map((x, i) => (i ? x.replace(" ", "\u00a0") : x)).join(" ");
+}
+
+const UNIT_WORD: Record<string, string> = {
+  killed: "killed",
+  injured: "injured",
+  arrested: "arrested",
+  detained: "detained",
+  missing: "missing",
+};
+
+/** "At least 76", "About 2,000", "NPR 11,000,000,000". */
+export function figureValue(f: ClaimFigure): string {
+  const n = f.figure.toLocaleString("en");
+  const value = f.unit === "damage-NPR" ? `NPR ${n}` : n;
+  return f.qualifier === "at-least" ? `At least ${value}` : f.qualifier === "about" ? `About ${value}` : value;
+}
+
+/** What the figure counts: "killed", "inmates escaped", "damage or loss". */
+export function figureUnit(f: ClaimFigure): string {
+  if (f.unit === "damage-NPR") return "damage or loss";
+  return UNIT_WORD[f.unit] ?? f.unitDetail ?? f.unit;
+}
+
+/** Where and when: "national · as of 2025/09/08, night". A publication date
+ *  standing in for the count's day says so. */
+export function figureContext(f: ClaimFigure): string {
+  const parts: string[] = [];
+  if (f.scope) parts.push(f.scope === "national" ? "Nationwide" : f.scope);
+  if (f.asOf !== undefined) {
+    const day = formatAtPrecision(new Date(f.asOf * 1000), "day");
+    const when = f.asOfTime ? `${day}, ${f.asOfTime}` : day;
+    parts.push(f.asOfBasis === "published" ? `reported ${when}` : `as of ${when}`);
+  } else parts.push("date not known");
+  return parts.join(" · ");
+}
+
+/** Other claims counting the same thing, place and day with a figure both
+ *  cannot hold. Each opens its claim. */
+function FigureConflicts({ ev, onOpen }: { ev: ClaimEvidence; onOpen: (id: string) => void }) {
+  if (!ev.conflicts.length) return null;
+  return (
+    <p data-part="figure-conflicts" className="text-xs text-ink-secondary">
+      <span aria-hidden className="inline-block w-1.5 h-1.5 mr-1.5 mb-px rounded-full" style={{ backgroundColor: "var(--warning)" }} />
+      Disagrees with{" "}
+      {ev.conflicts.map((c, i) => (
+        <span key={c.claimId}>
+          <button
+            type="button"
+            onClick={() => onOpen(c.claimId)}
+            className="inline text-left text-ink rounded-md cursor-pointer hover:underline decoration-border underline-offset-2
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+          >
+            {c.title}
+          </button>
+          <span className="text-ink-tertiary tabular-nums"> ({figureValue(c.figure).toLowerCase()})</span>
+          {i < ev.conflicts.length - 1 ? ", " : ""}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** The claim's figure as one line: value and unit, then where and when. */
+function FigureLine({ f, className = "" }: { f: ClaimFigure; className?: string }) {
+  return (
+    <p data-part="figure" className={`flex flex-wrap items-baseline gap-x-1.5 min-w-0 ${className}`}>
+      <span className="text-sm font-semibold text-ink tabular-nums">
+        {figureValue(f)} {figureUnit(f)}
+      </span>
+      <span className="text-xs text-ink-tertiary">{figureContext(f)}</span>
+    </p>
+  );
+}
+
+/** The figure column's cell in the Library: the number on top, so a column of
+ *  claims reads as a column of counts. */
+export function FigureCell({ f }: { f?: ClaimFigure }) {
+  if (!f)
+    return (
+      <span className="text-sm text-ink-tertiary" aria-label="No figure">
+        —
+      </span>
+    );
+  return (
+    <div data-part="figure-cell" className="flex flex-col min-w-0">
+      <span className="text-sm font-semibold text-ink tabular-nums">{figureValue(f)}</span>
+      <span className="text-xs text-ink-secondary">{figureUnit(f)}</span>
+      <span className="text-meta text-ink-tertiary">{figureContext(f)}</span>
+    </div>
+  );
 }
 
 /** Independent publishers per stance as one bar, in the stance colours. */
@@ -216,13 +309,29 @@ export function ClaimEvidenceMatrix({ ev, onOpen }: { ev: ClaimEvidence; onOpen:
 }
 
 /** The claim's head: status chip, the sentence and the bar. */
-export function ClaimEvidenceSummary({ ev, title, aside }: { ev: ClaimEvidence; title?: ReactNode; aside?: ReactNode }) {
+export function ClaimEvidenceSummary({
+  ev,
+  title,
+  aside,
+  onOpen,
+  figureLineClass = "",
+}: {
+  ev: ClaimEvidence;
+  title?: ReactNode;
+  aside?: ReactNode;
+  onOpen: (id: string) => void;
+  /** Where a figure column shows the figure (the Library), hides the line
+   *  at the widths that draw the column. */
+  figureLineClass?: string;
+}) {
   return (
     <div data-part="evidence-summary" className="flex flex-col gap-1.5 min-w-0 px-2">
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
         {title ?? <SectionLabel as="h3">Evidence</SectionLabel>}
         <RefStatus verification={ev.status} />
       </div>
+      {ev.figure && <FigureLine f={ev.figure} className={figureLineClass} />}
+      <FigureConflicts ev={ev} onOpen={onOpen} />
       <p className="text-xs text-ink-secondary">{evidenceSentence(ev)}</p>
       <div className="flex items-center gap-3 min-w-0">
         <EvidenceStrengthBar ev={ev} />
@@ -242,7 +351,7 @@ export function ClaimEvidenceBlock({ ev }: { ev: ClaimEvidence }) {
       aria-label="Evidence"
       className="flex flex-col gap-3 px-1 py-3 mb-stack rounded-md border border-border/60 bg-paper"
     >
-      <ClaimEvidenceSummary ev={ev} />
+      <ClaimEvidenceSummary ev={ev} onOpen={setPreview} />
       <ClaimEvidenceMatrix ev={ev} onOpen={setPreview} />
     </section>
   );

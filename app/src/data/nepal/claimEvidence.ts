@@ -43,8 +43,38 @@ export interface PublisherRow {
   cells: Record<Stance, EvidenceItem[]>;
 }
 
+/** A claim's structured figure (Research's reviewed extraction): the count,
+ *  what it counts, where, and the day it was stated for. */
+export interface ClaimFigure {
+  figure: number;
+  /** Thesaurus id: killed, injured, arrested, detained, missing, damage-NPR, other. */
+  unit: string;
+  /** What "other" counts ("inmates escaped"). */
+  unitDetail?: string;
+  qualifier: "exact" | "at-least" | "about";
+  scope?: string;
+  /** Epoch seconds, the day the count was stated for. */
+  asOf?: number;
+  asOfTime?: string;
+  /** stated | derived | published | unknown: a published date is a stand-in. */
+  asOfBasis?: string;
+  /** Other figures in the same statement, as text. */
+  more?: string;
+}
+
+/** Another claim counting the same thing, at the same place, for the same
+ *  day, with a figure both cannot hold. */
+export interface FigureConflict {
+  claimId: string;
+  title: string;
+  figure: ClaimFigure;
+}
+
 export interface ClaimEvidence {
   claimId: string;
+  figure?: ClaimFigure;
+  /** Empty when the figure has no comparable day, or none disagrees. */
+  conflicts: FigureConflict[];
   /** The claim's own verification status, as Research recorded it. */
   status?: Verification;
   rows: PublisherRow[];
@@ -93,6 +123,77 @@ export function wireOrigin(note: string | undefined): string | undefined {
   const bare = note.replace(/\(.*?\)/g, "").trim().toLowerCase();
   if (!bare || /[,;/]/.test(bare)) return undefined;
   return WIRES[bare] ?? publishers().get(bare)?.name;
+}
+
+const QUALIFIERS = new Set(["exact", "at-least", "about"]);
+
+/** The claim's figure, or undefined for a claim without one. */
+export function nepalClaimFigure(claimId: string): ClaimFigure | undefined {
+  const md = nepalEntity(claimId)?.metadata;
+  const figure = num(md?.figure?.[0]?.value);
+  const unit = str(md?.unit?.[0]?.value);
+  if (!md || figure === undefined || !unit) return undefined;
+  const q = str(md.qualifier?.[0]?.value);
+  const opt = <K extends string, V>(k: K, v: V | undefined) => (v === undefined ? {} : ({ [k]: v } as Record<K, V>));
+  return {
+    figure,
+    unit,
+    qualifier: q && QUALIFIERS.has(q) ? (q as ClaimFigure["qualifier"]) : "exact",
+    ...opt("unitDetail", str(md.unit_detail?.[0]?.value)),
+    ...opt("scope", str(md.scope?.[0]?.value)),
+    ...opt("asOf", num(md.as_of?.[0]?.value)),
+    ...opt("asOfTime", str(md.as_of_time?.[0]?.value)),
+    ...opt("asOfBasis", str(md.as_of_basis?.[0]?.value)),
+    ...opt("more", str(md.figure_more?.[0]?.value)),
+  };
+}
+
+/** Same count, same place, same day: comparable only when the day is the
+ *  one the count was stated for (stated or derived), not a publication date
+ *  standing in for it, and at the same time of day (hourly tolls on one day
+ *  are a running count, not a disagreement). */
+function comparableKey(f: ClaimFigure): string | undefined {
+  if (f.asOf === undefined || (f.asOfBasis !== "stated" && f.asOfBasis !== "derived")) return undefined;
+  return [f.unit, f.unitDetail ?? "", (f.scope ?? "").toLowerCase(), f.asOf, f.asOfTime ?? ""].join("|");
+}
+
+/** Can both figures hold? "At least 17" holds beside 19; "about 1,000" beside
+ *  anything within a tenth of it; exact figures only beside themselves. */
+function compatible(a: ClaimFigure, b: ClaimFigure): boolean {
+  if (a.figure === b.figure) return true;
+  const holds = (x: ClaimFigure, y: ClaimFigure) =>
+    (x.qualifier === "at-least" && y.figure >= x.figure) ||
+    (x.qualifier === "about" && Math.abs(y.figure - x.figure) <= x.figure * 0.1);
+  return holds(a, b) || holds(b, a);
+}
+
+let figureIndex: Map<string, string[]> | null = null;
+/** Claims by comparable key, built once per load. */
+function figuresByKey() {
+  if (figureIndex) return figureIndex;
+  figureIndex = new Map();
+  for (const e of nepalCorpus()?.entities ?? []) {
+    if (e.template !== "nepal_claim") continue;
+    const f = nepalClaimFigure(e.sharedId);
+    const key = f && comparableKey(f);
+    if (!key) continue;
+    const arr = figureIndex.get(key);
+    if (arr) arr.push(e.sharedId);
+    else figureIndex.set(key, [e.sharedId]);
+  }
+  return figureIndex;
+}
+
+function conflictsOf(claimId: string, f: ClaimFigure | undefined): FigureConflict[] {
+  const key = f && comparableKey(f);
+  if (!f || !key) return [];
+  const out: FigureConflict[] = [];
+  for (const id of figuresByKey().get(key) ?? []) {
+    if (id === claimId) continue;
+    const other = nepalClaimFigure(id)!;
+    if (!compatible(f, other)) out.push({ claimId: id, title: nepalEntity(id)?.title ?? id, figure: other });
+  }
+  return out.sort((a, b) => a.figure.figure - b.figure.figure);
 }
 
 const cache = new Map<string, ClaimEvidence | null>();
@@ -161,8 +262,11 @@ export function nepalClaimEvidence(claimId: string): ClaimEvidence | undefined {
   sorted.sort((a, b) => band(a) - band(b) || size(b) - size(a) || a.publisher.localeCompare(b.publisher));
 
   const status = str(claim.metadata.verification_status?.[0]?.value) as Verification | undefined;
+  const figure = nepalClaimFigure(claimId);
   const out: ClaimEvidence = {
     claimId,
+    ...(figure ? { figure } : {}),
+    conflicts: conflictsOf(claimId, figure),
     ...(status ? { status } : {}),
     rows: sorted,
     publishers: { supports: count("supports"), disputes: count("disputes"), reports_on: count("reports_on") },

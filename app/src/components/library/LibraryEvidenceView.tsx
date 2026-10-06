@@ -2,26 +2,28 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { ChevronRight, Scale } from "lucide-react";
 import type { Entity } from "../../data/entities";
 import { nepalClaimEvidence, STANCES, type ClaimEvidence } from "../../data/nepal/claimEvidence";
-import { ClaimEvidenceMatrix, ClaimEvidenceSummary } from "../relationships/ClaimEvidence";
+import { ClaimEvidenceMatrix, ClaimEvidenceSummary, FigureCell } from "../relationships/ClaimEvidence";
 
 type Select = (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
 
 /** Claims drawn per step before "Show more". */
 const STEP = 25;
 
-/** One claim: title, status, sentence and bar; its matrix on demand. The
- *  claim-level columns sit in the head; a structured figure (figure, unit,
- *  as of) goes beside the status when the data has it. */
+/** One claim: its figure in a leading column, then title, status, sentence
+ *  and bar; its matrix on demand. */
 function ClaimEvidenceCard({
   entity,
   ev,
   selected,
   onSelect,
+  figureColumn,
 }: {
   entity: Entity;
   ev: ClaimEvidence;
   selected: boolean;
   onSelect: Select;
+  /** Draw the figure column: some claim in the set has a figure. */
+  figureColumn: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const sources = STANCES.reduce((n, s) => n + ev.references[s], 0);
@@ -32,35 +34,48 @@ function ClaimEvidenceCard({
       data-selected={selected || undefined}
       className={`flex flex-col gap-3 px-1 py-3 rounded-md border border-border/60 ${selected ? "bg-parchment" : "bg-paper"}`}
     >
-      <ClaimEvidenceSummary
-        ev={ev}
-        title={
-          <h3 className="min-w-0 text-sm font-semibold text-ink">
-            <button
-              type="button"
-              onClick={(e) => onSelect(entity.id, e)}
-              aria-pressed={selected}
-              className="text-left rounded-md cursor-pointer hover:underline decoration-border underline-offset-2
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-            >
-              {entity.title}
-            </button>
-          </h3>
-        }
-        aside={
-          <button
-            type="button"
-            onClick={() => setOpen((x) => !x)}
-            aria-expanded={open}
-            aria-controls={matrixId}
-            className="inline-flex items-center gap-1 text-xs font-medium text-ink-secondary hover:text-ink rounded-md cursor-pointer
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-          >
-            <ChevronRight size={12} aria-hidden className={`transition-transform ${open ? "rotate-90" : ""}`} />
-            {open ? "Hide sources" : `Show ${sources === 1 ? "the source" : `${sources} sources`}`}
-          </button>
-        }
-      />
+      {/* The figure column needs room: on a phone (or a narrow pane) the
+          figure is the summary's first line instead. */}
+      <div className="@container/claim flex gap-1 min-w-0">
+        {figureColumn && (
+          <div className="hidden @xl/claim:block w-[7.5rem] shrink-0 pl-2">
+            <FigureCell f={ev.figure} />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <ClaimEvidenceSummary
+            ev={ev}
+            onOpen={(id) => onSelect(id)}
+            figureLineClass={figureColumn ? "@xl/claim:hidden" : ""}
+            title={
+              <h3 className="min-w-0 text-sm font-semibold text-ink">
+                <button
+                  type="button"
+                  onClick={(e) => onSelect(entity.id, e)}
+                  aria-pressed={selected}
+                  className="text-left rounded-md cursor-pointer hover:underline decoration-border underline-offset-2
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                >
+                  {entity.title}
+                </button>
+              </h3>
+            }
+            aside={
+              <button
+                type="button"
+                onClick={() => setOpen((x) => !x)}
+                aria-expanded={open}
+                aria-controls={matrixId}
+                className="inline-flex items-center gap-1 text-xs font-medium text-ink-secondary hover:text-ink rounded-md cursor-pointer
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+              >
+                <ChevronRight size={12} aria-hidden className={`transition-transform ${open ? "rotate-90" : ""}`} />
+                {open ? "Hide sources" : `Show ${sources === 1 ? "the source" : `${sources} sources`}`}
+              </button>
+            }
+          />
+        </div>
+      </div>
       <div id={matrixId} hidden={!open}>
         {open && <ClaimEvidenceMatrix ev={ev} onOpen={(id) => onSelect(id)} />}
       </div>
@@ -89,6 +104,7 @@ export const LibraryEvidenceView = memo(function LibraryEvidenceView({
     }
     return out;
   }, [entities]);
+  const figureColumn = useMemo(() => claims.some((c) => c.ev.figure), [claims]);
   const [limit, setLimit] = useState(STEP);
   useEffect(() => setLimit(STEP), [claims]);
 
@@ -105,7 +121,7 @@ export const LibraryEvidenceView = memo(function LibraryEvidenceView({
     <div data-component="LibraryEvidenceView">
       <ol className="flex flex-col gap-stack">
         {claims.slice(0, limit).map(({ entity, ev }) => (
-          <ClaimEvidenceCard key={entity.id} entity={entity} ev={ev} selected={selectedId === entity.id} onSelect={onSelect} />
+          <ClaimEvidenceCard key={entity.id} entity={entity} ev={ev} selected={selectedId === entity.id} onSelect={onSelect} figureColumn={figureColumn} />
         ))}
       </ol>
       {claims.length > limit && (
