@@ -81,7 +81,6 @@ import {
   libraryViewModeAtom,
   matchTypeFiltersAtom,
   rangeSelectionAtom,
-  logSearchAtom,
   requestMetadataFocusAtom,
   resultsCurrentPageAtom,
   setSelectionAnchorAtom,
@@ -132,6 +131,7 @@ import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { RecentSearches } from "../components/library/RecentSearches";
+import { logSearchAtom } from "../atoms/savedViews";
 import { LibraryDisplayMenu } from "../components/library/LibraryDisplayMenu";
 import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";

@@ -1,7 +1,7 @@
 import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
-import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
+import { atomFamily } from "jotai/utils";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { languageAtom } from "./language";
@@ -73,43 +73,8 @@ export const libraryActiveSearchAtom = atom(
   (get) => get(libraryQueryAtom).trim() || null,
 );
 
-/** Recent searches, newest first. Session storage, as with `appViewAtom`: a
- *  reload keeps the list, a new visit starts clean, and a shared prototype does
- *  not show the previous visitor's queries. Only settled queries are recorded
- *  (`logSearchAtom`), so the log does not fill with keystroke prefixes. */
-const searchHistoryJSON = createJSONStorage<string[]>(() => sessionStorage);
-export const librarySearchHistoryAtom = atomWithStorage<string[]>(
-  "uwazi:searchHistory",
-  [],
-  searchHistoryJSON,
-  { getOnInit: true },
-);
-
-/** How many searches the log keeps: a short way back, not an archive. */
-export const SEARCH_HISTORY_CAP = 8;
-/** Below this, a query isn't worth remembering (and is faster to retype). */
-export const MIN_LOGGED_QUERY = 2;
-
-/** Record a search. Deduped case-insensitively (a re-run moves to the top) and capped. */
-export const logSearchAtom = atom(null, (get, set, raw: string) => {
-  const q = raw.trim();
-  if (q.length < MIN_LOGGED_QUERY) return;
-  const rest = get(librarySearchHistoryAtom).filter(
-    (h) => h.toLowerCase() !== q.toLowerCase(),
-  );
-  set(librarySearchHistoryAtom, [q, ...rest].slice(0, SEARCH_HISTORY_CAP));
-});
-
-/** Forget one entry (its × ) or the lot (Clear all). */
-export const forgetSearchAtom = atom(null, (get, set, q: string) => {
-  set(
-    librarySearchHistoryAtom,
-    get(librarySearchHistoryAtom).filter((h) => h !== q),
-  );
-});
-export const clearSearchHistoryAtom = atom(null, (_get, set) => {
-  set(librarySearchHistoryAtom, []);
-});
+/* Recent searches live in `atoms/savedViews.ts` with the saved views: an
+   entry keeps the filter state it ran with (`LibrarySnapshot`). */
 
 /** Selected entity-type facets (typeId → on). Empty = all types. */
 export const libraryTypeFiltersAtom = atom<Record<string, boolean>>({});
@@ -1054,3 +1019,23 @@ export const libraryActiveFilterCountAtom = atom((get) => {
 export const libraryHasNarrowingAtom = atom(
   (get) => get(libraryActiveFilterCountAtom) > 0 || get(libraryActiveSearchAtom) !== null,
 );
+
+/** The Library's private state, for `atoms/savedViews.ts` only: a saved view
+ *  must restore the sort and view exactly as the reader left them (whether
+ *  they picked the sort, the view a search displaced), which the public atoms
+ *  derive and cannot be written back through. */
+export const libraryStateInternals = {
+  searchDraftStateAtom,
+  viewModeChosenAtom,
+  preSearchViewModeAtom,
+  searchModeOverriddenAtom,
+  sortStateAtom,
+  sortDirStateAtom,
+  userSortedAtom,
+  searchSortOverrideAtom,
+  searchSortDirOverrideAtom,
+  resultsSheetArmedAtom,
+};
+
+/** Switch collection without the bulk guard, for callers already behind it. */
+export const switchDataSourceAtom = atom(null, (_get, set, source: DataSource) => switchDataSource(set, source));

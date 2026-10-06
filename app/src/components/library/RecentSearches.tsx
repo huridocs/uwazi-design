@@ -4,10 +4,10 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { Clock, X } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
-  librarySearchHistoryAtom,
+  recentQueriesAtom,
   forgetSearchAtom,
   clearSearchHistoryAtom,
-} from "../../atoms/library";
+} from "../../atoms/savedViews";
 
 interface Props {
   /** The search box the panel hangs under — measured, never wrapped. */
@@ -30,9 +30,11 @@ interface Props {
  *  the same box should drop the same way.
  *
  *  Entries are recorded on SETTLE, not per keystroke (see `logSearchAtom`),
- *  so this lists searches rather than typing. */
+ *  so this lists searches rather than typing. It lists distinct queries and
+ *  re-runs only the words; the Views menu's History lists every search with
+ *  the filters it ran under and restores them. */
 export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
-  const history = useAtomValue(librarySearchHistoryAtom);
+  const history = useAtomValue(recentQueriesAtom);
   const forget = useSetAtom(forgetSearchAtom);
   const clearAll = useSetAtom(clearSearchHistoryAtom);
   const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
