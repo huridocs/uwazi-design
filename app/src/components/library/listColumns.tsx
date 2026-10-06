@@ -56,13 +56,12 @@ export interface ListColumnSpec {
 
 /** The built-in columns, in the order the table draws them.
  *
- *  `type` is off by default and that is the whole reason it can exist. A bare
- *  chip column never worked: the chip is 1.5rem but a "TYPE" header needs room
- *  for its label and its sort arrow, so the track always ran ~2rem wider than
- *  its contents and the gap had to sit somewhere ugly. So OFF, the chip rides
- *  with the title exactly as it always has; ON, it moves into a real column that
- *  prints the template NAME — which fills the track the chip could not — and the
- *  title cell drops it rather than printing the type twice. */
+ *  The template swatch is the row's first element in every collection: the
+ *  square that opens to the tinted name on hover. `type` (the Template NAME as
+ *  its own column) is off by default everywhere and only adds the written
+ *  name; it never takes the swatch away. A bare chip column never worked (a
+ *  "TYPE" header needs more room than the 1.5rem chip), which is why the name
+ *  column exists at all. */
 export const LIST_COLUMNS: ListColumnSpec[] = [
   {
     id: "title",
@@ -180,7 +179,9 @@ const COLLECTION_COLUMNS: Partial<
   Record<DataSource, Record<string, { default?: boolean; width?: string; offered?: false }>>
 > = {
   nepal: {
-    type: { default: true, width: "8.5rem" },
+    // The Template name column stays off, as everywhere; the swatch names the
+    // template on hover. Wider when it is turned on: Nepal's names are longer.
+    type: { width: "8.5rem" },
     country: { offered: false },
     date: { width: "6rem" },
   },
@@ -255,30 +256,20 @@ export function listColumnOptions(ctx: {
   }));
 }
 
-/** The specs the user has left on, turned into `DataTable` columns.
- *
- *  `title` swallows the type chip unless the Template column is drawing it —
- *  see `LIST_COLUMNS`. */
+/** The specs the user has left on, turned into `DataTable` columns. */
 export function buildListColumns(
   specs: ListColumnSpec[],
   isOn: (id: string) => boolean,
   cellCtx: ListCellContext,
 ): Column<Entity>[] {
-  const on = specs.filter((c) => isOn(c.id));
-  const typeColumn = on.some((c) => c.id === "type");
-  return on.map((c) => ({
-    id: c.id,
-    header: c.header ?? c.label,
-    width: c.width,
-    align: c.align,
-    sortKey: c.sortKey,
-    cell:
-      c.id === "title" && typeColumn
-        ? (e: Entity) => (
-            <span data-part="title" className="font-medium text-ink truncate">
-              <HighlightedText text={e.title} query={cellCtx.query} fieldKey="title" />
-            </span>
-          )
-        : (e: Entity) => c.cell(e, cellCtx),
-  }));
+  return specs
+    .filter((c) => isOn(c.id))
+    .map((c) => ({
+      id: c.id,
+      header: c.header ?? c.label,
+      width: c.width,
+      align: c.align,
+      sortKey: c.sortKey,
+      cell: (e: Entity) => c.cell(e, cellCtx),
+    }));
 }
