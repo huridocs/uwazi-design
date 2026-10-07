@@ -524,8 +524,9 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   evidence: [VIEW, CHART, SORT, LANGUAGE],
 
   /** Recordings on one clock: the lanes are ordered by kind and start, so
-   *  Sort has nothing to order. */
-  sync: [VIEW, CHART, LANGUAGE],
+   *  Sort has nothing to order, and the clock is the time axis, so the time
+   *  strip is not drawn. */
+  sync: [VIEW, LANGUAGE],
 
   /** The whole collection as a graph. Its options decide which edges and
    *  records are drawn; none of them moves a node (the layout is fixed per

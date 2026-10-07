@@ -1055,8 +1055,10 @@ export function LibraryView() {
   }, [q, setMatchTypes]);
 
   // The time strip shows under every layout (Display → Time strip, on by
-  // default): it filters by date and charts the whole result set.
-  const showBrush = timeHub && !cejilLoading && viewMode !== "overview";
+  // default): it filters by date and charts the whole result set. Not under
+  // Sync, whose own clock is the time axis there; a date filter set elsewhere
+  // still applies, and the Sync toolbar names it.
+  const showBrush = timeHub && !cejilLoading && viewMode !== "overview" && viewMode !== "sync";
 
   // The brush histogram applies every facet except the date one, so the bars
   // outside the range (dimmed) show what widening the window would add.

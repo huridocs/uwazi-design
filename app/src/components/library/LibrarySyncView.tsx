@@ -1,7 +1,9 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { ChevronRight, ExternalLink, Minus, Plus } from "lucide-react";
+import { libraryDateFromAtom, libraryDateToAtom } from "../../atoms/library";
+import { ActiveFilterChip } from "../shared/ActiveFilterChip";
+import { ChevronRight, ExternalLink, Minus, Plus, X } from "lucide-react";
 import type { Entity } from "../../data/entities";
 import { formatClock, formatOffset } from "../../data/vegas/links";
 import { VEGAS_UTC_OFFSET } from "../../data/vegas/schema";
@@ -47,6 +49,14 @@ const dayLabel = (t: number) =>
 
 /** Below this pane width the label sits over its bar (stacked lanes). */
 const STACK_BELOW = 640;
+/** From this view width the playhead readout docks beside the lanes, full
+ *  height; below it the readout is a one-line strip whose list lies over the
+ *  foot of the plot. Either way the lanes keep their height when a playhead
+ *  is set. */
+const DOCK_AT = 1040;
+/** The strip's list: this share of the plot, at most `READOUT_MAX` px. */
+const READOUT_SHARE = 0.3;
+const READOUT_MAX = 240;
 const LABEL_W = 224;
 const END_PAD = 12;
 const AXIS_H = 40;
@@ -228,6 +238,15 @@ export const LibrarySyncView = memo(function LibrarySyncView({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const axisRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [rootW, setRootW] = useState(0);
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setRootW(el.clientWidth));
+    ro.observe(el);
+    setRootW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -237,6 +256,11 @@ export const LibrarySyncView = memo(function LibrarySyncView({
     return () => ro.disconnect();
   }, []);
   const stacked = size.w > 0 && size.w < STACK_BELOW;
+  const docked = rootW >= DOCK_AT;
+  const [listOpen, setListOpen] = useState(true);
+  // The strip's list covers the foot of the plot; the lanes get as much room
+  // after their last row, so none stays under it.
+  const overlayH = !docked && playhead !== null && listOpen ? Math.min(READOUT_MAX, Math.round((size.h + AXIS_H) * READOUT_SHARE)) : 0;
   const laneH = stacked ? LANE_H_STACKED : LANE_H;
   const plotX0 = stacked ? 0 : LABEL_W;
   const plotW = Math.max(1, size.w - plotX0 - (stacked ? 0 : END_PAD));
@@ -833,7 +857,7 @@ export const LibrarySyncView = memo(function LibrarySyncView({
     const top = offsets[i];
     const h = offsets[i + 1] - top;
     if (top < el.scrollTop) el.scrollTop = top;
-    else if (top + h > el.scrollTop + el.clientHeight) el.scrollTop = top + h - el.clientHeight;
+    else if (top + h > el.scrollTop + el.clientHeight - overlayH) el.scrollTop = top + h - el.clientHeight + overlayH;
     setFocusIndex(i);
     pendingFocus.current = i;
   };
@@ -889,6 +913,11 @@ export const LibrarySyncView = memo(function LibrarySyncView({
   };
 
   /* ── Readout ───────────────────────────────────────────────────────── */
+  // The Library's date filter still narrows the lanes; the brush that sets it
+  // is not drawn here, so the toolbar names it and offers to clear it.
+  const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
+  const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
+
   const readout = useMemo(() => {
     if (playhead === null) return null;
     const running: SyncLane[] = [];
@@ -939,6 +968,72 @@ export const LibrarySyncView = memo(function LibrarySyncView({
     animateTo({ from: c - s / 2, to: c + s / 2 });
   };
 
+  const hint = "Click the clock or a lane to set the playhead. Arrow keys move it by a second, Shift by ten.";
+  const readoutHead = (
+    <>
+      <div className={`min-w-0 flex-1 flex gap-x-2 ${docked ? "flex-wrap items-baseline" : "items-baseline"}`} role="status" aria-live="polite">
+        {readout && playhead !== null ? (
+          <>
+            <span className="text-sm font-semibold text-ink tabular-nums" dir="ltr">
+              {clock(playhead)}
+            </span>
+            <span className={`text-xs text-ink-tertiary ${docked ? "" : "truncate"}`}>
+              {readout.running.length === 0
+                ? "No recording is known to run at this instant"
+                : `${readout.running.length.toLocaleString()} ${readout.running.length === 1 ? "recording runs" : "recordings run"} at this instant`}
+            </span>
+          </>
+        ) : (
+          <span className={`text-xs text-ink-tertiary ${docked ? "" : "truncate"}`} title={docked ? undefined : hint}>
+            {hint}
+          </span>
+        )}
+      </div>
+      {playhead !== null && !docked && (
+        <button
+          type="button"
+          aria-expanded={listOpen}
+          onClick={() => setListOpen((o) => !o)}
+          className={`shrink-0 h-7 px-2 inline-flex items-center gap-1 rounded-md text-xs cursor-pointer transition-colors ${BAR_GHOST} focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40`}
+        >
+          <ChevronRight size={13} aria-hidden className={`text-ink-muted transition-transform motion-reduce:transition-none ${listOpen ? "rotate-90" : "-rotate-90"}`} />
+          {listOpen ? "Hide list" : "Show list"}
+        </button>
+      )}
+      {playhead !== null && (
+        <button
+          type="button"
+          aria-label="Clear the playhead"
+          title="Clear the playhead"
+          onClick={() => setPlayhead(null)}
+          className={`shrink-0 h-7 w-7 grid place-items-center rounded-md cursor-pointer transition-colors ${BAR_GHOST} focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 ${docked ? "-mt-1" : ""}`}
+        >
+          <X size={14} aria-hidden />
+        </button>
+      )}
+    </>
+  );
+  // Rows read on two lines where the list is narrow: the docked column, a phone.
+  const twoLine = docked || rootW < STACK_BELOW;
+  const readoutList = (
+    <div className="flex-1 min-h-0 overflow-y-auto px-3 pt-1 pb-2">
+      {readout && playhead !== null && (
+        <>
+          <ReadoutList lanes={readout.running} playhead={playhead} selectedId={selectedId} onSelect={onSelect} onOpen={open} twoLine={twoLine} />
+          {readout.after.length > 0 && (
+            <details className="group mt-1">
+              <summary className="min-h-7 py-1 flex items-start gap-1.5 text-xs text-ink-secondary cursor-pointer list-none rounded-md hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40">
+                <ChevronRight size={13} aria-hidden className="shrink-0 mt-px text-ink-muted transition-transform motion-reduce:transition-none group-open:rotate-90" />
+                {readout.after.length.toLocaleString()} started earlier and may still run: their length is not in the data
+              </summary>
+              <ReadoutList lanes={readout.after} playhead={playhead} selectedId={selectedId} onSelect={onSelect} onOpen={open} twoLine={twoLine} />
+            </details>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div ref={rootRef} data-component="LibrarySyncView" className="h-full flex flex-col gap-2 min-h-0">
       {/* ── Window and controls ── */}
@@ -949,6 +1044,17 @@ export const LibrarySyncView = memo(function LibrarySyncView({
           </span>
           <span className="text-xs text-ink-tertiary whitespace-nowrap">Las Vegas time, {VEGAS_UTC_OFFSET}</span>
         </div>
+        {(dateFrom || dateTo) && (
+          <ActiveFilterChip
+            label="Dates"
+            detail={`${dateFrom.replace("T", " ") || "…"} – ${dateTo.replace("T", " ") || "…"}`}
+            removeLabel="Clear the date filter"
+            onRemove={() => {
+              setDateFrom("");
+              setDateTo("");
+            }}
+          />
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value=""
@@ -996,7 +1102,8 @@ export const LibrarySyncView = memo(function LibrarySyncView({
       </div>
 
       {/* ── Clock and lanes ── */}
-      <div data-part="plot" className="relative flex-1 min-h-0 flex flex-col rounded-lg bg-paper overflow-hidden">
+      <div className="flex-1 min-h-0 flex gap-2">
+      <div data-part="plot" className="relative flex-1 min-w-0 min-h-0 flex flex-col rounded-lg bg-paper overflow-hidden">
         <div
           data-part="clock"
           className="relative shrink-0 cursor-col-resize select-none border-b border-border"
@@ -1041,7 +1148,7 @@ export const LibrarySyncView = memo(function LibrarySyncView({
           onPointerCancel={endPointer}
           onPointerLeave={onPointerLeave}
         >
-          <div className="relative" style={{ height: Math.max(total, size.h) }}>
+          <div className="relative" style={{ height: Math.max(total + overlayH, size.h) }}>
             <canvas
               ref={canvasRef}
               aria-hidden
@@ -1134,50 +1241,30 @@ export const LibrarySyncView = memo(function LibrarySyncView({
             )}
           </div>
         </div>
+        {overlayH > 0 && (
+          <div
+            data-part="readout-list"
+            className="@container absolute inset-x-0 bottom-0 flex flex-col bg-paper border-t border-border"
+            style={{ height: overlayH }}
+          >
+            {readoutList}
+          </div>
+        )}
         {(tip ?? axisTip) && <SyncTip tip={(tip ?? axisTip)!} />}
       </div>
+      {docked && (
+        <section data-part="readout" aria-label="At the playhead" className="@container shrink-0 w-80 flex flex-col rounded-lg bg-paper">
+          <div className="shrink-0 flex items-start gap-2 min-h-10 px-3 pt-3 pb-1">{readoutHead}</div>
+          {playhead === null ? <SyncKey /> : readoutList}
+        </section>
+      )}
+      </div>
 
-      {/* ── Playhead readout ── */}
-      <section
-        data-part="readout"
-        aria-label="At the playhead"
-        className={`@container shrink-0 flex flex-col rounded-lg bg-paper h-[min(13rem,30%)] min-h-[7.5rem]`}
-      >
-        <div className="shrink-0 flex items-baseline gap-2 h-10 px-3 pt-3" role="status" aria-live="polite">
-          {readout && playhead !== null ? (
-            <>
-              <span className="text-sm font-semibold text-ink tabular-nums" dir="ltr">
-                {clock(playhead)}
-              </span>
-              <span className="text-xs text-ink-tertiary truncate">
-                {readout.running.length === 0
-                  ? "No recording is known to run at this instant"
-                  : `${readout.running.length.toLocaleString()} ${readout.running.length === 1 ? "recording runs" : "recordings run"} at this instant`}
-              </span>
-            </>
-          ) : (
-            <span className="text-xs text-ink-tertiary">
-              Click the clock or a lane to set the playhead. Arrow keys move it by a second, Shift by ten.
-            </span>
-          )}
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-2">
-          {readout && playhead !== null && (
-            <>
-              <ReadoutList lanes={readout.running} playhead={playhead} selectedId={selectedId} onSelect={onSelect} onOpen={open} />
-              {readout.after.length > 0 && (
-                <details className="group mt-1">
-                  <summary className="h-7 flex items-center gap-1.5 text-xs text-ink-secondary cursor-pointer list-none rounded-md hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40">
-                    <ChevronRight size={13} aria-hidden className="text-ink-muted transition-transform motion-reduce:transition-none group-open:rotate-90" />
-                    {readout.after.length.toLocaleString()} started earlier and may still run: their length is not in the data
-                  </summary>
-                  <ReadoutList lanes={readout.after} playhead={playhead} selectedId={selectedId} onSelect={onSelect} onOpen={open} />
-                </details>
-              )}
-            </>
-          )}
-        </div>
-      </section>
+      {!docked && (
+        <section data-part="readout" aria-label="At the playhead" className="shrink-0 flex items-center gap-2 h-10 px-3 rounded-lg bg-paper">
+          {readoutHead}
+        </section>
+      )}
 
       {pending && (
         <Modal
@@ -1276,6 +1363,57 @@ function SyncTip({ tip }: { tip: Tip }) {
   );
 }
 
+/** What the marks mean, in the docked readout while no playhead is set. */
+function SyncKey() {
+  const tick = (color: string) => <span aria-hidden className="w-0.5 h-3 rounded-[1px]" style={{ backgroundColor: color }} />;
+  const rows: { mark: ReactNode; text: string }[] = [
+    { mark: tick("var(--success)"), text: "Anchor, confirmed" },
+    { mark: tick("var(--text-muted)"), text: "Anchor, single source" },
+    { mark: tick("var(--warning)"), text: "Anchor, disputed" },
+    {
+      mark: (
+        <span aria-hidden className="flex items-center">
+          <span className="w-px h-2" style={{ backgroundColor: "var(--text-tertiary)" }} />
+          <span className="w-2.5 h-px" style={{ backgroundColor: "var(--text-tertiary)" }} />
+          <span className="w-2 h-2 rounded-full border-2" style={{ borderColor: "var(--success)" }} />
+        </span>
+      ),
+      text: `Outlier: more than ${OUTLIER_SECONDS} s off its moment, tied to it`,
+    },
+    {
+      mark: <span aria-hidden className="w-4 border-t border-dashed" style={{ borderColor: "var(--warning)" }} />,
+      text: "Where the title alone would start the recording",
+    },
+    {
+      mark: <span aria-hidden className="w-2.5 h-3 rounded-[1px] bg-vellum" />,
+      text: `Volley: its anchors within ${OUTLIER_SECONDS} s`,
+    },
+    {
+      mark: (
+        <span
+          aria-hidden
+          className="w-5 h-1.5 rounded-[1px]"
+          style={{ backgroundImage: "linear-gradient(to right, var(--text-tertiary), transparent)", opacity: 0.4 }}
+        />
+      ),
+      text: "May run on: the data has no lengths",
+    },
+  ];
+  return (
+    <div data-part="key" className="flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-3">
+      <h3 className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">Key</h3>
+      <ul className="mt-2 flex flex-col gap-2">
+        {rows.map((r) => (
+          <li key={r.text} className="flex items-start gap-2.5 text-xs text-ink-secondary">
+            <span className="shrink-0 w-5 h-4 flex items-center justify-center">{r.mark}</span>
+            <span className="min-w-0">{r.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** The recordings at the playhead, each a link that opens it there. */
 function ReadoutList({
   lanes,
@@ -1283,12 +1421,15 @@ function ReadoutList({
   selectedId,
   onSelect,
   onOpen,
+  twoLine,
 }: {
   lanes: SyncLane[];
   playhead: number;
   selectedId: string | null;
   onSelect: OnSelect;
   onOpen: (lane: SyncLane, link: SyncLink, offset: number) => void;
+  /** Name and link on the first line; kind, offset and warning under them. */
+  twoLine: boolean;
 }) {
   const seen = useAtomValue(syncOpenNoticeSeenAtom);
   return (
@@ -1296,46 +1437,68 @@ function ReadoutList({
       {lanes.map((l) => {
         const offset = Math.max(0, playhead - l.start!);
         const link = syncLinkAt(l, offset);
+        const warningWord = l.warning === "graphic" ? "Graphic" : "Distressing";
+        const place = twoLine ? "col-start-2 row-start-1 row-span-2" : "row-start-1 col-start-5";
+        const openLink = link ? (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (seen) return;
+              e.preventDefault();
+              onOpen(l, link, offset);
+            }}
+            title={link.seeks ? undefined : `Opens at the start; this host cannot open at a time. Go to ${formatOffset(offset)}.`}
+            aria-label={`Open ${l.name} ${link.seeks ? `at ${formatOffset(offset)}` : "at its start"}, in a new tab`}
+            className={`${place} shrink-0 inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs text-ink-secondary hover:bg-paper hover:text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40`}
+          >
+            {link.seeks && !twoLine ? `Open at ${formatOffset(offset)}` : "Open"}
+            <ExternalLink size={12} aria-hidden className="text-ink-muted" />
+          </a>
+        ) : (
+          <span className={`${place} shrink-0 text-xs text-ink-tertiary`}>No link</span>
+        );
         return (
           <li
             key={l.id}
-            className={`group flex items-center gap-3 h-8 px-1 -mx-1 rounded-md ${l.id === selectedId ? "bg-parchment" : "hover:bg-warm"}`}
+            className={`group grid items-center gap-x-3 px-1 -mx-1 rounded-md ${
+              twoLine ? "grid-cols-[minmax(0,1fr)_auto] py-1" : "grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] h-8"
+            } ${l.id === selectedId ? "bg-parchment" : "hover:bg-warm"}`}
           >
             <button
               type="button"
               onClick={(e) => onSelect(l.id, e)}
               aria-pressed={l.id === selectedId}
-              className="min-w-0 flex-1 text-start text-xs font-medium text-ink truncate cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+              className="min-w-0 text-start text-xs font-medium text-ink truncate cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
               title={l.name}
             >
               {l.name}
             </button>
-            <span className="hidden @md:inline text-meta text-ink-tertiary whitespace-nowrap">{l.kindLabel}</span>
-            <span className="text-xs text-ink-tertiary tabular-nums whitespace-nowrap" dir="ltr">
-              {formatOffset(offset)} in
+            {openLink}
+            <span className={`${twoLine ? "col-start-1 row-start-2" : "row-start-1 col-start-2 hidden @md:inline"} min-w-0 flex items-center gap-1.5 text-meta text-ink-tertiary whitespace-nowrap`}>
+              {twoLine ? (
+                <>
+                  <span className="truncate">{l.kindLabel}</span>
+                  <span aria-hidden>·</span>
+                  <span className="tabular-nums" dir="ltr">
+                    {formatOffset(offset)} in
+                  </span>
+                  <span className="w-fit px-1.5 py-px rounded-md bg-warm font-medium text-ink-secondary">{warningWord}</span>
+                </>
+              ) : (
+                l.kindLabel
+              )}
             </span>
-            <span className="w-fit px-1.5 py-px rounded-md bg-warm text-meta font-medium text-ink-secondary whitespace-nowrap">
-              {l.warning === "graphic" ? "Graphic" : "Distressing"}
-            </span>
-            {link ? (
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  if (seen) return;
-                  e.preventDefault();
-                  onOpen(l, link, offset);
-                }}
-                title={link.seeks ? undefined : `Opens at the start; this host cannot open at a time. Go to ${formatOffset(offset)}.`}
-                aria-label={`Open ${l.name} ${link.seeks ? `at ${formatOffset(offset)}` : "at its start"}, in a new tab`}
-                className="shrink-0 inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs text-ink-secondary hover:bg-paper hover:text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-              >
-                {link.seeks ? `Open at ${formatOffset(offset)}` : "Open"}
-                <ExternalLink size={12} aria-hidden className="text-ink-muted" />
-              </a>
-            ) : (
-              <span className="shrink-0 text-xs text-ink-tertiary">No link</span>
+            {!twoLine && (
+              <>
+                <span className="row-start-1 col-start-3 text-xs text-ink-tertiary tabular-nums whitespace-nowrap" dir="ltr">
+                  {formatOffset(offset)} in
+                </span>
+                <span className="row-start-1 col-start-4 w-fit px-1.5 py-px rounded-md bg-warm text-meta font-medium text-ink-secondary whitespace-nowrap">
+                  {warningWord}
+                </span>
+              </>
             )}
           </li>
         );
