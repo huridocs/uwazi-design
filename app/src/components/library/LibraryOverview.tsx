@@ -43,6 +43,9 @@ import {
 import { typeLabelColor } from "../../utils/typeColor";
 import { SectionLabel } from "../shared/SectionLabel";
 import { ChartTip } from "./BucketBreakdown";
+import { vegasSyncAtom } from "../../atoms/vegasSync";
+import { formatClock } from "../../data/vegas/links";
+import { ComparisonList, VegasSyncTable, momentName } from "./VegasSyncTable";
 
 const OverviewMap = lazy(() => import("./OverviewMap"));
 
@@ -106,6 +109,8 @@ const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
 const DAY = 86_400_000;
 const n = (v: number) => v.toLocaleString();
 const plural = (v: number, one: string, many = `${one}s`) => `${n(v)} ${v === 1 ? one : many}`;
+/** Rounded down, so 99.4% never reads as all of them. */
+const pct = (part: number, whole: number) => `${whole ? Math.floor((part / whole) * 100) : 0}%`;
 
 export function LibraryOverview({ loading }: { loading: boolean }) {
   const entities = useAtomValue(libraryEntitiesAtom);
@@ -191,6 +196,9 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   );
 
   const facets = useFacetSummaries(entities, source, language, ready);
+  const vegasSync = useAtomValue(vegasSyncAtom);
+  const sync = source === "vegas" ? vegasSync : null;
+  const [syncTableOpen, setSyncTableOpen] = useState(false);
   const network = useNetworkSummary(source, ready);
 
   const total = entities.length;
@@ -447,6 +455,69 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
             <BarSkeleton rows={LANES} />
           )}
         </Section>
+      )}
+
+      {/* ── Sync quality (Las Vegas) ──
+          How closely the recordings agree on each volley's clock. A row opens
+          the volley; the full table lists every aligned moment. */}
+      {ready && sync && sync.moments.some((m) => m.volley) && (
+        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
+        <Section
+          title="Sync quality"
+          note={`${pct(sync.totals.within2, sync.totals.counted)} of ${n(sync.totals.counted)} annotations within 2 s of their moment's median`}
+          action={{ label: "Open table", onClick: () => setSyncTableOpen(true) }}
+        >
+          <div aria-hidden className="flex items-center gap-3 h-6 px-0 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+            <span className="flex-1 min-w-0">Volley</span>
+            <span className="hidden @xl:block w-16 text-end">Gap</span>
+            <span className="w-14 @xl:w-20 text-end">Rec.</span>
+            <span className="w-14 @xl:w-20 text-end">Spread</span>
+            <span className="w-16 @xl:w-24 text-end">Outliers</span>
+          </div>
+          <ul aria-label="Sync quality by volley" className="flex flex-col -mx-2">
+            {sync.moments
+              .filter((m) => m.volley)
+              .sort((a, b) => a.volley! - b.volley!)
+              .map((m) => {
+                const gap = sync.intervals.find((i) => i.to === m.volley)?.seconds;
+                return (
+                  <li key={m.momentId}>
+                    <RowButton
+                      onClick={() => openRecord(m.momentId)}
+                      label={`Open ${momentName(m)}: ${plural(m.recordings, "recording")}, spread ${m.spread} s, ${plural(m.outliers.length, "outlier")}`}
+                    >
+                      <span className="min-w-0 flex-1 flex items-baseline gap-2">
+                        <span className="text-sm text-ink truncate">{momentName(m)}</span>
+                        <span className="text-xs text-ink-tertiary tabular-nums">{m.median !== null ? formatClock(m.median) : ""}</span>
+                      </span>
+                      <span className="hidden @xl:block w-16 text-end text-xs text-ink-tertiary tabular-nums">{gap !== undefined ? `+${gap} s` : ""}</span>
+                      <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.recordings}</span>
+                      <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.spread} s</span>
+                      <span className={`w-16 @xl:w-24 text-end text-xs tabular-nums ${m.outliers.length ? "text-warning-label font-semibold" : "text-ink-tertiary"}`}>
+                        {m.outliers.length || "None"}
+                      </span>
+                    </RowButton>
+                  </li>
+                );
+              })}
+          </ul>
+        </Section>
+        {sync.comparisons.length > 0 && (
+          <Section title="Against other accounts" note="Known from press summaries, not read at source">
+            <ComparisonList rows={sync.comparisons} onOpen={openRecord} />
+          </Section>
+        )}
+        </div>
+      )}
+      {syncTableOpen && sync && (
+        <VegasSyncTable
+          sync={sync}
+          onClose={() => setSyncTableOpen(false)}
+          onOpenMoment={(id) => {
+            setSyncTableOpen(false);
+            openRecord(id);
+          }}
+        />
       )}
 
       {/* ── Facets ──

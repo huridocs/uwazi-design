@@ -17,8 +17,8 @@ import { TimeTag } from "../shared/TimeTag";
 /** "+3 s", "−2 s", "0 s": a signed difference in seconds. */
 export function signedSeconds(s: number): string {
   const r = Math.round(s * 10) / 10;
-  if (r === 0) return "0 s";
-  return `${r > 0 ? "+" : "−"}${Math.abs(r)} s`;
+  if (r === 0) return "0\u00a0s";
+  return `${r > 0 ? "+" : "−"}${Math.abs(r)}\u00a0s`;
 }
 
 const CELL_HEAD = "text-meta font-semibold uppercase tracking-wider text-ink-tertiary text-start font-normal pb-1";
