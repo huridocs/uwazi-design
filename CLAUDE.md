@@ -378,7 +378,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   draws nothing and gets a title-only tooltip after 450 ms; a neighbour gets its ring, label and
   link to the anchor; edges answer clicks only. Neighbours are labelled by link weight, and the
   anchor's edges draw over the receded nodes. On phones the sheet's entity
-  (`previewEntityIdAtom`) is the canvas's selection. The tooltip is anchored to its target
+  (`previewEntityIdAtom`) is the canvas's selection. Like the map, the canvas fills its pane
+  (a `bleed-flush` lane with `data-gutter-bleed`, no frame); its controls sit on the 12px gutter
+  and Fit keeps the top and bottom bars clear. The tooltip is anchored to its target
   (above, else below, right, left), never to the pointer. Edges answer hover and click with their
   types and, for Nepal, quotes and status (`pairEvidence`). With a search, the camera flies to the
   best match by relevance; Enter / Shift+Enter in the masthead search (`networkFindStepAtom`)

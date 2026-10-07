@@ -102,6 +102,10 @@ const MOVE_MS = 380;
 const DOUBLE_TAP_MS = 320;
 /** Pixels kept clear around a fit, for marks, names and the controls. */
 const FIT_PAD = 96;
+/** Margins of a fit: the sides, and the top and bottom, which clear the
+ *  control bars laid over the canvas on the gutter (12px, a 28px bar, 16px). */
+const FIT_MARGIN = 32;
+const FIT_BAR_MARGIN = 56;
 
 type Box = [number, number, number, number];
 
@@ -1010,13 +1014,17 @@ export function NetworkCanvas({
     return () => ro.disconnect();
   }, []);
 
-  /** The camera that frames `ext`. */
+  /** The camera that frames `ext` between the control bars along the
+   *  canvas's top (breadcrumb, stepper) and bottom (zoom, Focus switch, chip). */
   const frameOf = useCallback(
     (ext: Extent): Camera => {
+      const top = FIT_BAR_MARGIN;
+      const bottom = FIT_BAR_MARGIN;
       const w = ext.maxX - ext.minX || 1;
       const h = ext.maxY - ext.minY || 1;
-      const k = Math.min(Math.max(1, size.w - FIT_PAD) / w, Math.max(1, size.h - FIT_PAD) / h);
-      return { k, tx: size.w / 2 - ((ext.minX + ext.maxX) / 2) * k, ty: size.h / 2 - ((ext.minY + ext.maxY) / 2) * k };
+      const availH = Math.max(1, size.h - top - bottom);
+      const k = Math.min(Math.max(1, size.w - 2 * FIT_MARGIN) / w, availH / h);
+      return { k, tx: size.w / 2 - ((ext.minX + ext.maxX) / 2) * k, ty: top + availH / 2 - ((ext.minY + ext.maxY) / 2) * k };
     },
     [size],
   );
@@ -1258,6 +1266,19 @@ export function NetworkCanvas({
       hood: (i: number) => [...hoodOf(i).list],
       hover: () => hoverRef.current,
       draws: () => drawCount.current,
+      /** Drawn nodes (or community marks, on the overview) under a control
+       *  laid over the canvas. */
+      underOverlays: () => {
+        const c = cam.current;
+        const pts: [number, number][] = [];
+        if (mix(c.k / fitK.current) < 0.5) {
+          for (const cm of communities) if (shownCount.get(cm)) pts.push([cm.x * c.k + c.tx, cm.y * c.k + c.ty]);
+        } else {
+          for (let i = 0; i < n; i++)
+            if (nodeOn[i] && (!member || member[i])) pts.push([shown.current[i * 2] * c.k + c.tx, shown.current[i * 2 + 1] * c.k + c.ty]);
+        }
+        return pts.filter(([x, y]) => overlays.current.some((b) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3])).length;
+      },
     };
   });
 
@@ -1844,7 +1865,10 @@ export function NetworkCanvas({
     <div
       ref={hostRef}
       data-component="NetworkCanvas"
-      className="relative w-full h-full min-h-0 overflow-hidden rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
+      // Edge to edge of the pane: listed by `__gutter()`, not asserted. Its
+      // controls sit on the gutter (12px) inside it.
+      data-gutter-bleed
+      className="relative w-full h-full min-h-0 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
       // The canvas region takes the keyboard: arrows pan (Shift: farther),
       // + and − zoom, 0 fits, Escape ends the selection. Keys pressed on the
       // controls inside it are theirs, except Escape.
@@ -1932,7 +1956,7 @@ export function NetworkCanvas({
         <nav
           aria-label="Where you are"
           data-part="breadcrumb" data-overlay
-          className="absolute top-0 left-0 h-6 max-w-[calc(100%-9rem)] flex items-center gap-1 px-1 bg-paper border border-border-soft rounded-md shadow-sm text-meta"
+          className="absolute top-3 left-3 h-6 max-w-[calc(100%-10.5rem)] flex items-center gap-1 px-1 bg-paper border border-border-soft rounded-md shadow-sm text-meta"
         >
           <button
             type="button"
@@ -1953,7 +1977,7 @@ export function NetworkCanvas({
       {legend.length > 1 && (
         <div
           data-part="legend" data-overlay
-          className={`absolute left-0 ${marksOn ? "top-8" : "top-0"} w-fit max-w-[16rem] bg-paper border border-border-soft rounded-md shadow-sm`}
+          className={`absolute left-3 ${marksOn ? "top-11" : "top-3"} w-fit max-w-[16rem] bg-paper border border-border-soft rounded-md shadow-sm`}
         >
           <button
             type="button"
@@ -1966,7 +1990,7 @@ export function NetworkCanvas({
             {legendShown ? <ChevronUp size={12} aria-hidden className="ms-auto" /> : <ChevronDown size={12} aria-hidden className="ms-auto" />}
           </button>
           {legendShown && (
-            <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn ? 112 : 80), 96, 244) }}>
+            <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn ? 136 : 104), 96, 244) }}>
               {legend.map(({ typeId, count }) => {
                 const on = !hiddenTypes.has(typeId);
                 const name = typeNameOf(typeId);
@@ -2007,7 +2031,7 @@ export function NetworkCanvas({
           role="group"
           aria-label="Matches"
           // `--rail-reserve`: the Library's Full width rail sits at this corner.
-          className="absolute top-0 right-[var(--rail-reserve,0px)] flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+          className="absolute top-3 right-[calc(var(--rail-reserve,0px)+0.75rem)] flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
         >
           <button
             type="button"
@@ -2036,12 +2060,12 @@ export function NetworkCanvas({
       {chip && (
         <p
           data-part="isolated" data-overlay
-          className="absolute left-0 bottom-0 w-fit px-2 h-6 flex items-center rounded-md bg-paper border border-border-soft text-meta text-ink-tertiary"
+          className="absolute left-3 bottom-3 w-fit px-2 h-6 flex items-center rounded-md bg-paper border border-border-soft text-meta text-ink-tertiary"
         >
           {chip}
         </p>
       )}
-      <div className="absolute bottom-0 right-0 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-full">
+      <div className="absolute bottom-3 right-3 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
         {layoutSwitch && (
           <div
             data-part="layout" data-overlay

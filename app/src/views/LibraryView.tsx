@@ -1364,12 +1364,15 @@ export function LibraryView() {
         onClick={clearOnGround}
         // Only a real tap opens an item here, never the end of a scroll.
         data-tap-guard
+        // A canvas lane spans the pane on purpose: `__gutter()` lists it and
+        // does not assert it.
+        data-gutter-bleed={viewMode === "map" || viewMode === "network" ? "" : undefined}
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.
-        // The map is a canvas: it fills the lane to the pane edges, no gutter
-        // and no inset.
-        className={`flex-1 min-h-0 bg-warm ${viewMode === "map" ? "bleed-flush" : "bleed py-3"} ${
+        // The map and the network are canvases: they fill the lane to the pane
+        // edges, no gutter and no inset; their overlays sit on the gutter.
+        className={`flex-1 min-h-0 bg-warm ${viewMode === "map" || viewMode === "network" ? "bleed-flush" : "bleed py-3"} ${
           viewMode === "map" || viewMode === "timeline" || viewMode === "results" || viewMode === "network"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
