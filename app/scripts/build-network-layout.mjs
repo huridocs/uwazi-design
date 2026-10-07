@@ -1,6 +1,6 @@
 // Lay out the Library's Network view ahead of time, one file per collection.
 //
-//   node scripts/build-network-layout.mjs [cejil|nepal|travesia|mock ...]
+//   node scripts/build-network-layout.mjs [cejil|nepal|travesia|vegas|mock ...]
 //
 // The Network view draws a whole collection: one node per record the Library
 // lists, one edge per unordered pair of records that a stored reference joins.
@@ -22,11 +22,11 @@
 // the same bytes.
 //
 // Weights: an edge that touches a high-degree record (a País, an Organismo, a
-// judge who signed hundreds of rulings) weighs 0.1 in both the layout and the
+// judge who signed hundreds of rulings, the Vegas map's Source) weighs 0.1 in both the layout and the
 // communities, and the layout then weighs edges by community (see `layout`). At full weight those few records pull the whole collection into
 // one ball around them; at 0.1 the cases and their documents keep their own
 // clusters. The thresholds are the view's "hub" thresholds (`HUB_DEGREE` in
-// src/data/network/graph.ts): 100 neighbours in CEJIL, 50 in Nepal, 20 in the
+// src/data/network/graph.ts): 100 neighbours in CEJIL, 50 in Nepal and Las Vegas, 20 in the
 // Sample and Red Travesía.
 import fs from "node:fs";
 import os from "node:os";
@@ -40,7 +40,7 @@ const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pub = (...p) => path.join(APP, "public", ...p);
 const readJson = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
 
-const HUB_DEGREE = { cejil: 100, nepal: 50, travesia: 20, mock: 20 };
+const HUB_DEGREE = { cejil: 100, nepal: 50, travesia: 20, vegas: 50, mock: 20 };
 const ITERATIONS = 800;
 /** Edge weight multipliers inside and between communities, for the layout only. */
 const INSIDE = 5;
@@ -70,6 +70,12 @@ function cejil() {
 function nepal() {
   const ents = readJson(pub("nepal-data", "entities.json"));
   const rels = readJson(pub("nepal-data", "relationships.json"));
+  return { ids: ents.map((e) => e.sharedId), pairs: rels.map((r) => [r.from, r.to]) };
+}
+
+function vegas() {
+  const ents = readJson(pub("vegas-data", "entities.json"));
+  const rels = readJson(pub("vegas-data", "relationships.json"));
   return { ids: ents.map((e) => e.sharedId), pairs: rels.map((r) => [r.from, r.to]) };
 }
 
@@ -112,6 +118,7 @@ const CORPORA = {
   cejil: { load: cejil, out: pub("cejil-data", "network.json") },
   nepal: { load: nepal, out: pub("nepal-data", "network.json") },
   travesia: { load: travesia, out: pub("travesia-data", "network.json") },
+  vegas: { load: vegas, out: pub("vegas-data", "network.json") },
   mock: { load: mock, out: pub("sample-data", "network.json") },
 };
 

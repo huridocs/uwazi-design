@@ -1,0 +1,74 @@
+[
+ {
+  "_id": "captures",
+  "name": "captures"
+ },
+ {
+  "_id": "recorded_at",
+  "name": "recorded at"
+ },
+ {
+  "_id": "depicts",
+  "name": "depicts"
+ },
+ {
+  "_id": "derived_from",
+  "name": "derived from"
+ },
+ {
+  "_id": "synced_with",
+  "name": "synced with"
+ },
+ {
+  "_id": "occurred_at",
+  "name": "occurred at"
+ },
+ {
+  "_id": "fired_from",
+  "name": "fired from"
+ },
+ {
+  "_id": "part_of",
+  "name": "part of"
+ },
+ {
+  "_id": "followed_by",
+  "name": "followed by"
+ },
+ {
+  "_id": "documents",
+  "name": "documents"
+ },
+ {
+  "_id": "issued_by",
+  "name": "issued by"
+ },
+ {
+  "_id": "supports",
+  "name": "supports"
+ },
+ {
+  "_id": "disputes",
+  "name": "disputes"
+ },
+ {
+  "_id": "contradicts",
+  "name": "contradicts"
+ },
+ {
+  "_id": "supersedes",
+  "name": "replaces"
+ },
+ {
+  "_id": "geolocated_by",
+  "name": "positioned by"
+ },
+ {
+  "_id": "synced_by",
+  "name": "synced by"
+ },
+ {
+  "_id": "published_in",
+  "name": "published in"
+ }
+]
