@@ -31,6 +31,9 @@ const BOUNDS_SETTLE_MS = 150;
 /** A move that starts this long after the reader's last wheel, click, key or
  *  pinch is theirs (the wheel waits 40 ms before it zooms). */
 const GESTURE_WINDOW_MS = 1000;
+/** A second click on a badge within this long is a double click: a zoom, not
+ *  a selection. */
+const DOUBLE_CLICK_MS = 250;
 
 /** The area as stored: rounded, so a link stays short. */
 const boundsOf = (b: L.LatLngBounds): MapBounds => {
@@ -52,11 +55,11 @@ const isActivation = (e: L.LeafletEvent) => {
  *  draws it (app/react/Map/LMap.tsx), with the collection's tiles.
  *
  *  One pin per entity with a geolocation, in its template's colour. Nearby pins
- *  merge into markercluster's fixed-size badges; a badge zooms to its members,
- *  and one whose members cannot split any further (they share a point, or the
- *  map is at its last zoom) opens them as a list in the drawer. A pin opens the
- *  entity's preview. Pins and badges are buttons: Tab reaches them, Enter or
- *  Space opens them.
+ *  merge into markercluster's fixed-size badges. A click on a badge marks it
+ *  and opens its members as a list (the drawer, or the rail's panel in Full
+ *  width and Split); a double click zooms to them. A pin opens the entity's
+ *  preview. Pins and badges are buttons: Tab reaches them, Enter or Space
+ *  opens them. Escape or a click on the bare map closes the list.
  *
  *  A record with a shape (a moving camera's path, a venue's footprint: the
  *  Vegas collection) draws it under the pins, in its template's colour. The
@@ -149,26 +152,62 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
       },
     });
 
-    const openCluster = (e: L.LeafletEvent) => {
-      if (e.type === "clusterkeypress" && !isActivation(e)) return;
-      (e as L.LeafletKeyboardEvent).originalEvent?.preventDefault?.();
-      const cluster = (e as unknown as { layer: L.MarkerCluster }).layer;
-      const bounds = cluster.getBounds();
-      const onePoint = bounds.getNorthEast().equals(bounds.getSouthWest());
-      const fromKeyboard = e.type === "clusterkeypress";
-      if (onePoint || map.getZoom() >= map.getMaxZoom()) {
-        keyboardOpen.current = fromKeyboard;
-        setSelectedId(null);
-        setSelectedCluster(clusterInfo(cluster));
-      } else {
-        // After a zoom the badge is gone; the map itself takes focus, and Tab
-        // goes on to the pins and badges now in view.
-        if (fromKeyboard) map.once("zoomend", () => map.getContainer().focus({ preventScroll: true }));
-        gestureAt.current = performance.now();
-        cluster.zoomToBounds({ padding: [24, 24] });
-      }
+    const selectCluster = (cluster: L.MarkerCluster, fromKeyboard: boolean) => {
+      keyboardOpen.current = fromKeyboard;
+      setSelectedId(null);
+      setSelectedCluster(clusterInfo(cluster));
     };
-    group.on("clusterclick clusterkeypress", openCluster);
+    const zoomCluster = (cluster: L.MarkerCluster) => {
+      const bounds = cluster.getBounds();
+      // Nothing to zoom into: its members share a point, or the map is at its
+      // last zoom. The list is all a double click can give.
+      if (bounds.getNorthEast().equals(bounds.getSouthWest()) || map.getZoom() >= map.getMaxZoom()) {
+        selectCluster(cluster, false);
+        return;
+      }
+      // A reader zoom: the area it lands on becomes the map-area filter.
+      gestureAt.current = performance.now();
+      cluster.zoomToBounds({ padding: [24, 24] });
+    };
+    /* A click selects the badge and opens its list; a double click (or double
+       tap) zooms to its members. The click waits out the double-click window,
+       so a double click never opens the list on its way to the zoom. Enter and
+       Space select at once. */
+    let pending: { cluster: L.MarkerCluster; timer: number } | null = null;
+    const onClusterClick = (e: L.LeafletEvent) => {
+      const cluster = (e as unknown as { layer: L.MarkerCluster }).layer;
+      if (pending) {
+        window.clearTimeout(pending.timer);
+        const same = pending.cluster === cluster;
+        pending = null;
+        if (same) {
+          zoomCluster(cluster);
+          return;
+        }
+      }
+      pending = {
+        cluster,
+        timer: window.setTimeout(() => {
+          pending = null;
+          selectCluster(cluster, false);
+        }, DOUBLE_CLICK_MS),
+      };
+    };
+    const onClusterKey = (e: L.LeafletEvent) => {
+      if (!isActivation(e)) return;
+      (e as L.LeafletKeyboardEvent).originalEvent.preventDefault();
+      selectCluster((e as unknown as { layer: L.MarkerCluster }).layer, true);
+    };
+    group.on("clusterclick", onClusterClick);
+    group.on("clusterkeypress", onClusterKey);
+    // The zoom is the second click's. A listener makes the badge the target of
+    // its dblclick, which then stops there (markers do not bubble mouse events)
+    // instead of reaching the map's own double-click zoom.
+    group.on("clusterdblclick", () => {});
+    // A click on the map itself, off every pin and badge, clears the list.
+    // Pins and badges do not bubble their clicks to the map.
+    const clearCluster = () => setSelectedCluster(null);
+    map.on("click", clearCluster);
 
     for (const e of located) {
       const color = getEntityType(e.typeId)?.color ?? "var(--text-tertiary)";
@@ -226,6 +265,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     }
 
     return () => {
+      if (pending) window.clearTimeout(pending.timer);
+      map.off("click", clearCluster);
       groupRef.current = null;
       map.removeLayer(group);
       map.removeLayer(shapes);

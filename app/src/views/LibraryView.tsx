@@ -1184,6 +1184,22 @@ export function LibraryView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionActive, clearSelection, splitPane]);
 
+  // A map cluster's list in the drawer closes on Escape too. In Full width
+  // and Split it is a rail panel, whose own Escape closes it.
+  const clusterListOpen = !!selectedCluster && !selectedId && viewMode === "map" && !fullWidth;
+  useEffect(() => {
+    if (!clusterListOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
+      if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
+      setSelectedCluster(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [clusterListOpen, setSelectedCluster]);
+
   /* `collapse`: a plain click in the view with 2 or more selected ends the
      multi-selection and previews that item. The selection and cluster drawers
      pass false: their rows are the selection, so a click previews without
