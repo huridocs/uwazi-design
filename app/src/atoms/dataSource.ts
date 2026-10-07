@@ -55,8 +55,19 @@ export const libraryEntitiesAtom = atom<Entity[]>((get) => {
   // entities first, deleted ones out, patched ones as new objects so every
   // per-entity cache recomputes. With none, the corpus's own array comes back
   // as is — its identity keys caches too.
-  return applyOverlay(get(corpusOverlayAtom(source)), seedFor(source, get));
+  return overlaid(get(corpusOverlayAtom(source)), seedFor(source, get));
 });
+
+/** The last overlay applied, by its inputs' identity. Split's right pane
+ *  evaluates this atom in its own scope; with the same overlay and corpus it
+ *  gets the same array, and every cache keyed on the array is shared. */
+let lastOverlaid: { overlay: CorpusOverlay; base: Entity[]; result: Entity[] } | null = null;
+function overlaid(overlay: CorpusOverlay, base: Entity[]): Entity[] {
+  if (lastOverlaid?.overlay !== overlay || lastOverlaid.base !== base) {
+    lastOverlaid = { overlay, base, result: applyOverlay(overlay, base) };
+  }
+  return lastOverlaid.result;
+}
 
 function seedFor(source: DataSource, get: Getter): Entity[] {
   switch (source) {

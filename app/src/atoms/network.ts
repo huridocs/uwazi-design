@@ -3,6 +3,8 @@ import { dataSourceAtom, libraryEntitiesAtom } from "./dataSource";
 import { referencesAtom } from "./references";
 import { buildNetworkGraph, NETWORK_TYPES_OFF } from "../data/network/graph";
 import type { Reference } from "../data/references";
+import type { Entity } from "../data/entities";
+import type { DataSource } from "./dataSource";
 import type { ToggleOption } from "../data/libraryDisplay";
 
 const NO_REFS: Reference[] = [];
@@ -16,8 +18,21 @@ export const networkFindStepAtom = atom<{ dir: 1 | -1; n: number }>({ dir: 1, n:
  *  the Network view and its Display options, so no other view builds it. */
 export const networkGraphAtom = atom((get) => {
   const source = get(dataSourceAtom);
-  return buildNetworkGraph(source, get(libraryEntitiesAtom), source === "mock" ? get(referencesAtom) : NO_REFS);
+  const entities = get(libraryEntitiesAtom);
+  const refs = source === "mock" ? get(referencesAtom) : NO_REFS;
+  // By input identity: Split's two panes evaluate this atom once each, and
+  // share one graph.
+  if (lastGraph?.source !== source || lastGraph.entities !== entities || lastGraph.refs !== refs) {
+    lastGraph = { source, entities, refs, graph: buildNetworkGraph(source, entities, refs) };
+  }
+  return lastGraph.graph;
 });
+let lastGraph: {
+  source: DataSource;
+  entities: Entity[];
+  refs: Reference[];
+  graph: ReturnType<typeof buildNetworkGraph>;
+} | null = null;
 
 /** Display › Relationship types: one switch per type the collection carries,
  *  most references first. Stored as `type:<label>` in the Network mode. */
