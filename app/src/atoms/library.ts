@@ -305,6 +305,11 @@ export const entitySelectedAtom = atomFamily((id: string) =>
  *  clearing it, and any new tick opens it again. */
 export const librarySelectionDrawerOpenAtom = atom(true);
 
+/** Full width: the selection list slides over the results only when the
+ *  selection bar's list button asks for it, not on every tick, since it
+ *  would cover the cards being picked. Cleared when the list closes. */
+export const librarySelectionListAskedAtom = atom(false);
+
 /** The selection drawer shows the bulk edit form instead of the list. Set by
  *  the footer's and the phone sheet's Edit with 2 or more selected; Cancel,
  *  Apply and clearing the selection end it. */
@@ -321,6 +326,7 @@ export const openBulkEditAtom = atom(null, (get, set) => {
   set(libraryBulkEditOpenAtom, true);
   set(libraryOpenEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
+  set(librarySelectionListAskedAtom, true);
 });
 
 /** Every selection write goes through here. With a dirty bulk form it is

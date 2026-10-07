@@ -72,6 +72,7 @@ import {
   libraryRailPanelAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
+  librarySelectionListAskedAtom,
   librarySortAtom,
   librarySortDirAtom,
   librarySortInMenuAtom,
@@ -955,7 +956,11 @@ export function LibraryView() {
     },
     [selectionActive, viewMode, clearSelection],
   );
-  const [selectionDrawerOpen, setSelectionDrawerOpen] = useAtom(librarySelectionDrawerOpenAtom);
+  const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
+  const [selectionListAsked, setSelectionListAsked] = useAtom(librarySelectionListAskedAtom);
+  useEffect(() => {
+    if (selectionListAsked && (!selectionActive || !selectionDrawerOpen)) setSelectionListAsked(false);
+  }, [selectionListAsked, selectionActive, selectionDrawerOpen, setSelectionListAsked]);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
   // The grid's and the table's order — Timeline and Results register their own,
@@ -1836,8 +1841,9 @@ export function LibraryView() {
             }),
           body: drawer,
         }
-      : selectionActive && selectionDrawerOpen
-        ? { key: "selection", label: "Selection", onClose: () => setSelectionDrawerOpen(false), body: drawer }
+      : selectionActive && selectionDrawerOpen && selectionListAsked
+        ? // No Escape of its own: the Library's Escape clears the selection, as in Drawer.
+          { key: "selection", label: "Selection", onClose: null, body: drawer }
         : selectedCluster && viewMode === "map"
           ? { key: "cluster", label: "Map cluster", onClose: () => setSelectedCluster(null), body: drawer }
           : null;
@@ -1853,7 +1859,9 @@ export function LibraryView() {
   function wrapLane(node: ReactNode) {
     if (!fullWidth) return node;
     return (
-      <div ref={setLaneHost} data-part="lane-host" className="relative flex-1 min-h-0 flex flex-col">
+      // `isolate`: the rail's layer stacks inside the lane, so the masthead's
+      // popovers (Sort, Language, Display, Views) open over it.
+      <div ref={setLaneHost} data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
         {node}
         <LibraryFullWidthLayer>
           <LibraryRail items={railItems} />

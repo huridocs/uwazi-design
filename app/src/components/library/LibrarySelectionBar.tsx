@@ -9,6 +9,7 @@ import {
   libraryOpenEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
+  librarySelectionListAskedAtom,
   selectIdsAtom,
 } from "../../atoms/library";
 import type { Corpus } from "../../data/entityChanges";
@@ -47,6 +48,7 @@ export function LibrarySelectionBar({
   const clear = useSetAtom(clearSelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
+  const askList = useSetAtom(librarySelectionListAskedAtom);
   const setPreview = useSetAtom(libraryOpenEntityIdAtom);
   const [sheetOpen, setSheetOpen] = useState(false);
   // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
@@ -71,6 +73,7 @@ export function LibrarySelectionBar({
     if (isMobile) return setSheetOpen(true);
     setPreview(null);
     openDrawer(true);
+    askList(true);
   };
   const actions = useSelectionActions({ order: filteredIds, corpus, isMobile });
 
