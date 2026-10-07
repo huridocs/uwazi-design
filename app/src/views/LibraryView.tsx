@@ -162,7 +162,9 @@ import { notebookPinCountAtom } from "../atoms/notebook";
 import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, type RailItem, type RailPane } from "../components/library/LibraryRail";
 import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
-import { paneHoldsEvent, useLibraryPane, useMastheadFold } from "../components/library/libraryPane";
+import { createPortal } from "react-dom";
+import { identityOf, sharedPass } from "../utils/sharedPass";
+import { paneHoldsEvent, useLibraryPane, useMastheadFold, useSplitFooter } from "../components/library/libraryPane";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -492,6 +494,7 @@ export function LibraryView() {
      below 1024px the drawer, sheets and Filters button stay as they are. Each
      of Split's panes is a Full width Library (`LibrarySplitView`). */
   const splitPane = useLibraryPane();
+  const splitFooter = useSplitFooter();
   const layout = useAtomValue(libraryLayoutAtom);
   const fullWidth = !!splitPane || (layout === "full" && breakpoint === "desktop");
   const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
@@ -632,7 +635,10 @@ export function LibraryView() {
 
   // Precomputed lowercase searchable text per entity (title, country, displayed
   // metadata values, descriptors), so a keystroke doesn't rebuild it per entity.
-  const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
+  const searchIndex = useMemo(
+    () => sharedPass(entities, `index:${language}`, () => buildSearchIndex(entities, language)),
+    [entities, language],
+  );
 
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
@@ -784,6 +790,35 @@ export function LibraryView() {
     ],
   );
 
+  // Everything `filterState` reads, as a string: the key under which the two
+  // Split panes share their full-corpus passes (`sharedPass`).
+  const passKey = [
+    dataSource,
+    language,
+    activeTypeIds.join(","),
+    hasDocOnly,
+    wantPublished,
+    wantRestricted,
+    activeCountries.join(","),
+    countryMode,
+    activeDescriptors.join(","),
+    descriptorMode,
+    fromMs,
+    toMs,
+    inheritedKey,
+    rangesKey,
+    JSON.stringify(groups),
+    chainKey,
+    identityOf(chainTemplates),
+    cejilReady,
+    nepalReady,
+    q,
+    searchMatch,
+    searchScope,
+    JSON.stringify(matchTypes),
+    contentKey,
+  ].join("\u0001");
+
   // Where each entity matched, computed at most once per entity per query and
   // shared by the relevance ranking, the match-type chip gate and the chip
   // counts. Lazy: with all chips on nothing asks, and the ranking asks only when
@@ -828,7 +863,8 @@ export function LibraryView() {
   // chips, and the chip-narrowed list is filtered from it rather than from the
   // corpus.
   const matchTypeBase = useMemo(
-    () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
+    () => (q ? sharedPass(entities, `matchType:${passKey}`, () => entities.filter((e) => matchesAll(e, filterState, "matchType"))) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `passKey` follows `filterState`
     [entities, filterState, q],
   );
 
@@ -840,7 +876,7 @@ export function LibraryView() {
       ? matchTypeBase.filter((e) =>
           passesMatchTypes(matchTypes, q, () => categoriesOf(e)),
         )
-      : entities.filter((e) => matchesAll(e, filterState));
+      : sharedPass(entities, `all:${passKey}`, () => entities.filter((e) => matchesAll(e, filterState)));
     const typeName = (e: Entity) => getEntityType(e.typeId)?.name ?? e.typeId;
     const cmp = (a: Entity, b: Entity) => {
       let r = 0;
@@ -907,7 +943,12 @@ export function LibraryView() {
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
   const searchMatchCount = useMemo(
-    () => (q ? entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0) : 0),
+    () =>
+      q
+        ? sharedPass(entities, `searchCount:${passKey}`, () =>
+            entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0),
+          )
+        : 0,
     [entities, filterState, q],
   );
 
@@ -937,7 +978,12 @@ export function LibraryView() {
   // The brush histogram applies every facet except the date one, so the bars
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
-    () => (showBrush ? entities.filter((e) => matchesAll(e, boundedState, "date")) : []),
+    () =>
+      showBrush
+        ? sharedPass(entities, `date:${JSON.stringify(mapBounds)}:${passKey}`, () =>
+            entities.filter((e) => matchesAll(e, boundedState, "date")),
+          )
+        : [],
     [entities, mapBounds, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush, searchScope, searchMatch],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
@@ -945,7 +991,9 @@ export function LibraryView() {
   const laneChart = useMemo(
     () =>
       viewMode === "timeline" && !cejilLoading
-        ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
+        ? sharedPass(entities, `lanes:${passKey}`, () =>
+            entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date")),
+          )
         : [],
     [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, viewMode, cejilLoading, searchScope, searchMatch],
   );
@@ -1236,7 +1284,108 @@ export function LibraryView() {
         </span>
       ));
 
-  const renderLeft = (menuTrigger?: ReactNode) => (
+  const renderLeft = (menuTrigger?: ReactNode) => {
+  // Split's shared bar names the pane it exports; synced, both panes hold one
+  // filter set and the plain name stands.
+  const exportLabel = splitPane && !splitFooter?.synced ? `Export ${splitPane.side} pane` : "Export CSV";
+  const footerActions = (
+    <>
+        {/* The bar swaps in place between the baseline actions and the
+            selection's, at the same height. The selection's readout, Clear and
+            select-all sit at the bar's end in `LibrarySelectionBar`. */}
+        {selectionActive && (
+          <LibrarySelectionBar
+            filteredIds={filteredIds}
+            loadedIds={drawnIds}
+            corpus={dataSource}
+            filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
+          />
+        )}
+        {!selectionActive && (
+          <CreateEntityButton
+            preset={createPreset}
+            named={createNamed}
+            recent={recentTemplates[dataSource] ?? []}
+            types={libraryTypes}
+            onCreate={handleCreate}
+            onAll={() => setCreateOpen(true)}
+            extra={[{ label: "Batch entry…", onSelect: () => setBatchOpen(true) }]}
+          />
+        )}
+        {!selectionActive && (
+          <FooterButton
+            icon={<Upload size={13} className="text-ink-tertiary" />}
+            label="Upload PDF"
+            onClick={() => uploadInputRef.current?.click()}
+          />
+        )}
+        {!selectionActive && (
+          <>
+            {canImport && (
+              <FooterButton
+                icon={<FileUp size={13} className="text-ink-tertiary" />}
+                label="Import CSV"
+                onClick={() =>
+                  guard(() => setImportOpen(true))
+                }
+              />
+            )}
+            {/* With a selection, the bar's own Export CSV exports the
+                selection; without one, this exports the current results. */}
+            <FooterButton
+              icon={<FileDown size={13} className="text-ink-tertiary" />}
+              label={exportLabel}
+              onClick={handleExport}
+            />
+          </>
+        )}
+        {/* No result count here: the masthead readout is the only one. The
+            active-filters button below is not a duplicate; it is the only way to
+            reach the filters while the drawer shows an entity. `ms-2` separates
+            it from the footer actions. */}
+        {/* Phones: the four actions above are `hidden sm:flex`; this button
+            opens them in a sheet. */}
+        {!selectionActive && (
+          <button
+            type="button"
+            onClick={() => setPhoneActionsOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={phoneActionsOpen}
+            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
+          >
+            <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+          </button>
+        )}
+        {/* With a selection the bar places it, before its end group. */}
+        {/* Phones carry Filters as a button of their own (below), with the count. */}
+        {!selectionActive && !menuTrigger && <ActiveFiltersButton className="ms-2 shrink-0" />}
+        {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
+            the bar's END, where the entity view's bar keeps it: in thumb reach,
+            and a menu at the bottom opens upward. Only the drawer nav moved;
+            search, view mode, Display and the readout stay on top. */}
+        {menuTrigger && (
+          <div data-part="sheets" className="ms-auto shrink-0 flex items-center gap-1">
+            {/* Filters one tap away, not behind the menu. */}
+            <button
+              type="button"
+              data-part="filters"
+              onClick={() => setOpenSection("filters")}
+              aria-haspopup="dialog"
+              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
+            >
+              <Filter size={13} className="text-ink-tertiary" aria-hidden />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="min-w-4 px-1 rounded-md bg-warm text-ink text-meta font-semibold tabular-nums">{activeFilterCount}</span>
+              )}
+            </button>
+            {menuTrigger}
+          </div>
+        )}
+    </>
+  );
+  return (
     // The narrow-tier gutter host (12px). The toolbar, the view lane, the time
     // brush and the footer are `bleed` bands: their grounds and rules reach the
     // pane edge and their content sits on the gutter.
@@ -1617,183 +1766,100 @@ export function LibraryView() {
       {showBrush && <TimeBrush entities={timeChart} />}
       </>)}
 
+      {/* The footer's dialogs and file input, mounted whichever bar shows the
+        actions (in Split the bar is shared and follows the active pane). */}
+      {pendingUploads && (
+        <UploadDocumentsModal
+          files={pendingUploads}
+          types={libraryTypes}
+          defaultTypeId={uploadTemplateId(dataSource)}
+          onUpload={startUpload}
+          onClose={() => setPendingUploads(null)}
+        />
+      )}
+      <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
+      {batchOpen && (
+        <BatchEntryModal
+          corpus={dataSource}
+          types={libraryTypes}
+          initialTypeId={createPreset}
+          language={language}
+          onClose={() => setBatchOpen(false)}
+        />
+      )}
+      {createOpen && (
+        <CreateEntityDialog
+          types={libraryTypes}
+          defaultTypeId={defaultTemplateId(dataSource)}
+          onChoose={handleCreate}
+          onClose={() => setCreateOpen(false)}
+        />
+      )}
+      {/* Not rendered: the file input the button above opens. */}
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        multiple
+        hidden
+        onChange={(e) => {
+          handleUpload(e.target.files);
+          // Cleared so choosing the same file again still fires a change.
+          e.target.value = "";
+        }}
+      />
+      {phoneActionsOpen && (
+        <ActionsSheet
+          heading="Library"
+          onClose={() => setPhoneActionsOpen(false)}
+          actions={[
+            // The visible way into bulk selection on a touch screen (a long
+            // press on an item still works): the selection bar shows and a
+            // tap toggles, until Clear.
+            { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+            { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
+            { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
+            ...(canImport
+              ? [
+                  {
+                    label: "Import CSV",
+                    icon: <FileUp size={14} />,
+                    onClick: () => guard(() => setImportOpen(true)),
+                  },
+                ]
+              : []),
+            { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
+          ]}
+        />
+      )}
       {/* Footer action bar. A container, so the four actions fold to their
           icons (each keeps its name) when the pane is too narrow for their
           labels — a drawer open beside the library, a small window — instead
           of wrapping onto a second line inside a fixed-height bar. */}
-      <div
-        data-part="library-footer"
-        className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
-        style={{
-          borderTop: "1px solid var(--border-primary)",
-          // Phones: the home indicator's inset is added below the 3rem row, so
-          // the row keeps its height and nothing above it moves.
-          ...(menuTrigger
-            ? { boxSizing: "content-box", paddingBottom: "env(safe-area-inset-bottom, 0px)" }
-            : null),
-        }}
-      >
-        {/* The bar swaps in place between the baseline actions and the
-            selection's, at the same height. The selection's readout, Clear and
-            select-all sit at the bar's end in `LibrarySelectionBar`. */}
-        {selectionActive && (
-          <LibrarySelectionBar
-            filteredIds={filteredIds}
-            loadedIds={drawnIds}
-            corpus={dataSource}
-            filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
-          />
-        )}
-        {!selectionActive && (
-          <CreateEntityButton
-            preset={createPreset}
-            named={createNamed}
-            recent={recentTemplates[dataSource] ?? []}
-            types={libraryTypes}
-            onCreate={handleCreate}
-            onAll={() => setCreateOpen(true)}
-            extra={[{ label: "Batch entry…", onSelect: () => setBatchOpen(true) }]}
-          />
-        )}
-        {pendingUploads && (
-          <UploadDocumentsModal
-            files={pendingUploads}
-            types={libraryTypes}
-            defaultTypeId={uploadTemplateId(dataSource)}
-            onUpload={startUpload}
-            onClose={() => setPendingUploads(null)}
-          />
-        )}
-        <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
-        {batchOpen && (
-          <BatchEntryModal
-            corpus={dataSource}
-            types={libraryTypes}
-            initialTypeId={createPreset}
-            language={language}
-            onClose={() => setBatchOpen(false)}
-          />
-        )}
-        {createOpen && (
-          <CreateEntityDialog
-            types={libraryTypes}
-            defaultTypeId={defaultTemplateId(dataSource)}
-            onChoose={handleCreate}
-            onClose={() => setCreateOpen(false)}
-          />
-        )}
-        {!selectionActive && (
-          <FooterButton
-            icon={<Upload size={13} className="text-ink-tertiary" />}
-            label="Upload PDF"
-            onClick={() => uploadInputRef.current?.click()}
-          />
-        )}
-        {/* Not rendered: the file input the button above opens. */}
-        <input
-          ref={uploadInputRef}
-          type="file"
-          accept="application/pdf,.pdf"
-          multiple
-          hidden
-          onChange={(e) => {
-            handleUpload(e.target.files);
-            // Cleared so choosing the same file again still fires a change.
-            e.target.value = "";
+      {splitPane ? (
+        // Split: one bar for both panes (`LibrarySplitView`); the active pane
+        // renders its actions into it.
+        splitFooter?.slot && splitFooter.active === splitPane.side && createPortal(footerActions, splitFooter.slot)
+      ) : (
+        <div
+          data-part="library-footer"
+          className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
+          style={{
+            borderTop: "1px solid var(--border-primary)",
+            // Phones: the home indicator's inset is added below the 3rem row, so
+            // the row keeps its height and nothing above it moves.
+            ...(menuTrigger
+              ? { boxSizing: "content-box", paddingBottom: "env(safe-area-inset-bottom, 0px)" }
+              : null),
           }}
-        />
-        {!selectionActive && (
-          <>
-            {canImport && (
-              <FooterButton
-                icon={<FileUp size={13} className="text-ink-tertiary" />}
-                label="Import CSV"
-                onClick={() =>
-                  guard(() => setImportOpen(true))
-                }
-              />
-            )}
-            {/* With a selection, the bar's own Export CSV exports the
-                selection; without one, this exports the current results. */}
-            <FooterButton
-              icon={<FileDown size={13} className="text-ink-tertiary" />}
-              label="Export CSV"
-              onClick={handleExport}
-            />
-          </>
-        )}
-        {/* No result count here: the masthead readout is the only one. The
-            active-filters button below is not a duplicate; it is the only way to
-            reach the filters while the drawer shows an entity. `ms-2` separates
-            it from the footer actions. */}
-        {/* Phones: the four actions above are `hidden sm:flex`; this button
-            opens them in a sheet. */}
-        {!selectionActive && (
-          <button
-            type="button"
-            onClick={() => setPhoneActionsOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={phoneActionsOpen}
-            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
-          >
-            <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
-          </button>
-        )}
-        {phoneActionsOpen && (
-          <ActionsSheet
-            heading="Library"
-            onClose={() => setPhoneActionsOpen(false)}
-            actions={[
-              // The visible way into bulk selection on a touch screen (a long
-              // press on an item still works): the selection bar shows and a
-              // tap toggles, until Clear.
-              { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
-              { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
-              { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
-              ...(canImport
-                ? [
-                    {
-                      label: "Import CSV",
-                      icon: <FileUp size={14} />,
-                      onClick: () => guard(() => setImportOpen(true)),
-                    },
-                  ]
-                : []),
-              { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
-            ]}
-          />
-        )}
-        {/* With a selection the bar places it, before its end group. */}
-        {/* Phones carry Filters as a button of their own (below), with the count. */}
-        {!selectionActive && !menuTrigger && <ActiveFiltersButton className="ms-2 shrink-0" />}
-        {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
-            the bar's END, where the entity view's bar keeps it: in thumb reach,
-            and a menu at the bottom opens upward. Only the drawer nav moved;
-            search, view mode, Display and the readout stay on top. */}
-        {menuTrigger && (
-          <div data-part="sheets" className="ms-auto shrink-0 flex items-center gap-1">
-            {/* Filters one tap away, not behind the menu. */}
-            <button
-              type="button"
-              data-part="filters"
-              onClick={() => setOpenSection("filters")}
-              aria-haspopup="dialog"
-              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
-              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
-            >
-              <Filter size={13} className="text-ink-tertiary" aria-hidden />
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="min-w-4 px-1 rounded-md bg-warm text-ink text-meta font-semibold tabular-nums">{activeFilterCount}</span>
-              )}
-            </button>
-            {menuTrigger}
-          </div>
-        )}
-      </div>
+        >
+          {footerActions}
+        </div>
+      )}
     </div>
     </SearchMarkProvider>
   );
+  };
 
   // Results tab body — the per-entity evidence view (where each term hit).
   const resultsBody = (

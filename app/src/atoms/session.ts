@@ -74,3 +74,11 @@ export const libraryLayoutAtom = sessionSetting<LibraryLayout>(
   "drawer",
   (v): v is LibraryLayout => v === "drawer" || v === "full" || v === "split",
 );
+
+/** Split's Sync filters (the switch in its footer): both panes use one filter
+ *  set. Kept for the session; it applies only while Split is on screen. */
+export const librarySyncFiltersAtom = sessionSetting<boolean>(
+  "librarySyncFilters",
+  false,
+  (v): v is boolean => typeof v === "boolean",
+);

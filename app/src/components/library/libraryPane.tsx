@@ -55,3 +55,20 @@ export const MastheadFoldProvider = MastheadFoldContext.Provider;
 export function useMastheadFold(): MastheadFoldValue | null {
   return useContext(MastheadFoldContext);
 }
+
+/* Split's one footer bar. The pane that last had focus (or a press) renders
+   its footer actions into `slot` through a portal, so Create, Upload and
+   Import act once and Export exports that pane. The other pane renders none. */
+export interface SplitFooterValue {
+  slot: HTMLElement | null;
+  active: LibraryPaneSide;
+  /** Sync filters is on: Export names the shared set, not a pane. */
+  synced: boolean;
+}
+
+const SplitFooterContext = createContext<SplitFooterValue | null>(null);
+export const SplitFooterProvider = SplitFooterContext.Provider;
+
+export function useSplitFooter(): SplitFooterValue | null {
+  return useContext(SplitFooterContext);
+}

@@ -13,6 +13,7 @@ import {
 import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
+import { libraryLayoutAtom, librarySyncFiltersAtom } from "./session";
 import { propertyColumns } from "../utils/entityFields";
 import { LIBRARY_SORTS, LIBRARY_VIEWS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
@@ -492,13 +493,68 @@ export const libraryDateToAtom = atom<string>("");
  *  one. */
 const mapBoundsStateAtom = atom<MapBounds | null>(null);
 export type { MapBounds };
-export const libraryMapBoundsAtom = atom(
+
+/** Which Split pane a store is: "left" in the root store, "right" in the right
+ *  pane's scope (`atoms/librarySplit.ts` sets it). Outside Split, "left". */
+export const libraryPaneSideAtom = atom<"left" | "right">("left");
+
+/** Split with Sync filters on: both panes use one filter set
+ *  (`atoms/librarySplit.ts` mirrors the filter atoms between the two stores). */
+export const librarySyncActiveAtom = atom(
+  (get) => get(librarySyncFiltersAtom) && get(libraryLayoutAtom) === "split" && get(breakpointAtom) === "desktop",
+);
+
+/** The map area while synced: one area for both panes, set from whichever
+ *  pane's map the reader panned. Not scoped, so both panes read it. */
+const syncedMapAreaAtom = atom<{ bounds: MapBounds; side: "left" | "right" } | null>(null);
+
+/** This pane's own map area: the filter outside sync, read only while its
+ *  Map view is in front. */
+export const libraryOwnMapAreaAtom = atom(
   (get) => (get(viewModeStateAtom) === "map" ? get(mapBoundsStateAtom) : null),
   (_get, set, next: MapBounds | null) => set(mapBoundsStateAtom, next),
 );
+
+/** The map area as a filter. Synced, it is the shared area, which narrows
+ *  both panes whatever view they show; otherwise this pane's own. */
+export const libraryMapBoundsAtom = atom(
+  (get) => (get(librarySyncActiveAtom) ? (get(syncedMapAreaAtom)?.bounds ?? null) : get(libraryOwnMapAreaAtom)),
+  (get, set, next: MapBounds | null) => {
+    if (get(librarySyncActiveAtom))
+      set(syncedMapAreaAtom, next ? { bounds: next, side: get(libraryPaneSideAtom) } : null);
+    else set(mapBoundsStateAtom, next);
+  },
+);
+
+/** The pane whose map set the shared area, while synced; null otherwise. */
+export const libraryMapAreaPaneAtom = atom((get) =>
+  get(librarySyncActiveAtom) ? (get(syncedMapAreaAtom)?.side ?? null) : null,
+);
+
+/** Drop this pane's map area, and the shared one while synced. */
+function clearMapArea(get: Getter, set: Setter) {
+  set(mapBoundsStateAtom, null);
+  if (get(librarySyncActiveAtom)) set(syncedMapAreaAtom, null);
+}
+
+/** Sync filters turns on: the shared area is the source pane's own. */
+export const enterSyncedMapAreaAtom = atom(null, (_get, set, area: { bounds: MapBounds; side: "left" | "right" } | null) =>
+  set(syncedMapAreaAtom, area),
+);
+/** Sync filters turns off (or Split goes): the pane whose map set the shared
+ *  area keeps it as its own; the other pane has none. Run in each store. */
+export const leaveSyncedMapAreaAtom = atom(null, (get, set) => {
+  const shared = get(syncedMapAreaAtom);
+  set(mapBoundsStateAtom, shared && shared.side === get(libraryPaneSideAtom) ? shared.bounds : null);
+});
+export const dropSyncedMapAreaAtom = atom(null, (_get, set) => set(syncedMapAreaAtom, null));
+
 /** What Reset demo data does to one Library pane. Split's right pane runs it
  *  through its own scope (`atoms/librarySplit.ts`). */
-export const resetLibraryPaneAtom = atom(null, (_get, set) => set(mapBoundsStateAtom, null));
+export const resetLibraryPaneAtom = atom(null, (_get, set) => {
+  set(mapBoundsStateAtom, null);
+  set(syncedMapAreaAtom, null);
+});
 registerSettingsReset((set) => set(resetLibraryPaneAtom));
 
 /** Facets generated from inherited relationship properties, keyed
@@ -543,9 +599,9 @@ const viewModeStateAtom = atom(
 );
 /** Forget the reader's pick, so the Library opens on the saved default view
  *  again (Settings › Collection writes this when it saves a new default). */
-export const resetLibraryViewChoiceAtom = atom(null, (_get, set) => {
+export const resetLibraryViewChoiceAtom = atom(null, (get, set) => {
   set(viewModeChosenAtom, null);
-  set(mapBoundsStateAtom, null);
+  clearMapArea(get, set);
 });
 
 /** Phones: the Results sheet a search opened. Opened once per query, so refining
@@ -569,9 +625,14 @@ export const submitLibrarySearchAtom = atom(null, (get, set) => {
  *  `librarySearchDraftAtom`); Adv. Search is a view the reader picks. */
 export const libraryViewModeAtom = atom(
   (get) => get(viewModeStateAtom),
-  (_get, set, next: LibraryViewMode) => {
-    // The map area is a filter only while its map is in front.
-    if (next !== "map") set(mapBoundsStateAtom, null);
+  (get, set, next: LibraryViewMode) => {
+    // The map area is a filter only while its map is in front. Synced, the
+    // shared area goes when the pane whose map set it leaves the Map view.
+    if (next !== "map") {
+      set(mapBoundsStateAtom, null);
+      if (get(librarySyncActiveAtom) && get(syncedMapAreaAtom)?.side === get(libraryPaneSideAtom))
+        set(syncedMapAreaAtom, null);
+    }
     set(viewModeStateAtom, next);
   },
 );
@@ -1121,7 +1182,7 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   set(libraryContentModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
-  set(mapBoundsStateAtom, null);
+  clearMapArea(get, set);
   set(libraryOpenEntityIdAtom, null);
   set(librarySelectedClusterAtom, null);
   // A selection belongs to the collection it was made in.
@@ -1132,7 +1193,7 @@ export const resetLibraryForSourceAtom = atom(null, (get, set) => resetLibraryFo
 
 /** Clear the facet filters but keep the query, for the Results tab's "hidden by
  *  filters · Clear filters" line. */
-export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
+export const clearLibraryFacetsAtom = atom(null, (get, set) => {
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});
@@ -1147,11 +1208,11 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
-  set(mapBoundsStateAtom, null);
+  clearMapArea(get, set);
 });
 
 /** Clear every filter and the search. The one definition, so callers cannot drift. */
-export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
+export const clearLibraryFiltersAtom = atom(null, (get, set) => {
   // Clear both the draft and the committed query: leaving the draft would let
   // the next keystroke re-commit the old string.
   set(clearLibrarySearchAtom);
@@ -1169,7 +1230,7 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
-  set(mapBoundsStateAtom, null);
+  clearMapArea(get, set);
 });
 
 /** Count of active facets (not the search; see `libraryActiveSearchAtom`). The
@@ -1271,7 +1332,36 @@ export const switchDataSourceAtom = atom(null, (get, set, source: DataSource) =>
  *  the derived atoms above read them through the scope. Shared on purpose: the
  *  collection, the language, the entities, the Notebook and every Settings
  *  store. */
+/** One pane's filter set: what Split's Sync filters keeps equal in both panes
+ *  (`atoms/librarySplit.ts`). The map area is synced apart from these
+ *  (`libraryMapBoundsAtom`). View, sort, display, selection and preview stay
+ *  per pane. */
+export const libraryFilterSetAtoms = [
+  libraryQueryAtom,
+  searchDraftStateAtom,
+  searchScopeShownAtom,
+  searchScopeStateAtom,
+  searchMatchShownAtom,
+  searchMatchStateAtom,
+  matchTypeFiltersAtom,
+  libraryTypeFiltersAtom,
+  libraryHasDocAtom,
+  libraryContentFiltersAtom,
+  libraryContentModeAtom,
+  libraryStatusFiltersAtom,
+  libraryCountryFiltersAtom,
+  libraryDescriptorFiltersAtom,
+  libraryFacetMatchAtom,
+  libraryFilterGroupsAtom,
+  libraryRangeFiltersAtom,
+  libraryDateFromAtom,
+  libraryDateToAtom,
+  libraryInheritedFiltersAtom,
+  libraryChainFiltersAtom,
+];
+
 export const libraryPaneScopedAtoms = [
+  libraryPaneSideAtom,
   // Search
   libraryQueryAtom,
   searchDraftStateAtom,

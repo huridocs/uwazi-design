@@ -18,6 +18,7 @@ import {
   libraryRangeFiltersAtom,
   libraryFilterGroupsAtom,
   libraryMapBoundsAtom,
+  libraryMapAreaPaneAtom,
   type LibraryMatch,
 } from "../atoms/library";
 import { groupEffective, inheritedKey, rangeKey } from "../utils/libraryFilter";
@@ -71,6 +72,9 @@ export function useActiveFilters(): ActiveFilter[] {
   const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
   const [groups, setGroups] = useAtom(libraryFilterGroupsAtom);
   const [mapBounds, setMapBounds] = useAtom(libraryMapBoundsAtom);
+  // Synced in Split, the area narrows both panes; the chip names the pane
+  // whose map set it.
+  const mapAreaPane = useAtomValue(libraryMapAreaPaneAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -176,7 +180,7 @@ export function useActiveFilters(): ActiveFilter[] {
       out.push({
         id: "map",
         group: "Map",
-        label: "In map area",
+        label: mapAreaPane ? `In map area · ${mapAreaPane} pane` : "In map area",
         remove: () => setMapBounds(null),
       });
 
@@ -285,6 +289,7 @@ export function useActiveFilters(): ActiveFilter[] {
     rangeFilters,
     groups,
     mapBounds,
+    mapAreaPane,
     setMapBounds,
     dataSource,
     language,

@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
-import { useAtomValue, useStore } from "jotai";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { useAtom, useAtomValue, useStore } from "jotai";
 import { ScopeProvider } from "jotai-scope";
 import { dataSourceAtom } from "../atoms/dataSource";
-import { rightPaneStore } from "../atoms/librarySplit";
+import { rightPaneStore, syncLibraryPanes } from "../atoms/librarySplit";
+import { librarySyncFiltersAtom } from "../atoms/session";
+import { useNotify } from "../hooks/useNotify";
+import { BAR_GHOST } from "../components/shared/warmButton";
 import {
   LibraryPaneProvider,
   MastheadFoldProvider,
+  SplitFooterProvider,
   notePointerPane,
   type LibraryPaneSide,
   type MastheadFoldValue,
+  type SplitFooterValue,
 } from "../components/library/libraryPane";
 import { SelectionOrderHost, type SelectionOrderHolder } from "../components/library/EntitySelectBox";
 import { LibraryView } from "./LibraryView";
@@ -106,19 +111,55 @@ export function LibrarySplitView() {
   );
   const fold = useMemo<MastheadFoldValue>(() => ({ tier: Math.max(tiers.left, tiers.right), report }), [tiers, report]);
 
+  /* The pane that last had focus or a press: the footer bar's actions are
+     its, and turning Sync filters on copies its filters into the other. */
+  const [active, setActive] = useState<LibraryPaneSide>("left");
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const [footerSlot, setFooterSlot] = useState<HTMLDivElement | null>(null);
+
+  /* Sync filters, kept for the session. On, the two stores mirror their filter
+     atoms (`syncLibraryPanes`). Turned on here, the copy runs from the active
+     pane; on a mount with it already on (a reload, Back), from the left pane,
+     where anything written from outside Split lands. A layout effect, so no
+     frame paints with the flag on and the panes not yet in step. */
+  const [sync, setSync] = useAtom(librarySyncFiltersAtom);
+  const syncFrom = useRef<LibraryPaneSide>("left");
+  useLayoutEffect(() => {
+    if (!sync) return;
+    const stop = syncLibraryPanes(root, right, syncFrom.current);
+    syncFrom.current = "left";
+    return stop;
+  }, [sync, root, right]);
+  const notify = useNotify();
+  const toggleSync = () => {
+    if (!sync) {
+      syncFrom.current = activeRef.current;
+      notify(`Filters synced: the ${activeRef.current} pane's filters now apply to both panes`);
+    }
+    setSync(!sync);
+  };
+  const footer = useMemo<SplitFooterValue>(
+    () => ({ slot: footerSlot, active, synced: sync }),
+    [footerSlot, active, sync],
+  );
+
   const dragging = drag !== null;
   const percent = (r: number) => Math.round(r * 100);
 
   return (
     <MastheadFoldProvider value={fold}>
+    <SplitFooterProvider value={footer}>
+    <div data-component="LibrarySplit" className="flex flex-col flex-1 min-h-0">
     <div
       ref={containerRef}
-      data-component="LibrarySplit"
+      data-part="panes"
       className={`flex flex-1 min-h-0 overflow-hidden ${dragging ? "select-none cursor-col-resize" : ""}`}
     >
       <LibraryPane
         side="left"
         id={leftId}
+        onActive={setActive}
         style={{ flex: `0 0 calc((100% - ${DIVIDER_PX}px) * ${share})` }}
       />
       <div
@@ -161,16 +202,62 @@ export function LibrarySplitView() {
         />
       </div>
       <ScopeProvider scope={right}>
-        <LibraryPane side="right" style={{ flex: "1 1 0" }} />
+        <LibraryPane side="right" style={{ flex: "1 1 0" }} onActive={setActive} />
       </ScopeProvider>
     </div>
+    {/* One footer bar for both panes: the active pane's actions (its
+        selection's, while it has one) in the slot, then Sync filters. A
+        container, so the actions fold to their icons as in a pane's bar. */}
+    <div
+      data-part="library-footer"
+      data-gutter-host
+      className="gutter-host @container shrink-0 flex items-center gap-1 h-12 bg-paper"
+      style={{ borderTop: "1px solid var(--border-primary)" }}
+    >
+      <div ref={setFooterSlot} data-part="pane-actions" className="flex-1 min-w-0 flex items-center gap-1" />
+      <button
+        type="button"
+        onClick={toggleSync}
+        aria-pressed={sync}
+        // The name stays put; the state is `aria-pressed` and the visible text.
+        aria-label="Sync filters"
+        data-part="sync-filters"
+        className={`shrink-0 inline-flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
+      >
+        {/* The switch, drawn; the state is also in the text. */}
+        <span
+          aria-hidden
+          className={`relative inline-block w-6 h-3.5 rounded-full transition-colors ${sync ? "bg-ink" : "bg-ink/20"}`}
+        >
+          <span
+            className={`absolute top-0.5 size-2.5 rounded-full bg-paper transition-[inset-inline-start] ${
+              sync ? "start-3" : "start-0.5"
+            }`}
+          />
+        </span>
+        Sync filters
+        <span className="text-ink-tertiary">{sync ? "On" : "Off"}</span>
+      </button>
+    </div>
+    </div>
+    </SplitFooterProvider>
     </MastheadFoldProvider>
   );
 }
 
 /** One pane: a landmark with its own name, the pane context its keys and
  *  touches check, and its own Shift-range order. */
-function LibraryPane({ side, id, style }: { side: LibraryPaneSide; id?: string; style: CSSProperties }) {
+function LibraryPane({
+  side,
+  id,
+  style,
+  onActive,
+}: {
+  side: LibraryPaneSide;
+  id?: string;
+  style: CSSProperties;
+  onActive: (side: LibraryPaneSide) => void;
+}) {
   const root = useRef<HTMLElement | null>(null);
   const pane = useMemo(() => ({ side, root }), [side]);
   const order = useMemo<SelectionOrderHolder>(() => ({ current: [] }), []);
@@ -182,6 +269,10 @@ function LibraryPane({ side, id, style }: { side: LibraryPaneSide; id?: string; 
       data-trap-scope
       aria-label={side === "left" ? "Library, left pane" : "Library, right pane"}
       onPointerEnter={() => notePointerPane(side)}
+      // Captured, so a press or focus anywhere in the pane makes it the
+      // active one. The footer's portalled actions bubble here too.
+      onFocusCapture={() => onActive(side)}
+      onPointerDownCapture={() => onActive(side)}
       className="min-w-0 flex flex-col overflow-hidden"
       style={style}
     >

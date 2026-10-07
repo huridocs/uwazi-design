@@ -3,6 +3,8 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, type DataSource } from "./dataSource";
 import { appViewAtom } from "./navigation";
 import { registerSettingsReset } from "./settingsReset";
+import { libraryLayoutAtom, librarySyncFiltersAtom } from "./session";
+import { breakpointAtom } from "./viewport";
 import {
   libraryStateInternals as L,
   libraryQueryAtom,
@@ -31,6 +33,7 @@ import {
   libraryResultsSheetOpenAtom,
   librarySelectedClusterAtom,
   libraryMapBoundsAtom,
+  librarySyncActiveAtom,
   switchDataSourceAtom,
   whenBulkClean,
   ALL_MATCH_TYPES,
@@ -94,6 +97,9 @@ export interface LibrarySnapshot {
   /** The Map view's area filter, which is also where the map opens. Missing
    *  in older snapshots and wherever the reader had not moved the map. */
   mapBounds?: MapBounds;
+  /** Saved in Split with Sync filters on: opened in Split, it turns sync on,
+   *  so the filters apply to both panes. Missing otherwise. */
+  synced?: true;
   /** The view the reader picked; null = the collection's default view. */
   viewMode: LibraryViewMode | null;
   display: LibraryDisplayState;
@@ -142,6 +148,7 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     ...(get(librarySearchScopeAtom) !== "all" ? { searchScope: get(librarySearchScopeAtom) } : {}),
     ...(get(librarySearchMatchAtom) !== "partial" ? { searchMatch: get(librarySearchMatchAtom) } : {}),
     ...(get(libraryMapBoundsAtom) ? { mapBounds: get(libraryMapBoundsAtom)! } : {}),
+    ...(get(librarySyncActiveAtom) ? { synced: true as const } : {}),
     viewMode: get(L.viewModeChosenAtom),
     display: get(libraryDisplayAtom),
     sort: {
@@ -210,7 +217,12 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   set(libraryTimelineScopeAtom, s.timelineScope);
   set(librarySelectedClusterAtom, null);
   // After the view: the bound is read only while the Map view is in front.
-  set(L.mapBoundsStateAtom, isMapBounds(s.mapBounds) ? { ...s.mapBounds } : null);
+  // Synced, it is the shared area, set from this pane.
+  set(libraryMapBoundsAtom, isMapBounds(s.mapBounds) ? { ...s.mapBounds } : null);
+  // Split's sync then copies this pane's filters into the other one
+  // (`LibrarySplitView`).
+  if (s.synced === true && get(libraryLayoutAtom) === "split" && get(breakpointAtom) === "desktop")
+    set(librarySyncFiltersAtom, true);
 }
 
 const isMapBounds = (b: unknown): b is MapBounds =>
