@@ -419,6 +419,18 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   opens the canvas centred on a community through `networkCentreCommunityAtom`. Sections the
   collection has nothing for are left out; the header and the first two rows keep fixed
   heights while a corpus loads. The description is Settings › Collection's `description`.
+- Sync view (`libraryViewModeAtom = "sync"`, `components/library/LibrarySyncView.tsx`): every
+  recording as a lane on one wall clock, offered only where `libraryHasSyncAtom` holds (Las Vegas).
+  Model in `data/vegas/syncLanes.ts`, built once from the corpus. A lane runs from `clock_start`
+  to `clock_end`, else its last anchor, then a fixed-width faded tail: the data has no durations,
+  so none is drawn. Recordings without a clock to the second or minute (every 911 call) are rows
+  with no bar; their group starts folded. Volley bands span the anchors within 2 s of the
+  consensus; an anchor further off is an outlier tied to it. Lanes are DOM rows (the accessible
+  list, virtualised) over one sticky canvas that draws the visible rows only. Window, playhead
+  and folds are per pane (`atoms/syncView.ts`, in `libraryPaneScopedAtoms`). Links open in a new
+  tab behind a content notice asked once per session. A plain wheel scrolls the lanes; ⌘/Ctrl +
+  wheel, a pinch, or a wheel on the clock zooms. The map area reaches it only through Split's
+  Sync filters, as every non-map view.
 - Canvas overlays (Network and Map controls, captions, chips, tooltips) have no border and no
   shadow: `CANVAS_OVERLAY*` in `components/shared/canvasOverlay.ts`, mirrored for Leaflet's zoom
   in `map.css`. One height (2rem) and radius; buttons on `BAR_GHOST`.
