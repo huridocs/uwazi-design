@@ -35,6 +35,26 @@ export interface TextSelection {
   height: number;
 }
 
+/** Where a reference sits inside a recording (the Vegas collection's
+ *  `captures` and `derived_from`): the media equivalent of `TextSelection`. */
+export interface MediaAnchor {
+  /** The recording the offset is in. */
+  recordingId: string;
+  /** Seconds from the recording's start. */
+  offset: number;
+  end?: number;
+  /** The wall-clock time annotated there, in ms (stored as UTC, like every
+   *  corpus's dates). */
+  clock?: number;
+  /** What happens there ("10th Volley Begins"), as the source annotates it. */
+  label?: string;
+  /** How the source qualifies it ("1 sec. in"). */
+  qualifier?: string;
+  /** The recording opened at `offset`; absent where its host cannot be
+   *  opened at a time. */
+  url?: string;
+}
+
 /** The page a selection sits on, or undefined when its source has none. */
 export const selectionPage = (s: TextSelection | undefined): number | undefined =>
   s && s.page >= 1 ? s.page : undefined;
@@ -66,6 +86,9 @@ export interface Reference {
   /** When the link held, where the collection dates it. Absent = not
    *  time-bound. */
   period?: RefPeriod;
+  /** The time inside a recording the link rests on. Rows show it as a time
+   *  tag beside (or instead of) the page tag. */
+  mediaAnchor?: MediaAnchor;
   createdAt: string;
 }
 

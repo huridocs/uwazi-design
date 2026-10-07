@@ -555,6 +555,33 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - The build also stops on a bundled image without licence, licence link or attribution, a
     document without issuer or source URL or listed as link only, and a contact in document
     text that is not an institution's.
+- Las Vegas, 1 October 2017 (`data/vegas/`, `public/vegas-data/`): a real open-source corpus
+  Juan asked for, the recordings of the shooting placed and timed to the second, built from
+  Research's seed by `scripts/build-vegas-corpus.mjs` (the seed lives in the main checkout's
+  `dev/results/vegas-seed`, outside git). Rerun the script with `VEGAS_DENYLIST` pointing at the
+  seed's `privacy-denylist.txt`; the list never enters the repo and the build stops without it.
+  Do not edit the JSON. Then rerun `scripts/build-network-layout.mjs vegas`.
+  - The build stops on every rule of the seed's `validate.py` and README §10.5: a denylisted
+    name (victims, the gunman, private people), a phone or e-mail other than the map's group
+    address in the map's Source, a social handle, short or thumbnail link, a recording without a
+    graphic or distressing warning, a file/thumbnail/image/poster property, a label describing a
+    person hit, a 911 call with title text, a label, an unlisted property or an unrounded
+    position, an audio link outside the two archive.org items or without its evidence note, a
+    select value outside its thesaurus, a reference joining templates its type does not allow, an
+    unresolved id, a count without its as-of date.
+  - Nothing is stored: recordings are links. Every recording is covered (`MediaItemCard`) and
+    its card draws the video or audio mark, never a still. A 911 call's link is its archive.org
+    audio file; its media card starts the compilation at the call's offset.
+  - Dates are Las Vegas wall-clock time stored as UTC (`VEGAS_UTC_OFFSET`, named under the date
+    filter). Timed records carry their time in `createdAt` and `span.seconds`, so the date sort,
+    the brush (minute and second buckets), the filter's time fields and the spine work to the
+    second. Only the clock properties print a time (`RecordContext.timed`).
+  - `captures` and `derived_from` carry a media anchor (`Reference.mediaAnchor`): Relationships
+    rows show it as a `TimeTag` that opens the recording at `&t=` where the host can seek, and
+    the Notebook cites the recording at that offset and clock time.
+  - Camera paths and venue footprints are `Entity.shape`, drawn under the pins by
+    `LibraryMapView`. `sync_offset_seconds` is a range facet. Verification leads the facets, then
+    Recording kind.
 - Paragraph extraction: extractors and per-entity statuses are per-corpus stores
   (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
   rich text and a numeric property; only Red Travesía has one, so it holds the seed and the

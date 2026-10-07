@@ -13,6 +13,7 @@ import { focusedEntityIdAtom } from "./focusedEntity";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profile";
 import { isNepalEntity, nepalReferencesFor } from "../data/nepal/profile";
+import { isVegasEntity, vegasReferencesFor } from "../data/vegas/profile";
 
 /* ── The Sample registry as saved in this visit ──────────────────────────
    Settings' relationship-type changes are kept in sessionStorage
@@ -93,6 +94,7 @@ export function referencesFor(id: string, all: Reference[]): Reference[] {
   if (isCejilEntity(id)) return cejilReferencesFor(id);
   if (isTravesiaEntity(id)) return travesiaReferencesFor(id);
   if (isNepalEntity(id)) return nepalReferencesFor(id);
+  if (isVegasEntity(id)) return vegasReferencesFor(id);
   // The main entity goes through the same projection: the corpus is mostly
   // sourced from it, but the cross-entity rows (`ref-xs-*`) point AT it, and
   // returned unchanged they rendered it related to itself. A ref whose two
@@ -114,7 +116,7 @@ export function writeReferencesFor(
 ): Reference[] {
   // CEJIL relationships are read-only in the prototype — never write them back
   // into the mock corpus.
-  if (isCejilEntity(id) || isTravesiaEntity(id) || isNepalEntity(id)) return all;
+  if (isCejilEntity(id) || isTravesiaEntity(id) || isNepalEntity(id) || isVegasEntity(id)) return all;
   const origInScope = all.filter((r) => involvesEntity(r, id));
   const outOfScope = all.filter((r) => !involvesEntity(r, id));
   const prevScoped = origInScope.map((r) => fromPerspective(r, id));

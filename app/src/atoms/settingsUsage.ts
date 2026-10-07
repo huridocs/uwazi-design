@@ -7,6 +7,8 @@ import { cejilEsBySid } from "../data/cejil/load";
 import { travesiaCorpus, travesiaEntity } from "../data/travesia/load";
 import { nepalCorpus, nepalEntity } from "../data/nepal/load";
 import { nepalLibraryEntities } from "../data/nepal/adapt";
+import { vegasCorpus, vegasEntity } from "../data/vegas/load";
+import { vegasLibraryEntities } from "../data/vegas/adapt";
 import { relationTypesCorpus } from "./relationTypes";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
@@ -28,7 +30,7 @@ import {
   type HeldValue,
   type ValueReader,
 } from "../utils/settingsUsage";
-import { cejilReadyAtom, dataSourceAtom, nepalReadyAtom, travesiaReadyAtom, type DataSource } from "./dataSource";
+import { cejilReadyAtom, dataSourceAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom, type DataSource } from "./dataSource";
 import { entitiesAtom } from "./entities";
 import { entityAccessAtom, libraryEntityOverlayAtom } from "./entityChanges";
 import { entityMetadataAtom } from "./entityMetadata";
@@ -63,6 +65,7 @@ function entitiesOf(get: Getter, corpus: Corpus): Entity[] | null {
   if (corpus === "travesia")
     return get(travesiaReadyAtom) ? applyOverlay(overlay.travesia, travesiaLibraryEntities()) : null;
   if (corpus === "nepal") return get(nepalReadyAtom) ? applyOverlay(overlay.nepal, nepalLibraryEntities()) : null;
+  if (corpus === "vegas") return get(vegasReadyAtom) ? applyOverlay(overlay.vegas, vegasLibraryEntities()) : null;
   if (corpus === "artworks") return applyOverlay(overlay.artworks, artworkLibraryEntities());
   return applyOverlay(overlay.mock, get(entitiesAtom));
 }
@@ -116,6 +119,7 @@ const readerAtom = atomFamily((corpus: Corpus) =>
     const cejilReady = get(cejilReadyAtom);
     const travesiaReady = get(travesiaReadyAtom);
     const nepalReady = get(nepalReadyAtom);
+    const vegasReady = get(vegasReadyAtom);
     return (e, p) => {
       const rec = records[e.id];
       if (rec) {
@@ -125,6 +129,7 @@ const readerAtom = atomFamily((corpus: Corpus) =>
       if (corpus === "cejil") return cejilReady ? heldFromRaw(cejilEsBySid().get(e.id)?.metadata[p.name]) : [];
       if (corpus === "travesia") return travesiaReady ? heldFromRaw(travesiaEntity(e.id)?.metadata[p.name]) : [];
       if (corpus === "nepal") return nepalReady ? heldFromRaw(nepalEntity(e.id)?.metadata[p.name]) : [];
+      if (corpus === "vegas") return vegasReady ? heldFromRaw(vegasEntity(e.id)?.metadata[p.name]) : [];
       if (corpus === "artworks") return entityPropertyValues(e, p.name, "EN").map((label) => ({ label }));
       const v = native[e.id]?.[p.name];
       return v ? [{ label: v }] : [];
@@ -229,14 +234,21 @@ export const relationTypeUsageInAtom = atomFamily((key: string) =>
             ? get(nepalReadyAtom)
               ? (nepalCorpus()?.references ?? []).filter((x) => x.type === id).length
               : 0
-            : (cejilUsageByRelationType[id] ?? 0);
+            : corpus === "vegas"
+              ? get(vegasReadyAtom)
+                ? (vegasCorpus()?.references ?? []).filter((x) => x.type === id).length
+                : 0
+              : (cejilUsageByRelationType[id] ?? 0);
     return relationTypeUsage({
       id,
       references,
       schema: get(schemaAtom(corpus)),
       templateName: get(templateNamesAtom(corpus)),
       writable: corpus === "mock",
-      pending: (corpus === "travesia" && !get(travesiaReadyAtom)) || (corpus === "nepal" && !get(nepalReadyAtom)),
+      pending:
+        (corpus === "travesia" && !get(travesiaReadyAtom)) ||
+        (corpus === "nepal" && !get(nepalReadyAtom)) ||
+        (corpus === "vegas" && !get(vegasReadyAtom)),
     });
   }),
 );

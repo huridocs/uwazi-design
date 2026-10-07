@@ -309,7 +309,7 @@ export function isLibrarySnapshot(x: unknown): x is LibrarySnapshot {
   return (
     s.v === 1 &&
     typeof s.collection === "string" &&
-    ["mock", "cejil", "artworks", "travesia", "nepal"].includes(s.collection) &&
+    ["mock", "cejil", "artworks", "travesia", "nepal", "vegas"].includes(s.collection) &&
     typeof s.query === "string" &&
     !!s.types && typeof s.types === "object" &&
     !!s.display && typeof s.display === "object" &&

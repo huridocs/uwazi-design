@@ -19,7 +19,7 @@ function dateOf(e: Entity): string | undefined {
 /** The Library's List view on a phone: two-line rows instead of the table.
  *  The title wraps to two lines; under it one muted line carries only the
  *  fields that have a value (template · country · date, then a collection's
- *  own List cells such as Nepal's verification and place), so an empty Country
+ *  own List cells such as Nepal's verification and place, the Vegas clock time), so an empty Country
  *  never shows as "—" and no column holds width for it. A field whose column is
  *  switched off in Display is left out here too (the template always prints). Sort stays in the Display
  *  menu. Each row is a ListCardRow with its stretched primary button. */
@@ -45,6 +45,8 @@ export const MobileEntityList = memo(function MobileEntityList({
           getEntityType(e.typeId)?.name,
           columnOn("country") && e.country,
           columnOn("date") && dateOf(e),
+          columnOn("clock") && e.listCells?.clock,
+          columnOn("syncConfidence") && e.listCells?.syncConfidence,
           columnOn("verification") && e.listCells?.verification,
           columnOn("placeOrPublisher") && e.listCells?.placeOrPublisher,
         ].filter(Boolean);

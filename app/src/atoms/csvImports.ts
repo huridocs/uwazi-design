@@ -36,7 +36,7 @@ export const csvImports = createSettingsCollection<CsvImport>({
   isRecord: isImport,
 });
 
-const CORPORA: Corpus[] = ["mock", "cejil", "artworks", "travesia", "nepal"];
+const CORPORA: Corpus[] = ["mock", "cejil", "artworks", "travesia", "nepal", "vegas"];
 /** One runner step. */
 const TICK_MS = 700;
 /** Steps each stage before "Creating entities" takes. */

@@ -7,10 +7,11 @@ import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { nepalLibraryEntities } from "../data/nepal/adapt";
+import { vegasLibraryEntities } from "../data/vegas/adapt";
 import { libraryEntityOverlayAtom } from "./entityChanges";
 import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityChanges";
 
-export type DataSource = "mock" | "cejil" | "artworks" | "travesia" | "nepal";
+export type DataSource = "mock" | "cejil" | "artworks" | "travesia" | "nepal" | "vegas";
 
 /** Which dataset the Library renders. Every load starts on `cejil`; a switch
  *  lasts until the next load and is not stored. `mock` keeps the curated demo
@@ -18,7 +19,9 @@ export type DataSource = "mock" | "cejil" | "artworks" | "travesia" | "nepal";
  *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`);
  *  `travesia` is a fictional shelter network generated over a real schema
  *  (see `data/travesia/`), loaded on demand like CEJIL; `nepal` is a real
- *  open-source corpus on the 2024–2026 protests (see `data/nepal/`), the same way.
+ *  open-source corpus on the 2024–2026 protests (see `data/nepal/`), the same way;
+ *  `vegas` is a real open-source corpus of the recordings of the 1 October 2017
+ *  shooting in Las Vegas (see `data/vegas/`), the same way again.
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
 export const dataSourceAtom = atom<DataSource>("cejil");
 
@@ -38,6 +41,8 @@ export const cejilReadyAtom = atom(false);
 export const travesiaReadyAtom = atom(false);
 /** The same, for the Nepal corpus (public/nepal-data/*.json). */
 export const nepalReadyAtom = atom(false);
+/** The same, for the Las Vegas corpus (public/vegas-data/*.json). */
+export const vegasReadyAtom = atom(false);
 
 /** One corpus's slice of the overlay. A derived atom per corpus: a write to
  *  one corpus leaves the others' slices the same object, so the list below
@@ -86,6 +91,9 @@ function seedFor(source: DataSource, get: Getter): Entity[] {
     case "nepal":
       get(nepalReadyAtom);
       return nepalLibraryEntities();
+    case "vegas":
+      get(vegasReadyAtom);
+      return vegasLibraryEntities();
     default: {
       // Compile-time: widening DataSource without answering here is a type
       // error. Runtime: an unknown value degrades to the mock seed instead
@@ -123,8 +131,9 @@ export function entityCorpusPool(
     const entities = cejilLibraryEntities();
     return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
-  if (corpus === "travesia" || corpus === "nepal") {
-    const entities = corpus === "nepal" ? nepalLibraryEntities() : travesiaLibraryEntities();
+  if (corpus === "travesia" || corpus === "nepal" || corpus === "vegas") {
+    const entities =
+      corpus === "nepal" ? nepalLibraryEntities() : corpus === "vegas" ? vegasLibraryEntities() : travesiaLibraryEntities();
     return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
   return { corpus, entities: applyOverlay(overlay, mock), loading: false };
@@ -148,6 +157,7 @@ export const libraryTypesAtom = atom<EntityType[]>((get) => {
     case "cejil":
     case "travesia":
     case "nepal":
+    case "vegas":
     case "mock":
       return get(templateTypesAtom(source));
     default: {

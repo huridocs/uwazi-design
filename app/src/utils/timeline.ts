@@ -5,7 +5,7 @@ import { formatMoment as formatMomentIn } from "./dateFormat";
  *  timeline view bodies). One scale, shared — so the histogram, the vertical
  *  rail and the spine can never disagree about where a year sits. */
 
-export type TimeUnit = "decade" | "year" | "quarter" | "month" | "day" | "hour";
+export type TimeUnit = "decade" | "year" | "quarter" | "month" | "day" | "hour" | "minute" | "second";
 
 export interface TimeBucket {
   key: string;
@@ -45,8 +45,11 @@ export function timeExtent(entities: Entity[]): Extent | null {
 }
 
 /** Bucket granularity that keeps the histogram legible at any span — a 60-year
- *  corpus (CEJIL) reads in years, an 18-month one (Sample) in months. */
+ *  corpus (CEJIL) reads in years, an 18-month one (Sample) in months, a set
+ *  inside two days (the Vegas recordings of one night) at the brush's fine
+ *  scale. */
 export function pickUnit(spanMs: number): TimeUnit {
+  if (spanMs <= 2 * 86_400_000) return pickFineUnit(spanMs);
   const years = spanMs / YEAR_MS;
   if (years > 8) return "year";
   if (years > 2.5) return "quarter";
@@ -54,9 +57,13 @@ export function pickUnit(spanMs: number): TimeUnit {
 }
 
 /** The brush zoomed in on a range: days for a few months, hours for a few
- *  days, so a 30-hour window is drawn across the strip and not as a sliver. */
+ *  days, so a 30-hour window is drawn across the strip and not as a sliver;
+ *  minutes for a few hours and seconds for a few minutes (the Vegas
+ *  recordings, timed to the second across eleven minutes). */
 export function pickFineUnit(spanMs: number): TimeUnit {
   const days = spanMs / 86_400_000;
+  if (spanMs <= 6 * 60_000) return "second";
+  if (spanMs <= 4 * 3_600_000) return "minute";
   if (days <= 4) return "hour";
   if (days <= 120) return "day";
   return pickUnit(spanMs);
@@ -68,6 +75,14 @@ export function bucketOf(t: number, unit: TimeUnit): Omit<TimeBucket, "entities"
   const y = d.getUTCFullYear();
   const m = d.getUTCMonth();
   switch (unit) {
+    case "second": {
+      const start = Math.floor(t / 1000) * 1000;
+      return { key: `${start}`, label: formatMoment(start, true), start, end: start + 1000 };
+    }
+    case "minute": {
+      const start = Math.floor(t / 60_000) * 60_000;
+      return { key: `${start}`, label: formatMoment(start, true), start, end: start + 60_000 };
+    }
     case "hour": {
       const start = Date.UTC(y, m, d.getUTCDate(), d.getUTCHours());
       return { key: `${start}`, label: formatMoment(start, true), start, end: start + 3_600_000 };
@@ -207,35 +222,40 @@ export function colorSpread(entities: Entity[], cap = 4): string[] {
 
 export const toISODate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-/** The start of a record's time to the minute: a timed event's span start,
- *  else its date. What the zoomed brush buckets by. */
+/** The start of a record's time to the minute (to the second where it is
+ *  timed so): a timed event's span start, else its date. What the zoomed
+ *  brush buckets by. */
 export const preciseTime = (e: Entity): number | null => e.span?.from ?? entityTime(e);
 
 /* ── Date bounds and spans ─────────────────────────────────────────────────
    The Library's date filter holds a day ("2025-09-08") or a day and a time
-   ("2025-09-08T12:30"). Both are read as UTC: the corpora store wall-clock
+   ("2025-09-08T12:30", or "2017-10-01T22:06:06" in a collection timed to the
+   second). All are read as UTC: the corpora store wall-clock
    dates as UTC, so the filter and the records agree on what "12:30" means. */
 
 /** A filter bound in ms. A day `to` runs to the end of that day; a timed `to`
- *  to the end of that minute. null for none or an unreadable value. */
+ *  to the end of that minute, or of that second when it has seconds. null for
+ *  none or an unreadable value. */
 export function dateBoundMs(value: string, side: "from" | "to"): number | null {
   if (!value) return null;
   const timed = value.includes("T");
   const t = Date.parse(timed && !/Z|[+-]\d\d:\d\d$/.test(value) ? `${value}Z` : value);
   if (Number.isNaN(t)) return null;
   if (side === "from") return t;
-  return t + (timed ? 60_000 : 86_400_000) - 1;
+  const withSeconds = /T\d{2}:\d{2}:\d{2}/.test(value);
+  return t + (withSeconds ? 1000 : timed ? 60_000 : 86_400_000) - 1;
 }
 
 /** The day part of a bound, and its time ("" when the bound is a day). */
 export const boundDay = (value: string) => value.slice(0, 10);
-export const boundTime = (value: string) => (value.includes("T") ? value.slice(11, 16) : "");
+export const boundTime = (value: string) => (value.includes("T") ? value.slice(11, 19) : "");
 
 /** A bound from ms: the day when it falls on a UTC midnight, else day and
- *  minute. */
+ *  minute, and second when it is not on a whole minute. */
 export function toBound(ms: number): string {
   const iso = new Date(ms).toISOString();
-  return iso.slice(11, 16) === "00:00" ? iso.slice(0, 10) : iso.slice(0, 16);
+  if (iso.slice(11, 19) === "00:00:00") return iso.slice(0, 10);
+  return iso.slice(17, 19) === "00" ? iso.slice(0, 16) : iso.slice(0, 19);
 }
 
 /** Does the entity's time touch [from, to]? A record with a span (an event's

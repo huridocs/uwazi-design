@@ -8,6 +8,7 @@ import { inheritedFilterProps } from "../data/metadata";
 import { cejilInheritedDefs } from "../data/cejil/adapt";
 import { travesiaFacetDefs } from "../data/travesia/adapt";
 import { nepalFacetDefs } from "../data/nepal/adapt";
+import { vegasFacetDefs } from "../data/vegas/adapt";
 
 // ONE declaration, in atoms/dataSource.ts. This module used to carry its own
 // copy of the union, which is how "artworks" got added without any branch on
@@ -56,6 +57,8 @@ function curatedDefs(
       return travesiaFacetDefs;
     case "nepal":
       return nepalFacetDefs;
+    case "vegas":
+      return vegasFacetDefs;
     case "artworks":
       return [];
     default: {
@@ -78,6 +81,9 @@ const FIXED_FACET_PROPERTIES: Record<DataSource, string[]> = {
   // `rights` is split into the Content card's storage and the Licence facet;
   // `content_warning` is the Content card's own group.
   nepal: ["verification_status", "rights", "content_warning"],
+  // Verification is curated across templates (a claim's `verification_status`
+  // with the rest); the warning is the Content card's own group.
+  vegas: ["verification_status", "content_warning"],
   artworks: ["genres"],
 };
 
@@ -196,6 +202,7 @@ export function entityInheritedValues(
     case "cejil":
     case "travesia":
     case "nepal":
+    case "vegas":
       return e.inherited?.[def.propId] ?? [];
     case "mock": {
       if (def.targetTypeId && e.typeId !== def.targetTypeId) return [];

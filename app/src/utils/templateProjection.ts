@@ -105,17 +105,24 @@ export interface RecordContext {
   /** A template of the corpus, for a relationship's target: the inherited
    *  property's name and the connected column's header. */
   template: (id: string) => TemplateDef | undefined;
+  /** Which date properties print their time of day. Absent: all of them,
+   *  when the record is timed to the hour (`hourPrecise`). The Vegas
+   *  collection times only its clock properties, to the second. */
+  timed?: (property: string, values: Record<string, RawValue[] | undefined>) => boolean;
 }
 
 /** Dates are epoch seconds in both dumps; the record prints dd/mm/yyyy, and
- *  "dd/mm/yyyy HH:mm" when the record is timed to the hour (`hourPrecise`).
+ *  "dd/mm/yyyy HH:mm" when the record is timed to the hour (`hourPrecise`),
+ *  "dd/mm/yyyy HH:mm:ss" when the value has seconds (the Vegas recordings).
  *  The display (`formatDateText`) puts it in the collection's format. */
 export function fmtDate(v: unknown, withTime = false): string {
   if (typeof v !== "number" || !Number.isFinite(v) || v <= 0) return "";
   const d = new Date(v * 1000);
   const p = (n: number) => String(n).padStart(2, "0");
   const day = `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
-  return withTime ? `${day} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}` : day;
+  if (!withTime) return day;
+  const ss = d.getUTCSeconds() ? `:${p(d.getUTCSeconds())}` : "";
+  return `${day} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}${ss}`;
 }
 
 function fmtRange(v: unknown, withTime = false): string {
@@ -250,7 +257,7 @@ export function recordFieldsFor(
       });
       continue;
     }
-    const strings = displayStrings(p.type, vals, withTime);
+    const strings = displayStrings(p.type, vals, ctx.timed ? ctx.timed(p.name, values) : withTime);
     if (!strings.length) {
       const blank = blankField(ctx.corpus, p, "EN");
       if (blank) out.push({ ...blank, label: base.label });

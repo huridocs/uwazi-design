@@ -58,6 +58,10 @@ const isActivation = (e: L.LeafletEvent) => {
  *  entity's preview. Pins and badges are buttons: Tab reaches them, Enter or
  *  Space opens them.
  *
+ *  A record with a shape (a moving camera's path, a venue's footprint: the
+ *  Vegas collection) draws it under the pins, in its template's colour. The
+ *  shapes are not controls; the record's pin is.
+ *
  *  `entities` is the result set without the map's area. When the reader pans
  *  or zooms, the visible area becomes a filter (`libraryMapBoundsAtom`); the
  *  map's own fits never write it, so opening the view narrows nothing. While
@@ -194,6 +198,21 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
       group.addLayer(pin);
     }
 
+    // Areas first, then paths over them, all under the pins.
+    const shapes = L.layerGroup();
+    const shaped = entities.filter((e) => e.shape);
+    shaped.sort((a, b) => (a.shape!.kind === b.shape!.kind ? 0 : a.shape!.kind === "polygon" ? -1 : 1));
+    for (const e of shaped) {
+      const color = getEntityType(e.typeId)?.color ?? "#6B7280";
+      const { kind, points } = e.shape!;
+      shapes.addLayer(
+        kind === "polygon"
+          ? L.polygon(points, { color, weight: 1, opacity: 0.7, fillColor: color, fillOpacity: 0.12, interactive: false })
+          : L.polyline(points, { color, weight: 2, opacity: 0.75, interactive: false }),
+      );
+    }
+    shapes.addTo(map);
+
     group.addTo(map);
     groupRef.current = group;
     // With an area set, the reader's view stays; the first time with one (a
@@ -209,6 +228,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     return () => {
       groupRef.current = null;
       map.removeLayer(group);
+      map.removeLayer(shapes);
     };
     // `located` follows `entities`.
     // eslint-disable-next-line react-hooks/exhaustive-deps

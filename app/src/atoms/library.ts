@@ -7,6 +7,7 @@ import {
   dataSourceAtom,
   libraryEntitiesAtom,
   nepalReadyAtom,
+  vegasReadyAtom,
   travesiaReadyAtom,
   type DataSource,
 } from "./dataSource";
@@ -93,6 +94,8 @@ export const libraryCorpusReadyAtom = atom((get) => {
       return get(travesiaReadyAtom);
     case "nepal":
       return get(nepalReadyAtom);
+    case "vegas":
+      return get(vegasReadyAtom);
     default:
       return true;
   }

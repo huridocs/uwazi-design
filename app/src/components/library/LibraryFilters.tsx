@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FULL_TEXT_MIN } from "../../utils/searchScope";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
+import { VEGAS_UTC_OFFSET } from "../../data/vegas/schema";
 import type { Entity } from "../../data/entities";
 import {
   CONTENT_GROUPS,
@@ -485,8 +486,10 @@ export function LibraryFilters() {
     });
   }, [entities, filterState, collectionMaxYear]);
   const hasDates = datePresets.length > 0;
-  // Time fields only where records are timed to the hour (Nepal events).
+  // Time fields only where records are timed to the hour (Nepal events), with
+  // seconds where they are timed to the second (the Vegas recordings).
   const hasHours = useMemo(() => entities.some((e) => e.span?.hour), [entities]);
+  const hasSeconds = useMemo(() => entities.some((e) => e.span?.seconds), [entities]);
   const toggleInherited = (propId: string, value: string) =>
     setInheritedFilters((s) => ({
       ...s,
@@ -701,7 +704,7 @@ export function LibraryFilters() {
           }}
           match={{ mode: countryMode, onChange: (m) => setMatch("country", m), multi: true, missing: countryCounts.missing }}
           sort="alpha"
-          hideWhenEmpty={dataSource === "nepal"}
+          hideWhenEmpty={dataSource === "nepal" || dataSource === "vegas"}
         />
 
         {shownDefs.map((def) => {
@@ -787,6 +790,8 @@ export function LibraryFilters() {
             to={dateTo}
             presets={datePresets}
             hasHours={hasHours}
+            hasSeconds={hasSeconds}
+            clockNote={dataSource === "vegas" ? `Las Vegas time, ${VEGAS_UTC_OFFSET}` : undefined}
             onFrom={setDateFrom}
             onTo={setDateTo}
             onSetRange={(f, t) => {
@@ -1474,6 +1479,8 @@ function DateRangeCard({
   to,
   presets,
   hasHours = false,
+  hasSeconds = false,
+  clockNote,
   onFrom,
   onTo,
   onSetRange,
@@ -1483,6 +1490,11 @@ function DateRangeCard({
   to: string;
   presets: DatePreset[];
   hasHours?: boolean;
+  /** The time fields take seconds ("22:06:06"). */
+  hasSeconds?: boolean;
+  /** Whose clock the times are, where the collection says ("Las Vegas time,
+   *  UTC−07:00"): the records store wall-clock time. */
+  clockNote?: string;
   onFrom: (v: string) => void;
   onTo: (v: string) => void;
   onSetRange: (from: string, to: string) => void;
@@ -1551,20 +1563,26 @@ function DateRangeCard({
         /* Same columns as the dates above, so each time sits under its day.
            A time needs its day: the field waits for one. */
         <div data-part="times" className="px-1 flex items-center gap-1.5">
-          <TimeBox value={boundTime(from)} disabled={!from} onChange={(t) => onFrom(withTime(boundDay(from), t))} ariaLabel="From time" />
+          <TimeBox value={boundTime(from)} seconds={hasSeconds} disabled={!from} onChange={(t) => onFrom(withTime(boundDay(from), t))} ariaLabel="From time" />
           <span aria-hidden className="invisible text-xs shrink-0">→</span>
-          <TimeBox value={boundTime(to)} disabled={!to} onChange={(t) => onTo(withTime(boundDay(to), t))} ariaLabel="To time" />
+          <TimeBox value={boundTime(to)} seconds={hasSeconds} disabled={!to} onChange={(t) => onTo(withTime(boundDay(to), t))} ariaLabel="To time" />
         </div>
+      )}
+      {hasHours && clockNote && (
+        <p data-part="clock-note" className="px-1 text-xs text-ink-tertiary">
+          {clockNote}
+        </p>
       )}
     </section>
   );
 }
 
-/** A day plus an optional "HH:MM": the bound the date atoms hold. */
+/** A day plus an optional "HH:MM" or "HH:MM:SS": the bound the date atoms
+ *  hold. */
 const withTime = (day: string, time: string) => (day && time ? `${day}T${time}` : day);
 
-/** Hours and minutes for a bound, in UTC like the records. Empty = the whole
- *  day. A text field, 24-hour ("16:00"): a native time input follows the
+/** Hours and minutes for a bound, and seconds where the collection is timed
+ *  to the second, in UTC like the records. Empty = the whole day. A text field, 24-hour ("16:00"): a native time input follows the
  *  browser's locale and printed "04:00 PM" beside dates in the collection's
  *  format. Text that is not a time is kept as typed and dropped on blur. */
 function TimeBox({
@@ -1572,25 +1590,27 @@ function TimeBox({
   onChange,
   ariaLabel,
   disabled,
+  seconds = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   ariaLabel: string;
   disabled?: boolean;
+  seconds?: boolean;
 }) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
   const parse = (t: string) => {
-    const m = /^(\d{1,2}):?(\d{2})$/.exec(t.trim());
-    if (!m || +m[1] > 23 || +m[2] > 59) return null;
-    return `${m[1].padStart(2, "0")}:${m[2]}`;
+    const m = (seconds ? /^(\d{1,2}):?(\d{2})(?::?(\d{2}))?$/ : /^(\d{1,2}):?(\d{2})$/).exec(t.trim());
+    if (!m || +m[1] > 23 || +m[2] > 59 || (m[3] !== undefined && +m[3] > 59)) return null;
+    return `${m[1].padStart(2, "0")}:${m[2]}${m[3] !== undefined ? `:${m[3]}` : ""}`;
   };
   return (
     <input
       type="text"
       inputMode="numeric"
       autoComplete="off"
-      placeholder="hh:mm"
+      placeholder={seconds ? "hh:mm:ss" : "hh:mm"}
       value={text}
       disabled={disabled}
       onChange={(e) => {

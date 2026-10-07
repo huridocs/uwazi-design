@@ -171,11 +171,30 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     ),
   },
   {
+    // The Vegas recordings' and moments' wall-clock time, to the second where
+    // the map gives one. Sorts by the record's date, which carries the time.
+    id: "clock",
+    label: "Clock time",
+    default: true,
+    width: "6rem",
+    sortKey: "recent",
+    only: ["vegas"],
+    cell: (e) => listCell(e, "clock"),
+  },
+  {
+    id: "syncConfidence",
+    label: "Sync confidence",
+    default: true,
+    width: "11rem",
+    only: ["vegas"],
+    cell: (e) => listCell(e, "syncConfidence"),
+  },
+  {
     id: "verification",
     label: "Verification",
     default: true,
     width: "7rem",
-    only: ["nepal"],
+    only: ["nepal", "vegas"],
     cell: (e) => listCell(e, "verification"),
   },
   {
@@ -223,6 +242,15 @@ const COLLECTION_COLUMNS: Partial<
     type: { width: "8.5rem" },
     country: { offered: false },
     date: { width: LIST_TRACK.date },
+  },
+  // Title, Template, Clock time, Sync confidence, Verification. A recording's
+  // day is the same for all of them, so the clock replaces the Date column;
+  // Relationships stays on offer, off.
+  vegas: {
+    type: { default: true, width: "8.5rem" },
+    country: { offered: false },
+    date: { offered: false },
+    connections: { default: false },
   },
 };
 

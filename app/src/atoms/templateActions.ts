@@ -3,7 +3,7 @@ import type { Corpus } from "../data/entityChanges";
 import type { TemplateDef } from "../data/templates/types";
 import { templateStore, templatesAtom } from "./templates";
 import { filterSettings } from "./settingsSingletons";
-import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, nepalReadyAtom, travesiaReadyAtom } from "./dataSource";
+import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "./dataSource";
 import { cejilEntityCountByTemplate } from "../data/cejil/aggregates";
 import { DEFAULT_LIBRARY_SORT, libraryInheritedFiltersAtom, libraryRangeFiltersAtom, librarySortAtom, libraryTypeFiltersAtom } from "./library";
 import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
@@ -145,7 +145,9 @@ export const templateEntityCountsAtom = atom((get) => {
         ? get(travesiaReadyAtom)
         : corpus === "nepal"
           ? get(nepalReadyAtom)
-          : true;
+          : corpus === "vegas"
+            ? get(vegasReadyAtom)
+            : true;
   if (!loaded)
     return {
       known: false,

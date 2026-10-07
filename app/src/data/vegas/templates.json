@@ -35,7 +35,7 @@
    {
     "id": "vegas_recording:media_kind",
     "name": "media_kind",
-    "label": "Kind",
+    "label": "Recording kind",
     "type": "select",
     "content": "media_kinds",
     "required": true,
@@ -137,7 +137,8 @@
     "name": "sync_offset_seconds",
     "label": "Start, seconds after 22:00:00",
     "type": "numeric",
-    "filter": true
+    "filter": true,
+    "defaultfilter": true
    },
    {
     "id": "vegas_recording:sync_confidence",
@@ -400,7 +401,7 @@
    {
     "id": "vegas_moment:moment_type",
     "name": "moment_type",
-    "label": "Type",
+    "label": "Moment type",
     "type": "select",
     "content": "moment_types",
     "required": true,
@@ -561,7 +562,7 @@
    {
     "id": "vegas_place:place_type",
     "name": "place_type",
-    "label": "Type",
+    "label": "Place type",
     "type": "select",
     "content": "place_types",
     "required": true,
@@ -768,7 +769,7 @@
    {
     "id": "vegas_claim:claim_type",
     "name": "claim_type",
-    "label": "Type",
+    "label": "Claim type",
     "type": "select",
     "content": "claim_types",
     "filter": true,
@@ -892,7 +893,7 @@
    {
     "id": "vegas_finding:finding_type",
     "name": "finding_type",
-    "label": "Type",
+    "label": "Finding type",
     "type": "select",
     "content": "finding_types",
     "filter": true,
@@ -980,7 +981,7 @@
    {
     "id": "vegas_organisation:org_type",
     "name": "org_type",
-    "label": "Type",
+    "label": "Organisation type",
     "type": "select",
     "content": "org_types",
     "filter": true,

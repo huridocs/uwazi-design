@@ -111,8 +111,9 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     return { min: buckets[0].start, max: buckets[buckets.length - 1].end };
   }, [buckets]);
 
-  // At an hour scale a drag sets hours.
-  const timed = timedBounds || unit === "hour";
+  // At an hour, minute or second scale a drag sets times.
+  const clockUnit = unit === "hour" || unit === "minute" || unit === "second";
+  const timed = timedBounds || clockUnit;
   const winFrom = drag ? drag.from : fromMs ?? axis?.min ?? 0;
   const winTo = drag ? drag.to : toMs ?? axis?.max ?? 0;
 
@@ -290,17 +291,23 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   // so the axis carries fewer of them rather than a smaller size (11px floor).
   // A phone takes three: at 360–390 more of them ran together ("Jan 2023Apr 2023").
   // Hour labels ("12:00") are short, so an hour scale carries more of them.
-  const maxTicks = isMobile ? 3 : unit === "hour" ? 12 : 7;
+  const maxTicks = isMobile ? 3 : clockUnit ? 12 : 7;
   const tickEvery = Math.max(1, Math.ceil(buckets.length / maxTicks));
   // Hours tick on round hours (every 1, 2, 3, 6, 12 or 24), and midnight
   // prints the day, so a 30-hour range reads "2025/09/08 · 06:00 · 12:00 …".
   const hourStep = [1, 2, 3, 6, 12, 24].find((h) => buckets.length / h <= maxTicks) ?? 24;
+  // Minutes and seconds tick on round steps the same way ("22:05 · 22:10").
+  const clockStep = [1, 2, 5, 10, 15, 30, 60].find((n) => buckets.length / n <= maxTicks) ?? 60;
   const ticks =
     unit === "hour"
       ? buckets.filter((b) => new Date(b.start).getUTCHours() % hourStep === 0)
-      : buckets.filter((_, i) => i % tickEvery === 0);
+      : unit === "minute"
+        ? buckets.filter((b) => new Date(b.start).getUTCMinutes() % clockStep === 0)
+        : unit === "second"
+          ? buckets.filter((b) => new Date(b.start).getUTCSeconds() % clockStep === 0)
+          : buckets.filter((_, i) => i % tickEvery === 0);
   const tickLabel = (b: TimeBucket) =>
-    unit !== "hour" ? b.label : new Date(b.start).getUTCHours() === 0 ? formatDay(b.start) : formatTime(b.start);
+    !clockUnit ? b.label : unit === "hour" && new Date(b.start).getUTCHours() === 0 ? formatDay(b.start) : formatTime(b.start);
 
   const startDrag = (mode: DragState["mode"]) => (ev: React.PointerEvent) => {
     ev.preventDefault();

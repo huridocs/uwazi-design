@@ -10,6 +10,7 @@ import type { ChainGraph, ChainSegment } from "../utils/chainTraversal";
 import type { ActiveChain } from "../utils/libraryFilter";
 import { cejilChainGraph } from "./cejil/graph";
 import { nepalChainGraph } from "./nepal/graph";
+import { vegasChainGraph } from "./vegas/graph";
 
 /** A single chain-segment value facet — renders as one keyword facet card and
  *  tests one node on the traversed path. */
@@ -43,6 +44,7 @@ const CHAIN_MAX_PATHS = 400;
 const GRAPHS: Partial<Record<Corpus, () => ChainGraph | null>> = {
   cejil: cejilChainGraph,
   nepal: nepalChainGraph,
+  vegas: vegasChainGraph,
 };
 
 export const chainGraphFor = (corpus: Corpus): ChainGraph | null => GRAPHS[corpus]?.() ?? null;
@@ -64,12 +66,15 @@ export interface PathSkipGroup {
  *    and event pairs (sources skipped), a quarter of the connected pairs had a
  *    shortest path through a place, two thirds of those through Kathmandu or
  *    Nepal. Without places, 8% lost every path within four hops and 3% got
- *    longer; the empty result offers to include them. */
+ *    longer; the empty result offers to include them.
+ *  - The Vegas map's Source places and times nearly every recording, so a
+ *    path through a source says only that both ends are on the map. */
 const PATH_SKIP: Partial<Record<Corpus, PathSkipGroup[]>> = {
   nepal: [
     { id: "sources", typeIds: ["nepal_source"], label: "sources" },
     { id: "places", typeIds: ["nepal_location"], label: "places" },
   ],
+  vegas: [{ id: "sources", typeIds: ["vegas_source"], label: "sources" }],
 };
 
 export const pathSkipFor = (corpus: Corpus): PathSkipGroup[] => PATH_SKIP[corpus] ?? [];

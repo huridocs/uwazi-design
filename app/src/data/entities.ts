@@ -18,6 +18,8 @@ import { travesiaTypeById } from "./travesia/typesAdapter";
 import { travesiaEntityById } from "./travesia/adapt";
 import { nepalTypeById } from "./nepal/typesAdapter";
 import { nepalEntityById } from "./nepal/adapt";
+import { vegasTypeById } from "./vegas/typesAdapter";
+import { vegasEntityById } from "./vegas/adapt";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
@@ -85,8 +87,12 @@ export interface Entity {
   /** The record's time as a span, where it has more than a point: an event's
    *  start and end at its precision (a day-precision end runs to the end of
    *  that day). In ms. The date filter tests overlap with it; the timeline
-   *  still plots `createdAt`. `hour`: the record is timed to the hour. */
-  span?: { from: number; to: number; hour?: boolean };
+   *  still plots `createdAt`. `hour`: the record is timed to the hour (or
+   *  finer); `seconds`: to the second (the Vegas recordings and moments). */
+  span?: { from: number; to: number; hour?: boolean; seconds?: boolean };
+  /** A line or an area the map draws beside the record's point: a moving
+   *  camera's path, a venue's footprint. [lat, lng] pairs. Adapter-supplied. */
+  shape?: { kind: "line" | "polygon"; points: [number, number][] };
   /** Values for a collection's own List columns (`only` in `LIST_COLUMNS`),
    *  by column id. Adapter-supplied, like `fields`. */
   listCells?: Record<string, string>;
@@ -478,6 +484,7 @@ export function getEntityType(typeId: string): EntityType | undefined {
     artworkTypeById.get(typeId) ??
     travesiaTypeById.get(typeId) ??
     nepalTypeById.get(typeId) ??
+    vegasTypeById.get(typeId) ??
     previewTypes.get(typeId)
   );
 }
@@ -506,7 +513,8 @@ export function getEntity(id: string): Entity | undefined {
     cejilEntityById().get(id) ??
     artworkEntityById().get(id) ??
     travesiaEntityById().get(id) ??
-    nepalEntityById().get(id);
+    nepalEntityById().get(id) ??
+    vegasEntityById().get(id);
   if (!base) return undefined;
   const patch = overlayPatch(id);
   return patch ? patchedEntity(base, patch) : base;
@@ -529,6 +537,7 @@ export function entityCorpusOf(id: string): Corpus {
   if (artworkEntityById().has(id)) return "artworks";
   if (travesiaEntityById().has(id)) return "travesia";
   if (nepalEntityById().has(id)) return "nepal";
+  if (vegasEntityById().has(id)) return "vegas";
   // Unknown ids (a runtime-created entity not yet in the seed, a stale
   // persisted id) belong to the seed, which is the only corpus this app writes.
   return "mock";

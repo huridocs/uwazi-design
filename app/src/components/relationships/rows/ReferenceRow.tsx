@@ -11,6 +11,8 @@ import { relationDisplayLabel } from "../../../utils/inheritance";
 import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { PageTag } from "../../shared/PageTag";
+import { TimeTag } from "../../shared/TimeTag";
+import { formatTime } from "../../../utils/dateFormat";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
@@ -67,6 +69,16 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   const status = <RefStatus verification={reference.verification} period={reference.period} />;
   // A web source's quote has no page: no tag, nothing to jump to.
   const page = selectionPage(selection);
+  // A time in a recording (the Vegas collection): the tag opens the recording
+  // there; the row says what happens at that time.
+  const anchor = reference.mediaAnchor;
+  const timeTag = anchor ? (
+    <TimeTag anchor={anchor} recordingTitle={getEntity(anchor.recordingId)?.title} />
+  ) : null;
+  const anchorLine =
+    anchor?.label || anchor?.clock !== undefined
+      ? [anchor.label, anchor.clock !== undefined ? formatTime(anchor.clock) : undefined].filter(Boolean).join(" · ")
+      : "";
 
   /** The page tag's job: go to this passage in the document, and mark the row
    *  as the one you went from. Only ever reached by pressing the tag — the row
@@ -109,6 +121,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
         />
       </div>
       {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+      {timeTag}
     </div>
   );
 
@@ -133,6 +146,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
       <div className="flex items-center gap-1.5 shrink-0">
         {status}
         {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+        {timeTag}
       </div>
     </div>
   );
@@ -148,7 +162,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
         <div
           data-part="header"
           className={`flex items-start justify-between gap-2 ${
-            hideRelLabel && !selection && !reference.targetSelection ? "" : "mb-1.5"
+            hideRelLabel && !selection && !reference.targetSelection && !anchorLine ? "" : "mb-1.5"
           }`}
         >
           <div className="flex items-center gap-1.5 min-w-0">
@@ -168,7 +182,18 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
               {type?.name ?? ""}
             </span>
             {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
+            {timeTag}
           </div>
+        </div>
+      )}
+      {!selection && anchorLine && (
+        // The source's own words for what happens at that time, and the clock
+        // there: what the time tag points at.
+        <div data-part="anchor" className="flex items-start justify-between gap-2">
+          <p className="text-xs text-ink-secondary leading-relaxed min-w-0 truncate">
+            <HighlightedText text={anchorLine} query={query} />
+          </p>
+          {nested && timeTag}
         </div>
       )}
       {selection ? (

@@ -5,6 +5,7 @@ import { overlayRecord } from "../data/entityChanges";
 import { cejilBySidLang, cejilEsBySid } from "../data/cejil/load";
 import { travesiaEntity } from "../data/travesia/load";
 import { nepalEntity } from "../data/nepal/load";
+import { vegasEntity } from "../data/vegas/load";
 import { templateMirror, templatesMirror } from "../data/templates/mirror";
 import { displayStrings } from "./templateProjection";
 
@@ -46,7 +47,7 @@ export function entityPropertyValues(e: Entity, name: string, lang: Language): s
 
 function read(e: Entity, name: string, lang: Language): string[] {
   const corpus = entityCorpusOf(e.id);
-  if (!overlayRecord(e.id) && (corpus === "cejil" || corpus === "travesia" || corpus === "nepal")) {
+  if (!overlayRecord(e.id) && (corpus === "cejil" || corpus === "travesia" || corpus === "nepal" || corpus === "vegas")) {
     const p = templateMirror(corpus, e.typeId)?.properties.find((x) => x.name === name);
     if (!p) return [];
     const raw =
@@ -54,7 +55,9 @@ function read(e: Entity, name: string, lang: Language): string[] {
         ? (cejilBySidLang().get(`${e.id}::${LANG_CODE[lang]}`) ?? cejilEsBySid().get(e.id))?.metadata?.[name]
         : corpus === "nepal"
           ? nepalEntity(e.id)?.metadata[name]
-          : travesiaEntity(e.id)?.metadata[name];
+          : corpus === "vegas"
+            ? vegasEntity(e.id)?.metadata[name]
+            : travesiaEntity(e.id)?.metadata[name];
     if (p.type === "relationship")
       return (raw ?? []).map((v) => (typeof v.label === "string" ? v.label : "")).filter(Boolean);
     return displayStrings(p.type, raw);

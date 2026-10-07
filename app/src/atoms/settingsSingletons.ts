@@ -81,6 +81,7 @@ const COLLECTION_DESCRIPTIONS: Record<Corpus, string> = {
   artworks: "Paintings by well-known artists, each with its image, its artist and the artist’s period and nationality.",
   travesia: "A fictional collection in the shape of a migrant shelter network's casework: people on the move, their movements, detentions, disappearances and the alerts raised about them.",
   nepal: "The protests in Nepal from 2024 to 2026: events, the people and organisations involved, casualties, official actions, and the sources and claims behind each.",
+  vegas: "The recordings of the shooting at the Route 91 Harvest festival in Las Vegas on 1 October 2017, placed and timed to the second against each other, with the moments they capture, the official findings and the sources behind each. Recordings are linked, never stored, and every one carries a content warning.",
 };
 
 /** Each corpus's own name, as the navbar's collection switcher reads it. */
@@ -90,6 +91,7 @@ const COLLECTION_NAMES: Record<Corpus, string> = {
   artworks: "Best Artworks",
   travesia: "Red Travesía",
   nepal: "Nepal protests 2024–2026",
+  vegas: "Las Vegas, 1 October 2017",
 };
 
 export const collectionSettings = createSettingsSingleton<CollectionSettings>({

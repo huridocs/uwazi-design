@@ -210,6 +210,16 @@ const COMMON = [
   { name: "creationDate", label: "Date added", type: "date" },
   { name: "editDate", label: "Date modified", type: "date" },
 ];
+/** Properties the seed labels "Type" or "Kind" in several templates: each is
+ *  its own Library facet, so each names its template ("Moment type"). */
+const PROP_LABELS = {
+  media_kind: "Recording kind",
+  moment_type: "Moment type",
+  place_type: "Place type",
+  claim_type: "Claim type",
+  finding_type: "Finding type",
+  org_type: "Organisation type",
+};
 const templates = seedTemplates.map((t) => ({
   ...t,
   id: tplId(t.id),
@@ -219,7 +229,7 @@ const templates = seedTemplates.map((t) => ({
     id: `${tplId(t.id)}:${p.name}`,
   })),
   properties: t.properties.map((p) => {
-    const out = { ...p, id: `${tplId(t.id)}:${p.name}` };
+    const out = { ...p, id: `${tplId(t.id)}:${p.name}`, ...(PROP_LABELS[p.name] ? { label: PROP_LABELS[p.name] } : {}) };
     if (p.type === "relationship") {
       out.content = p.content ? tplId(p.content) : "";
       out.x = { connectionKey: `${p.relationType}:${out.content}` };
@@ -232,9 +242,10 @@ const templates = seedTemplates.map((t) => ({
 }));
 const templateById = new Map(templates.map((t) => [t.id, t]));
 // The recording's start offset is a range facet (Library › Filters): numeric,
-// flagged `filter` in the seed.
+// flagged `filter` in the seed, and shown without a Template selection.
 const syncProp = templateById.get("vegas_recording")?.properties.find((p) => p.name === "sync_offset_seconds");
 if (!syncProp || syncProp.type !== "numeric" || !syncProp.filter) fail("sync_offset_seconds is not a numeric filter on Recording");
+else syncProp.defaultfilter = true;
 
 /* ── Dates ──────────────────────────────────────────────────────────── */
 /** ISO date, month or second → epoch seconds of the wall-clock time. The

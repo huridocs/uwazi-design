@@ -4,6 +4,7 @@ import { sampleTemplateDefs } from "../sample/templates";
 import { cejilTemplateDefs } from "../cejil/templatesSeed";
 import { travesiaTemplateDefs } from "../travesia/templatesSeed";
 import { nepalTemplateDefs } from "../nepal/templatesSeed";
+import { vegasTemplateDefs } from "../vegas/templatesSeed";
 import { artworkTemplateDefs } from "../artworks/templates";
 
 /** Templates for code outside React (record profiles, blank forms, the
@@ -19,6 +20,7 @@ export const TEMPLATE_SEEDS: Record<Corpus, () => TemplateDef[]> = {
   cejil: cejilTemplateDefs,
   travesia: travesiaTemplateDefs,
   nepal: nepalTemplateDefs,
+  vegas: vegasTemplateDefs,
   artworks: artworkTemplateDefs,
 };
 

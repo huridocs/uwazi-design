@@ -13,6 +13,8 @@ import { cejilEsBySid } from "./cejil/load";
 import { cejilTemplates } from "./cejil/templates";
 import { nepalEntity } from "./nepal/load";
 import { nepalTemplateById } from "./nepal/schema";
+import { vegasEntity } from "./vegas/load";
+import { vegasTemplateById } from "./vegas/schema";
 
 let cejilProps: Map<string, DatePropertyDef[]> | null = null;
 function cejilDateProps(templateId: string): DatePropertyDef[] {
@@ -41,6 +43,9 @@ export function datesOf(entityId: string, lang: Language): EntityDate[] {
   } else if (nepalEntity(entityId)) {
     const record = nepalEntity(entityId)!;
     out = datesFromUwaziMetadata(record.metadata, nepalTemplateById.get(record.template)?.properties ?? []);
+  } else if (vegasEntity(entityId)) {
+    const record = vegasEntity(entityId)!;
+    out = datesFromUwaziMetadata(record.metadata, vegasTemplateById.get(record.template)?.properties ?? []);
   } else {
     const record = cejilEsBySid().get(entityId);
     // An unloaded corpus is not "no dates": don't cache the empty answer.

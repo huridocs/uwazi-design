@@ -2,7 +2,8 @@ import { useMemo, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
-import { bucketOf, elapsed, formatDay } from "../../utils/timeline";
+import { bucketOf, elapsed, formatDay, formatMoment } from "../../utils/timeline";
+import { formatTime } from "../../utils/dateFormat";
 
 /* One track geometry, shared by Rail, Density and both spines, so the axis sits at
  * the same x in every layout and switching layouts doesn't move the timeline.
@@ -521,14 +522,18 @@ function ClusterLeader<T>({
  *  Under RTL "9 Feb 2012" would reorder to "Feb 2012 9", so `<bdi>` isolates the
  *  text while the box keeps the pane's direction; `dir="ltr"` on the box would
  *  also flip its text-align and move the date away from its dot. */
-export function SpineDate({ t }: { t: number }) {
+export function SpineDate({ t, withTime = false }: { t: number; withTime?: boolean }) {
+  // A timed record (the Vegas recordings, to the second) prints its time:
+  // its neighbours on the spine are the same day, the time is what differs.
+  // The day stays in the tooltip.
   return (
     <time
       data-component="SpineDate"
-      dateTime={Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : undefined}
+      dateTime={Number.isFinite(t) ? new Date(t).toISOString().slice(0, withTime ? 19 : 10) : undefined}
+      title={withTime ? formatMoment(t, true) : undefined}
       className="shrink-0 w-[5.5rem] text-meta tabular-nums text-ink-tertiary"
     >
-      <bdi dir="ltr">{formatDay(t)}</bdi>
+      <bdi dir="ltr">{withTime ? formatTime(t) : formatDay(t)}</bdi>
     </time>
   );
 }

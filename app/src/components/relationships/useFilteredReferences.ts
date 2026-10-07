@@ -141,7 +141,7 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     if (matcher) {
       result = result.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
+        const haystack = `${ref.sourceSelection?.text ?? ""} ${ref.mediaAnchor?.label ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
         return matcher(haystack);
       });
     }
@@ -152,14 +152,20 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     if (sortOrder === "appearance") {
       // Entity-level refs (no sourceSelection) sort to the top: they're not
       // tied to a passage, so they read as "header" relationships about the
-      // entity overall. Anchored refs follow in page-then-top order.
+      // entity overall. Anchored refs follow in page-then-top order, and refs
+      // anchored in a recording by their time in it.
       return [...result].sort((a, b) => {
         const pageA = a.sourceSelection?.page ?? -1;
         const pageB = b.sourceSelection?.page ?? -1;
         if (pageA !== pageB) return pageA - pageB;
         const topA = a.sourceSelection?.top ?? 0;
         const topB = b.sourceSelection?.top ?? 0;
-        return topA - topB;
+        if (topA !== topB) return topA - topB;
+        // A recording's moments in the order they happen: by the clock time at
+        // the anchor, else its offset. Refs with no time keep their place.
+        const atA = a.mediaAnchor ? (a.mediaAnchor.clock ?? a.mediaAnchor.offset * 1000) : -1;
+        const atB = b.mediaAnchor ? (b.mediaAnchor.clock ?? b.mediaAnchor.offset * 1000) : -1;
+        return atA - atB;
       });
     }
     if (sortOrder === "evidence") {

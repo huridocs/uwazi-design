@@ -4,13 +4,15 @@
 import type { Entity } from "../data/entities";
 import { getEntity, getEntityType } from "../data/entities";
 import { selectionPage, type Reference, type Verification } from "../data/references";
-import { formatAtPrecision } from "./dateFormat";
+import { formatAtPrecision, formatMoment } from "./dateFormat";
 import { VERIFICATION_LABEL } from "./relationships";
 import { isNepalEntity } from "../data/nepal/profile";
 import { nepalDoc, nepalEntity, nepalRefsByEntity } from "../data/nepal/load";
 import { nepalSourceLink } from "../data/nepal/sourceLink";
 import { isCejilEntity } from "../data/cejil/profile";
 import { STANCES, STANCE_LABEL, type Stance } from "../data/nepal/claimEvidence";
+import { isVegasEntity, vegasEntity, vegasRefsByEntity } from "../data/vegas/load";
+import { formatClock, formatOffset, vegasLinkAt, vegasRecordingUrl, vegasSourceLink } from "../data/vegas/links";
 
 /** Where a record can be read and who put it there. */
 export interface RecordSource {
@@ -41,6 +43,10 @@ export interface Citation {
   quote: string;
   /** "p. 14", where the quote was found on a page of a document. */
   page?: string;
+  /** "at 0:04, 22:09:48", where it was found in a recording: the offset into
+   *  it and the clock time there (the Vegas collection). `url` then opens the
+   *  recording at that offset. */
+  at?: string;
 }
 
 export interface NotebookEntry {
@@ -73,10 +79,11 @@ function recordDate(e: Entity): string | undefined {
   return formatAtPrecision(d, e.datePrecision ?? "day");
 }
 
-/** The record's status: Nepal's verification, else published or restricted. */
+/** The record's status: Nepal's or Las Vegas's verification, else published
+ *  or restricted. */
 function statusOf(e: Entity): { status?: string; statusKey?: string } {
-  if (isNepalEntity(e.id)) {
-    const n = nepalEntity(e.id);
+  if (isNepalEntity(e.id) || isVegasEntity(e.id)) {
+    const n = nepalEntity(e.id) ?? vegasEntity(e.id);
     const v = (n?.metadata.verification ?? n?.metadata.verification_status)?.[0]?.value;
     if (typeof v === "string" && STATUS_LONG[v]) return { status: STATUS_LONG[v], statusKey: v };
   }
@@ -100,6 +107,20 @@ export function recordSource(id: string): RecordSource {
         publisher: doc.publisher,
         date: doc.published ? `Published ${formatAtPrecision(new Date(doc.published * 1000), "day")}` : e && recordDate(e),
       };
+    return { date: e && recordDate(e) };
+  }
+  if (isVegasEntity(id)) {
+    const link = vegasSourceLink(id);
+    if (link) return { url: link.url, publisher: link.publisher, date: link.dateLine };
+    const v = vegasEntity(id)!;
+    if (v.template === "vegas_recording") {
+      const clock = v.datePrecision === "second" || v.datePrecision === "minute" ? v.date : undefined;
+      return {
+        url: vegasRecordingUrl(v),
+        publisher: v.metadata.platform?.[0]?.label,
+        date: clock !== undefined ? `Starts ${formatMoment(clock * 1000, true)}` : e && recordDate(e),
+      };
+    }
     return { date: e && recordDate(e) };
   }
   if (isCejilEntity(id)) return { url: `${CEJIL_ORIGIN}/entity/${id}`, publisher: CEJIL_PUBLISHER, date: e && recordDate(e) };
@@ -132,6 +153,26 @@ function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
     }
     return dedupe(out);
   }
+  if (isVegasEntity(id)) {
+    // A moment a recording captures, or a call in its compilation: the map's
+    // annotation is the passage, cited to the recording at its offset.
+    for (const r of vegasRefsByEntity().get(id) ?? []) {
+      const m = r.media;
+      if (!m?.label) continue;
+      const rec = vegasEntity(m.recording);
+      const src = recordSource(m.recording);
+      out.push({
+        sourceId: m.recording,
+        sourceTitle: rec?.title ?? m.recording,
+        url: vegasLinkAt(m.recording, m.offset) ?? src.url,
+        publisher: src.publisher,
+        status: STATUS_LONG[r.verification],
+        quote: m.qualifier && !m.label.includes(m.qualifier) ? `${m.label} (${m.qualifier})` : m.label,
+        at: [`at ${formatOffset(m.offset)}`, m.clock !== undefined ? formatClock(m.clock) : undefined].filter(Boolean).join(", "),
+      });
+    }
+    return dedupe(out);
+  }
   const src = recordSource(id);
   const title = getEntity(id)?.title ?? id;
   for (const r of refs) {
@@ -157,7 +198,7 @@ function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
 function dedupe(list: Citation[]): Citation[] {
   const seen = new Set<string>();
   return list.filter((c) => {
-    const k = `${c.sourceId}\u0000${c.quote}\u0000${c.page ?? ""}\u0000${c.stance ?? ""}\u0000${c.stanceOn ?? ""}`;
+    const k = `${c.sourceId}\u0000${c.quote}\u0000${c.page ?? ""}\u0000${c.at ?? ""}\u0000${c.stance ?? ""}\u0000${c.stanceOn ?? ""}`;
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
@@ -193,10 +234,10 @@ export function stanceText(c: Citation): string | undefined {
   return c.stanceOn ? `${STANCE_LABEL[c.stance]} “${c.stanceOn}”` : STANCE_LABEL[c.stance];
 }
 
-/** One citation as a sentence: Stance: “quote” — Source, Publisher, date. URL. Status. p. N */
+/** One citation as a sentence: Stance: “quote” — Source, Publisher, date. URL. Status. p. N (or "at 0:04, 22:09:48") */
 function citationParts(c: Citation): { stance?: string; quote: string; rest: string[] } {
   const where = [c.sourceTitle, c.publisher, c.date].filter(Boolean).join(", ");
-  return { stance: stanceText(c), quote: c.quote, rest: [where, c.url, c.status, c.page].filter(Boolean) as string[] };
+  return { stance: stanceText(c), quote: c.quote, rest: [where, c.url, c.status, c.page, c.at].filter(Boolean) as string[] };
 }
 
 function headLine(e: NotebookEntry): string[] {

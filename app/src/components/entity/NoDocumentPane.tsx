@@ -1,5 +1,6 @@
 import { ExternalLink, FileX, Globe } from "lucide-react";
 import { nepalSourceLink } from "../../data/nepal/sourceLink";
+import { vegasSourceLink } from "../../data/vegas/links";
 import { WARM_BUTTON } from "../shared/warmButton";
 
 /** What the entity view shows where a document would be, for a record that
@@ -7,7 +8,7 @@ import { WARM_BUTTON } from "../shared/warmButton";
  *  a short empty state. Never the sample PDF, which read as this record's
  *  document. */
 export function NoDocumentPane({ entityId }: { entityId: string }) {
-  const link = nepalSourceLink(entityId);
+  const link = nepalSourceLink(entityId) ?? vegasSourceLink(entityId);
   return (
     <div
       data-component="NoDocumentPane"

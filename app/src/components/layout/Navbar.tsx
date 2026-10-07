@@ -117,6 +117,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     artworks: useAtomValue(collectionSettings.valueOfAtom("artworks")).name,
     travesia: useAtomValue(collectionSettings.valueOfAtom("travesia")).name,
     nepal: useAtomValue(collectionSettings.valueOfAtom("nepal")).name,
+    vegas: useAtomValue(collectionSettings.valueOfAtom("vegas")).name,
   };
   const COLLECTIONS: { id: DataSource; label: string; detail: string }[] = [
     { id: "mock", label: names.mock, detail: "Sample · curated demo entities" },
@@ -126,6 +127,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     { id: "travesia", label: names.travesia, detail: "Fictional · synthetic portraits" },
     // Public sources only; every fact carries a verification status.
     { id: "nepal", label: names.nepal, detail: "Open sources · verified per fact · 1,868" },
+    // Recordings linked, never stored; every one carries a content warning.
+    { id: "vegas", label: names.vegas, detail: "Open sources · recordings timed to the second · 582" },
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 

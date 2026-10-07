@@ -773,7 +773,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 <span className="relative shrink-0 w-4 h-4 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
                 </span>
-                <SpineDate t={t} />
+                <SpineDate t={t} withTime={!!e.createdAt?.includes("T")} />
                 <span
                   className={`flex-1 min-w-0 truncate text-xs ${sel ? "text-ink font-medium" : "text-ink-secondary"}`}
                 >

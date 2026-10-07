@@ -23,6 +23,7 @@ import { RelationshipsActionBar } from "../components/relationships/Relationship
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { NoDocumentPane } from "../components/entity/NoDocumentPane";
 import { nepalSourceLink } from "../data/nepal/sourceLink";
+import { vegasSourceLink } from "../data/vegas/links";
 import { nepalClaimEvidence } from "../data/nepal/claimEvidence";
 import { ClaimEvidenceBlock } from "../components/relationships/ClaimEvidence";
 
@@ -47,7 +48,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const relFilterCount = useAtomValue(activeFilterCountAtom);
 
   const hideMinimap = view === "graph";
-  const sourceLink = profile.hasDocument ? undefined : nepalSourceLink(focusedId);
+  const sourceLink = profile.hasDocument ? undefined : (nepalSourceLink(focusedId) ?? vegasSourceLink(focusedId));
   // A record with no file and no source link has nothing for a Document tab
   // to show: the drawer drops the tab and opens on Filters, whatever tab the
   // previous record left open.

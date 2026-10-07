@@ -10,6 +10,7 @@ const FILES: Partial<Record<DataSource, string>> = {
   cejil: "/cejil-data/network.json",
   nepal: "/nepal-data/network.json",
   travesia: "/travesia-data/network.json",
+  vegas: "/vegas-data/network.json",
   mock: "/sample-data/network.json",
 };
 

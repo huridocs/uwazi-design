@@ -15,6 +15,9 @@ import { cejilCorpus } from "../cejil/load";
 import { nepalCorpus } from "../nepal/load";
 import { nepalRelTypeName } from "../nepal/schema";
 import { travesiaCorpus } from "../travesia/load";
+import { vegasCorpus } from "../vegas/load";
+import { vegasRelTypeName } from "../vegas/schema";
+import { formatOffset } from "../vegas/links";
 import { relationDisplayLabel } from "../../utils/inheritance";
 
 /** A record with this many neighbours or more is a hub; its edges draw faint
@@ -24,6 +27,7 @@ import { relationDisplayLabel } from "../../utils/inheritance";
 export const HUB_DEGREE: Record<DataSource, number> = {
   cejil: 100,
   nepal: 50,
+  vegas: 50,
   mock: 20,
   travesia: 20,
   artworks: 20,
@@ -38,9 +42,12 @@ export const NETWORK_TYPES_OFF: Partial<Record<DataSource, string[]>> = {
 };
 
 /** Templates the Evidence toggle hides with their edges: Nepal's sources,
- *  claims and media, which link the evidence layer to events and actors. */
+ *  claims and media, which link the evidence layer to events and actors;
+ *  the Vegas sources, claims and official findings, the same layer over the
+ *  recordings and moments. */
 export const NETWORK_EVIDENCE_TEMPLATES: Partial<Record<DataSource, string[]>> = {
   nepal: ["nepal_source", "nepal_claim", "nepal_media"],
+  vegas: ["vegas_source", "vegas_claim", "vegas_finding"],
 };
 
 export interface NetworkGraph {
@@ -77,6 +84,12 @@ function linksOf(source: DataSource, sampleRefs: Reference[]): RawLink[] {
         from: r.from,
         to: r.to,
         type: relationDisplayLabel(nepalRelTypeName.get(r.type) ?? r.type),
+      }));
+    case "vegas":
+      return (vegasCorpus()?.references ?? []).map((r) => ({
+        from: r.from,
+        to: r.to,
+        type: relationDisplayLabel(vegasRelTypeName.get(r.type) ?? r.type),
       }));
     case "travesia":
       return (travesiaCorpus()?.relationships ?? []).map((r) => ({ from: r.from, to: r.to, type: r.typeName }));
@@ -196,13 +209,30 @@ export interface PairEvidence {
 }
 
 /** The references between two records that carry a quote or a status, for an
- *  edge's tooltip. Only Nepal's do; every other collection returns none. Read
- *  on hover, one scan of the collection's references. */
+ *  edge's tooltip. Nepal's carry both; the Vegas references carry a status,
+ *  and a recording's moment the map's annotation at its time in the
+ *  recording ("10th Volley Begins, at 0:02"). Every other collection returns
+ *  none. Read on hover, one scan of the collection's references. */
 export function pairEvidence(source: DataSource, idA: string, idB: string, limit = 3): PairEvidence[] {
-  if (source !== "nepal") return [];
+  const between = (r: { from: string; to: string }) =>
+    (r.from === idA && r.to === idB) || (r.from === idB && r.to === idA);
   const out: PairEvidence[] = [];
+  if (source === "vegas") {
+    for (const r of vegasCorpus()?.references ?? []) {
+      if (!between(r)) continue;
+      const m = r.media;
+      out.push({
+        type: relationDisplayLabel(vegasRelTypeName.get(r.type) ?? r.type),
+        ...(m?.label ? { quote: `${m.label}, at ${formatOffset(m.offset)}` } : {}),
+        verification: r.verification,
+      });
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+  if (source !== "nepal") return [];
   for (const r of nepalCorpus()?.references ?? []) {
-    if (!((r.from === idA && r.to === idB) || (r.from === idB && r.to === idA))) continue;
+    if (!between(r)) continue;
     if (!r.quote && !r.verification) continue;
     out.push({
       type: relationDisplayLabel(nepalRelTypeName.get(r.type) ?? r.type),

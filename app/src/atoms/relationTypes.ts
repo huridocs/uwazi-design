@@ -9,6 +9,7 @@ import { focusedEntityIdAtom } from "./focusedEntity";
 import { entityCorpusOf } from "../data/entities";
 import { travesiaRelationTypes } from "../data/travesia/schema";
 import { nepalRelationTypes } from "../data/nepal/schema";
+import { vegasRelationTypes } from "../data/vegas/schema";
 import { registerRelationLabelReader } from "../utils/inheritance";
 import type { Corpus } from "../data/entityChanges";
 import {
@@ -38,7 +39,7 @@ import { createSettingsCollection, hasId, newSettingsId, registerSettingsReset }
  *  references it labels, it lives for the visit in memory. CEJIL's types come
  *  from its dump and its references are read-only, so its registry is a
  *  settings store: names can change, and a type no reference uses can go.
- *  Travesía's and Nepal's work the same way, over their own dumps.
+ *  Travesía's, Nepal's and Las Vegas's work the same way, over their own dumps.
  *  `no_label` is the panel's fallback for an untyped reference, not a stored
  *  type: Settings never lists it (as in Uwazi). */
 
@@ -47,6 +48,7 @@ const DUMP_TYPES: Partial<Record<Corpus, { _id: string; name: string }[]>> = {
   cejil: cejilRelationTypes,
   travesia: travesiaRelationTypes,
   nepal: nepalRelationTypes,
+  vegas: vegasRelationTypes,
 };
 
 const importedStore = createSettingsCollection<RelationTypeDef>({
@@ -57,11 +59,11 @@ const importedStore = createSettingsCollection<RelationTypeDef>({
   isRecord: (r) => hasId(r) && typeof (r as Partial<RelationTypeDef>).label === "string",
 });
 
-/** The collection whose types Settings shows: CEJIL's, Travesía's and
- *  Nepal's own; the Sample's on the Sample and Artworks (which has none). */
+/** The collection whose types Settings shows: CEJIL's, Travesía's, Nepal's
+ *  and Las Vegas's own; the Sample's on the Sample and Artworks (which has none). */
 export const relationTypesCorpus = (source: string): Corpus =>
-  source === "cejil" || source === "travesia" || source === "nepal" ? source : "mock";
-const isImported = (c: Corpus) => c === "cejil" || c === "travesia" || c === "nepal";
+  source === "cejil" || source === "travesia" || source === "nepal" || source === "vegas" ? source : "mock";
+const isImported = (c: Corpus) => c === "cejil" || c === "travesia" || c === "nepal" || c === "vegas";
 
 /* CEJIL's and Travesía's references name their type by its dump name, not
    its id, so a rename in Settings reaches them through `relationLabel`: the

@@ -68,12 +68,14 @@ const FULL_DATE =
 
 /** A day with a time of day after it ("08/09/2025 12:37", "2025-09-08T12:37"):
  *  what a record whose precision is Hour stores. */
-const WITH_TIME = /^(.+?)[ T](\d{2}:\d{2})$/;
+const WITH_TIME = /^(.+?)[ T](\d{2}:\d{2}(?::\d{2})?)$/;
 
-/** "12:37": hours and minutes, 24-hour, UTC like the stored values. */
+/** "12:37": hours and minutes, 24-hour, UTC like the stored values; and
+ *  seconds when the instant has them ("22:06:06", the Vegas recordings). */
 export function formatTime(ms: number): string {
   const d = new Date(ms);
-  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  const ss = d.getUTCSeconds() ? `:${pad(d.getUTCSeconds())}` : "";
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}${ss}`;
 }
 
 /** An instant as the collection prints dates, with ", 12:37" when the time

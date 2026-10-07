@@ -459,6 +459,7 @@ function CitationEntry({ n, entry }: { n: number; entry: NotebookEntry }) {
                   [c.sourceId === entry.id ? null : c.sourceTitle, c.publisher].filter(Boolean).join(", ") || "This record",
                   c.status?.replace(/ /g, "\u00a0"),
                   c.page?.replace(/ /g, "\u00a0"),
+                  c.at?.replace(/ /g, "\u00a0"),
                 ]
                   .filter(Boolean)
                   .join("\u00a0· ")}

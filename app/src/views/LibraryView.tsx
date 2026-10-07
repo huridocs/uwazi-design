@@ -5,7 +5,7 @@ import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
-import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { useRegisterCsvImport } from "../hooks/useRegisterCsvImport";
@@ -22,6 +22,7 @@ import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { loadNepalData, nepalRefsByEntity } from "../data/nepal/load";
+import { loadVegasData, vegasRefsByEntity } from "../data/vegas/load";
 import { preloadMediaItemCard } from "../components/metadata/lazyMediaItemCard";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -268,12 +269,36 @@ export function LibraryView() {
       };
     }
   }, [dataSource, nepalReady, setNepalReady, cejilRetry]);
+  const [vegasReady, setVegasReady] = useAtom(vegasReadyAtom);
+  useEffect(() => {
+    if (dataSource === "vegas" && !vegasReady) {
+      let alive = true;
+      setCejilError(false);
+      // Its recordings' record card is the same chunk as Nepal's media items.
+      preloadMediaItemCard();
+      loadVegasData().then(
+        () => alive && setVegasReady(true),
+        () => alive && setCejilError(true),
+      );
+      return () => {
+        alive = false;
+      };
+    }
+  }, [dataSource, vegasReady, setVegasReady, cejilRetry]);
   // `cejilLoading` covers every lazy source: the selected corpus is still loading.
   const cejilLoading =
     (dataSource === "cejil" && !cejilReady) ||
     (dataSource === "travesia" && !travesiaReady) ||
-    (dataSource === "nepal" && !nepalReady);
-  const lazyName = dataSource === "travesia" ? "Red Travesía" : dataSource === "nepal" ? "Nepal protests" : "CEJIL";
+    (dataSource === "nepal" && !nepalReady) ||
+    (dataSource === "vegas" && !vegasReady);
+  const lazyName =
+    dataSource === "travesia"
+      ? "Red Travesía"
+      : dataSource === "nepal"
+        ? "Nepal protests"
+        : dataSource === "vegas"
+          ? "Las Vegas, 1 October 2017"
+          : "CEJIL";
   const references = useAtomValue(referencesAtom);
   // Filtering, ranking, match categories and highlighting read `query` (the
   // committed search). Only the input binds to the draft.
@@ -648,12 +673,16 @@ export function LibraryView() {
       if (nepalReady) for (const [sid, arr] of nepalRefsByEntity()) m.set(sid, arr.length);
       return m;
     }
+    if (dataSource === "vegas") {
+      if (vegasReady) for (const [sid, arr] of vegasRefsByEntity()) m.set(sid, arr.length);
+      return m;
+    }
     for (const r of references) {
       m.set(r.sourceEntityId, (m.get(r.sourceEntityId) ?? 0) + 1);
       m.set(r.targetEntityId, (m.get(r.targetEntityId) ?? 0) + 1);
     }
     return m;
-  }, [references, dataSource, cejilReady, travesiaReady, nepalReady]);
+  }, [references, dataSource, cejilReady, travesiaReady, nepalReady, vegasReady]);
 
   // Precomputed lowercase searchable text per entity (title, country, displayed
   // metadata values, descriptors), so a keystroke doesn't rebuild it per entity.
@@ -736,7 +765,7 @@ export function LibraryView() {
   const chainTemplates = useAtomValue(templatesAtom(dataSource));
   const activeChains = useMemo(
     () => buildActiveChains(chainFilters, chainFacetDefsFor(dataSource, chainTemplates), chainGraphFor(dataSource)),
-    [dataSource, chainFilters, chainTemplates, cejilReady, nepalReady],
+    [dataSource, chainFilters, chainTemplates, cejilReady, nepalReady, vegasReady],
   );
   const chainKey = JSON.stringify(chainFilters);
   // The Content card, keyed on content like the facets above.
@@ -834,6 +863,7 @@ export function LibraryView() {
     identityOf(chainTemplates),
     cejilReady,
     nepalReady,
+    vegasReady,
     q,
     searchMatch,
     searchScope,

@@ -28,7 +28,7 @@ import type { DocumentGroup, FileEntry } from "./files";
  *  utilities call with no store — read the MIRROR below, which the atom's one
  *  write path keeps in step. */
 
-export type Corpus = "mock" | "cejil" | "artworks" | "travesia" | "nepal";
+export type Corpus = "mock" | "cejil" | "artworks" | "travesia" | "nepal" | "vegas";
 
 export interface EntityRecord {
   typeId: string;
@@ -57,6 +57,7 @@ export const EMPTY_OVERLAY: ChangeLayer = {
   artworks: EMPTY_CORPUS,
   travesia: EMPTY_CORPUS,
   nepal: EMPTY_CORPUS,
+  vegas: EMPTY_CORPUS,
 };
 
 export const isEmptyCorpusOverlay = (o: CorpusOverlay) =>

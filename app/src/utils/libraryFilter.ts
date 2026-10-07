@@ -316,6 +316,9 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
     case "nepal":
       // 51 records carry an attached PDF (sources and official actions).
       return (entityContent(e, source).contains ?? []).includes("document");
+    case "vegas":
+      // Recordings and records: nothing carries a document.
+      return false;
     case "artworks":
       // An image corpus: nothing carries a document. Previously this fell
       // through to the mock branch and was right only because "artwork" and

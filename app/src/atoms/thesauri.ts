@@ -3,9 +3,10 @@ import { atomFamily } from "jotai/utils";
 import { seedThesauri, seedThesaurusValues, type SettingsThesaurus, type ThesaurusValue } from "../data/settings";
 import { cejilSettingsThesauri, cejilThesaurusValues } from "../data/cejil/settingsAdapt";
 import type { Corpus } from "../data/entityChanges";
-import { dataSourceAtom, nepalReadyAtom, travesiaReadyAtom } from "./dataSource";
+import { dataSourceAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "./dataSource";
 import { travesiaSettingsThesauri } from "../data/travesia/load";
 import { nepalSettingsThesauri } from "../data/nepal/load";
+import { vegasSettingsThesauri } from "../data/vegas/load";
 import { artworkThesauri } from "../data/artworks/thesauri";
 import { cejilValueLabels } from "../data/cejil/profile";
 import { SAMPLE_COUNTRY_LABELS } from "../data/sample/countryLabels";
@@ -42,8 +43,8 @@ interface CorpusThesauri {
 
 const EMPTY: CorpusThesauri = { created: [], values: {}, renamed: {}, deleted: [], bindings: {} };
 
-const overlayAtom = atom<Record<Corpus, CorpusThesauri>>({ mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY, nepal: EMPTY });
-registerSettingsReset((set) => set(overlayAtom, { mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY, nepal: EMPTY }));
+const overlayAtom = atom<Record<Corpus, CorpusThesauri>>({ mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY, nepal: EMPTY, vegas: EMPTY });
+registerSettingsReset((set) => set(overlayAtom, { mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY, nepal: EMPTY, vegas: EMPTY }));
 
 /** Values a list holds, groups counted beside their children — the count
  *  Settings has always shown ("Groups count as items alongside their
@@ -58,6 +59,7 @@ function seedOf(corpus: Corpus): { list: SettingsThesaurus[]; values: Record<str
   // Travesía's thesauri arrive with its entities (empty until then).
   if (corpus === "travesia") return travesiaSettingsThesauri();
   if (corpus === "nepal") return nepalSettingsThesauri();
+  if (corpus === "vegas") return vegasSettingsThesauri();
   // The artworks corpus shows the Sample's thesauri plus its own two (genres,
   // nationalities), which its templates bind since step M5.
   if (corpus === "artworks") {
@@ -75,6 +77,7 @@ export const thesauriAtom = atomFamily((corpus: Corpus) =>
     // A lazily loaded corpus's seed appears on load: recompute then.
     if (corpus === "travesia") get(travesiaReadyAtom);
     if (corpus === "nepal") get(nepalReadyAtom);
+    if (corpus === "vegas") get(vegasReadyAtom);
     const o = get(overlayAtom)[corpus];
     const seed = seedOf(corpus);
     const deleted = new Set(o.deleted);
@@ -239,7 +242,7 @@ const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
  *  plan reads asks, and the list only changes when the store does. */
 const localizedCache = new WeakMap<ThesaurusValue[], Map<Language, ThesaurusValue[]>>();
 export function localizeValues(values: ThesaurusValue[], corpus: Corpus, lang: Language): ThesaurusValue[] {
-  if (corpus === "travesia" || corpus === "nepal" || (lang === "EN" && corpus !== "cejil")) return values;
+  if (corpus === "travesia" || corpus === "nepal" || corpus === "vegas" || (lang === "EN" && corpus !== "cejil")) return values;
   let byLang = localizedCache.get(values);
   const hit = byLang?.get(lang);
   if (hit) return hit;
