@@ -496,7 +496,10 @@ export const libraryMapBoundsAtom = atom(
   (get) => (get(viewModeStateAtom) === "map" ? get(mapBoundsStateAtom) : null),
   (_get, set, next: MapBounds | null) => set(mapBoundsStateAtom, next),
 );
-registerSettingsReset((set) => set(mapBoundsStateAtom, null));
+/** What Reset demo data does to one Library pane. Split's right pane runs it
+ *  through its own scope (`atoms/librarySplit.ts`). */
+export const resetLibraryPaneAtom = atom(null, (_get, set) => set(mapBoundsStateAtom, null));
+registerSettingsReset((set) => set(resetLibraryPaneAtom));
 
 /** Facets generated from inherited relationship properties, keyed
  *  `inheritProperty → (value → on)`, as in Uwazi. */
@@ -1089,6 +1092,12 @@ export const whenBulkCleanAtom = atom(null, (get, set, run: () => void) => whenB
 
 function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   set(dataSourceAtom, source);
+  resetLibraryForSource(get, set);
+}
+
+/** What a collection switch resets in one Library pane, after the switch.
+ *  Split's right pane runs it through its own scope (`atoms/librarySplit.ts`). */
+function resetLibraryForSource(get: Getter, set: Setter) {
   // The query carries over to the new collection; a scope it cannot offer does not.
   set(dropUnofferedScopeAtom);
   // Likewise the Evidence view: the default view where the new collection has
@@ -1113,6 +1122,8 @@ function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   // A selection belongs to the collection it was made in.
   set(clearSelectionAtom);
 }
+
+export const resetLibraryForSourceAtom = atom(null, (get, set) => resetLibraryForSource(get, set));
 
 /** Clear the facet filters but keep the query, for the Results tab's "hidden by
  *  filters · Clear filters" line. */
@@ -1250,11 +1261,11 @@ export const libraryStateInternals = {
 /** Switch collection without the bulk guard, for callers already behind it. */
 export const switchDataSourceAtom = atom(null, (get, set, source: DataSource) => switchDataSource(get, set, source));
 
-/** Split spike (dev/results/split-view/spike.md): every primitive that holds
- *  one Library pane's state, private bases included. A pane wraps its subtree
- *  in a `ScopeProvider` over these; the derived atoms above read them through
- *  the scope. Shared on purpose: the collection, the language, the entities
- *  and every Settings store. */
+/** Every primitive that holds one Library pane's state, private bases
+ *  included. Split's right pane is a scope over these (`atoms/librarySplit.ts`);
+ *  the derived atoms above read them through the scope. Shared on purpose: the
+ *  collection, the language, the entities, the Notebook and every Settings
+ *  store. */
 export const libraryPaneScopedAtoms = [
   // Search
   libraryQueryAtom,
@@ -1308,4 +1319,10 @@ export const libraryPaneScopedAtoms = [
   libraryLanguageInMenuAtom,
   libraryCardColumnsInEffectAtom,
   libraryResultsPreviewCountAtom,
+  // Bulk edit, the selection's dialogs, and what the pane's preview was asked to do
+  libraryBulkEditOpenAtom,
+  libraryBulkEditIdsAtom,
+  librarySelectionDialogAtom,
+  libraryEditRequestAtom,
+  focusMetadataFieldAtom,
 ];

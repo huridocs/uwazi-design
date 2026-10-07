@@ -8,7 +8,7 @@ import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
 import { LibraryView } from "./views/LibraryView";
-import { LibrarySplitSpike, splitSpikePanes } from "./views/LibrarySplitSpike";
+import { LibrarySplitView } from "./views/LibrarySplitView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { useCsvImportRunner } from "./atoms/csvImports";
 import { ImportCSVView } from "./views/ImportCSVView";
@@ -19,6 +19,8 @@ import { AgentModal } from "./components/agent/AgentModal";
 import { MobileOverlayStack } from "./components/relationships/MobileOverlayStack";
 import { UnsavedChangesGuard } from "./components/shared/UnsavedChangesGuard";
 import { languageAtom } from "./atoms/language";
+import { libraryLayoutAtom } from "./atoms/session";
+import { breakpointAtom } from "./atoms/viewport";
 import { appViewAtom, type AppView } from "./atoms/navigation";
 import { signedInUserIdAtom, usersAtom } from "./atoms/users";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
@@ -37,6 +39,10 @@ export function App() {
   const users = useAtomValue(usersAtom);
   const setSignedIn = useSetAtom(signedInUserIdAtom);
   const [language, setLanguage] = useAtom(languageAtom);
+  // Split is desktop only; below 1024px the Library is one pane with its drawer.
+  const libraryLayout = useAtomValue(libraryLayoutAtom);
+  const breakpoint = useAtomValue(breakpointAtom);
+  const split = libraryLayout === "split" && breakpoint === "desktop";
   // Direction derives from the reading language — selecting AR anywhere
   // (language pills or the navbar toggle) flips the document, and leaving
   // AR restores LTR. No separate direction state to fall out of sync.
@@ -147,7 +153,7 @@ export function App() {
         ) : appView === "settings" ? (
           <SettingsView onNavigate={handleNavigate} />
         ) : appView === "library" ? (
-          splitSpikePanes() ? <LibrarySplitSpike panes={splitSpikePanes() as 1 | 2} /> : <LibraryView />
+          split ? <LibrarySplitView /> : <LibraryView />
         ) : (
           <EntityView />
         )}

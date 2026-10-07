@@ -140,6 +140,10 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
       // all "open" and the lower ones are inert. Wrapping Tab back into an
       // inert panel would cancel the key and focus nothing.
       if (container.closest("[inert]")) return;
+      // A trap inside one Split pane (a rail panel) holds Tab only while the
+      // focus is in that pane: the other pane stays reachable.
+      const scope = container.closest("[data-trap-scope]");
+      if (scope && !scope.contains(document.activeElement)) return;
       const els = focusables();
       if (els.length === 0) return;
       const first = els[0];

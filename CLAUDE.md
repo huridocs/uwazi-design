@@ -394,8 +394,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   records in view. Settings › Collection can make Network the default view. `window.__network`
   (dev builds) gives node screen positions for scripted checks.
 - Library layout (`libraryLayoutAtom`, session; navbar Settings › Library layout): Drawer
-  (default), Full width, Split (listed, not built). Full width applies to the collection view
-  at ≥1024 only. The drawer goes; `LibraryRail` floats at the view lane's top end with Filters,
+  (default), Full width, Split. Full width and Split apply to the collection view at ≥1024
+  only. The drawer goes; `LibraryRail` floats at the view lane's top end with Filters,
   Results, Notebook and Views and history (`libraryRailPanelAtom`, focus-trapped, Escape
   closes), each the drawer's or menu's own body. The preview, the selection list and a map
   cluster open in the same panel (`RailPane`), one panel at a time, all 29rem; a rail item
@@ -406,6 +406,24 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Canvas overlays (Network and Map controls, captions, chips, tooltips) have no border and no
   shadow: `CANVAS_OVERLAY*` in `components/shared/canvasOverlay.ts`, mirrored for Leaflet's zoom
   in `map.css`. One height (2rem) and radius; buttons on `BAR_GHOST`.
+- Split (`views/LibrarySplitView.tsx`): two Full width `LibraryView`s, each a `section` landmark
+  ("Library, left pane" / "right pane"), with a divider (`role="separator"`, arrows, Home/End to
+  a pane's 28rem minimum, double-click resets; `librarySplitRatioAtom`, session). RTL mirrors
+  the row.
+  - The left pane is the root store, so `#view=` links, Reset demo data and anything else
+    written from outside a pane land there. The right pane is a jotai-scope scope over
+    `libraryPaneScopedAtoms` plus the Network find cursor and `atoms/rightPane.ts`'s bases,
+    built once per session (`atoms/librarySplit.ts`) so the entity view and Back find it as it
+    was. It runs the collection-switch and Reset resets through its scope. A new per-pane atom
+    goes in `libraryPaneScopedAtoms`. Language, collection and Notebook are shared.
+  - A pane's keys and long presses act only where the focus is, or the pointer when the focus
+    is in neither pane (`paneHoldsEvent`, `components/library/libraryPane.tsx`). Each pane has
+    its own Shift-range order (`SelectionOrderHost`). A rail panel's focus trap holds Tab only
+    while the focus is in its pane (`data-trap-scope`).
+  - A pane's preview never moves `focusedEntityIdAtom`: it shows Metadata and Relationships,
+    and "View entity" for the rest; a draft is the exception. A passage hit goes to the entity
+    view, as on phones. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input, so
+    both panes share one array and one graph.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with

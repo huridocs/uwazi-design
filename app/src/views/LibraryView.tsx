@@ -97,8 +97,8 @@ import {
 } from "../atoms/library";
 import {
   EntitySelectBox,
-  currentSelectionOrder,
   selectionIntent,
+  useCurrentSelectionOrder,
   useSelectionOrder,
   useTouchSelection,
   lastPointerWasTouch,
@@ -161,6 +161,7 @@ import { notebookPinCountAtom } from "../atoms/notebook";
 import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, type RailItem, type RailPane } from "../components/library/LibraryRail";
 import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
+import { paneHoldsEvent, useLibraryPane } from "../components/library/libraryPane";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -487,8 +488,11 @@ export function LibraryView() {
 
   const isMobile = breakpoint === "mobile";
   /* Library layout (navbar Settings › Library layout). Full width is desktop only:
-     below 1024px the drawer, sheets and Filters button stay as they are. */
-  const fullWidth = useAtomValue(libraryLayoutAtom) === "full" && breakpoint === "desktop";
+     below 1024px the drawer, sheets and Filters button stay as they are. Each
+     of Split's panes is a Full width Library (`LibrarySplitView`). */
+  const splitPane = useLibraryPane();
+  const layout = useAtomValue(libraryLayoutAtom);
+  const fullWidth = !!splitPane || (layout === "full" && breakpoint === "desktop");
   const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
   const notebookPins = useAtomValue(notebookPinCountAtom);
 
@@ -930,6 +934,7 @@ export function LibraryView() {
   const clearSelection = useSetAtom(clearSelectionAtom);
   const collapseSelection = useSetAtom(collapseSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
+  const currentSelectionOrder = useCurrentSelectionOrder();
   /* A plain click on the empty ground of the results (lane, gaps, margin)
      clears the selection through the same guard as Escape. Ignored: clicks on
      items or controls, modifier clicks, the end of a drag or text selection,
@@ -979,11 +984,13 @@ export function LibraryView() {
   }, [viewMode, shownIds, mapIds, setDrawnIds]);
 
   // Escape clears — except where Escape already means something: a text field,
-  // a dialog, an open menu.
+  // a dialog, an open menu. In Split, only in the pane that holds the focus or
+  // the pointer.
   useEffect(() => {
     if (!selectionActive) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (!paneHoldsEvent(splitPane, e)) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
       // A popup open anywhere — the Display menu, a Select, the search tips —
@@ -995,7 +1002,7 @@ export function LibraryView() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectionActive, clearSelection]);
+  }, [selectionActive, clearSelection, splitPane]);
 
   /* `collapse`: a plain click in the view with 2 or more selected ends the
      multi-selection and previews that item. The selection and cluster drawers
@@ -1007,8 +1014,9 @@ export function LibraryView() {
       collapse: boolean,
       id: string,
       e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean },
-      /** Phones: go to the entity view rather than a sheet (a passage jump
-       *  needs the document, which a sheet doesn't carry). */
+      /** Phones and Split: go to the entity view rather than a sheet or the
+       *  pane's preview (a passage jump needs the document, which neither
+       *  carries). */
       navigate = false,
     ) => {
       const intent = e ? selectionIntent(e) : null;
@@ -1020,7 +1028,7 @@ export function LibraryView() {
       const preview = () => {
         // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
         setAnchor(id);
-        if (isMobile && navigate) {
+        if ((isMobile || splitPane) && navigate) {
           openEntity(id);
         } else if (isMobile) {
           // A phone opens the entity as a sheet on the stack (the connection
@@ -1028,7 +1036,9 @@ export function LibraryView() {
           // its footer's "Open entity" is the route to the full view.
           setOverlayEntity(id);
         } else {
-          focusForPreview(id);
+          // A Split pane's preview leaves the global focus alone: two previews
+          // would fight over it, and it is what the entity view opens on.
+          if (!splitPane) focusForPreview(id);
           setSelectedId(id);
         }
       };
@@ -1046,6 +1056,8 @@ export function LibraryView() {
       selectionActive,
       collapseSelection,
       setAnchor,
+      currentSelectionOrder,
+      splitPane,
     ],
   );
   // A plain selection reads the entity's document in the reading language; only
@@ -1068,7 +1080,7 @@ export function LibraryView() {
     if (isMobile) setOverlayEntity(null);
     else setSelectedId(null);
   }, [isMobile, setOverlayEntity, setSelectedId]);
-  useTouchSelection(toggleSelection);
+  useTouchSelection(toggleSelection, splitPane?.root);
   useTapGuard();
 
   // Results-tab full-text snippet: select the entity, then jump the preview's

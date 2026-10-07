@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useLayoutEffect, type KeyboardEvent, type MouseEvent } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, type KeyboardEvent, type MouseEvent, type RefObject } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   libraryDrawnIdsAtom,
@@ -13,8 +13,15 @@ import {
    registers its drawn order when it commits (`useSelectionOrder`); a list
    drawn somewhere else at the same time (the selection or cluster drawer)
    scopes its own rows with `SelectionOrderScope`. Read at click time, so no
-   card re-renders when the order changes. */
-let viewOrder: readonly string[] = [];
+   card re-renders when the order changes. One holder per Library pane: Split
+   gives each pane its own (`SelectionOrderHost`), so a range in one pane never
+   runs over the other's order. */
+export interface SelectionOrderHolder {
+  current: readonly string[];
+}
+const PaneOrder = createContext<SelectionOrderHolder>({ current: [] });
+/** A Library pane's own order holder. */
+export const SelectionOrderHost = PaneOrder.Provider;
 
 /** Register the order the visible view draws its entities in, or `null` for
  *  a host that is not drawing the view right now. A layout effect, so only a
@@ -23,9 +30,10 @@ let viewOrder: readonly string[] = [];
  *  before the browser paints anything to click. Only one mounted caller may
  *  pass ids at a time: a parent's layout effect runs after its child's. */
 export function useSelectionOrder(ids: readonly string[] | null): void {
+  const holder = useContext(PaneOrder);
   useLayoutEffect(() => {
-    if (ids) viewOrder = ids;
-  }, [ids]);
+    if (ids) holder.current = ids;
+  }, [ids, holder]);
 }
 
 /** Publish the ids the visible view draws, for "select all loaded" (see
@@ -38,7 +46,10 @@ export function useDrawnIds(ids: readonly string[]): void {
 }
 
 /** The current view's order, for a click handled outside a checkbox. */
-export const currentSelectionOrder = (): readonly string[] => viewOrder;
+export function useCurrentSelectionOrder(): () => readonly string[] {
+  const holder = useContext(PaneOrder);
+  return useCallback(() => holder.current, [holder]);
+}
 
 const OrderScope = createContext<readonly string[] | null>(null);
 export const SelectionOrderScope = OrderScope.Provider;
@@ -73,7 +84,8 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
   const toggle = useSetAtom(toggleSelectionAtom);
   const range = useSetAtom(rangeSelectionAtom);
   const scoped = useContext(OrderScope);
-  const order = () => scoped ?? viewOrder;
+  const paneOrder = useContext(PaneOrder);
+  const order = () => scoped ?? paneOrder.current;
 
   const onClick = (e: MouseEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -174,8 +186,9 @@ function itemIdAt(target: EventTarget | null): string | null {
   return null;
 }
 
-/** Install the long-press (while mounted). `toggle` is the selection toggle. */
-export function useTouchSelection(toggle: (id: string) => void) {
+/** Install the long-press (while mounted). `toggle` is the selection toggle;
+ *  `within`, the pane whose items it toggles (Split mounts one per pane). */
+export function useTouchSelection(toggle: (id: string) => void, within?: RefObject<HTMLElement | null>) {
   useEffect(() => {
     let timer = 0;
     let start: { x: number; y: number } | null = null;
@@ -188,6 +201,7 @@ export function useTouchSelection(toggle: (id: string) => void) {
       lastPointerType = e.pointerType;
       fired = false;
       if (e.pointerType !== "touch") return;
+      if (within?.current && !within.current.contains(e.target as Node)) return;
       const id = itemIdAt(e.target);
       if (!id) return;
       start = { x: e.clientX, y: e.clientY };
@@ -227,5 +241,5 @@ export function useTouchSelection(toggle: (id: string) => void) {
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("contextmenu", onContext, true);
     };
-  }, [toggle]);
+  }, [toggle, within]);
 }

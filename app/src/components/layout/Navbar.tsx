@@ -74,7 +74,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const setSettingsDrilled = useSetAtom(settingsMobileDrilledAtom);
   const [breakpoint] = useAtom(breakpointAtom);
   const [libraryLayout, setLibraryLayout] = useAtom(libraryLayoutAtom);
-  const libraryFullWidth = appView === "library" && libraryLayout === "full" && breakpoint === "desktop";
+  // Full width and Split both carry the Notebook on each pane's rail.
+  const libraryFullWidth = appView === "library" && libraryLayout !== "drawer" && breakpoint === "desktop";
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -534,7 +535,11 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                           label: t("System", "Full width"),
                           hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
                         },
-                        { value: "split", label: t("System", "Split"), hint: t("System", "Coming next"), disabled: true },
+                        {
+                          value: "split",
+                          label: t("System", "Split"),
+                          hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
+                        },
                       ]}
                       steady
                     />

@@ -65,11 +65,20 @@ export const drawerWidthAtom = sessionSetting<number | null>(
 /** How the Library's collection view is laid out, switched from the navbar's
  *  Settings dropdown (experimental). `drawer` is the docked drawer (the
  *  default); `full` gives the main pane the whole width with a floating rail
- *  of slide-over panels; `split` is listed but not built. Desktop only: below 1024px the Library
+ *  of slide-over panels; `split` is two Full width panes side by side
+ *  (`views/LibrarySplitView.tsx`). Desktop only: below 1024px the Library
  *  keeps its drawer and sheets whatever this says. */
 export type LibraryLayout = "drawer" | "full" | "split";
 export const libraryLayoutAtom = sessionSetting<LibraryLayout>(
   "libraryLayout",
   "drawer",
-  (v): v is LibraryLayout => v === "drawer" || v === "full",
+  (v): v is LibraryLayout => v === "drawer" || v === "full" || v === "split",
+);
+
+/** Split's left pane, as a share of the two (0.5 at start). Each pane's
+ *  28rem minimum is applied where it is read, against the width on screen. */
+export const librarySplitRatioAtom = sessionSetting<number>(
+  "librarySplitRatio",
+  0.5,
+  (v): v is number => typeof v === "number" && Number.isFinite(v) && v > 0 && v < 1,
 );
