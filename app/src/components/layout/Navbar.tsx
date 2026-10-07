@@ -74,6 +74,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const setSettingsDrilled = useSetAtom(settingsMobileDrilledAtom);
   const [breakpoint] = useAtom(breakpointAtom);
   const [libraryLayout, setLibraryLayout] = useAtom(libraryLayoutAtom);
+  const libraryFullWidth = appView === "library" && libraryLayout === "full" && breakpoint === "desktop";
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -423,7 +424,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       {/* Right: Notifications + Assistant + Settings + Theme toggle */}
       <div data-part="end" className="flex items-center gap-2">
         {!showingCatalog && <Beacon rtl={rtl} />}
-        {!showingCatalog && <NotebookButton rtl={rtl} compact={isMobile} />}
+        {/* Full width puts the Notebook on the Library's rail, with its count. */}
+        {!showingCatalog && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile} />}
         {!showingCatalog && (
           <button
             type="button"

@@ -1,18 +1,19 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { X } from "lucide-react";
 import { libraryRailPanelAtom, type LibraryRailPanel } from "../../atoms/library";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useOverlayLayer } from "../../hooks/useOverlayLayer";
-import { DRAWER_MIN_WIDTH, DrawerWidthProvider, useDrawerWidth } from "../../hooks/useDrawerWidth";
+import { DrawerWidthProvider } from "../../hooks/useDrawerWidth";
 
 /* Full width layout (`libraryLayoutAtom = "full"`): the Library's main pane
    takes the whole width, and what the drawer held moves to two places over the
    pane's view lane:
    - the rail, a floating column of icon buttons at the lane's top end, each
      opening one panel anchored beside it (Filters, Results, Notebook, Views);
-   - the pane slide-over, which takes the drawer's other contents (the record
-     preview, the selection list, a map cluster) at the drawer's width.
+   - the same panel takes the drawer's other contents (the record preview, the
+     selection list, a map cluster) when the Library opens one. One panel at a
+     time: opening a record closes Filters, and a rail item closes the record.
    Both mount inside `LibraryFullWidthLayer`, which spans the lane from pane
    edge to pane edge. The bodies are the drawer's own; nothing is forked. */
 
@@ -21,8 +22,9 @@ import { DRAWER_MIN_WIDTH, DrawerWidthProvider, useDrawerWidth } from "../../hoo
  *  scrolling views pad their end by this so the rail never covers a card. */
 export const RAIL_RESERVE = "2.75rem";
 
-/** The anchored panel's width: the Notebook slide-over's. */
-const PANEL_REM = 26;
+/** The anchored panel's width, the same for every panel: the drawer's default
+ *  (460px), so the record preview's footer keeps "View entity" on one line. */
+const PANEL_REM = 29;
 
 export interface RailItem {
   id: LibraryRailPanel;
@@ -30,6 +32,10 @@ export interface RailItem {
   icon: ReactNode;
   /** User-set state behind a closed panel, as the drawer tabs mark it. */
   dot?: boolean;
+  /** A count drawn on the button (the Notebook's pins), when above zero, and
+   *  what it counts, for the button's name ("Notebook, 2 pinned"). */
+  count?: number;
+  countNoun?: string;
   /** Why the item cannot open now; the button stays, so the rail never moves. */
   disabledReason?: string;
   /** The panel's body. `ownHeader`: it draws its own title and close. */
@@ -37,6 +43,20 @@ export interface RailItem {
   ownHeader?: boolean;
   /** As tall as its content (up to the lane), not the lane's height. */
   fit?: boolean;
+}
+
+/** What the Library opened into the panel itself: the record preview, the
+ *  selection list or a map cluster. Each body draws its own title and close. */
+export interface RailPane {
+  /** Which body; a change moves focus into the panel again. */
+  key: string;
+  label: string;
+  body: ReactNode;
+  /** Escape's action, or null when the Library's own Escape handles it. */
+  onEscape: (() => void) | null;
+  /** Close it, then run `next` (a rail item opening). A dirty edit may stop
+   *  the close, and then `next` does not run. */
+  close: (next: () => void) => void;
 }
 
 /** The positioned layer over the view lane. `bleed-flush` geometry by hand:
@@ -57,13 +77,17 @@ export function LibraryFullWidthLayer({ children }: { children: ReactNode }) {
 }
 
 /** The rail and its one open panel. */
-export function LibraryRail({ items }: { items: RailItem[] }) {
+export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane | null }) {
   const [open, setOpen] = useAtom(libraryRailPanelAtom);
   const ids = useId();
-  const current = items.find((i) => i.id === open && !i.disabledReason) ?? null;
+  const railItem = items.find((i) => i.id === open && !i.disabledReason) ?? null;
+  // The Library's own panel wins; the host closes a rail panel when one opens.
+  const current: Shown | null = pane
+    ? { id: `pane:${pane.key}`, label: pane.label, body: pane.body, ownHeader: true }
+    : railItem;
   // The body lags the close by the slide-out, so the panel does not empty on
   // its way off.
-  const [shown, setShown] = useState<RailItem | null>(current);
+  const [shown, setShown] = useState<Shown | null>(current);
   useEffect(() => {
     if (current) {
       setShown(current);
@@ -74,8 +98,8 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
   }, [current]);
   // A panel whose item went disabled (Adv. Search took the main pane) closes.
   useEffect(() => {
-    if (open && !current) setOpen(null);
-  }, [open, current, setOpen]);
+    if (open && !railItem) setOpen(null);
+  }, [open, railItem, setOpen]);
 
   const isOpen = current !== null;
   const panelRef = useFocusTrap<HTMLDivElement>(isOpen, shown?.id);
@@ -83,17 +107,26 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
     panelRef.current?.toggleAttribute("inert", !isOpen);
   }, [isOpen, panelRef]);
   const layer = useOverlayLayer(isOpen);
+  const paneEscape = pane ? pane.onEscape : undefined;
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || paneEscape === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented && layer.isTopNow()) {
+      if (e.key !== "Escape" || e.defaultPrevented || !layer.isTopNow()) return;
+      if (paneEscape) {
+        // In a record, Escape in a field or a menu is that control's.
+        const t = e.target as HTMLElement | null;
+        if (t?.closest("input, textarea, select, [role=menu], [role=listbox]")) return;
+        if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
         e.preventDefault();
-        setOpen(null);
+        paneEscape();
+        return;
       }
+      e.preventDefault();
+      setOpen(null);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, layer, setOpen]);
+  }, [isOpen, layer, setOpen, paneEscape]);
 
   const panelId = `${ids}-panel`;
   const titleId = `${ids}-title`;
@@ -117,7 +150,13 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
               type="button"
               data-part="rail-item"
               data-item={item.id}
-              aria-label={disabled ? `${item.label} (${item.disabledReason})` : item.label}
+              aria-label={
+                disabled
+                  ? `${item.label} (${item.disabledReason})`
+                  : item.count !== undefined
+                    ? `${item.label}, ${item.count} ${item.countNoun ?? ""}`.trimEnd()
+                    : item.label
+              }
               title={disabled ? item.disabledReason : item.label}
               aria-haspopup="dialog"
               aria-expanded={active}
@@ -125,7 +164,8 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
               aria-disabled={disabled || undefined}
               onClick={() => {
                 if (disabled) return;
-                setOpen(active ? null : item.id);
+                if (pane) pane.close(() => setOpen(item.id));
+                else setOpen(active ? null : item.id);
               }}
               className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 ${
                 disabled
@@ -144,6 +184,15 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
                   className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: "var(--accent-blue)" }}
                 />
+              )}
+              {!!item.count && (
+                <span
+                  aria-hidden="true"
+                  data-part="count"
+                  className="absolute -bottom-1 -end-1 min-w-4 px-1 py-px rounded-md bg-paper border border-border text-meta leading-none font-medium tabular-nums text-ink"
+                >
+                  {item.count}
+                </span>
               )}
             </button>
           );
@@ -171,7 +220,7 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
       >
         {shown &&
           (shown.ownHeader ? (
-            shown.body
+            <DrawerWidthProvider value={PANEL_REM * 16}>{shown.body}</DrawerWidthProvider>
           ) : (
             <div data-gutter-host className={`gutter-host flex flex-col min-h-0 ${shown.fit ? "" : "h-full"}`}>
               <div className="shrink-0 h-10 flex items-center justify-between gap-2">
@@ -199,76 +248,11 @@ export function LibraryRail({ items }: { items: RailItem[] }) {
   );
 }
 
-/** The drawer's other contents, slid over the pane at the drawer's width (the
- *  one remembered for every drawer host). Non-modal, as the drawer is: the
- *  results stay live beside it, and a click on another record swaps it.
- *  Escape runs `onClose` unless a layer above it (a nested preview, a dialog)
- *  takes the key. */
-export function LibraryPaneSlideOver({
-  hostRef,
-  open,
-  label,
-  onClose,
-  children,
-}: {
-  /** The pane it measures its width against (half of it at most). */
-  hostRef: RefObject<HTMLElement | null>;
-  open: boolean;
+/** What the panel shows: a rail item's body or the Library's own. */
+interface Shown {
+  id: string;
   label: string;
-  onClose: (() => void) | null;
-  children: ReactNode;
-}) {
-  const { width, measured } = useDrawerWidth(hostRef, { defaultWidth: 460, minWidth: DRAWER_MIN_WIDTH });
-  // The last contents stay through the slide-out, so the panel does not empty
-  // on its way off the pane.
-  const last = useRef<ReactNode>(null);
-  if (open) last.current = children;
-  const [lingering, setLingering] = useState(false);
-  useEffect(() => {
-    if (open) return;
-    setLingering(true);
-    const t = window.setTimeout(() => setLingering(false), 250);
-    return () => window.clearTimeout(t);
-  }, [open]);
-  const body = open ? children : lingering ? last.current : null;
-
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    ref.current?.toggleAttribute("inert", !open);
-  }, [open]);
-  const layer = useOverlayLayer(open);
-  useEffect(() => {
-    if (!open || !onClose) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || !layer.isTopNow()) return;
-      // Escape in a field or a menu is that control's.
-      const t = e.target as HTMLElement | null;
-      if (t?.closest("input, textarea, select, [role=menu], [role=listbox]")) return;
-      if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
-      e.preventDefault();
-      onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose, layer]);
-
-  return (
-    <aside
-      ref={ref}
-      aria-label={label}
-      data-component="LibraryPaneSlideOver"
-      data-state={open ? "open" : "closed"}
-      className={`absolute top-0 bottom-0 end-0 z-10 flex flex-col bg-paper overflow-hidden
-        transition-transform duration-250 ease-out motion-reduce:transition-none ${
-          open ? "pointer-events-auto translate-x-0" : "pointer-events-none translate-x-full rtl:-translate-x-full"
-        }`}
-      style={{
-        width,
-        borderInlineStart: "1px solid var(--border-primary)",
-        boxShadow: open ? "-4px 0 16px rgba(0,0,0,0.08)" : "none",
-      }}
-    >
-      <DrawerWidthProvider value={width}>{measured && body}</DrawerWidthProvider>
-    </aside>
-  );
+  body: ReactNode;
+  ownHeader?: boolean;
+  fit?: boolean;
 }

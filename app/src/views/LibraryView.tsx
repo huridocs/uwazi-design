@@ -157,7 +157,8 @@ import { BarDivider } from "../components/shared/BarDivider";
 import { useTapGuard } from "../hooks/useTapGuard";
 import { previewEntityIdAtom } from "../atoms/entityPreview";
 import { libraryLayoutAtom } from "../atoms/session";
-import { LibraryFullWidthLayer, LibraryPaneSlideOver, LibraryRail, RAIL_RESERVE, type RailItem } from "../components/library/LibraryRail";
+import { notebookPinCountAtom } from "../atoms/notebook";
+import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, type RailItem, type RailPane } from "../components/library/LibraryRail";
 import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
 
@@ -485,13 +486,11 @@ export function LibraryView() {
   }
 
   const isMobile = breakpoint === "mobile";
-  /* Library layout (Dev panel › Library layout). Full width is desktop only:
+  /* Library layout (navbar Settings › Library layout). Full width is desktop only:
      below 1024px the drawer, sheets and Filters button stay as they are. */
   const fullWidth = useAtomValue(libraryLayoutAtom) === "full" && breakpoint === "desktop";
   const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
-  // The lane's host, in state so the slide-over measures it once it exists.
-  const [laneHost, setLaneHost] = useState<HTMLDivElement | null>(null);
-  const laneHostRef = useMemo(() => ({ current: laneHost }), [laneHost]);
+  const notebookPins = useAtomValue(notebookPinCountAtom);
 
   /* ── Masthead fold ──────────────────────────────────────────────────────
      The toolbar row folds on its own width, not the viewport's: the pane is
@@ -956,7 +955,7 @@ export function LibraryView() {
     },
     [selectionActive, viewMode, clearSelection],
   );
-  const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
+  const [selectionDrawerOpen, setSelectionDrawerOpen] = useAtom(librarySelectionDrawerOpenAtom);
   const [selectionListAsked, setSelectionListAsked] = useAtom(librarySelectionListAskedAtom);
   useEffect(() => {
     if (selectionListAsked && (!selectionActive || !selectionDrawerOpen)) setSelectionListAsked(false);
@@ -1789,7 +1788,7 @@ export function LibraryView() {
   /* ── Full width ─────────────────────────────────────────────────────────
      The drawer's Filters and Results tabs, the Notebook and the Views menu's
      body become the rail's panels; what else the drawer would show (the
-     preview, the selection list, a map cluster) slides over the pane. */
+     preview, the selection list, a map cluster) opens in the same panel. */
   const railReserve = (
     viewMode === "map" || viewMode === "network"
       ? { "--rail-reserve": RAIL_RESERVE }
@@ -1816,6 +1815,9 @@ export function LibraryView() {
       id: "notebook",
       label: t("System", "Notebook"),
       icon: <MessageSquare size={15} aria-hidden />,
+      // The navbar's Notebook button is hidden in this layout; its count is here.
+      count: notebookPins,
+      countNoun: "pinned",
       ownHeader: true,
       body: (
         <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
@@ -1836,24 +1838,50 @@ export function LibraryView() {
       ),
     },
   ];
-  const pane = !fullWidth
+  const closePreview = (next?: () => void) =>
+    guard(() => {
+      if (selectedId === draftId) discardDraft(selectedId!);
+      setSelectedId(null);
+      next?.();
+    });
+  const pane: (RailPane & { focusKey: string }) | null = !fullWidth
     ? null
     : selectedId
       ? {
           key: "preview",
+          // A new record moves focus into the panel again.
+          focusKey: `preview:${selectedId}`,
           label: getEntity(selectedId)?.title ?? "Entity",
-          onClose: () =>
-            guard(() => {
-              if (selectedId === draftId) discardDraft(selectedId);
-              setSelectedId(null);
-            }),
+          onEscape: () => closePreview(),
+          close: closePreview,
           body: drawer,
         }
       : selectionActive && selectionDrawerOpen && selectionListAsked
-        ? // No Escape of its own: the Library's Escape clears the selection, as in Drawer.
-          { key: "selection", label: "Selection", onClose: null, body: drawer }
+        ? {
+            key: "selection",
+            focusKey: "selection",
+            label: "Selection",
+            // No Escape of its own: the Library's Escape clears the selection, as in Drawer.
+            onEscape: null,
+            // A rail item closes the list and keeps the selection, as its Close does.
+            close: (next) => {
+              setSelectionDrawerOpen(false);
+              next();
+            },
+            body: drawer,
+          }
         : selectedCluster && viewMode === "map"
-          ? { key: "cluster", label: "Map cluster", onClose: () => setSelectedCluster(null), body: drawer }
+          ? {
+              key: "cluster",
+              focusKey: `cluster:${selectedCluster.label}`,
+              label: "Map cluster",
+              onEscape: () => setSelectedCluster(null),
+              close: (next) => {
+                setSelectedCluster(null);
+                next();
+              },
+              body: drawer,
+            }
           : null;
   // Opening any of those closes the rail's panel: one surface over the pane.
   const paneKey = pane?.key ?? null;
@@ -1869,13 +1897,10 @@ export function LibraryView() {
     return (
       // `isolate`: the rail's layer stacks inside the lane, so the masthead's
       // popovers (Sort, Language, Display, Views) open over it.
-      <div ref={setLaneHost} data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
+      <div data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
         {node}
         <LibraryFullWidthLayer>
-          <LibraryRail items={railItems} />
-          <LibraryPaneSlideOver hostRef={laneHostRef} open={!!pane} label={pane?.label ?? ""} onClose={pane?.onClose ?? null}>
-            {pane?.body}
-          </LibraryPaneSlideOver>
+          <LibraryRail items={railItems} pane={pane && { ...pane, key: pane.focusKey }} />
         </LibraryFullWidthLayer>
       </div>
     );

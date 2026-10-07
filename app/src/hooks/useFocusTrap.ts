@@ -16,6 +16,33 @@ function focusablesIn(container: HTMLElement): HTMLElement[] {
   );
 }
 
+/** The control the last press landed on, for a trap opened by a press that
+ *  focused nothing: a click on a card's text leaves focus on <body> (and Safari
+ *  never focuses a pressed button). The pressed element if focusable, else the
+ *  stretched button of the card or row it sits in (`data-part="primary-action"`). */
+let lastPress: EventTarget | null = null;
+if (typeof document !== "undefined") {
+  document.addEventListener("pointerdown", (e) => (lastPress = e.target), true);
+}
+function pressedControl(): HTMLElement | null {
+  if (!(lastPress instanceof Element) || !lastPress.isConnected) return null;
+  const own = lastPress.closest<HTMLElement>(FOCUSABLE);
+  if (own) return own;
+  for (let el: Element | null = lastPress; el; el = el.parentElement) {
+    const target = el.querySelector<HTMLElement>(':scope > [data-part="primary-action"]');
+    if (target) return target;
+  }
+  return null;
+}
+
+/** What gets focus back when the trap releases: the focused element, else the
+ *  pressed control. */
+function opener(): HTMLElement | null {
+  const el = document.activeElement;
+  if (el instanceof HTMLElement && el !== document.body) return el;
+  return pressedControl();
+}
+
 /** Trap Tab focus inside the returned ref's element while `active`.
  *
  *  - Moves initial focus to the first focusable child (unless something inside
@@ -42,10 +69,16 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
   const wasActiveRef = useRef(false);
   /** Whether the trap effect is currently mounted — see the restore below. */
   const trappingRef = useRef(false);
-  if (active && !wasActiveRef.current) {
-    const el = document.activeElement;
-    triggerRef.current = el instanceof HTMLElement && el !== document.body ? el : null;
+  if (active && !wasActiveRef.current) triggerRef.current = opener();
+  /* New content opened from outside while the trap stays up (a panel that
+     swaps Filters for a record when a card is pressed): focus goes back to
+     what opened the new content, not to what opened the first. */
+  const lastKeyRef = useRef(contentKey);
+  if (active && wasActiveRef.current && contentKey !== lastKeyRef.current) {
+    const el = opener();
+    if (el && !ref.current?.contains(el)) triggerRef.current = el;
   }
+  lastKeyRef.current = contentKey;
   wasActiveRef.current = active;
 
   /* Initial focus is its OWN effect, and it re-runs when `contentKey` changes.
@@ -97,7 +130,6 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
     if (!active) return;
     const container = ref.current;
     if (!container) return;
-    const trigger = triggerRef.current;
     trappingRef.current = true;
 
     const focusables = () => focusablesIn(container);
@@ -142,6 +174,8 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
         // pressing something outside (the overlay's outside-click) leaves focus
         // on that thing, and taking it away would be the bug.
         const current = document.activeElement;
+        // Read now: new content may have retargeted it since the trap went up.
+        const trigger = triggerRef.current;
         const ours = !current || current === document.body || container.contains(current);
         if (trigger?.isConnected && ours) trigger.focus({ preventScroll: true });
       });
