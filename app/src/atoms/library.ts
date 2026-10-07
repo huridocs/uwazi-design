@@ -43,9 +43,10 @@ import {
 export const libraryQueryAtom = atom("");
 
 /** The text in the search box, kept apart from the committed query. A non-empty
- *  draft commits immediately; an empty draft commits nothing, so clearing the box
- *  to retype does not wipe the result set mid-read. The committed query is
- *  dismissed only through `clearLibrarySearchAtom` (its chip, or Clear all). */
+ *  draft commits immediately; an empty draft commits nothing at once, so
+ *  clearing the box to retype does not wipe the result set mid-read. A box left
+ *  empty for `SEARCH_SETTLE_MS` ends the search (`LibraryView`), as do the box's
+ *  ×, its chip and Clear all, all through `clearLibrarySearchAtom`. */
 const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
@@ -268,6 +269,11 @@ export interface LibraryCluster {
   label: string;
   ids: string[];
 }
+/** How long a query must stay unchanged to count as settled: recent searches
+ *  record it, and the map may refit to it, past the partial queries typed on
+ *  the way. */
+export const SEARCH_SETTLE_MS = 1200;
+
 export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
 
 /* ── Multi-selection ──────────────────────────────────────────────────────

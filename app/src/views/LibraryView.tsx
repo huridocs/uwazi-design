@@ -70,6 +70,7 @@ import {
   librarySearchDraftAtom,
   librarySelectModeAtom,
   librarySelectedClusterAtom,
+  SEARCH_SETTLE_MS,
   libraryOpenEntityIdAtom,
   libraryRailPanelAtom,
   librarySelectionActiveAtom,
@@ -188,10 +189,6 @@ function compareValues(a: string, b: string): number {
 }
 
 export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
-
-/** How long the query must stay unchanged before it is recorded in recent
- *  searches: long enough to skip the partial queries typed on the way. */
-const SETTLE_MS = 1200;
 
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
@@ -737,9 +734,18 @@ export function LibraryView() {
     // waiting for the render that displays it.
     const t = committedQuery.trim();
     if (!t) return;
-    const id = window.setTimeout(() => recordSearch(t), SETTLE_MS);
+    const id = window.setTimeout(() => recordSearch(t), SEARCH_SETTLE_MS);
     return () => window.clearTimeout(id);
   }, [committedQuery, recordSearch]);
+
+  // A box emptied by hand ends the search once it stays empty for the settle
+  // time; retyping before then keeps the results on screen. In synced Split the
+  // draft is mirrored, so both panes end it.
+  useEffect(() => {
+    if (searchDraft !== "" || !committedQuery.trim()) return;
+    const id = window.setTimeout(() => clearSearch(), SEARCH_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [searchDraft, committedQuery, clearSearch]);
 
   // The drawer's Results tab is not rendered while the main pane is the Results
   // view: it would be a narrow copy of the same list. Filters sits at the
@@ -1543,10 +1549,8 @@ export function LibraryView() {
           />
           {searchDraft && (
             <button
-              // Empties the box, not the search: the committed query stays so the
-              // results remain usable while retyping. `ActiveSearchChip` or Clear
-              // all ends the search.
-              onClick={() => setSearchDraft("")}
+              // Ends the search: an empty box means no query.
+              onClick={() => clearSearch()}
               aria-label="Clear search"
               className="hit-area shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
             >

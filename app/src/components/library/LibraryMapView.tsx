@@ -4,12 +4,14 @@ import L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { languageAtom } from "../../atoms/language";
+import { dataSourceAtom } from "../../atoms/dataSource";
 import {
   librarySelectedClusterAtom,
   libraryOpenEntityIdAtom,
   libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
   libraryMapBoundsAtom,
+  SEARCH_SETTLE_MS,
   type LibraryCluster,
   type MapBounds,
 } from "../../atoms/library";
@@ -34,6 +36,9 @@ const GESTURE_WINDOW_MS = 1000;
 /** A second click on a badge within this long is a double click: a zoom, not
  *  a selection. */
 const DOUBLE_CLICK_MS = 250;
+/** Lucide's `maximize`, for the Fit control Leaflet draws outside React. */
+const FIT_ICON =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
 
 /** The area as stored: rounded, so a link stays short. */
 const boundsOf = (b: L.LatLngBounds): MapBounds => {
@@ -68,7 +73,11 @@ const isActivation = (e: L.LeafletEvent) => {
  *  `entities` is the result set without the map's area. When the reader pans
  *  or zooms, the visible area becomes a filter (`libraryMapBoundsAtom`); the
  *  map's own fits never write it, so opening the view narrows nothing. While
- *  an area is set the map keeps the reader's view instead of refitting. */
+ *  an area is set the map keeps the reader's view instead of refitting.
+ *
+ *  The map fits the results when the view opens, when the collection changes
+ *  and on its Fit control; a change of results leaves the camera alone unless
+ *  no located result is left in view (see the pin effect). */
 export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
@@ -84,6 +93,9 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   // The area this map last wrote; any other value (a saved view) moves the map.
   const written = useRef<MapBounds | null>(null);
   const gestureAt = useRef(-Infinity);
+  // The collection the map last fitted its results for; a new one fits again.
+  const dataSource = useAtomValue(dataSourceAtom);
+  const fittedFor = useRef<string | null>(null);
 
   const host = useRef<HTMLDivElement>(null);
   const map = useLeafletMap(host, {
@@ -257,14 +269,25 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     // With an area set, the reader's view stays; the first time with one (a
     // saved view), the map opens on it.
     const area = mapBoundsRef.current;
+    let refit = 0;
     if (area) {
       if (written.current !== area) fitArea(area);
     } else if (located.length) {
-      gestureAt.current = -Infinity;
-      map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32], animate: false });
+      /* The map fits the results when the view opens and when the collection
+         changes. A later change of results (a keystroke here or in the synced
+         pane, a facet) leaves the camera where it is, unless none of the
+         located results is left in view: then it fits once the query settles. */
+      const fresh = fittedFor.current !== dataSource;
+      if (fresh) {
+        fittedFor.current = dataSource;
+        fitResults(group, false);
+      } else if (!located.some((e) => map.getBounds().contains([e.geo!.lat, e.geo!.lng]))) {
+        refit = window.setTimeout(() => fitResults(group, true), SEARCH_SETTLE_MS);
+      }
     }
 
     return () => {
+      window.clearTimeout(refit);
       if (pending) window.clearTimeout(pending.timer);
       map.off("click", clearCluster);
       groupRef.current = null;
@@ -274,6 +297,39 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     // `located` follows `entities`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, entities, setSelectedCluster, setSelectedId]);
+
+  /** Fit the pins, as the map's own move: it writes no area. */
+  function fitResults(group: L.MarkerClusterGroup, animate: boolean) {
+    if (!map || !group.getLayers().length) return;
+    gestureAt.current = -Infinity;
+    map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32], animate });
+  }
+
+  /* Fit, beside − and +: the reader asks for the results. It drops the map
+     area too, or the area would keep filtering a view no longer on screen. */
+  const fitRef = useRef<() => void>(() => {});
+  fitRef.current = () => {
+    if (groupRef.current) fitResults(groupRef.current, true);
+    if (mapBoundsRef.current) {
+      written.current = null;
+      setMapBounds(null);
+    }
+  };
+  useEffect(() => {
+    const bar = map?.getContainer().querySelector(".leaflet-control-zoom");
+    if (!map || !bar) return;
+    const fit = L.DomUtil.create("a", "leaflet-control-zoom-fit", bar as HTMLElement) as HTMLAnchorElement;
+    fit.href = "#";
+    fit.role = "button";
+    fit.title = "Fit to results";
+    fit.setAttribute("aria-label", "Fit to results");
+    fit.innerHTML = FIT_ICON;
+    L.DomEvent.on(fit, "click", (e) => {
+      L.DomEvent.preventDefault(e);
+      fitRef.current();
+    });
+    return () => fit.remove();
+  }, [map]);
 
   /** Show a stored area, as the map's own move. */
   function fitArea(area: MapBounds) {
