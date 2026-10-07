@@ -5,7 +5,9 @@ export interface Column<T> {
   id: string;
   header: ReactNode;
   cell: (row: T, index: number) => ReactNode;
-  /** Grid track width (e.g. "1fr", "8rem", "70px"). Default "1fr". */
+  /** Grid track width (e.g. "1fr", "8rem", "70px", "minmax(16rem, 1fr)").
+   *  Default "1fr". A length, or the first argument of a `minmax()`, counts
+   *  toward the table's minimum width when it overflows into its host. */
   width?: string;
   align?: "left" | "center" | "right";
   /** When set (with the table's `onSort`), the header is clickable and sorts by
@@ -47,6 +49,16 @@ interface DataTableProps<T> {
   /** When set, the grid gets this min-width (rem) and scrolls horizontally
    *  below it instead of squishing. Omit for tables whose columns always fit. */
   minWidthRem?: number;
+  /** Where the table scrolls sideways when its columns need more than the
+   *  pane: `self` (default), inside its own card; `host`, the card grows to
+   *  the columns' total and the nearest scrolling ancestor (a `bleed` lane,
+   *  whose scrollbar sits at the pane edge) scrolls it. In `host` the header
+   *  sticks to the host's top and the first column to its inline start. */
+  overflow?: "self" | "host";
+  /** `host` only: where the header sticks, from the host's content edge. A
+   *  sticky box stops at the scroller's padding, so a host with top padding
+   *  passes its negative to pin the header to the scroller's top edge. */
+  stickyTop?: string;
   /** Extra attributes spread onto each row container — used for drag-to-reorder
    *  (the row is the drop target; the grip in a cell is the drag handle). */
   rowProps?: (row: T, index: number) => HTMLAttributes<HTMLTableRowElement>;
@@ -69,11 +81,39 @@ interface DataTableProps<T> {
   selectedStyle?: "fill" | "outline";
 }
 
+/** A right-aligned column before another takes `pe-3` on top of the gap, so
+ *  its figures never read as part of the next cell. */
 const alignClass = {
   left: "",
   center: "justify-center text-center",
   right: "justify-end text-right",
 } as const;
+
+/** The first column in `host` overflow: it sticks to the host's inline start
+ *  and paints the row's ground (inherited, so hover and selection show
+ *  through). It reaches back over the row's padding and the pane gutter to the
+ *  pane edge, and forward over the gap, so cells scrolling under it never show
+ *  beside it; at rest the card clips that reach. The host is a `bleed` lane:
+ *  its inline padding is the gutter, and the sticky inset measures from inside
+ *  that padding, so the inset is the gutter's negative. */
+const STICKY_FIRST = "sticky z-[1] bg-inherit";
+const STICKY_REACH = "calc(1rem + var(--gutter, 0px))";
+const STICKY_FIRST_STYLE: React.CSSProperties = {
+  insetInlineStart: "calc(-1 * var(--gutter, 0px))",
+  marginInlineStart: `calc(-1 * ${STICKY_REACH})`,
+  paddingInlineStart: STICKY_REACH,
+  marginInlineEnd: "-0.75rem",
+  paddingInlineEnd: "0.75rem",
+};
+
+/** A track's minimum, for the `host` card's min-width: a length as it is, the
+ *  first argument of a `minmax()`, else nothing. */
+function trackMin(width = "1fr"): string {
+  const w = width.trim();
+  const mm = /^minmax\(\s*([^,]+),/.exec(w);
+  const v = mm ? mm[1].trim() : w;
+  return /^[\d.]+(rem|px|em)$/.test(v) ? v : "0px";
+}
 
 const CARD_SHADOW = "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)";
 
@@ -98,18 +138,31 @@ export function DataTable<T>({
   density = "comfortable",
   rowAccessory,
   selectedStyle = "fill",
+  overflow = "self",
+  stickyTop = "0px",
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const box = DENSITY[density];
-  const scrolls = minWidthRem !== undefined;
+  const host = overflow === "host";
+  const scrolls = minWidthRem !== undefined && !host;
+  // In `host`, the card is never narrower than its tracks' minimums, the gaps
+  // (gap-3) and the row's own padding (px-4).
+  const hostMinWidth = host
+    ? `max(${minWidthRem ?? 0}rem, calc(${columns.map((c) => trackMin(c.width)).join(" + ")} + ${
+        (columns.length - 1) * 0.75 + 2
+      }rem))`
+    : undefined;
 
   return (
     <div
       data-component="DataTable"
       data-table
       data-density={density}
-      className={`rounded-md bg-paper ${scrolls ? "overflow-x-auto" : "overflow-hidden"}`}
-      style={{ boxShadow: CARD_SHADOW }}
+      data-overflow={overflow}
+      // `clip`, not `hidden`, in `host`: a `hidden` box is a scroll container,
+      // and the sticky header and first column would stick to it, not the host.
+      className={`rounded-md bg-paper ${scrolls ? "overflow-x-auto" : host ? "overflow-clip" : "overflow-hidden"}`}
+      style={{ boxShadow: CARD_SHADOW, minWidth: hostMinWidth }}
     >
       <div style={scrolls ? { minWidth: `${minWidthRem}rem` } : undefined}>
         {/* A real table — header and rows only (footer/empty state live outside
@@ -118,7 +171,7 @@ export function DataTable<T>({
             semantics from re-displayed table elements, so the implicit roles are
             also stated; they are redundant everywhere else. */}
         <table role="table" className="block w-full">
-          <thead role="rowgroup" data-part="header" className="block">
+          <thead role="rowgroup" data-part="header" className={`block ${host ? "sticky z-[2]" : ""}`} style={host ? { top: stickyTop } : undefined}>
             <tr
               role="row"
               className={`grid items-center gap-3 px-4 ${box.header} text-meta font-semibold text-ink-tertiary uppercase tracking-wider`}
@@ -128,7 +181,7 @@ export function DataTable<T>({
                 borderBottom: "1px solid var(--border-primary)",
               }}
             >
-              {columns.map((col) => {
+              {columns.map((col, ci) => {
                 const sortable = !!col.sortKey && !!onSort;
                 const active = sortable && sort?.key === col.sortKey;
                 return (
@@ -147,7 +200,10 @@ export function DataTable<T>({
                           : "none"
                         : undefined
                     }
-                    className={`flex items-center min-w-0 font-semibold text-start ${alignClass[col.align ?? "left"]}`}
+                    className={`flex items-center min-w-0 font-semibold text-start ${alignClass[col.align ?? "left"]} ${col.align === "right" && ci < columns.length - 1 ? "pe-3" : ""} ${
+                      host && ci === 0 ? STICKY_FIRST : ""
+                    }`}
+                    style={host && ci === 0 ? STICKY_FIRST_STYLE : undefined}
                   >
                     {sortable ? (
                       <button
@@ -199,19 +255,23 @@ export function DataTable<T>({
                     // A Shift+click on a clickable row is the host's (a range);
                     // don't also extend the page's text selection to it.
                     onMouseDown={onRowClick ? (e) => e.shiftKey && e.preventDefault() : undefined}
-                    className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
+                    // The selection rings are drawn by `::after`, over the cells:
+                    // a sticky first column paints its own ground and would
+                    // cover a ring drawn on the row.
+                    className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors
+                      after:absolute after:inset-0 after:z-[1] after:pointer-events-none ${
                       clickable ? "cursor-pointer" : ""
                     } ${
                       selected
                         ? selectedStyle === "outline"
-                          ? "ring-2 ring-inset ring-[var(--selected-ring)] hover:bg-warm forced-colors:outline forced-colors:outline-1 forced-colors:-outline-offset-1 forced-colors:outline-[CanvasText]"
+                          ? "bg-paper after:ring-2 after:ring-inset after:ring-[var(--selected-ring)] hover:bg-warm forced-colors:outline forced-colors:outline-1 forced-colors:-outline-offset-1 forced-colors:outline-[CanvasText]"
                           : "bg-parchment"
-                        : "hover:bg-warm"
+                        : "bg-paper hover:bg-warm"
                     }
-                      has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-inset
-                      has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none
-                      has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset
-                      has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]
+                      has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:after:ring-2 has-[[data-part=select]_input:checked]:after:ring-inset
+                      has-[[data-part=select]_input:checked]:after:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none
+                      has-[[data-part=select]_input:focus-visible]:after:ring-2 has-[[data-part=select]_input:focus-visible]:after:ring-inset
+                      has-[[data-part=select]_input:focus-visible]:after:ring-[var(--selected-ring)]
                       forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:-outline-offset-2
                       forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]
                       forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed forced-colors:has-[[data-part=select]_input:focus-visible]:outline-2
@@ -242,13 +302,16 @@ export function DataTable<T>({
                         {rowAccessory?.(row)}
                       </td>
                     )}
-                    {columns.map((col) => (
+                    {columns.map((col, ci) => (
                       <td
                         key={col.id}
                         role="cell"
                         data-part="cell"
                         data-column={col.id}
-                        className={`relative flex items-center min-w-0 text-ink ${alignClass[col.align ?? "left"]}`}
+                        className={`relative flex items-center min-w-0 text-ink ${alignClass[col.align ?? "left"]} ${col.align === "right" && ci < columns.length - 1 ? "pe-3" : ""} ${
+                          host && ci === 0 ? STICKY_FIRST : ""
+                        }`}
+                        style={host && ci === 0 ? STICKY_FIRST_STYLE : undefined}
                       >
                         {col.cell(row, i)}
                       </td>

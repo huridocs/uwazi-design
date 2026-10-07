@@ -1514,6 +1514,10 @@ export function LibraryView() {
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}
             minWidthRem={34}
+            // Many columns scroll the lane sideways, header and Title held.
+            overflow="host"
+            // The lane's `py-3`.
+            stickyTop="-0.75rem"
             density={listDensity}
           />
         )}

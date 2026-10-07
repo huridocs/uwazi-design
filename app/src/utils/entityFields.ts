@@ -174,6 +174,9 @@ export interface PropertyColumn {
   /** The templates that carry it, in template order: where the Display
    *  menu lists it. One column, however many templates share the name. */
   templates: string[];
+  /** The property's type family (`multidate` reads as `date`): what sizes
+   *  its List column. */
+  type?: string;
 }
 
 /** Types that share a column under one name (Uwazi's combine rule). */
@@ -207,7 +210,7 @@ export function propertyColumns(templates: TemplateDef[]): PropertyColumn[] {
       }
       if (seen) continue; // same name, another type: the first one keeps the column
       byName.set(p.name, {
-        col: { name: p.name, label: p.label, sortable: !!p.prioritySorting, templates: [t.name] },
+        col: { name: p.name, label: p.label, sortable: !!p.prioritySorting, templates: [t.name], type: family(p.type) },
         family: family(p.type),
       });
     }

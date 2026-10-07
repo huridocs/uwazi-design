@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { HighlightedText } from "../shared/HighlightedText";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { entityPropertyValue, type PropertyColumn } from "../../utils/entityFields";
@@ -36,6 +36,44 @@ export interface ListCellContext {
   renderMatch: (e: Entity) => ReactNode;
 }
 
+/** Track widths by what a column holds. Fixed tracks, so a column never
+ *  squeezes; the Title takes the slack above its minimum. When the tracks need
+ *  more than the pane, the table scrolls sideways in the Library's lane. */
+export const LIST_TRACK = {
+  title: "minmax(16rem, 1fr)",
+  count: "9rem",
+  date: "7.5rem",
+  dateRange: "12rem",
+  number: "6rem",
+  id: "8rem",
+  short: "10rem",
+  long: "14rem",
+} as const;
+
+const META_TRACK: Record<string, string> = {
+  date: LIST_TRACK.date,
+  daterange: LIST_TRACK.dateRange,
+  numeric: LIST_TRACK.number,
+  generatedid: LIST_TRACK.id,
+  select: LIST_TRACK.short,
+  relationship: LIST_TRACK.short,
+  text: LIST_TRACK.long,
+  link: LIST_TRACK.long,
+  geolocation: LIST_TRACK.long,
+};
+
+/** A cut value names itself on hover: the native tooltip, set only when the
+ *  text is truncated, so a value that fits shows none. */
+export function fullOnHover(text: string) {
+  return {
+    onMouseEnter: (e: MouseEvent<HTMLElement>) => {
+      const el = e.currentTarget;
+      if (el.scrollWidth > el.clientWidth) el.title = text;
+      else el.removeAttribute("title");
+    },
+  };
+}
+
 export interface ListColumnSpec {
   id: string;
   label: string;
@@ -67,11 +105,12 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     id: "title",
     label: "Title",
     default: true,
+    width: LIST_TRACK.title,
     sortKey: "title",
     cell: (e, ctx) => (
       <span data-part="title-cell" className="flex items-center gap-2 min-w-0">
         <EntityTypeTag variant="swatch" typeId={e.typeId} />
-        <span data-part="title" className="font-medium text-ink truncate">
+        <span data-part="title" className="font-medium text-ink truncate" {...fullOnHover(e.title)}>
           <HighlightedText text={e.title} query={ctx.query} fieldKey="title" />
         </span>
       </span>
@@ -108,7 +147,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     width: "9rem",
     sortKey: "country",
     cell: (e, ctx) => (
-      <span data-part="country" className="text-ink-secondary truncate">
+      <span data-part="country" className="text-ink-secondary truncate" {...fullOnHover(e.country ?? "")}>
         {e.country ? <HighlightedText text={e.country} query={ctx.query} fieldKey="country" /> : "—"}
       </span>
     ),
@@ -117,7 +156,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     id: "date",
     label: "Date",
     default: true,
-    width: "5rem",
+    width: LIST_TRACK.date,
     sortKey: "recent",
     // The year, unless the corpus says how precisely the date is known; then
     // as precisely as that, in the collection's date format.
@@ -152,7 +191,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     id: "connections",
     label: "Relationships",
     default: true,
-    width: "8rem",
+    width: LIST_TRACK.count,
     align: "right",
     sortKey: "connections",
     cell: (e, ctx) => (
@@ -166,7 +205,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
 function listCell(e: Entity, id: string, query = "") {
   const value = e.listCells?.[id];
   return (
-    <span data-part={id} className="text-ink-secondary truncate">
+    <span data-part={id} className="text-ink-secondary truncate" {...fullOnHover(value ?? "")}>
       {value ? <HighlightedText text={value} query={query} fieldKey={id} /> : "—"}
     </span>
   );
@@ -183,7 +222,7 @@ const COLLECTION_COLUMNS: Partial<
     // template on hover. Wider when it is turned on: Nepal's names are longer.
     type: { width: "8.5rem" },
     country: { offered: false },
-    date: { width: "6rem" },
+    date: { width: LIST_TRACK.date },
   },
 };
 
@@ -210,13 +249,14 @@ export function metaColumn(col: PropertyColumn, source: DataSource): ListColumnS
     id: metaColumnId(col.name, source),
     label: col.label,
     default: false,
-    width: "10rem",
+    width: META_TRACK[col.type ?? ""] ?? LIST_TRACK.short,
+    align: col.type === "numeric" ? "right" : undefined,
     cell: (e, ctx) => {
       const field = entityPropertyValue(e, col.name, ctx.language);
       if (!field) return <span data-part="meta" data-empty className="text-ink-tertiary">—</span>;
       return (
         <span data-part="meta" className="flex items-baseline gap-1 min-w-0 text-ink-secondary">
-          <span className="truncate">
+          <span className="truncate" {...fullOnHover(field.more ? `${field.value} (+${field.more})` : field.value)}>
             <HighlightedText text={field.value} query={ctx.query} fieldKey={col.name} />
           </span>
           {field.more ? (

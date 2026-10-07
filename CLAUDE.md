@@ -176,6 +176,9 @@ Known gaps, kept on purpose:
   sit directly inside a host.
 - Every table spans its pane inside the gutter (no `max-w`, `w-fit` or fixed width); the name
   column takes the slack.
+- A table whose columns need more than the pane does not squeeze: `DataTable overflow="host"`
+  sizes the card to its track minimums and the `bleed` lane scrolls it sideways, header and first
+  column sticky. The Library List uses it; widths by type are `LIST_TRACK` in `listColumns.tsx`.
 - Vertical rhythm is `stack` (8px). Each host declares `--body-top`; the first block of every tab
   body takes it with `body-top`, so first blocks line up across tabs.
 - A padded control declares its edge: `data-gutter-align="box"` or `"text"`.
@@ -400,6 +403,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   rail's Notebook item carries the pin count. Scrolling views pad their end by
   `RAIL_RESERVE`; Map and Network run under the rail and read `--rail-reserve` for their
   top-end controls.
+- Canvas overlays (Network and Map controls, captions, chips, tooltips) have no border and no
+  shadow: `CANVAS_OVERLAY*` in `components/shared/canvasOverlay.ts`, mirrored for Leaflet's zoom
+  in `map.css`. One height (2rem) and radius; buttons on `BAR_GHOST`.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with
