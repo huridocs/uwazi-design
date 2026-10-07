@@ -28,7 +28,18 @@ import { loadNetworkLayout, placeNetworkCached, type StoredLayout } from "../../
 import { CONTENT_ROWS, entityContent } from "../../utils/entityContent";
 import { entityCountries, entityInheritedValues, libraryInheritedDefs } from "../../utils/libraryFacets";
 import type { MapBounds } from "../../utils/libraryFilter";
-import { bucketSeries, entityTime, formatDay, timeExtent, toISODate, type TimeBucket, type TimeUnit } from "../../utils/timeline";
+import {
+  bucketSeries,
+  entityTime,
+  formatDay,
+  formatMoment,
+  preciseTime,
+  timeExtent,
+  toBound,
+  toISODate,
+  type TimeBucket,
+  type TimeUnit,
+} from "../../utils/timeline";
 import { typeLabelColor } from "../../utils/typeColor";
 import { SectionLabel } from "../shared/SectionLabel";
 import { ChartTip } from "./BucketBreakdown";
@@ -42,18 +53,13 @@ const OverviewMap = lazy(() => import("./OverviewMap"));
  * clear it). It reads the whole collection, never the filters: the Overview
  * has none (`LibraryView` leaves it when one is set or a search starts).
  *
- * A section the collection has nothing for is left out. While a lazy corpus
- * loads, the header and the first two rows hold their final heights, so
- * nothing above the fold moves when it lands. */
+ * A section the collection has nothing for is left out. Cards size to their
+ * content; where two columns meet, the last card in the shorter one takes the
+ * slack (the map, when there is one). While a lazy corpus loads, the
+ * skeleton has the loaded layout's parts in the same places. */
 
-/** Fixed heights, shared by the loading state and the loaded one. */
-const HEADER_H = "10.5rem";
-const ROW_A_H = "20rem";
-const LANES_H = "16.5rem";
-/** Map and Network, the second band: at 1440 × 900 it sits above the fold. */
-const ROW_C_H = "15rem";
-const FACET_H = "16rem";
-const ROW_E_H = "14rem";
+/** The map's least height; in the first band it takes what is left over. */
+const MAP_MIN_H = "min-h-[15rem]";
 
 /** Lanes the Overview's timeline draws; the Timeline view draws every one. */
 const LANES = 6;
@@ -72,6 +78,30 @@ const RECENT = 5;
 const MAP_SHARE = 0.1;
 const MAP_MIN = 50;
 
+/** The lanes draw the window holding this share of the dated records when it
+ *  is under this share of the whole span. */
+const FOCUS_SHARE = 0.7;
+const FOCUS_RATIO = 0.25;
+const UNIT_MS: Record<TimeUnit, number> = {
+  second: 1000,
+  minute: 60_000,
+  hour: 3_600_000,
+  day: 86_400_000,
+  month: 30.44 * 86_400_000,
+  quarter: 91.3 * 86_400_000,
+  year: 365.25 * 86_400_000,
+  decade: 3652.5 * 86_400_000,
+};
+const TICK_STEPS: Record<TimeUnit, number[]> = {
+  second: [1, 5, 10, 15, 30],
+  minute: [1, 2, 5, 10, 15, 30],
+  hour: [1, 2, 3, 6, 12],
+  day: [1, 2, 7, 14],
+  month: [1, 2, 3, 6, 12],
+  quarter: [1, 2, 4],
+  year: [1, 2, 5, 10, 20, 50],
+  decade: [1, 2, 5],
+};
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY = 86_400_000;
 const n = (v: number) => v.toLocaleString();
@@ -182,26 +212,158 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   const showYours = ready && (views.length > 0 || pins.length > 0);
   const showRecent = ready && recent.length > 0;
 
+  const located = useMemo(() => entities.filter((e) => e.geo), [entities]);
+  const [scaleNote, setScaleNote] = useState<string | null>(null);
   const span = summary.extent ? formatSpan(summary.extent.min, summary.extent.max) : null;
+  const mapCard = showMap && (
+    <Section
+      title="Where"
+      // Takes what the column leaves, never less than its own minimum, so the
+      // fitted map is whole in the card.
+      className={`flex-1 ${MAP_MIN_H}`}
+      action={{ label: "Open Map", onClick: () => setView("map") }}
+      note={`${plural(summary.located, "record")} with a location`}
+    >
+      <div className="relative flex-1 min-h-0 rounded-md overflow-hidden bg-vellum">
+        <Suspense fallback={null}>
+          <OverviewMap
+            located={located}
+            onMap={() => setView("map")}
+            onRecord={(id) => {
+              setView("map");
+              setOpen(id);
+            }}
+            onArea={(b: MapBounds) =>
+              enter("map", () => {
+                // The area is a filter only while the map is in front:
+                // the view first, then the area.
+                setView("map");
+                setMapBounds(b);
+              })
+            }
+          />
+        </Suspense>
+      </div>
+    </Section>
+  );
+  const templatesCard = (
+    <Section
+      title="What's in it"
+      note={ready ? plural(summary.byType.length, "template") : undefined}
+      action={ready ? { label: "Open Cards", onClick: () => setView("cards") } : undefined}
+    >
+      {ready ? (
+        <BarList
+          label="Records per template"
+          rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
+            key: id,
+            label: typeOf(id).name,
+            color: typeOf(id).color,
+            count,
+            action: `Show the ${n(count)} ${typeOf(id).name} records`,
+            onClick: () => enter("cards", () => setTypes({ [id]: true })),
+          }))}
+          more={
+            summary.byType.length > TOP_TEMPLATES
+              ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
+              : undefined
+          }
+        />
+      ) : (
+        <BarSkeleton rows={TOP_TEMPLATES} />
+      )}
+    </Section>
+  );
+  // Contains and Language, one card: each holds two to five rows, too few for
+  // a card of their own. `grow`: the last card in its column takes the slack.
+  const contentCard = (grow: boolean) => (
+    <Card label="Content" className={grow ? "flex-1" : ""}>
+      <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${!ready || (showContains && showLanguages) ? "@xl:grid-cols-2" : ""}`}>
+        {(!ready || showContains) && (
+          <Group title="Contains" note={ready ? `of ${plural(total, "record")}` : undefined}>
+            {ready ? (
+              <BarList
+                label="Records by what they contain"
+                scaleTo={total}
+                rows={contentRows.map((r) => ({
+                  key: `${r.group}:${r.id}`,
+                  label: r.label,
+                  count: r.count,
+                  action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
+                  onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
+                }))}
+              />
+            ) : (
+              <BarSkeleton rows={2} />
+            )}
+          </Group>
+        )}
+        {(!ready || showLanguages) && (
+          <Group title="Language" note={ready ? `of ${plural(total, "record")}` : undefined}>
+            {ready ? (
+              <BarList
+                label="Records by the language of their content"
+                scaleTo={total}
+                rows={summary.languages.map(([l, count]) => ({
+                  key: `language:${l}`,
+                  label: l,
+                  count,
+                  action: `Show the ${n(count)} records in ${l}`,
+                  onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
+                }))}
+              />
+            ) : (
+              <BarSkeleton rows={2} />
+            )}
+          </Group>
+        )}
+      </div>
+    </Card>
+  );
+  // A community's template is shown only where the listed ones differ; the
+  // same template under every row says nothing.
+  const listed = network?.communities.slice(0, TOP_COMMUNITIES) ?? [];
+  const mixedTemplates = new Set(listed.map((c) => c.typeId)).size > 1;
+  const networkCard = (grow: boolean) => showNetwork && network && (
+    <Section
+      title="Connections"
+      className={grow ? "flex-1" : ""}
+      action={{ label: "Open Network", onClick: () => setView("network") }}
+      note={`${plural(network.communities.length, "community", "communities")} of linked records`}
+    >
+      <BarList
+        label="Largest communities"
+        rows={listed.map((c) => ({
+          key: String(c.id),
+          label: c.name,
+          color: mixedTemplates ? typeOf(c.typeId).color : undefined,
+          sub: c.with.length ? `with ${c.with.join(", ")}` : undefined,
+          count: c.size,
+          action: `Open the Network on ${c.name}'s community, ${plural(c.size, "record")}`,
+          onClick: () => {
+            setCentre(c.id);
+            setView("network");
+          },
+        }))}
+      />
+    </Section>
+  );
 
   return (
     <div data-component="LibraryOverview" aria-busy={loading} className="@container flex flex-col gap-2 pb-3">
       {/* ── Header ── */}
       {/* The collection's title page: its name, what it is at a reading
-          measure, and the key figures. Fixed height from two columns up;
-          narrower, the figures may wrap, the same while loading as loaded. */}
-      <header
-        data-part="header"
-        className="flex flex-col justify-between gap-4 pt-2 pb-3 @3xl:h-[var(--overview-header-h)]"
-        style={{ "--overview-header-h": HEADER_H } as React.CSSProperties}
-      >
+          measure, and the key figures. */}
+      <header data-part="header" className="flex flex-col gap-4 pt-2 pb-2">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-ink leading-tight truncate">{settings.name || "Untitled collection"}</h1>
           {settings.description && (
-            <p className="mt-2 max-w-[40rem] text-sm text-ink-secondary leading-relaxed line-clamp-3 @xl:line-clamp-2">{settings.description}</p>
+            <p className="mt-2 max-w-[40rem] text-sm text-ink-secondary leading-relaxed line-clamp-3 @xl:line-clamp-2" title={settings.description}>
+              {settings.description}
+            </p>
           )}
         </div>
-        <dl data-part="stats" className="grid grid-cols-2 gap-x-4 gap-y-3 @xl:flex @xl:flex-wrap @xl:items-end @xl:gap-x-10 @3xl:h-[3.25rem] @3xl:overflow-hidden">
+        <dl data-part="stats" className="grid grid-cols-2 gap-x-4 gap-y-3 @xl:flex @xl:flex-wrap @xl:items-end @xl:gap-x-12">
           <Stat label="Records" value={ready ? n(total) : null} />
           {(!ready || span) && <Stat label="Dates" value={ready ? span : null} ltr />}
           {(!ready || summary.languages.length > 0) && (
@@ -215,165 +377,68 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         </dl>
       </header>
 
-      {/* ── What's in it · Contains, Language ── */}
+      {/* ── What, where, and how it is connected ──
+          Two columns that size to their content. The start side lists: the
+          templates, then the communities. The end side is the map, which
+          takes whatever height the column has left (a tall fit such as the
+          Americas needs it), over the Content card. Without a map the Content
+          card moves under the templates and Connections has the end side. */}
       <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-        <Section
-          title="What's in it"
-          height={ROW_A_H}
-          className={ready && !showContent ? "@3xl:col-span-2" : ""}
-          action={ready ? { label: "Open Cards", onClick: () => setView("cards") } : undefined}
-        >
+        <div className="flex flex-col gap-2 min-w-0">
+          {templatesCard}
           {ready ? (
-            <BarList
-              label="Records per template"
-              rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
-                key: id,
-                label: typeOf(id).name,
-                color: typeOf(id).color,
-                count,
-                action: `Show the ${n(count)} ${typeOf(id).name} records`,
-                onClick: () => enter("cards", () => setTypes({ [id]: true })),
-              }))}
-              more={
-                summary.byType.length > TOP_TEMPLATES
-                  ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
-                  : undefined
-              }
-            />
+            showMap ? networkCard(true) : showContent && contentCard(true)
           ) : (
-            <BarSkeleton rows={TOP_TEMPLATES} />
+            // Most collections have a map, so the loading layout is the
+            // mapped one: Connections here, Content under the map. Six short
+            // rows hold the height of four two-line communities.
+            <Section title="Connections" className="flex-1">
+              <BarSkeleton rows={6} />
+            </Section>
           )}
-        </Section>
-        {(!ready || showContent) && (
-          // Two sections side by side, each the band's height (Nepal lists
-          // five kinds of content; stacked, Language had no room).
-          <div
-            className={`grid grid-cols-1 gap-2 min-w-0 ${(!ready || (showContains && showLanguages)) ? "@xl:grid-cols-2" : ""} @3xl:grid-rows-1 @3xl:h-[var(--overview-row-a-h)]`}
-            style={{ "--overview-row-a-h": ROW_A_H } as React.CSSProperties}
-          >
-            {(!ready || showContains) && (
-              <Section title="Contains" note={ready ? `of ${plural(total, "record")}` : undefined}>
-                {ready ? (
-                  <BarList
-                    label="Records by what they contain"
-                    scaleTo={total}
-                    narrow
-                    rows={contentRows.map((r) => ({
-                      key: `${r.group}:${r.id}`,
-                      label: r.label,
-                      count: r.count,
-                      action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
-                      onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
-                    }))}
-                  />
-                ) : (
-                  <BarSkeleton rows={2} />
-                )}
-              </Section>
-            )}
-            {(!ready || showLanguages) && (
-              <Section title="Language" note={ready ? `of ${plural(total, "record")}` : undefined}>
-                {ready ? (
-                  <BarList
-                    label="Records by the language of their content"
-                    scaleTo={total}
-                    narrow
-                    rows={summary.languages.map(([l, count]) => ({
-                      key: `language:${l}`,
-                      label: l,
-                      count,
-                      action: `Show the ${n(count)} records in ${l}`,
-                      onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
-                    }))}
-                  />
-                ) : (
-                  <BarSkeleton rows={2} />
-                )}
-              </Section>
+        </div>
+        {(!ready || showMap || showNetwork) && (
+          <div className="flex flex-col gap-2 min-w-0">
+            {ready ? (
+              showMap ? (
+                <>
+                  {mapCard}
+                  {showContent && contentCard(false)}
+                </>
+              ) : (
+                networkCard(true)
+              )
+            ) : (
+              <>
+                <Section title="Where" className={`flex-1 ${MAP_MIN_H}`}>
+                  <div aria-hidden className="flex-1 rounded-md bg-vellum" />
+                </Section>
+                {contentCard(false)}
+              </>
             )}
           </div>
         )}
       </div>
 
-      {/* ── Map · Network ── */}
-      {(showMap || showNetwork) && (
-        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-          {showMap && (
-            <Section
-              title="Where"
-              height={ROW_C_H}
-              className={showNetwork ? "" : "@3xl:col-span-2"}
-              action={{ label: "Open Map", onClick: () => setView("map") }}
-              note={`${plural(summary.located, "record")} with a location`}
-            >
-              <div className="relative flex-1 min-h-0 rounded-md overflow-hidden bg-vellum">
-                <Suspense fallback={null}>
-                  <OverviewMap
-                    located={entities.filter((e) => e.geo)}
-                    onMap={() => setView("map")}
-                    onRecord={(id) => {
-                      setView("map");
-                      setOpen(id);
-                    }}
-                    onArea={(b: MapBounds) =>
-                      enter("map", () => {
-                        // The area is a filter only while the map is in front:
-                        // the view first, then the area.
-                        setView("map");
-                        setMapBounds(b);
-                      })
-                    }
-                  />
-                </Suspense>
-              </div>
-            </Section>
-          )}
-          {showNetwork && network && (
-            <Section
-              title="Connections"
-              height={ROW_C_H}
-              className={showMap ? "" : "@3xl:col-span-2"}
-              action={{ label: "Open Network", onClick: () => setView("network") }}
-              note={`${plural(network.communities.length, "community", "communities")} of linked records`}
-            >
-              <BarList
-                label="Largest communities"
-                rows={network.communities.slice(0, TOP_COMMUNITIES).map((c) => ({
-                  key: String(c.id),
-                  label: c.name,
-                  sub: typeOf(c.typeId),
-                  count: c.size,
-                  action: `Open the Network on ${c.name}'s community, ${plural(c.size, "record")}`,
-                  onClick: () => {
-                    setCentre(c.id);
-                    setView("network");
-                  },
-                }))}
-              />
-            </Section>
-          )}
-        </div>
-      )}
-
       {/* ── Timeline ── */}
       {showLanes && (
         <Section
           title="Over time"
-          // A phone stacks each lane's name over its dots, so the band grows.
-          className="@3xl:h-[var(--overview-lanes-h)]"
-          style={{ "--overview-lanes-h": LANES_H } as React.CSSProperties}
+          note={ready ? scaleNote ?? undefined : undefined}
           action={ready ? { label: "Open Timeline", onClick: () => setView("timeline") } : undefined}
         >
           {ready ? (
             <OverviewLanes
               entities={entities}
               typeOf={typeOf}
+              onScale={setScaleNote}
               onLane={(typeId) => enter("timeline", () => setTypes({ [typeId]: true }))}
-              onCell={(typeId, b) =>
+              onCell={(typeId, b, fine) =>
                 enter("timeline", () => {
                   setTypes({ [typeId]: true });
-                  setFrom(toISODate(b.start));
-                  setTo(toISODate(b.end - DAY));
+                  // A minute or an hour is a timed bound; a day and up, days.
+                  setFrom(fine ? toBound(b.start) : toISODate(b.start));
+                  setTo(fine ? toBound(b.end - 1000) : toISODate(b.end - DAY));
                 })
               }
             />
@@ -383,38 +448,40 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         </Section>
       )}
 
-      {/* ── Facets ── */}
+      {/* ── Facets ──
+          One card, a column per property: a property with two values beside
+          one with six no longer leaves a card mostly empty. */}
       {ready && facets.length > 0 && (
-        <div
-          className={`grid grid-cols-1 gap-2 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3 [&>*:nth-child(3)]:@3xl:col-span-2 [&>*:nth-child(3)]:@6xl:col-span-1"}`}
-        >
-          {facets.map((f) => (
-            <Section key={f.key} title={f.title} height={FACET_H} note={`${plural(f.distinct, "value")}`}>
-              <BarList
-                label={`${f.title}, most used values`}
-                rows={f.values.map(([v, count]) => ({
-                  key: v,
-                  label: v,
-                  count,
-                  action: `Show the ${n(count)} records with ${f.title} ${v}`,
-                  onClick: () =>
-                    enter("cards", () => {
-                      if (f.kind === "country") setCountries({ [v]: true });
-                      else if (f.kind === "descriptor") setDescriptors({ [v]: true });
-                      else setInherited({ [f.key]: { [v]: true } });
-                    }),
-                }))}
-              />
-            </Section>
-          ))}
-        </div>
+        <Card label="Most used values">
+          <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3"}`}>
+            {facets.map((f) => (
+              <Group key={f.key} title={f.title} note={plural(f.distinct, "value")}>
+                <BarList
+                  label={`${f.title}, most used values`}
+                  rows={f.values.map(([v, count]) => ({
+                    key: v,
+                    label: v,
+                    count,
+                    action: `Show the ${n(count)} records with ${f.title} ${v}`,
+                    onClick: () =>
+                      enter("cards", () => {
+                        if (f.kind === "country") setCountries({ [v]: true });
+                        else if (f.kind === "descriptor") setDescriptors({ [v]: true });
+                        else setInherited({ [f.key]: { [v]: true } });
+                      }),
+                  }))}
+                />
+              </Group>
+            ))}
+          </div>
+        </Card>
       )}
 
       {/* ── Recently modified · Yours ── */}
       {(showRecent || showYours) && (
         <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
           {showRecent && (
-            <Section title="Recently modified" height={ROW_E_H} className={showYours ? "" : "@3xl:col-span-2"}>
+            <Section title="Recently modified">
               <RecordList
                 records={recent.map((e) => ({ e, meta: formatDay(Date.parse(e.updatedAt!)) }))}
                 typeOf={typeOf}
@@ -423,15 +490,15 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
             </Section>
           )}
           {showYours && (
-            <Section title="Saved views and pins" height={ROW_E_H} className={showRecent ? "" : "@3xl:col-span-2"}>
-              <ul className="flex flex-col min-h-0 overflow-y-auto -mx-2">
+            <Section title="Saved views and pins">
+              <ul className="flex flex-col -mx-2">
                 {views.map((v) => {
                   const k = snapshotFilterCount(v.snapshot);
                   return (
                     <li key={v.id}>
                       <RowButton onClick={() => applySnapshot(v.snapshot)} label={`Open saved view ${v.name}`}>
                         <Bookmark size={13} aria-hidden className="shrink-0 text-ink-muted" />
-                        <span className="min-w-0 flex-1 truncate text-sm text-ink">{v.name}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-ink" title={v.name}>{v.name}</span>
                         <span className="shrink-0 text-xs text-ink-tertiary tabular-nums">
                           {k === 0 ? "No filters" : plural(k, "filter")}
                         </span>
@@ -443,7 +510,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
                   <li key={e.id}>
                     <RowButton onClick={() => openRecord(e.id)} label={`Open ${e.title}`}>
                       <Pin size={13} aria-hidden className="shrink-0 text-ink-muted" />
-                      <span className="min-w-0 flex-1 truncate text-sm text-ink">{e.title}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm text-ink" title={e.title}>{e.title}</span>
                       <TemplateName type={typeOf(e.typeId)} />
                     </RowButton>
                   </li>
@@ -475,34 +542,39 @@ function Stat({ label, value, ltr = false }: { label: string; value: string | nu
   );
 }
 
-function Section({
+/** A paper card. Its height is its content's unless the layout stretches it. */
+function Card({ label, className = "", children }: { label: string; className?: string; children: ReactNode }) {
+  return (
+    <section data-part="section" aria-label={label} className={`flex flex-col min-w-0 p-4 rounded-lg bg-paper ${className}`}>
+      {children}
+    </section>
+  );
+}
+
+/** A titled block: a caps label, a note, and the way into the view that
+ *  shows it in full. A card holds one or several. */
+function Group({
   title,
-  height,
-  className = "",
-  style,
-  action,
   note,
+  action,
   children,
 }: {
   title: string;
-  /** A fixed height; without one the section takes what its box gives it. */
-  height?: string;
-  className?: string;
-  style?: React.CSSProperties;
-  action?: { label: string; onClick: () => void };
   note?: string;
+  action?: { label: string; onClick: () => void };
   children: ReactNode;
 }) {
   return (
-    <section
-      data-part="section"
-      aria-label={title}
-      className={`flex flex-col min-w-0 min-h-0 p-4 rounded-lg bg-paper ${className}`}
-      style={{ height, ...style }}
-    >
-      <header className="shrink-0 flex items-center gap-2 h-6 mb-2">
+    <div role="group" aria-label={title} className="flex flex-col flex-1 min-w-0 min-h-0">
+      {/* A phone has no tooltip to recover a cut note: there it takes a line
+          of its own under the label and wraps. */}
+      <header className="shrink-0 flex flex-wrap items-center gap-x-2 min-h-6 mb-2">
         <SectionLabel as="h2" className="shrink-0">{title}</SectionLabel>
-        {note && <span className="min-w-0 truncate text-xs text-ink-tertiary tabular-nums">{note}</span>}
+        {note && (
+          <span className="order-last basis-full text-xs text-ink-tertiary tabular-nums @xl:order-none @xl:basis-auto @xl:min-w-0 @xl:flex-1 @xl:truncate" title={note}>
+            {note}
+          </span>
+        )}
         {action && (
           <button
             type="button"
@@ -516,7 +588,30 @@ function Section({
         )}
       </header>
       {children}
-    </section>
+    </div>
+  );
+}
+
+/** A card with one group. */
+function Section({
+  title,
+  className = "",
+  action,
+  note,
+  children,
+}: {
+  title: string;
+  className?: string;
+  action?: { label: string; onClick: () => void };
+  note?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card label={title} className={className}>
+      <Group title={title} note={note} action={action}>
+        {children}
+      </Group>
+    </Card>
   );
 }
 
@@ -545,9 +640,9 @@ function RowButton({
   );
 }
 
-function TemplateName({ type, wide = false }: { type: EntityType; wide?: boolean }) {
+function TemplateName({ type }: { type: EntityType }) {
   return (
-    <span className={`shrink-0 flex items-center gap-1.5 min-w-0 ${wide ? "max-w-full" : "max-w-[45%]"}`}>
+    <span className="shrink-0 flex items-center gap-1.5 min-w-0 max-w-[45%]">
       <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px]" style={{ backgroundColor: type.color }} />
       <span className="truncate text-xs" style={{ color: typeLabelColor(type.color) }}>
         {type.name}
@@ -561,40 +656,38 @@ interface BarRow {
   label: string;
   /** A template: its colour on a dot beside the label. */
   color?: string;
-  /** A second line's template (a community's dominant one). */
-  sub?: EntityType;
+  /** A second line under the label (a community's other leading records). */
+  sub?: string;
   count: number;
   action: string;
   onClick: () => void;
 }
 
 /** A ranked list of horizontal bars, each drawn to scale from zero against
- *  `scaleTo` (the largest row when absent), its exact count in a fixed
- *  column at the end. One quiet ink tint for every bar: identity, where
- *  there is one, is the template dot, and the label stays ink. */
+ *  `scaleTo` (the largest row when absent). The label takes the row; the bar
+ *  has a short track of its own at the end, the exact count right after it,
+ *  so a number is never far from its bar. One quiet ink tint for every bar:
+ *  identity, where there is one, is the template dot, and the label stays
+ *  ink. */
 function BarList({
   rows,
   label,
   scaleTo,
   more,
-  narrow = false,
 }: {
   rows: BarRow[];
   label: string;
   scaleTo?: number;
   /** A last row for what the list leaves out ("4 more templates in Cards"). */
   more?: { label: string; onClick: () => void };
-  /** A half-width card: the label takes half the row, the bar the rest. */
-  narrow?: boolean;
 }) {
   const max = scaleTo ?? Math.max(1, ...rows.map((r) => r.count));
   return (
-    <ul aria-label={label} className="flex flex-col -mx-2 min-h-0 overflow-y-auto">
+    <ul aria-label={label} className="flex flex-col -mx-2">
       {rows.map((r) => (
         <li key={r.key}>
           <RowButton onClick={r.onClick} label={r.action} tall={!!r.sub}>
-            {/* A phone gives the label most of the row; the bar stays a bar. */}
-            <span className={`min-w-0 ${narrow ? "w-3/5 @xl:w-1/2" : "w-3/5 @xl:w-[42%]"} shrink-0 flex flex-col justify-center`}>
+            <span className="min-w-0 flex-1 flex flex-col justify-center">
               <span className="min-w-0 flex items-center gap-1.5">
                 {r.color && <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px]" style={{ backgroundColor: r.color }} />}
                 {/* A truncated name keeps its whole text in the tooltip. */}
@@ -602,15 +695,19 @@ function BarList({
                   {r.label}
                 </span>
               </span>
-              {r.sub && <TemplateName type={r.sub} wide />}
+              {r.sub && (
+                <span className="min-w-0 truncate text-xs text-ink-tertiary" title={r.sub}>
+                  {r.sub}
+                </span>
+              )}
             </span>
-            <span aria-hidden className="relative flex-1 min-w-0 h-1.5">
+            <span aria-hidden className="relative shrink-0 w-[28%] max-w-[9rem] h-1.5 rounded-full bg-ink/5">
               <span
-                className="absolute inset-y-0 start-0 rounded-full bg-ink/15 group-hover:bg-ink/30 transition-colors"
-                style={{ width: `${Math.max(0.5, (r.count / max) * 100)}%` }}
+                className="absolute inset-y-0 start-0 rounded-full bg-ink/20 group-hover:bg-ink/40 transition-colors"
+                style={{ width: `${Math.max(1, (r.count / max) * 100)}%` }}
               />
             </span>
-            <span className="shrink-0 w-14 text-end text-xs text-ink-secondary tabular-nums">{n(r.count)}</span>
+            <span className="shrink-0 w-12 text-end text-xs text-ink-secondary tabular-nums group-hover:text-ink">{n(r.count)}</span>
           </RowButton>
         </li>
       ))}
@@ -631,8 +728,9 @@ function BarSkeleton({ rows }: { rows: number }) {
     <div aria-hidden className="flex flex-col">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-3 h-7">
-          <span className="w-[42%] shrink-0 h-3 rounded-sm bg-vellum" />
-          <span className="h-1.5 rounded-full bg-vellum" style={{ width: `${Math.max(8, 50 - i * 6)}%` }} />
+          <span className="flex-1 min-w-0"><span className="block h-3 rounded-sm bg-vellum" style={{ width: `${Math.max(30, 70 - i * 5)}%` }} /></span>
+          <span className="shrink-0 w-[28%] max-w-[9rem] h-1.5 rounded-full bg-vellum" />
+          <span className="shrink-0 w-12" />
         </div>
       ))}
     </div>
@@ -649,11 +747,11 @@ function RecordList({
   onOpen: (id: string) => void;
 }) {
   return (
-    <ul className="flex flex-col min-h-0 overflow-y-auto -mx-2">
+    <ul className="flex flex-col -mx-2">
       {records.map(({ e, meta }) => (
         <li key={e.id}>
           <RowButton onClick={() => onOpen(e.id)} label={`Open ${e.title}`}>
-            <span className="min-w-0 flex-1 truncate text-sm text-ink">{e.title}</span>
+            <span className="min-w-0 flex-1 truncate text-sm text-ink" title={e.title}>{e.title}</span>
             <TemplateName type={typeOf(e.typeId)} />
             <span className="shrink-0 w-[5.5rem] text-end text-xs text-ink-tertiary tabular-nums">{meta}</span>
           </RowButton>
@@ -662,6 +760,10 @@ function RecordList({
     </ul>
   );
 }
+
+const sameDay = (a: number, b: number) => toISODate(a) === toISODate(b);
+/** "22:05", or "22:05:10" for seconds, in UTC like every collection date. */
+const clock = (ms: number, unit: TimeUnit) => new Date(ms).toISOString().slice(11, unit === "second" ? 19 : 16);
 
 /** "1969 – 2025", or days for a span shorter than two years. */
 function formatSpan(min: number, max: number): string {
@@ -674,19 +776,26 @@ function formatSpan(min: number, max: number): string {
 /* ── Timeline lanes ───────────────────────────────────────────────────── */
 
 /** The Timeline view's Lanes, reduced: the six largest templates, one column
- *  per period across the whole range at the finest of month, quarter and year
- *  that fits, a dot's area its count on one scale. A lane opens Timeline on
- *  its template; a dot, on its template and period. */
+ *  per period at the finest unit that fits, a dot's area its count on one
+ *  scale. The range is where the records are: when most of them sit in a
+ *  small part of the whole span (the Vegas recordings, twenty minutes of one
+ *  night in a span of nine years) the lanes draw that window, and say so and
+ *  how many records fall outside it. A lane opens Timeline on its template; a
+ *  dot, on its template and period. */
 function OverviewLanes({
   entities,
   typeOf,
+  onScale,
   onLane,
   onCell,
 }: {
   entities: Entity[];
   typeOf: (id: string) => EntityType;
+  /** The scale in words ("By year, 1986 – 2021"), for the section's note. */
+  onScale: (note: string | null) => void;
   onLane: (typeId: string) => void;
-  onCell: (typeId: string, b: TimeBucket) => void;
+  /** `fine`: the bucket is shorter than a day, so its bounds carry a time. */
+  onCell: (typeId: string, b: TimeBucket, fine: boolean) => void;
 }) {
   const [w, setW] = useState(0);
   const ro = useRef<ResizeObserver | null>(null);
@@ -703,7 +812,27 @@ function OverviewLanes({
   const [hover, setHover] = useState<string | null>(null);
 
   const dated = useMemo(() => entities.filter((e) => entityTime(e) !== null), [entities]);
-  const extent = useMemo(() => timeExtent(dated), [dated]);
+  const full = useMemo(() => timeExtent(dated), [dated]);
+  // The shortest window that holds FOCUS_SHARE of the dated records, by each
+  // record's precise time. Drawn instead of the whole span when it is under
+  // FOCUS_RATIO of it.
+  const focus = useMemo(() => {
+    if (!full) return null;
+    const times = dated.map((e) => preciseTime(e)!).sort((a, b) => a - b);
+    const k = Math.max(1, Math.ceil(times.length * FOCUS_SHARE));
+    let lo = times[0], hi = times[times.length - 1];
+    for (let i = 0; i + k - 1 < times.length; i++) {
+      const w = times[i + k - 1] - times[i];
+      if (w < hi - lo) {
+        lo = times[i];
+        hi = times[i + k - 1];
+      }
+    }
+    if (hi - lo >= (full.max - full.min) * FOCUS_RATIO) return null;
+    const outside = times.filter((t) => t < lo || t > hi).length;
+    return { min: lo, max: hi, outside };
+  }, [dated, full]);
+  const extent = focus ?? full;
   // Wide enough at desktop widths for the longest template names CEJIL has
   // ("Geolocalización de los hechos del caso"); a cut name keeps a tooltip.
   // Below 560 each lane's name sits on its own line over the dots.
@@ -715,14 +844,17 @@ function OverviewLanes({
   const unit = useMemo((): TimeUnit => {
     if (!extent) return "year";
     const span = extent.max - extent.min;
-    const per = (u: TimeUnit) => (u === "month" ? 30.44 : u === "quarter" ? 91.3 : 365.25) * DAY;
-    const fits = (u: TimeUnit) => (span / per(u) + 1) * (u === "year" ? LANE_YEAR_MIN : LANE_COL_MIN) <= plotW;
-    return (["month", "quarter", "year"] as TimeUnit[]).find(fits) ?? "year";
-  }, [extent, plotW]);
+    const fits = (u: TimeUnit) => (span / UNIT_MS[u] + 1) * (u === "year" ? LANE_YEAR_MIN : LANE_COL_MIN) <= plotW;
+    // Whole collections stay at month or coarser; a focused window may go
+    // down to the minute.
+    const units: TimeUnit[] = focus ? ["second", "minute", "hour", "day", "month", "quarter", "year"] : ["month", "quarter", "year"];
+    return units.find(fits) ?? "year";
+  }, [extent, plotW, focus]);
+  const fine = unit === "second" || unit === "minute" || unit === "hour";
 
   const { cols, lanes, max, more } = useMemo(() => {
     if (!extent || plotW <= 0) return { cols: [] as TimeBucket[], lanes: [], max: 1, more: 0 };
-    const cols = bucketSeries(dated, unit, extent);
+    const cols = bucketSeries(dated, unit, extent, fine ? preciseTime : entityTime);
     const byType = new Map<string, Map<string, number>>();
     for (const c of cols)
       for (const e of c.entities) {
@@ -737,14 +869,27 @@ function OverviewLanes({
     let max = 1;
     for (const l of lanes) for (const v of l.cells.values()) max = Math.max(max, v);
     return { cols, lanes, max, more: all.length - lanes.length };
-  }, [dated, unit, extent, plotW]);
+  }, [dated, unit, extent, plotW, fine]);
+
+  useEffect(() => {
+    if (!cols.length) return onScale(null);
+    const first = cols[0], last = cols[cols.length - 1];
+    const range = fine
+      ? sameDay(first.start, last.start)
+        ? `${formatDay(first.start)}, ${clock(first.start, unit)}–${clock(last.start, unit)}`
+        : `${formatMoment(first.start, true)} – ${formatMoment(last.start, true)}`
+      : first.label === last.label
+        ? first.label
+        : `${first.label} – ${last.label}`;
+    onScale(`By ${unit}, ${range}`);
+  }, [cols, unit, fine, onScale]);
 
   const colW = cols.length ? Math.max(unit === "year" ? LANE_YEAR_MIN : LANE_COL_MIN, plotW / cols.length) : 0;
   const rMax = Math.min(colW, LANE_H) / 2 - 1;
   const radius = (v: number) => Math.max(1.5, Math.sqrt(v / max) * rMax);
 
   const ticks = useMemo(() => {
-    const steps = unit === "year" ? [1, 2, 5, 10, 20, 50] : unit === "quarter" ? [1, 2, 4] : [1, 2, 3, 6, 12];
+    const steps = TICK_STEPS[unit];
     const k = steps.find((st) => colW * st >= LANE_LABEL_PITCH) ?? steps[steps.length - 1];
     const totalW = cols.length * colW;
     const half = LANE_LABEL_PITCH / 2 - 4;
@@ -753,15 +898,28 @@ function OverviewLanes({
       const d = new Date(c.start);
       const y = d.getUTCFullYear();
       const m = d.getUTCMonth();
-      const rank = unit === "year" ? y : unit === "quarter" ? m / 3 : m;
+      const rank =
+        unit === "year" ? y
+        : unit === "quarter" ? m / 3
+        : unit === "month" ? m
+        : unit === "day" ? d.getUTCDate() - 1
+        : unit === "hour" ? d.getUTCHours()
+        : unit === "minute" ? d.getUTCMinutes()
+        : d.getUTCSeconds();
       if (rank % k !== 0) return;
-      const label = unit === "year" || m === 0 ? String(y) : unit === "quarter" ? `Q${m / 3 + 1}` : MONTH_SHORT[m];
+      const label =
+        unit === "second" ? clock(c.start, "second")
+        : fine ? clock(c.start, unit)
+        : unit === "day" ? `${d.getUTCDate()} ${MONTH_SHORT[m]}`
+        : unit === "year" || m === 0 ? String(y)
+        : unit === "quarter" ? `Q${m / 3 + 1}`
+        : MONTH_SHORT[m];
       const x = Math.min(Math.max((i + 0.5) * colW, half), totalW - half);
       if (out.length && x - out[out.length - 1].x < LANE_LABEL_PITCH * 0.8) return;
       out.push({ i, label, x });
     });
     return out;
-  }, [cols, colW, unit]);
+  }, [cols, colW, unit, fine]);
 
   return (
     <div ref={hostRef} data-component="OverviewLanes" className="flex-1 min-h-0 flex flex-col">
@@ -810,7 +968,7 @@ function OverviewLanes({
                           <button
                             type="button"
                             aria-label={`${type.name}, ${c.label}: ${plural(v, "record")}. Open Timeline on it`}
-                            onClick={() => onCell(lane.typeId, c)}
+                            onClick={() => onCell(lane.typeId, c, fine)}
                             onMouseEnter={() => setHover(id)}
                             onMouseLeave={() => setHover(null)}
                             onFocus={() => setHover(id)}
@@ -858,6 +1016,7 @@ function OverviewLanes({
           </div>
           <p className="mt-auto pt-1 text-xs text-ink-tertiary">
             Dot area is the number of dated records per {unit}.
+            {focus && focus.outside > 0 && ` ${plural(focus.outside, "dated record")} outside this window${full ? `, ${formatSpan(full.min, full.max)},` : ""} in Timeline.`}
             {more > 0 && ` ${plural(more, "more template")} in Timeline.`}
           </p>
         </>
@@ -914,7 +1073,10 @@ function useFacetSummaries(entities: Entity[], source: DataSource, language: Lan
 
 interface CommunitySummary {
   id: number;
+  /** The member with most neighbours. */
   name: string;
+  /** The next two by neighbours: what tells this community from the others. */
+  with: string[];
   typeId: string;
   size: number;
 }
@@ -942,12 +1104,17 @@ function useNetworkSummary(source: DataSource, ready: boolean): { communities: C
     return {
       communities: placement.communities
         .filter((c) => c.members.length > 1)
-        .map((c) => ({
+        .map((c) => {
+          const title = (i: number) => getEntity(graph.ids[i])?.title ?? graph.ids[i];
+          const lead = [...c.members].sort((p, q) => graph.degree[q] - graph.degree[p] || p - q).filter((i) => i !== c.top);
+          return {
           id: c.id,
-          name: getEntity(graph.ids[c.top])?.title ?? graph.ids[c.top],
+          name: title(c.top),
+          with: lead.slice(0, 2).map(title),
           typeId: c.typeId,
           size: c.members.length,
-        })),
+          };
+        }),
     };
   }, [ready, stored, source, graph]);
 }

@@ -1583,7 +1583,9 @@ export function LibraryView() {
         {(sortInline || viewInline) && (
         <div data-part="arrange" className="shrink-0 flex items-center gap-1.5">
           {sortInline && (
-          <div ref={foldRefs.sort}>
+          // The Overview lists nothing, so Sort has nothing to order: hidden
+          // there, its slot kept so View and Display stay put between views.
+          <div ref={foldRefs.sort} className={overview ? "invisible" : undefined} aria-hidden={overview || undefined}>
             <Select
               value={sort}
               onChange={(v) => {

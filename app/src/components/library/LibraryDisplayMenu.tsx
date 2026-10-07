@@ -319,8 +319,14 @@ export function LibraryDisplayMenu() {
     </>
   );
 
+  // The Overview draws no results, so it has no display options of its own;
+  // the menu holds only what folds in from a narrow toolbar. With nothing
+  // folded the trigger keeps its slot, hidden, so the row does not move when
+  // the view changes.
+  const idle = mode === "overview" && sections.length === 0;
+
   return (
-    <div data-component="LibraryDisplayMenu" className="relative">
+    <div data-component="LibraryDisplayMenu" className={`relative ${idle ? "invisible" : ""}`} aria-hidden={idle || undefined}>
       <button
         type="button"
         data-part="trigger"
