@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef } from "react";
+import { startTransition, useEffect, useMemo, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -11,6 +11,7 @@ import {
   libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
   libraryMapBoundsAtom,
+  libraryMapBearingsAtom,
   SEARCH_SETTLE_MS,
   type LibraryCluster,
   type MapBounds,
@@ -22,6 +23,7 @@ import { entityInMapBounds } from "../../utils/libraryFilter";
 import { getEntity, getEntityType, type Entity } from "../../data/entities";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 import { CANVAS_OVERLAY } from "../shared/canvasOverlay";
+import { vegasSyncAtom } from "../../atoms/vegasSync";
 
 /** Zoom a fit to the pins stops at, so one pin (or pins on one building)
  *  does not open at street level. At 6 the map stayed at country scale for
@@ -404,6 +406,36 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     };
   }, [map, setMapBounds]);
 
+  /* Las Vegas: a line from each placed camera in the results to the place the
+     shots were fired from. It is computed from two positions; it says nothing
+     about where the camera pointed. Under the pins, not a control. */
+  const bearingsOn = useAtomValue(libraryMapBearingsAtom);
+  const sync = useAtomValue(vegasSyncAtom);
+  const bearings = useMemo(() => {
+    if (!bearingsOn || !sync) return [];
+    const ids = new Set(entities.map((e) => e.id));
+    return sync.bearings.filter((b) => ids.has(b.recordingId));
+  }, [bearingsOn, sync, entities]);
+  useEffect(() => {
+    if (!map || !bearings.length) return;
+    const lines = L.layerGroup(
+      bearings.map((b) =>
+        L.polyline(
+          [
+            [b.from.lat, b.from.lng],
+            [b.to.lat, b.to.lng],
+          ],
+          { className: "map-bearing", weight: 1, dashArray: "3 4", interactive: false },
+        ),
+      ),
+    );
+    lines.addTo(map);
+    lines.eachLayer((l) => (l as L.Path).bringToBack());
+    return () => {
+      map.removeLayer(lines);
+    };
+  }, [map, bearings]);
+
   // Redraw the badges to mark the selected one, or to rename them in a new language.
   useEffect(() => {
     groupRef.current?.refreshClusters();
@@ -470,6 +502,12 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             </span>
           )}
         </p>
+        {bearingsOn && sync && (
+          <p data-part="bearing-caption" className={`absolute top-[3.25rem] start-3 z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
+            <span aria-hidden className="inline-block w-4 align-middle me-1.5 border-t border-dashed border-ink-secondary" />
+            Bearing to source, computed: {bearings.length.toLocaleString()} {bearings.length === 1 ? "line" : "lines"}
+          </p>
+        )}
       </div>
     </div>
   );

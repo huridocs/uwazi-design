@@ -8,6 +8,7 @@ import {
   SYNC_FLAG_LABEL,
   SYNC_TOLERANCE_SECONDS,
   type RecordingSync,
+  type SourceBearing,
   type SyncAnalysis,
 } from "../../utils/syncAnalysis";
 import { MetadataCard } from "./MetadataCard";
@@ -41,7 +42,7 @@ export function VegasSyncCard({ recordingId }: { recordingId: string }) {
   if (!sync || !rec) return null;
   return (
     <MetadataCard title="Sync" component="VegasSyncCard">
-      <SyncSummary rec={rec} />
+      <SyncSummary rec={rec} bearing={sync.bearings.find((b) => b.recordingId === recordingId)} />
       {rec.flags.length > 0 && (
         <ul aria-label="Sync flags" className="flex flex-wrap gap-1.5">
           {rec.flags.map((f) => (
@@ -58,7 +59,7 @@ export function VegasSyncCard({ recordingId }: { recordingId: string }) {
   );
 }
 
-function SyncSummary({ rec }: { rec: RecordingSync }) {
+function SyncSummary({ rec, bearing }: { rec: RecordingSync; bearing?: SourceBearing }) {
   const rows: [string, string][] = [
     ["Clock at start", rec.clockStart !== undefined ? formatClock(rec.clockStart) : "None"],
     ["Offset to shared clock", rec.offset !== null ? signedSeconds(rec.offset) : "No aligned anchor"],
@@ -70,6 +71,14 @@ function SyncSummary({ rec }: { rec: RecordingSync }) {
     rows.push([
       "Title against annotations",
       `${formatClock(rec.titleStart)} against ${formatClock(rec.impliedStart)} (${signedSeconds(rec.titleDifference)})`,
+    ]);
+  }
+  if (bearing) {
+    // From the camera position to the place the shots came from: computed,
+    // not where the camera pointed.
+    rows.push([
+      "Bearing to source, computed",
+      `${Math.round(bearing.bearing)}°, ${bearing.metres >= 1000 ? `${(bearing.metres / 1000).toFixed(1)}\u00a0km` : `${Math.round(bearing.metres)}\u00a0m`}`,
     ]);
   }
   return (

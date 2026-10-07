@@ -120,6 +120,9 @@ export interface DisplayContext {
   networkTypes: ToggleOption[];
   /** The collection has an evidence layer the Network view can hide (Nepal). */
   networkEvidence: boolean;
+  /** The collection knows where the shots came from, so the Map can draw a
+   *  computed bearing from each camera to it (Las Vegas). */
+  mapBearings: boolean;
 }
 
 interface SectionBase {
@@ -492,7 +495,27 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** The map draws neither cards nor rows, so it offers the chart and the phone's
    *  sort and nothing else. An empty-feeling menu is the honest answer; a menu
    *  full of controls that act on nothing is not. */
-  map: [VIEW, CHART, SORT, LANGUAGE],
+  map: [
+    VIEW,
+    CHART,
+    SORT,
+    LANGUAGE,
+    {
+      id: "mapLayers",
+      label: "Layers",
+      kind: "toggles",
+      separator: true,
+      visible: (ctx) => ctx.mapBearings,
+      options: [
+        {
+          id: "bearings",
+          label: "Bearing to source",
+          detail: "Computed: a line from each camera position to where the shots were fired from",
+          default: false,
+        },
+      ],
+    },
+  ],
 
   /** Claims against their sources: the sort orders the claims; nothing else
    *  here has a card or a column to configure. */

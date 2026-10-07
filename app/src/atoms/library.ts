@@ -853,8 +853,15 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     // Only the Network view builds the graph its type list comes from.
     networkTypes: get(libraryViewModeAtom) === "network" ? get(networkTypeOptionsAtom) : [],
     networkEvidence: !!NETWORK_EVIDENCE_TEMPLATES[get(dataSourceAtom)],
+    mapBearings: get(dataSourceAtom) === "vegas",
   };
 });
+
+/** The Map draws each camera's computed bearing to the source (Las Vegas
+ *  only; `LIBRARY_DISPLAY.map`'s Layers). */
+export const libraryMapBearingsAtom = atom(
+  (get) => get(dataSourceAtom) === "vegas" && get(libraryDisplayAtom).modes.map?.bearings === true,
+);
 
 /** The Network view's stored Display answers (`LIBRARY_DISPLAY.network`). */
 export const libraryNetworkDisplayAtom = atom((get) => get(libraryDisplayAtom).modes.network ?? {});

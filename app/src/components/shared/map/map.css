@@ -167,3 +167,9 @@
 :root.dark .map-tiles-osm {
   filter: grayscale(0.85) invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.85);
 }
+
+/* Las Vegas: the computed bearing from a camera to the source (LibraryMapView). */
+.leaflet-container .map-bearing {
+  stroke: var(--text-secondary);
+  stroke-opacity: 0.55;
+}
