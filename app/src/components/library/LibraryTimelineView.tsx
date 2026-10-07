@@ -14,7 +14,6 @@ import { getEntityType, type Entity } from "../../data/entities";
 import {
   bucketOf,
   colorSpread,
-  dominantColor,
   elapsed,
   entityTime,
   formatDay,
@@ -154,16 +153,28 @@ function useRange() {
  * 1 & 2 — RAIL and DENSITY. Same shell: a period-grouped list with a
  *     vertical time track on the right, where the document's reference
  *     minimap sits. Two tracks swap into it:
- *       · clusters — dots and counted clusters that FAN OUT into their
- *                    members (RefMinimap, straight across). Navigation:
- *                    clicking picks an entity, it never filters.
- *       · density  — the same periods as volume bars. Clicking a bar
- *                    FILTERS the Library to that period.
+ *       · rail     — one neutral mark per period on a density scale,
+ *                    quiet periods as template-coloured dots.
+ *       · density  — the same periods as bars stacked by template.
+ *     Clicking a period on either FILTERS the Library to it.
  * ------------------------------------------------------------------ */
 
-/** A period quiet enough to read as a single dot; busier ones become a
- *  counted ring. */
-const DOT_CAP = 12;
+/** A period with this many records or fewer draws them as dots in their
+ *  template colours, where its band has room; busier ones are a bar. */
+const DOT_CAP = 3;
+/** Pixels kept clear between two periods' marks on the rail. */
+const PERIOD_GAP = 2;
+/** The least distance between two labels on the track's label column. */
+const LABEL_PITCH = 18;
+
+/** A label on the track's label column. `rank` is the year, or the month
+ *  index in the year scope: labels are thinned to every 2nd, 5th, 10th… rank
+ *  so the ones kept fall on round values. */
+interface TrackMark {
+  label: string;
+  yPct: number;
+  rank: number;
+}
 
 interface TrackProps {
   buckets: TimeBucket[];
@@ -171,13 +182,16 @@ interface TrackProps {
   /** ms → % down the plotting area. Owned by the shell, because the year scope
    *  insets the plot to make room for the ↑/↓ edge counts. */
   pos: (ms: number) => number;
-  marks: { label: string; yPct: number }[];
+  marks: TrackMark[];
   scope: TimelineScope;
   setScope: (s: TimelineScope) => void;
   focusYear: number;
   before: number;
   after: number;
   activeKey: string | null;
+  /** When the period at the top of the rows starts (the first one before any
+   *  scroll): the rail tints the period that holds it, in either scope. */
+  activeAt: number;
   hovered: string | null;
   setHovered: (k: string | null) => void;
   scrollToTime: (t: number) => void;
@@ -222,9 +236,11 @@ function TrackedList({
   // minimap's whole-document / this-page toggle, on time.
   const { extent, trackBuckets, before, after, marks, pos } = useMemo(() => {
     const isYear = scope === "year";
+    // Whole periods: the first and last are not cut to their first and last
+    // record, so every period gets the same band on the track.
     const extent = isYear
       ? { min: Date.UTC(focusYear, 0, 1), max: Date.UTC(focusYear + 1, 0, 1) - 1 }
-      : fullExtent;
+      : { min: bucketOf(fullExtent.min, unit).start, max: bucketOf(fullExtent.max, unit).end - 1 };
     const inRange = isYear
       ? source.filter((e) => {
           const t = entityTime(e)!;
@@ -249,24 +265,23 @@ function TrackedList({
     const pos = (ms: number) =>
       top + ((Math.min(Math.max(ms, extent.min), extent.max) - extent.min) / span) * height;
 
-    const marks: { label: string; yPct: number }[] = [];
+    // Every month of the year, or every year of the span, at the middle of
+    // its period so a label sits beside its mark. `TrackFrame` thins them to
+    // the room the track has.
+    const marks: TrackMark[] = [];
+    const mid = (a: number, b: number) => pos((Math.max(a, extent.min) + Math.min(b, extent.max)) / 2);
     if (isYear) {
-      for (let m = 0; m < 12; m += 2)
+      for (let m = 0; m < 12; m++)
         marks.push({
           label: bucketOf(Date.UTC(focusYear, m, 1), "month").label.slice(0, 3),
-          yPct: pos(Date.UTC(focusYear, m, 1)),
+          yPct: mid(Date.UTC(focusYear, m, 1), Date.UTC(focusYear, m + 1, 1)),
+          rank: m,
         });
     } else {
-      const seen = new Set<number>();
-      const all: { label: string; yPct: number }[] = [];
-      for (const b of trackBuckets) {
-        const y = new Date(b.start).getUTCFullYear();
-        if (seen.has(y)) continue;
-        seen.add(y);
-        all.push({ label: String(y), yPct: pos(Math.max(b.start, extent.min)) });
-      }
-      const every = Math.max(1, Math.ceil(all.length / 9));
-      marks.push(...all.filter((_, i) => i % every === 0));
+      const y0 = new Date(extent.min).getUTCFullYear();
+      const y1 = new Date(extent.max).getUTCFullYear();
+      for (let y = y0; y <= y1; y++)
+        marks.push({ label: String(y), yPct: mid(Date.UTC(y, 0, 1), Date.UTC(y + 1, 0, 1)), rank: y });
     }
     return { extent, trackBuckets, before, after, marks, pos };
   }, [scope, focusYear, fullExtent, source, unit]);
@@ -304,6 +319,7 @@ function TrackedList({
     before,
     after,
     activeKey,
+    activeAt: (groups.find((x) => x.key === activeKey) ?? groups[0])?.start ?? fullExtent.min,
     hovered,
     setHovered,
     scrollToTime,
@@ -359,7 +375,7 @@ function TrackedList({
         })}
       </div>
 
-      {track === "density" ? <DensityTrack {...trackProps} /> : <ClusterTrack {...trackProps} />}
+      {track === "density" ? <DensityTrack {...trackProps} /> : <RailTrack {...trackProps} />}
     </div>
   );
 }
@@ -392,10 +408,21 @@ function TrackFrame({
   focusYear: number;
   before: number;
   after: number;
-  marks: { label: string; yPct: number }[];
-  children: React.ReactNode;
+  marks: TrackMark[];
+  /** The marks; a function gets the plot's height in px. */
+  children: React.ReactNode | ((plotH: number) => React.ReactNode);
 }) {
   const isYear = scope === "year";
+  const plotH = usePlotHeight();
+  // Keep every k-th rank, k the smallest round step whose labels stand at
+  // least LABEL_PITCH apart.
+  const shownMarks = useMemo(() => {
+    if (marks.length < 2 || !plotH.h) return marks;
+    const pitch = (Math.abs(marks[1].yPct - marks[0].yPct) / 100) * plotH.h;
+    const steps = isYear ? [1, 2, 3, 6, 12] : [1, 2, 5, 10, 20, 50, 100];
+    const k = steps.find((st) => pitch * st >= LABEL_PITCH) ?? steps[steps.length - 1];
+    return marks.filter((m) => m.rank % k === 0);
+  }, [marks, plotH.h, isYear]);
   return (
     <div className="relative shrink-0 flex flex-col" style={{ width }} role="group" aria-label={label}>
       {/* Scope toggle — centred ON the axis, like the minimap's mode button.
@@ -412,8 +439,10 @@ function TrackFrame({
               ? `Showing ${focusYear} — switch to the whole timeline`
               : "Showing the whole timeline — switch to this year"
           }
+          // Bar-ladder ghost on the warm pane: no fill, edge or ring at rest;
+          // parchment on hover; the focus ring only for the keyboard.
           className="absolute top-0 flex items-center justify-center rounded-md transition-colors cursor-pointer
-            text-ink-tertiary hover:bg-warm hover:text-ink-secondary translate-x-1/2
+            text-ink-secondary hover:bg-parchment hover:text-ink translate-x-1/2
             focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
           style={{ width: 22, height: 22, insetInlineEnd: axisEnd }}
         >
@@ -421,7 +450,7 @@ function TrackFrame({
         </button>
       </div>
 
-      <div className="relative flex-1 min-h-0">
+      <div ref={plotH.ref} className="relative flex-1 min-h-0">
         <div
           className="absolute top-0 bottom-0"
           style={{ insetInlineEnd: axisEnd, width: 1, backgroundColor: "var(--border-primary)" }}
@@ -431,11 +460,11 @@ function TrackFrame({
         {isYear && before > 0 && <EdgeCount dir="up" n={before} axisEnd={axisEnd} />}
         {isYear && after > 0 && <EdgeCount dir="down" n={after} axisEnd={axisEnd} />}
 
-        {children}
+        {typeof children === "function" ? children(plotH.h) : children}
 
         {/* One label column: fixed width so "1986" and "Jan" share a left edge
             instead of each hanging off its own text width. */}
-        {marks.map((m) => (
+        {shownMarks.map((m) => (
           <span
             key={`l-${m.label}`}
             // ink-TERTIARY: at 11px this is still small text, and muted misses AA on
@@ -449,6 +478,19 @@ function TrackFrame({
       </div>
     </div>
   );
+}
+
+/** The plot area's height in px, for thinning labels and sizing marks. */
+function usePlotHeight() {
+  const [h, setH] = useState(0);
+  const ro = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((el: HTMLDivElement | null) => {
+    ro.current?.disconnect();
+    if (!el) return;
+    ro.current = new ResizeObserver(([entry]) => setH(Math.round(entry.contentRect.height)));
+    ro.current.observe(el);
+  }, []);
+  return { ref, h };
 }
 
 function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd: number }) {
@@ -467,18 +509,18 @@ function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd
   );
 }
 
-/** The RefMinimap idiom: a dot per quiet period, a counted ring per busy one.
+/** The rail: one mark per period on a density scale. A period's bar grows
+ *  inward from the axis, its length the square root of its count against the
+ *  busiest period in view, so every period carries information and none is
+ *  capped. A period of up to `DOT_CAP` records draws them as dots in their
+ *  template colours where its band has room. Periods sit proportional in
+ *  time with `PERIOD_GAP` between them; the period at the top of the rows is
+ *  tinted. Exact counts are in the tooltip and the accessible name.
  *
- *  Clicking a node FILTERS the Library to that period — it doesn't scroll the
- *  list to it. Scrolling left you looking at the same 4,398 results with the
- *  viewport moved; the point of picking a period is to be left with that period.
- *  Click it again to clear.
- *
- *  No fan: once a click filters, the period's members are already the list —
- *  fanning them onto the track as well was the same information twice, in a
- *  cramped 40px gutter, one of them unclickable-adjacent to the other. */
-function ClusterTrack(props: TrackProps) {
-  const { buckets, extent, pos, activeKey, hovered, setHovered } = props;
+ *  Clicking a period filters the Library to it and brings its rows up; click
+ *  it again to clear. */
+function RailTrack(props: TrackProps) {
+  const { buckets, extent, pos, activeAt, hovered, setHovered, scrollToTime } = props;
   const geom = useTrackGeom();
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
@@ -488,7 +530,7 @@ function ClusterTrack(props: TrackProps) {
       width={geom.W}
       axisEnd={geom.AXIS}
       labelW={geom.LABEL}
-      label="Timeline — periods"
+      label="Timeline — records by period"
       scope={props.scope}
       setScope={props.setScope}
       focusYear={props.focusYear}
@@ -496,72 +538,70 @@ function ClusterTrack(props: TrackProps) {
       after={props.after}
       marks={props.marks}
     >
-      {buckets.map((b) => {
-        const n = b.entities.length;
-        const picked = !range.isAll && range.covers(b);
-        const inRange = range.overlaps(b);
-        const small = n <= DOT_CAP;
-        const lit = picked || activeKey === b.key || hovered === b.key;
-        const size = small ? (lit ? 12 : 9) : 15 + Math.min(Math.sqrt(n / maxCount) * 11, 11);
-        const color = dominantColor(b.entities);
-
-        return (
-          <div
-            key={b.key}
-            // Anchored so the node's centre lands ON the axis line. The out-of-range
-            // DIMMING goes on the dot, not this wrapper: opacity < 1 makes a stacking
-            // context, which both faded the hover tooltip to 28% AND trapped its
-            // z-index so a list card painted over it. The wrapper stays opaque; the
-            // tooltip is its child (a sibling of the dot), so it clears everything.
-            className="absolute -translate-y-1/2 translate-x-1/2"
-            style={{
-              top: `${pos(Math.max(b.start, extent.min))}%`,
-              insetInlineEnd: geom.AXIS,
-            }}
-          >
+      {(plotH) =>
+        buckets.map((b) => {
+          const n = b.entities.length;
+          const picked = !range.isAll && range.covers(b);
+          const inRange = range.overlaps(b);
+          const isHov = hovered === b.key;
+          const active = activeAt >= b.start && activeAt < b.end;
+          const top = pos(Math.max(b.start, extent.min));
+          const bottom = pos(Math.min(b.end, extent.max));
+          const bandPx = ((bottom - top) / 100) * plotH - PERIOD_GAP;
+          const dotted = n <= DOT_CAP && bandPx >= 8 && n * 8 <= geom.BAR;
+          const len = Math.max(3, Math.sqrt(n / maxCount) * (geom.BAR - 4));
+          const thick = Math.max(2, Math.min(6, bandPx - 2));
+          const ink = picked ? "var(--text-primary)" : isHov || active ? "var(--text-secondary)" : "var(--text-tertiary)";
+          const records = `${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}`;
+          return (
             <button
-              aria-label={`${b.label} — ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}`}
+              key={b.key}
+              aria-label={`${b.label}: ${records}`}
               aria-pressed={picked}
-              onClick={() => range.toggle(b)}
+              onClick={() => {
+                range.toggle(b);
+                scrollToTime(b.start);
+              }}
               onMouseEnter={() => setHovered(b.key)}
               onMouseLeave={() => setHovered(null)}
-              className="flex items-center justify-center rounded-full transition-all cursor-pointer
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-              style={
-                small
-                  ? {
-                      width: size,
-                      height: size,
-                      backgroundColor: color,
-                      opacity: inRange ? (lit ? 1 : 0.75) : 0.28,
-                      boxShadow: lit ? `0 0 0 3px ${color}33` : "none",
-                    }
-                  : {
-                      width: size,
-                      height: size,
-                      border: `1.5px solid ${lit ? "var(--text-secondary)" : "var(--border-soft)"}`,
-                      backgroundColor: lit ? "var(--bg-muted)" : "var(--bg-surface)",
-                      opacity: inRange ? 1 : 0.28,
-                    }
-              }
+              // Out of the date range: faded, but the hovered one is opaque so
+              // its tooltip reads.
+              className={`absolute flex flex-row-reverse items-center gap-0.5 rounded-sm cursor-pointer
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40
+                ${active ? "bg-parchment" : isHov ? "bg-vellum" : ""}`}
+              style={{
+                insetInlineEnd: geom.AXIS + 1,
+                width: geom.BAR,
+                top: `calc(${top}% + ${PERIOD_GAP / 2}px)`,
+                height: `max(2px, calc(${bottom - top}% - ${PERIOD_GAP}px))`,
+                opacity: inRange || isHov ? 1 : 0.3,
+              }}
             >
-              {!small && (
+              {dotted ? (
+                b.entities.map((e) => (
+                  <span
+                    key={e.id}
+                    aria-hidden
+                    className="shrink-0 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: getEntityType(e.typeId)?.color ?? "var(--text-tertiary)" }}
+                  />
+                ))
+              ) : (
                 <span
-                  className="text-meta font-bold leading-none tabular-nums"
-                  style={{ color: lit ? "var(--text-primary)" : "var(--text-tertiary)" }}
-                >
-                  {n > 99 ? "99+" : n}
-                </span>
+                  aria-hidden
+                  className="shrink-0 rounded-s-[2px]"
+                  style={{ width: len, height: thick, backgroundColor: ink, opacity: picked || isHov || active ? 1 : 0.6 }}
+                />
+              )}
+              {isHov && (
+                <ChartTip>
+                  {b.label} · {records}
+                </ChartTip>
               )}
             </button>
-            {hovered === b.key && (
-              <ChartTip>
-                {b.label} · {n.toLocaleString()}
-              </ChartTip>
-            )}
-          </div>
-        );
-      })}
+          );
+        })
+      }
     </TrackFrame>
   );
 }
