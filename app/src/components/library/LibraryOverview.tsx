@@ -353,8 +353,9 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
     <div data-component="LibraryOverview" aria-busy={loading} className="@container flex flex-col gap-2 pb-3">
       {/* ── Header ── */}
       {/* The collection's title page: its name, what it is at a reading
-          measure, and the key figures. */}
-      <header data-part="header" className="flex flex-col gap-4 pt-2 pb-2">
+          measure, and the key figures. The same card as the sections below,
+          so its edges, padding and gaps line up with theirs. */}
+      <header data-part="header" className="flex flex-col gap-4 p-4 rounded-lg bg-paper">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-ink leading-tight truncate">{settings.name || "Untitled collection"}</h1>
           {settings.description && (
