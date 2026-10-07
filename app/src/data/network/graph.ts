@@ -58,11 +58,9 @@ export const NETWORK_UNNAMING_TEMPLATES: Partial<Record<DataSource, string[]>> =
   vegas: ["vegas_source"],
 };
 
-/** Whether node `i` may name its community: not a source record, and not
- *  linked to more than half the collection. */
+/** Whether node `i` may name its community: any record but a source. */
 export function canNameCommunity(g: NetworkGraph, i: number): boolean {
-  if (NETWORK_UNNAMING_TEMPLATES[g.source]?.includes(g.typeIds[i])) return false;
-  return g.degree[i] * 2 <= g.ids.length;
+  return !NETWORK_UNNAMING_TEMPLATES[g.source]?.includes(g.typeIds[i]);
 }
 
 export interface NetworkGraph {
