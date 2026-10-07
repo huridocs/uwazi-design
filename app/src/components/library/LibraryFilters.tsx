@@ -530,7 +530,8 @@ export function LibraryFilters() {
   const addGroup = () => setGroups((gs) => [...gs, { id: `group-${Date.now().toString(36)}`, op: "or", keys: [] }]);
   const updateGroup = (id: string, next: Partial<FilterGroup>) =>
     setGroups((gs) => gs.map((g) => (g.id === id ? { ...g, ...next } : g)));
-  // CEJIL filter groups (e.g. "Documentos") — expanded by default.
+  // CEJIL filter groups (e.g. "Documentos") start collapsed; a group holding a
+  // ticked template opens, so the selection is never hidden.
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const groupNames =
     dataSource === "cejil" ? facetNodes.flatMap((n) => (n.kind === "group" ? [n.name] : [])) : [];
@@ -604,7 +605,7 @@ export function LibraryFilters() {
                   );
                 }
                 const ids = node.ids;
-                const open = openGroups[node.name] ?? true;
+                const open = openGroups[node.name] ?? ids.some((id) => typeFilters[id]);
                 const total = ids.reduce((s, id) => s + (typeCounts[id] ?? 0), 0);
                 return (
                   <div key={node.name} data-part="facet-group" role="group" aria-label={node.name}>
