@@ -29,9 +29,10 @@
  *  place: turning Thumbnail off must not make three sections vanish from under
  *  the pointer that is still travelling toward them. */
 
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results" | "evidence" | "network";
+export type LibraryViewMode = "overview" | "cards" | "list" | "map" | "timeline" | "results" | "evidence" | "network";
 
 export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
+  "overview",
   "cards",
   "list",
   "map",
@@ -492,6 +493,10 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** The whole collection as a graph. Its options decide which edges and
    *  records are drawn; none of them moves a node (the layout is fixed per
    *  collection). Sort orders nothing here, so it is not offered. */
+  /** The collection's landing page: it draws the whole collection, so only
+   *  the content language (its property values' labels) applies. */
+  overview: [LANGUAGE],
+
   network: [
     VIEW,
     CHART,

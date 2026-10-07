@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import type { Entity } from "../../data/entities";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
-import { libraryNetworkDisplayAtom } from "../../atoms/library";
+import { libraryNetworkDisplayAtom, networkCentreCommunityAtom } from "../../atoms/library";
 import { networkFindStepAtom, networkGraphAtom } from "../../atoms/network";
 import { graphId, HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
 import { loadNetworkLayout, placeNetworkCached, type StoredLayout } from "../../data/network/layout";
@@ -58,6 +58,7 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   const graph = useAtomValue(networkGraphAtom);
   const display = useAtomValue(libraryNetworkDisplayAtom);
   const types = useAtomValue(libraryTypesAtom);
+  const [centreOn, setCentreOn] = useAtom(networkCentreCommunityAtom);
 
   const [stored, setStored] = useState<{ source: string; layout: StoredLayout | null; failed?: boolean } | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -306,6 +307,8 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
         find={find}
         hiddenMatches={hiddenMatches}
         edgeInfo={edgeInfo}
+        centreOn={centreOn}
+        onCentred={() => setCentreOn(null)}
         label={
           !filtering
             ? "Network of the collection"

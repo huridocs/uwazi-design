@@ -40,6 +40,9 @@ export type CollectionSettings = CollectionFields & Record<string, unknown>;
 export interface CollectionFields {
   /** `site_name` */
   name: string;
+  /** What the collection holds, in a sentence or two: the Library's Overview
+   *  prints it under the name. The prototype's own; Uwazi has no such field. */
+  description: string;
   /** Upload id of the favicon; "" = the Uwazi logo. Uwazi stores the URL. */
   favicon: string;
   /** `home_page`; "" = the library */
@@ -71,6 +74,15 @@ export interface CollectionFields {
   mapStartingPoint: MapPoint | null;
 }
 
+/** Each corpus's own description, for the Library's Overview. */
+const COLLECTION_DESCRIPTIONS: Record<Corpus, string> = {
+  mock: "Cases, judgments, hearings and the people and places they name, from the Inter-American human rights system. A sample collection for trying Uwazi.",
+  cejil: "CEJIL’s archive of the Inter-American human rights system: cases, judgments, provisional measures, hearings and the documents behind them.",
+  artworks: "Paintings by well-known artists, each with its image, its artist and the artist’s period and nationality.",
+  travesia: "A fictional collection in the shape of a migrant shelter network's casework: people on the move, their movements, detentions, disappearances and the alerts raised about them.",
+  nepal: "The protests in Nepal from 2024 to 2026: events, the people and organisations involved, casualties, official actions, and the sources and claims behind each.",
+};
+
 /** Each corpus's own name, as the navbar's collection switcher reads it. */
 const COLLECTION_NAMES: Record<Corpus, string> = {
   mock: "Inter-American Human Rights Archive",
@@ -84,6 +96,7 @@ export const collectionSettings = createSettingsSingleton<CollectionSettings>({
   name: "collection",
   seedOf: (corpus: Corpus) => ({
     name: COLLECTION_NAMES[corpus],
+    description: COLLECTION_DESCRIPTIONS[corpus],
     favicon: "",
     landing: "",
     defaultView: corpus === "cejil" && DEFAULT_VIEWS.includes(cejilCollection.defaultView as DefaultLibraryView)

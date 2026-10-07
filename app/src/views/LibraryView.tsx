@@ -85,6 +85,8 @@ import {
   libraryTimeHubAtom,
   libraryTypeFiltersAtom,
   libraryViewModeAtom,
+  libraryOverviewOfferedAtom,
+  libraryOverviewOriginAtom,
   libraryHasClaimEvidenceAtom,
   matchTypeFiltersAtom,
   librarySearchScopeAtom,
@@ -152,6 +154,7 @@ import { HighlightedText, SearchMarkProvider } from "../components/shared/Highli
 import { Select } from "../components/shared/Select";
 import { MobileEntityList } from "../components/library/MobileEntityList";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
+import { LibraryOverview } from "../components/library/LibraryOverview";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
@@ -499,6 +502,25 @@ export function LibraryView() {
   const fullWidth = !!splitPane || (layout === "full" && breakpoint === "desktop");
   const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
   const notebookPins = useAtomValue(notebookPinCountAtom);
+
+  /* ── Overview ───────────────────────────────────────────────────────────
+     The collection's landing page, always the pane's whole width: no drawer,
+     no rail while it shows. It has nothing applied, so a search, a filter or
+     an open record (a saved view, a link, Create) leaves it for Cards; after
+     one of its entry points, clearing what it applied comes back to it.
+     Layout effects, so neither move paints a frame of the wrong view. */
+  const overview = viewMode === "overview";
+  const overviewOffered = useAtomValue(libraryOverviewOfferedAtom);
+  const [overviewOrigin, setOverviewOrigin] = useAtom(libraryOverviewOriginAtom);
+  const somethingApplied = activeFilterCount > 0 || committedQuery.trim() !== "";
+  useLayoutEffect(() => {
+    if (overview && (somethingApplied || selectedId)) {
+      if (somethingApplied) setOverviewOrigin(true);
+      setViewMode("cards");
+    } else if (!overview && overviewOrigin && !somethingApplied && !selectedId) {
+      setViewMode("overview");
+    }
+  }, [overview, somethingApplied, selectedId, overviewOrigin, setOverviewOrigin, setViewMode]);
 
   /* ── Masthead fold ──────────────────────────────────────────────────────
      The toolbar row folds on its own width, not the viewport's: the pane is
@@ -973,7 +995,7 @@ export function LibraryView() {
 
   // The time strip shows under every layout (Display → Time strip, on by
   // default): it filters by date and charts the whole result set.
-  const showBrush = timeHub && !cejilLoading;
+  const showBrush = timeHub && !cejilLoading && viewMode !== "overview";
 
   // The brush histogram applies every facet except the date one, so the bars
   // outside the range (dimmed) show what widening the window would add.
@@ -1530,7 +1552,17 @@ export function LibraryView() {
               control; its `steady` trigger keeps the width fixed across views. */}
           {viewInline && (
             <div ref={foldRefs.view}>
-              <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} evidence={hasClaimEvidence} />
+              <ViewSwitcher
+                value={viewMode}
+                onChange={(v) => {
+                  // A view picked by hand is the reader's own: clearing no longer
+                  // goes back to the Overview.
+                  setOverviewOrigin(false);
+                  setViewMode(v as typeof viewMode);
+                }}
+                evidence={hasClaimEvidence}
+                overview={overviewOffered}
+              />
             </div>
           )}
         </div>
@@ -1604,9 +1636,13 @@ export function LibraryView() {
         }`}
         // Full width: the scrolling views keep their end clear of the rail;
         // the canvases run under it and move their top-end controls aside.
-        style={fullWidth ? railReserve : undefined}
+        // The Overview has no rail.
+        style={fullWidth && !overview ? railReserve : undefined}
       >
-        {cejilLoading ? (
+        {overview && !cejilError ? (
+          // Draws its own fixed-height sections while a corpus loads.
+          <LibraryOverview loading={cejilLoading} />
+        ) : cejilLoading ? (
           cejilError ? (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-tertiary">
               <span>Couldn’t load the {lazyName} collection.</span>
@@ -1749,7 +1785,7 @@ export function LibraryView() {
         )}
 
         {/* Hidden while the table has no columns: there is nothing to show more of. */}
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" &&
+        {!cejilLoading && viewMode !== "overview" && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
@@ -2037,10 +2073,10 @@ export function LibraryView() {
   }, [paneKey, setRailPanel]);
   // Outside Full width no panel stays set, so none opens when it is chosen.
   useEffect(() => {
-    if (!fullWidth && railPanel) setRailPanel(null);
-  }, [fullWidth, railPanel, setRailPanel]);
+    if ((!fullWidth || overview) && railPanel) setRailPanel(null);
+  }, [fullWidth, overview, railPanel, setRailPanel]);
   function wrapLane(node: ReactNode) {
-    if (!fullWidth) return node;
+    if (!fullWidth || overview) return node;
     return (
       // `isolate`: the rail's layer stacks inside the lane, so the masthead's
       // popovers (Sort, Language, Display, Views) open over it.
@@ -2078,7 +2114,7 @@ export function LibraryView() {
         {selectedId && <EntityDrawerPreview entityId={selectedId} />}
       </MobileBottomSheet>
     )}
-    {fullWidth ? (
+    {fullWidth || overview ? (
       <div data-component="LibraryFullWidth" className="flex flex-1 overflow-hidden">
         <div data-part="content" className="flex-1 overflow-hidden">{renderLeft()}</div>
       </div>

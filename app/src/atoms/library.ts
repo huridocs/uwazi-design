@@ -586,17 +586,37 @@ const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = {
   map: "map",
   network: "network",
 };
+/** Is the Overview offered? In the Drawer and Full width layouts, at every
+ *  width; not in Split's panes (held for now). Split applies at 1024 and up
+ *  only, so below that the Library is a Drawer one and offers it. */
+export const libraryOverviewOfferedAtom = atom(
+  (get) => get(libraryLayoutAtom) !== "split" || get(breakpointAtom) !== "desktop",
+);
 /** Evidence reads as the default view in a collection with no claim evidence
- *  (a saved view or link made in Nepal, or one opened before Nepal loaded). */
+ *  (a saved view or link made in Nepal, or one opened before Nepal loaded).
+ *  Where the Overview is offered, the Library opens on it until the reader
+ *  picks a view; elsewhere a stored Overview reads as the default view. */
 const viewModeStateAtom = atom(
   (get): LibraryViewMode => {
     const fallback = DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards";
+    const offered = get(libraryOverviewOfferedAtom);
     const chosen = get(viewModeChosenAtom);
     if (chosen === "evidence" && !get(libraryHasClaimEvidenceAtom)) return fallback;
-    return chosen ?? fallback;
+    if (chosen === "overview" && !offered) return fallback;
+    return chosen ?? (offered ? "overview" : fallback);
   },
   (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
 );
+
+/** The reader left the Overview through one of its entry points, which
+ *  applied a filter or a search. While set, clearing what is applied returns
+ *  to the Overview (`LibraryView`); picking a view by hand or a collection
+ *  switch drops it. */
+export const libraryOverviewOriginAtom = atom(false);
+
+/** The Overview's Network teaser asks the Network view to open centred on
+ *  this community (its stored id); the canvas clears it once it has. */
+export const networkCentreCommunityAtom = atom<number | null>(null);
 /** Forget the reader's pick, so the Library opens on the saved default view
  *  again (Settings › Collection writes this when it saves a new default). */
 export const resetLibraryViewChoiceAtom = atom(null, (get, set) => {
@@ -632,6 +652,15 @@ export const libraryViewModeAtom = atom(
       set(mapBoundsStateAtom, null);
       if (get(librarySyncActiveAtom) && get(syncedMapAreaAtom)?.side === get(libraryPaneSideAtom))
         set(syncedMapAreaAtom, null);
+    }
+    // The Overview describes the whole collection: going back to it clears
+    // the search, the filters, the selection and the open record.
+    if (next === "overview") {
+      set(clearLibraryFiltersAtom);
+      set(libraryOpenEntityIdAtom, null);
+      set(librarySelectedClusterAtom, null);
+      set(clearSelectionAtom);
+      set(libraryOverviewOriginAtom, false);
     }
     set(viewModeStateAtom, next);
   },
@@ -1169,6 +1198,10 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   // Likewise the Evidence view: the default view where the new collection has
   // no claim evidence. Before it loads it cannot say, so it is dropped then too.
   if (get(viewModeChosenAtom) === "evidence" && !get(libraryHasClaimEvidenceAtom)) set(viewModeChosenAtom, null);
+  // Where it is offered, a collection opens on its Overview.
+  if (get(libraryOverviewOfferedAtom)) set(viewModeChosenAtom, null);
+  set(libraryOverviewOriginAtom, false);
+  set(networkCentreCommunityAtom, null);
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});
@@ -1388,6 +1421,8 @@ export const libraryPaneScopedAtoms = [
   mapBoundsStateAtom,
   // View, display, sort
   viewModeChosenAtom,
+  libraryOverviewOriginAtom,
+  networkCentreCommunityAtom,
   libraryDisplayStoreAtom,
   libraryTimelineScopeAtom,
   sortStateAtom,

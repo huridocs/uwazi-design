@@ -403,6 +403,17 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   rail's Notebook item carries the pin count. Scrolling views pad their end by
   `RAIL_RESERVE`; Map and Network run under the rail and read `--rail-reserve` for their
   top-end controls.
+- Overview (`libraryViewModeAtom = "overview"`, `components/library/LibraryOverview.tsx`): the
+  collection's landing page, first in the View menu in Drawer and Full width (never in Split's
+  panes, `libraryOverviewOfferedAtom`). The Library opens on it, and a collection switch returns
+  to it, until the reader picks a view. It always takes the pane's whole width: no drawer, no
+  rail. It reads the whole collection and has nothing applied: a search, a filter or an open
+  record leaves it for Cards, and choosing it clears all three. Each chart is an entry point
+  that applies its filter and opens a view; `libraryOverviewOriginAtom` then brings the reader
+  back when what it applied is cleared (a view picked by hand drops it). The Network teaser
+  opens the canvas centred on a community through `networkCentreCommunityAtom`. Sections the
+  collection has nothing for are left out; the header and the first two rows keep fixed
+  heights while a corpus loads. The description is Settings › Collection's `description`.
 - Canvas overlays (Network and Map controls, captions, chips, tooltips) have no border and no
   shadow: `CANVAS_OVERLAY*` in `components/shared/canvasOverlay.ts`, mirrored for Leaflet's zoom
   in `map.css`. One height (2rem) and radius; buttons on `BAR_GHOST`.

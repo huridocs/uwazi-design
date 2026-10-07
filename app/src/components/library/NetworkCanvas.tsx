@@ -83,6 +83,10 @@ export interface NetworkCanvasProps {
   edgeInfo: (edge: number) => EdgeInfo;
   /** Accessible name of the drawing and of its keyboard list. */
   label: string;
+  /** A community (stored id) to centre once the canvas has a size; `onCentred`
+   *  is told when it has (the Overview's Network teaser). */
+  centreOn?: number | null;
+  onCentred?: () => void;
 }
 
 export interface EdgeInfo {
@@ -263,6 +267,8 @@ export function NetworkCanvas({
   find = null,
   hiddenMatches = 0,
   label,
+  centreOn: centreCommunityId = null,
+  onCentred,
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1736,6 +1742,16 @@ export function NetworkCanvas({
     const k = clamp(f.k, fitK.current * (marksOn ? OPEN_TO * 1.1 : 1), fitK.current * Math.min(MAX_REL, 12));
     centreOn((ext.minX + ext.maxX) / 2, (ext.minY + ext.maxY) / 2, k);
   };
+
+  // Opened from the Overview's Network teaser: centre that community once the
+  // canvas has a size, after its first fit.
+  useEffect(() => {
+    if (centreCommunityId === null || !size.w || !size.h) return;
+    const idx = communityIndex.get(centreCommunityId);
+    if (idx !== undefined) centreCommunity(idx);
+    onCentred?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centreCommunityId, size.w > 0 && size.h > 0, communityIndex]);
 
   const onPointerLeave = () => {
     pointerAt.current = null;

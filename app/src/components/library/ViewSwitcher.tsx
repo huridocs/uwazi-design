@@ -17,25 +17,32 @@ import { LIBRARY_VIEWS } from "../../data/libraryDisplay";
  *  Sort · View · Display · Language — anything that resizes shoves every control
  *  beside it sideways the moment you switch view. */
 // The list is `LIBRARY_VIEWS`, which the Display menu's View section reads when
-// this select folds into it.
-const VIEWS = LIBRARY_VIEWS.map((v) => ({ value: v.id, label: v.label }));
+// this select folds into it. Overview, the collection's landing page, leads
+// where it is offered (Drawer and Full width, not Split's panes).
+const VIEWS = [
+  { value: "overview", label: "Overview" },
+  ...LIBRARY_VIEWS.map((v) => ({ value: v.id, label: v.label })),
+];
 
-const VIEWS_NO_EVIDENCE = VIEWS.filter((v) => v.value !== "evidence");
 
 export function ViewSwitcher({
   value,
   onChange,
   evidence = true,
+  overview = false,
 }: {
   value: string;
   onChange: (id: string) => void;
   /** Whether to list Evidence. */
   evidence?: boolean;
+  /** Whether to list Overview. */
+  overview?: boolean;
 }) {
+  const options = VIEWS.filter((v) => (v.value !== "evidence" || evidence) && (v.value !== "overview" || overview));
   return (
     <Select
       value={value}
-      options={evidence ? VIEWS : VIEWS_NO_EVIDENCE}
+      options={options}
       onChange={onChange}
       ariaLabel="View"
       sheetTitle="View"

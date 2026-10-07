@@ -72,6 +72,7 @@ const err = (message: string | undefined): ValidationIssue | null => (message ? 
 /** What the log lists for a change, by field. */
 const FIELD_LABEL: Partial<Record<keyof CollectionSettings, string>> = {
   name: "Collection Name",
+  description: "Description",
   favicon: "Custom Favicon",
   defaultView: "Default View",
   dateFormat: "Default date format",
@@ -308,6 +309,7 @@ export function CollectionPage() {
     const value: CollectionSettings = {
       ...rest,
       name: trimmed(rest.name),
+      description: trimmed(rest.description),
       landing: trimmed(rest.landing),
       googleAnalytics: trimmed(rest.googleAnalytics),
       matomo: trimmed(rest.matomo),
@@ -377,6 +379,15 @@ export function CollectionPage() {
             onClear={() => update({ favicon: "" })}
           />
         </SettingsFieldRow>
+        <SettingsField label="Description" description="Shown under the collection name on the Library's Overview.">
+          <textarea
+            id="collection-description"
+            rows={3}
+            value={draft.description}
+            onChange={(e) => update({ description: e.target.value })}
+            className="w-full px-3 py-2 text-sm text-ink bg-warm border border-border rounded-md resize-y placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-colors"
+          />
+        </SettingsField>
         <SettingsFieldRow>
           <SettingsField label="Default View">
             <Select
