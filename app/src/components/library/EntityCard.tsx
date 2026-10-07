@@ -690,8 +690,8 @@ export const EntityCard = memo(function EntityCard({
               +{beyond}
             </span>
           )}
-          {connectionBadge}
           {selectable && <PinToggle entityId={entity.id} title={entity.title} reveal />}
+          {connectionBadge}
           {viewButton}
         </div>
       </div>
