@@ -1,4 +1,5 @@
-import { createContext, useContext, type RefObject } from "react";
+import { createContext, useContext, useSyncExternalStore, type RefObject } from "react";
+import type { Entity } from "../../data/entities";
 
 /* Split (`views/LibrarySplitView.tsx`) mounts two Library panes. What a pane
    needs to know about being one: which side it is, and its root element, so
@@ -58,12 +59,45 @@ export function useMastheadFold(): MastheadFoldValue | null {
 
 /* Split's one footer bar. The pane that last had focus (or a press) renders
    its footer actions into `slot` through a portal, so Create, Upload and
-   Import act once and Export exports that pane. The other pane renders none. */
+   Import act once. The other pane renders none. Export CSV offers the left
+   pane, the right pane or both, so each pane reports its current result set
+   to `results`, mounted and active or not. */
 export interface SplitFooterValue {
   slot: HTMLElement | null;
   active: LibraryPaneSide;
-  /** Sync filters is on: Export names the shared set, not a pane. */
+  /** Sync filters is on: both panes hold one set, and Export exports it. */
   synced: boolean;
+  results: PaneResults;
+}
+
+/** Each pane's filtered result set, outside React state: a pane writes it on
+ *  every change, and only the Export button that reads a count re-renders. */
+export interface PaneResults {
+  get: (side: LibraryPaneSide) => readonly Entity[];
+  set: (side: LibraryPaneSide, list: readonly Entity[]) => void;
+  subscribe: (listener: () => void) => () => void;
+}
+
+export function createPaneResults(): PaneResults {
+  const lists: Record<LibraryPaneSide, readonly Entity[]> = { left: [], right: [] };
+  const listeners = new Set<() => void>();
+  return {
+    get: (side) => lists[side],
+    set: (side, list) => {
+      if (lists[side] === list) return;
+      lists[side] = list;
+      for (const l of listeners) l();
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+/** One pane's result count, kept current. */
+export function usePaneResultCount(results: PaneResults, side: LibraryPaneSide): number {
+  return useSyncExternalStore(results.subscribe, () => results.get(side).length);
 }
 
 const SplitFooterContext = createContext<SplitFooterValue | null>(null);

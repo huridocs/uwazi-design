@@ -126,14 +126,35 @@ export async function exportEntitiesCsv(
   onProgress?: (done: number, total: number) => boolean | void,
   { includeInherited = false }: { includeInherited?: boolean } = {},
 ): Promise<CsvExport | null> {
-  const columns = [...FIXED];
-  const seen = new Set(FIXED);
+  return exportGroupsCsv([{ entities }], language, onProgress, { includeInherited });
+}
+
+/** Several entity lists as ONE CSV: Split's "Both" export. With `column`, each
+ *  row starts with its group's label in that column ("Pane": Left / Right).
+ *  The columns are the union over every group, in the order first met, so the
+ *  first group's come first. An entity in two groups is two rows. */
+export async function exportGroupsCsv(
+  groups: readonly { label?: string; entities: readonly Entity[] }[],
+  language: Language,
+  onProgress?: (done: number, total: number) => boolean | void,
+  { includeInherited = false, column }: { includeInherited?: boolean; column?: string } = {},
+): Promise<CsvExport | null> {
+  const columns = column ? [column, ...FIXED] : [...FIXED];
+  const seen = new Set(columns);
   const rows: Record<string, string>[] = [];
-  for (let i = 0; i < entities.length; i += CHUNK) {
-    for (const e of entities.slice(i, i + CHUNK)) rows.push(rowOf(e, language, columns, seen, includeInherited));
-    if (onProgress?.(Math.min(i + CHUNK, entities.length), entities.length) === false) return null;
-    // Yield, so the progress is painted and the page stays usable.
-    await new Promise((r) => setTimeout(r, 0));
+  const total = groups.reduce((n, g) => n + g.entities.length, 0);
+  let done = 0;
+  for (const { label, entities } of groups) {
+    for (let i = 0; i < entities.length; i += CHUNK) {
+      for (const e of entities.slice(i, i + CHUNK)) {
+        const row = rowOf(e, language, columns, seen, includeInherited);
+        rows.push(column ? { [column]: label ?? "", ...row } : row);
+      }
+      done += Math.min(CHUNK, entities.length - i);
+      if (onProgress?.(done, total) === false) return null;
+      // Yield, so the progress is painted and the page stays usable.
+      await new Promise((r) => setTimeout(r, 0));
+    }
   }
   const lines = [
     columns.map(cell).join(","),

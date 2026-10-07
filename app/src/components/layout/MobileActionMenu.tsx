@@ -19,11 +19,14 @@ interface MobileActionMenuProps {
   label?: string;
   /** The trigger glyph. Defaults to a horizontal ellipsis. */
   icon?: ReactNode;
+  /** A labelled trigger in place of the kebab (a bar button that opens a
+   *  menu): its content and classes. `label` still names the menu. */
+  trigger?: { content: ReactNode; className: string };
 }
 
 const MENU_MIN_WIDTH = 180;
 
-export function MobileActionMenu({ items, floating = false, fixed = false, label = "More options", icon }: MobileActionMenuProps & {
+export function MobileActionMenu({ items, floating = false, fixed = false, label = "More options", icon, trigger }: MobileActionMenuProps & {
   /** Floating over content, not hosted in a bar. Only then does the trigger
    *  draw a border: a bar button carries none, but a bare kebab over a page
    *  would have nothing to separate it from what is under it. */
@@ -150,14 +153,17 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
         onKeyDown={onTriggerKeyDown}
         data-part="trigger"
         aria-haspopup="menu"
-        className={`flex items-center justify-center rounded-md hover:bg-warm aria-expanded:bg-warm transition-colors w-9 h-9 ${
-          floating ? "border border-border bg-paper" : ""
-        }`}
-        style={{ color: "var(--text-secondary)" }}
+        className={
+          trigger?.className ??
+          `flex items-center justify-center rounded-md hover:bg-warm aria-expanded:bg-warm transition-colors w-9 h-9 ${
+            floating ? "border border-border bg-paper" : ""
+          }`
+        }
+        style={trigger ? undefined : { color: "var(--text-secondary)" }}
         aria-label={label}
         aria-expanded={open}
       >
-        {icon ?? <MoreHorizontal size={16} aria-hidden />}
+        {trigger?.content ?? icon ?? <MoreHorizontal size={16} aria-hidden />}
       </button>
 
       {open && (

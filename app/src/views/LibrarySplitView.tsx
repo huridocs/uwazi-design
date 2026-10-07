@@ -10,6 +10,7 @@ import {
   LibraryPaneProvider,
   MastheadFoldProvider,
   SplitFooterProvider,
+  createPaneResults,
   notePointerPane,
   type LibraryPaneSide,
   type MastheadFoldValue,
@@ -139,9 +140,10 @@ export function LibrarySplitView() {
     }
     setSync(!sync);
   };
+  const results = useMemo(createPaneResults, []);
   const footer = useMemo<SplitFooterValue>(
-    () => ({ slot: footerSlot, active, synced: sync }),
-    [footerSlot, active, sync],
+    () => ({ slot: footerSlot, active, synced: sync, results }),
+    [footerSlot, active, sync, results],
   );
 
   const dragging = drag !== null;

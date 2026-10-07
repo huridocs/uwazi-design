@@ -3,7 +3,7 @@ import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckSquare, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
+import { CheckSquare, ChevronDown, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
@@ -13,7 +13,8 @@ import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { CreateEntityButton } from "../components/library/CreateEntityButton";
 import { BatchEntryModal } from "../components/library/BatchEntryModal";
-import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
+import { isPdf, runCsvExport, runPanesCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
+import { MobileActionMenu } from "../components/layout/MobileActionMenu";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
 import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
@@ -168,7 +169,7 @@ import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
 import { createPortal } from "react-dom";
 import { identityOf, sharedPass } from "../utils/sharedPass";
-import { paneHoldsEvent, useLibraryPane, useMastheadFold, useSplitFooter } from "../components/library/libraryPane";
+import { paneHoldsEvent, useLibraryPane, useMastheadFold, usePaneResultCount, useSplitFooter, type LibraryPaneSide, type PaneResults } from "../components/library/libraryPane";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -502,6 +503,8 @@ export function LibraryView() {
       guard(() => setSelectedId(ids[0]));
     });
   }
+  const exportName = (part?: string) =>
+    `uwazi-${dataSource}${part ? `-${part}` : ""}-${new Date().toISOString().slice(0, 10)}.csv`;
   /** Export CSV: the current result set with facets, query and match types
    *  applied (`filtered`, the list every view mode draws). */
   function handleExport() {
@@ -509,12 +512,26 @@ export function LibraryView() {
       notify("Nothing to export — no entity matches the current filters", "info");
       return;
     }
-    void runCsvExport(
-      store,
-      filtered,
-      language,
-      `uwazi-${dataSource}-${new Date().toISOString().slice(0, 10)}.csv`,
-    );
+    void runCsvExport(store, filtered, language, exportName());
+  }
+  /** Split's Export CSV menu: one pane's result set, or both as one file led
+   *  by a "Pane" column. Each list is the pane's own `filtered`, reported to
+   *  the shared results. */
+  function handleSplitExport(which: LibraryPaneSide | "both") {
+    const results = splitFooter!.results;
+    const nothing = () => notify("Nothing to export — no entity matches the current filters", "info");
+    if (which !== "both") {
+      const list = results.get(which);
+      if (list.length === 0) return nothing();
+      void runCsvExport(store, list, language, exportName(which));
+      return;
+    }
+    const panes = [
+      { label: "Left", entities: results.get("left") },
+      { label: "Right", entities: results.get("right") },
+    ];
+    if (panes.every((p) => p.entities.length === 0)) return nothing();
+    void runPanesCsvExport(store, panes, language, exportName("both"));
   }
 
   const isMobile = breakpoint === "mobile";
@@ -986,6 +1003,11 @@ export function LibraryView() {
     () => (mapBounds ? unbounded.filter((e) => entityInMapBounds(e, mapBounds)) : unbounded),
     [unbounded, mapBounds],
   );
+  // Split's Export CSV reads both panes' sets.
+  const paneResults = splitFooter?.results;
+  useEffect(() => {
+    if (paneSide && paneResults) paneResults.set(paneSide, filtered);
+  }, [paneSide, paneResults, filtered]);
   // The filter with the map's area, for the passes that go through `compile`.
   const boundedState = useMemo(
     () => (mapBounds ? { ...filterState, mapBounds } : filterState),
@@ -1337,9 +1359,6 @@ export function LibraryView() {
       ));
 
   const renderLeft = (menuTrigger?: ReactNode) => {
-  // Split's shared bar names the pane it exports; synced, both panes hold one
-  // filter set and the plain name stands.
-  const exportLabel = splitPane && !splitFooter?.synced ? `Export ${splitPane.side} pane` : "Export CSV";
   const footerActions = (
     <>
         {/* The bar swaps in place between the baseline actions and the
@@ -1384,11 +1403,17 @@ export function LibraryView() {
             )}
             {/* With a selection, the bar's own Export CSV exports the
                 selection; without one, this exports the current results. */}
-            <FooterButton
-              icon={<FileDown size={13} className="text-ink-tertiary" />}
-              label={exportLabel}
-              onClick={handleExport}
-            />
+            {/* Split: a menu of left, right and both. Synced, the two panes
+                hold one set and the button exports it at once. */}
+            {splitFooter && !splitFooter.synced ? (
+              <SplitExportButton results={splitFooter.results} onExport={handleSplitExport} />
+            ) : (
+              <FooterButton
+                icon={<FileDown size={13} className="text-ink-tertiary" />}
+                label="Export CSV"
+                onClick={handleExport}
+              />
+            )}
           </>
         )}
         {/* No result count here: the masthead readout is the only one. The
@@ -2197,6 +2222,42 @@ export function LibraryView() {
   );
 }
 
+
+/** Split's Export CSV: a bar button on the menu contract, each entry with
+ *  its pane's current count. */
+function SplitExportButton({
+  results,
+  onExport,
+}: {
+  results: PaneResults;
+  onExport: (which: LibraryPaneSide | "both") => void;
+}) {
+  const left = usePaneResultCount(results, "left");
+  const right = usePaneResultCount(results, "right");
+  const records = (n: number) => `${n.toLocaleString()} ${n === 1 ? "record" : "records"}`;
+  return (
+    <div className="hidden sm:flex shrink-0">
+      <MobileActionMenu
+        label="Export CSV"
+        trigger={{
+          className: `flex items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`,
+          content: (
+            <>
+              <FileDown size={13} className="text-ink-tertiary" aria-hidden />
+              <span className="hidden @[44rem]:inline">Export CSV</span>
+              <ChevronDown size={12} className="text-ink-tertiary" aria-hidden />
+            </>
+          ),
+        }}
+        items={[
+          { id: "left", label: `Left pane (${records(left)})`, onSelect: () => onExport("left") },
+          { id: "right", label: `Right pane (${records(right)})`, onSelect: () => onExport("right") },
+          { id: "both", label: `Both (${records(left + right)})`, onSelect: () => onExport("both") },
+        ]}
+      />
+    </div>
+  );
+}
 
 function FooterButton({
   icon,

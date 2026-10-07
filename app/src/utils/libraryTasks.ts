@@ -6,7 +6,7 @@ import type { BulkPlan } from "./bulkEdit";
 import type { Corpus } from "../data/entityChanges";
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
-import { downloadCsv, exportEntitiesCsv } from "./exportCsv";
+import { downloadCsv, exportEntitiesCsv, exportGroupsCsv, type CsvExport } from "./exportCsv";
 
 /** The Library footer's background tasks, run against the jotai STORE rather
  *  than from component state: a task outlives the view that started it (leave
@@ -112,24 +112,49 @@ export async function runCsvExport(
   language: Language,
   filename: string,
 ): Promise<void> {
+  return runExportTask(store, entities.length, filename, (onProgress) =>
+    exportEntitiesCsv(entities, language, onProgress),
+  );
+}
+
+/** Split's "Both": the two panes' result sets as one CSV, each row led by a
+ *  "Pane" column naming the pane it came from. */
+export async function runPanesCsvExport(
+  store: Store,
+  panes: readonly { label: string; entities: readonly Entity[] }[],
+  language: Language,
+  filename: string,
+): Promise<void> {
+  const count = panes.reduce((n, p) => n + p.entities.length, 0);
+  return runExportTask(store, count, filename, (onProgress) =>
+    exportGroupsCsv(panes, language, onProgress, { column: "Pane" }),
+  );
+}
+
+async function runExportTask(
+  store: Store,
+  count: number,
+  filename: string,
+  build: (onProgress: (done: number) => boolean) => Promise<CsvExport | null>,
+): Promise<void> {
   const id = taskId("export");
   // One step past the rows: the task is complete when the file is handed over,
   // not when the last row is built.
-  const total = entities.length + 1;
+  const total = count + 1;
   store.set(tasksAtom, (prev) => [
     ...prev,
     {
       id,
       label: "Exporting CSV",
-      detail: `${entities.length.toLocaleString()} ${entities.length === 1 ? "entity" : "entities"}`,
+      detail: `${count.toLocaleString()} ${count === 1 ? "entity" : "entities"}`,
       current: 0,
       total,
       driven: true,
     },
   ]);
-  let result: Awaited<ReturnType<typeof exportEntitiesCsv>>;
+  let result: CsvExport | null;
   try {
-    result = await exportEntitiesCsv(entities, language, (done) => {
+    result = await build((done) => {
       patch(store, id, { current: done });
       // Stop building rows for a task nobody is waiting on.
       return alive(store, id);
