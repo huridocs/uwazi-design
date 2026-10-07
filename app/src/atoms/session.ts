@@ -74,11 +74,3 @@ export const libraryLayoutAtom = sessionSetting<LibraryLayout>(
   "drawer",
   (v): v is LibraryLayout => v === "drawer" || v === "full" || v === "split",
 );
-
-/** Split's left pane, as a share of the two (0.5 at start). Each pane's
- *  28rem minimum is applied where it is read, against the width on screen. */
-export const librarySplitRatioAtom = sessionSetting<number>(
-  "librarySplitRatio",
-  0.5,
-  (v): v is number => typeof v === "number" && Number.isFinite(v) && v > 0 && v < 1,
-);

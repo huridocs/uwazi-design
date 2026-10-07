@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
-import { useAtom, useStore } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import { ScopeProvider } from "jotai-scope";
-import { librarySplitRatioAtom } from "../atoms/session";
+import { dataSourceAtom } from "../atoms/dataSource";
 import { rightPaneStore } from "../atoms/librarySplit";
 import {
   LibraryPaneProvider,
@@ -22,8 +22,10 @@ const DIVIDER_PX = 5;
    side, each a full Full width Library with its own masthead, body, brush and
    rail. The left pane is the root store; the right pane is a scope that lives
    for the session (`atoms/librarySplit.ts`). The language, the collection and
-   the Notebook are shared. The divider sets the left pane's share, kept for
-   the session; RTL mirrors the row, so the left pane is then on the right. */
+   the Notebook are shared. The divider sets the left pane's share while Split
+   is on screen; Split opens at 50/50 every time (choosing it, a reload, Back
+   from the entity view, a collection switch). RTL mirrors the row, so the
+   left pane is then on the right. */
 export function LibrarySplitView() {
   const root = useStore();
   const right = useMemo(() => rightPaneStore(root), [root]);
@@ -39,8 +41,13 @@ export function LibrarySplitView() {
     return () => ro.disconnect();
   }, []);
 
-  const [stored, setStored] = useAtom(librarySplitRatioAtom);
-  // The live share during a drag, written to the session on release.
+  // The left pane's share, kept in this component so every mount starts at
+  // 50/50; a collection switch starts it again too.
+  const source = useAtomValue(dataSourceAtom);
+  const [ratio, setRatio] = useState({ source, share: 0.5 });
+  const stored = ratio.source === source ? ratio.share : 0.5;
+  const setStored = (share: number) => setRatio({ source, share });
+  // The live share during a drag, kept on release.
   const [drag, setDrag] = useState<number | null>(null);
   const dragStart = useRef(0);
   const span = Math.max(1, width - DIVIDER_PX);
