@@ -17,6 +17,7 @@ import {
   ExternalLink,
   LogOut,
   Database,
+  Columns2,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
@@ -37,6 +38,7 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
+import { libraryLayoutAtom, type LibraryLayout } from "../../atoms/session";
 import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { MobileBottomSheet } from "./MobileBottomSheet";
@@ -71,6 +73,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const [settingsSection, setSettingsSection] = useAtom(settingsSectionAtom);
   const setSettingsDrilled = useSetAtom(settingsMobileDrilledAtom);
   const [breakpoint] = useAtom(breakpointAtom);
+  const [libraryLayout, setLibraryLayout] = useAtom(libraryLayoutAtom);
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -505,6 +508,32 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       ariaLabel={t("System", "Interface language")}
                       align="end"
                       options={UI_LANGUAGES}
+                      steady
+                    />
+                  </div>
+                  {/* Library layout: experimental, a session switch like the two
+                      above. It applies from 1024px; on a tablet the row stays and
+                      the options say so. Phones never get it (no dropdown there,
+                      and the layout does not apply). */}
+                  <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
+                      <Columns2 size={14} className="text-ink-tertiary" />
+                      {t("System", "Library layout")}
+                    </span>
+                    <Select
+                      value={libraryLayout}
+                      onChange={(v) => { setLibraryLayout(v as LibraryLayout); setSettingsOpen(false); }}
+                      ariaLabel={t("System", "Library layout")}
+                      align="end"
+                      options={[
+                        { value: "drawer", label: t("System", "Drawer") },
+                        {
+                          value: "full",
+                          label: t("System", "Full width"),
+                          hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
+                        },
+                        { value: "split", label: t("System", "Split"), hint: t("System", "Coming next"), disabled: true },
+                      ]}
                       steady
                     />
                   </div>

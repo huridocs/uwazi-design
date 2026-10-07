@@ -54,6 +54,12 @@ const STRINGS: Record<string, { es: string; fr: string }> = {
   "User settings": { es: "Configuración de usuario", fr: "Paramètres utilisateur" },
   "System settings": { es: "Configuración del sistema", fr: "Paramètres système" },
   "Interface language": { es: "Idioma de la interfaz", fr: "Langue de l'interface" },
+  "Library layout": { es: "Vista Biblioteca", fr: "Vue Bibliothèque" },
+  Drawer: { es: "Panel", fr: "Panneau" },
+  "Full width": { es: "Ancho completo", fr: "Pleine largeur" },
+  Split: { es: "Dividido", fr: "Partagé" },
+  "Coming next": { es: "Próximamente", fr: "Bientôt" },
+  "From 1024px": { es: "Desde 1024px", fr: "Dès 1024px" },
 
   // Main tab strips
   Document: { es: "Documento", fr: "Document" },
