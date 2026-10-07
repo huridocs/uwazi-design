@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { X } from "lucide-react";
 import { libraryRailPanelAtom, type LibraryRailPanel } from "../../atoms/library";
@@ -82,9 +82,19 @@ export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane
   const ids = useId();
   const railItem = items.find((i) => i.id === open && !i.disabledReason) ?? null;
   // The Library's own panel wins; the host closes a rail panel when one opens.
-  const current: Shown | null = pane
-    ? { id: `pane:${pane.key}`, label: pane.label, body: pane.body, ownHeader: true }
-    : railItem;
+  // Memoised: a fresh object on each of this component's renders re-ran the
+  // effect below, whose `setShown` rendered again, without end while a record
+  // was open.
+  const paneKey = pane?.key;
+  const paneLabel = pane?.label;
+  const paneBody = pane?.body;
+  const current: Shown | null = useMemo(
+    () =>
+      paneKey !== undefined
+        ? { id: `pane:${paneKey}`, label: paneLabel ?? "", body: paneBody, ownHeader: true }
+        : railItem,
+    [paneKey, paneLabel, paneBody, railItem],
+  );
   // The body lags the close by the slide-out, so the panel does not empty on
   // its way off.
   const [shown, setShown] = useState<Shown | null>(current);
