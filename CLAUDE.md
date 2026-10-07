@@ -416,7 +416,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   record leaves it for Cards, and choosing it clears all three. Each chart is an entry point
   that applies its filter and opens a view; `libraryOverviewOriginAtom` then brings the reader
   back when what it applied is cleared (a view picked by hand drops it). The Network teaser
-  opens the canvas centred on a community through `networkCentreCommunityAtom`. Sections the
+  opens the canvas centred on a community through `networkCentreCommunityAtom`. A community is
+  named by its best-connected member that `canNameCommunity` allows: never a Source record
+  (`NETWORK_UNNAMING_TEMPLATES`) nor one linked to more than half the collection. Where the time
+  section draws a concentrated window (`focusWindow`), the header's Dates names it and keeps the
+  full span in its tooltip. Sections the
   collection has nothing for are left out; the header and the first two rows keep fixed
   heights while a corpus loads. The description is Settings › Collection's `description`.
 - Sync view (`libraryViewModeAtom = "sync"`, `components/library/LibrarySyncView.tsx`): every
@@ -428,7 +432,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   consensus; an anchor further off is an outlier tied to it. Lanes are DOM rows (the accessible
   list, virtualised) over one sticky canvas that draws the visible rows only. Window, playhead
   and folds are per pane (`atoms/syncView.ts`, in `libraryPaneScopedAtoms`). Links open in a new
-  tab behind a content notice asked once per session. A plain wheel scrolls the lanes; ⌘/Ctrl +
+  tab behind a content notice asked once per session. The playhead readout docks beside the
+  lanes from a 1040px view (a key to the marks until a playhead is set); narrower, it is a
+  one-line strip whose list lies over the foot of the plot. The Library's date brush is not
+  drawn under Sync; a date filter set elsewhere shows as a chip in its toolbar. A plain wheel scrolls the lanes; ⌘/Ctrl +
   wheel, a pinch, or a wheel on the clock zooms. The map area reaches it only through Split's
   Sync filters, as every non-map view.
 - Canvas overlays (Network and Map controls, captions, chips, tooltips) have no border and no
