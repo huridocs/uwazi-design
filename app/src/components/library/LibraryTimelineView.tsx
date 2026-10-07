@@ -13,6 +13,7 @@ import {
 import { getEntityType, type Entity } from "../../data/entities";
 import {
   bucketOf,
+  bucketSeries,
   colorSpread,
   elapsed,
   entityTime,
@@ -24,6 +25,7 @@ import {
   toISODate,
   typeOrder,
   type TimeBucket,
+  type TimeUnit,
   dateBoundMs,
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -818,17 +820,65 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
  *     cell drills in — it sets the template facet AND the date range.
  * ------------------------------------------------------------------ */
 
+/** Narrowest column the lanes grid draws for months, quarters and days; years
+ *  may go to `LANE_YEAR_MIN` before the grid scrolls. */
+const LANE_COL_MIN = 14;
+const LANE_YEAR_MIN = 8;
+/** Height of one lane. */
+const LANE_H = 32;
+/** Least distance between two labels on the lanes' time axis. */
+const LANE_LABEL_PITCH = 40;
+
+/** A round count near `v`, for the size key. */
+const roundCount = (v: number) => {
+  if (v < 10) return Math.max(1, Math.round(v));
+  const p = 10 ** Math.floor(Math.log10(v));
+  return Math.round(v / p) * p;
+};
+
+/** Template × period: one lane per template, one column per period across
+ *  the whole range. The period is the finest of day, month, quarter and year
+ *  whose columns fit the pane; only a range too long even for years scrolls,
+ *  with the template column and the axis kept in view. A dot's AREA is its
+ *  count, on one scale for every lane. Selecting a dot filters the Library to
+ *  that template and period; selecting it again clears both. */
 function LanesLayout({ laneChart }: LayoutProps) {
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hover, setHover] = useState<string | null>(null);
   const range = useRange();
+  const breakpoint = useAtomValue(breakpointAtom);
+  const [paneW, setPaneW] = useState(0);
+  const ro = useRef<ResizeObserver | null>(null);
+  const paneRef = useCallback((el: HTMLDivElement | null) => {
+    ro.current?.disconnect();
+    if (!el) return;
+    ro.current = new ResizeObserver(([entry]) => setPaneW(Math.round(entry.contentRect.width)));
+    ro.current.observe(el);
+  }, []);
 
   const dated = useMemo(() => sortByTime(laneChart), [laneChart]);
   const extent = useMemo(() => timeExtent(dated), [dated]);
-  const unit = useMemo(() => (extent ? pickUnit(extent.max - extent.min) : "year"), [extent]);
+  // Template names wrap to two lines in this column; the count sits after it.
+  const labelW = breakpoint === "mobile" ? 104 : breakpoint === "tablet" ? 160 : 208;
+  const countW = breakpoint === "mobile" ? 36 : 48;
+  const plotW = Math.max(0, paneW - labelW - countW);
+
+  const unit = useMemo((): TimeUnit => {
+    if (!extent) return "year";
+    const span = extent.max - extent.min;
+    const fits = (u: TimeUnit) => {
+      const per = u === "day" ? 86_400_000 : u === "month" ? 30.44 * 86_400_000 : u === "quarter" ? 91.3 * 86_400_000 : 365.25 * 86_400_000;
+      return (span / per + 1) * (u === "year" ? LANE_YEAR_MIN : LANE_COL_MIN) <= plotW;
+    };
+    // Days only for a range of a few months; finer reads as noise.
+    const units: TimeUnit[] = span <= 120 * 86_400_000 ? ["day", "month", "quarter", "year"] : ["month", "quarter", "year"];
+    return units.find(fits) ?? "year";
+  }, [extent, plotW]);
 
   const { cols, lanes, max } = useMemo(() => {
-    const cols = groupByBucket(dated, unit);
+    if (!extent) return { cols: [] as TimeBucket[], lanes: [], max: 1 };
+    // Every period in the range, empty ones included, so time reads evenly.
+    const cols = bucketSeries(dated, unit, extent);
     const byType = new Map<string, Map<string, Entity[]>>();
     for (const c of cols) {
       for (const e of c.entities) {
@@ -852,110 +902,155 @@ function LanesLayout({ laneChart }: LayoutProps) {
       }))
       .sort((a, b) => b.total - a.total);
     return { cols, lanes, max };
-  }, [dated, unit]);
+  }, [dated, unit, extent]);
 
-  if (!cols.length) return null;
+  const colMin = unit === "year" ? LANE_YEAR_MIN : LANE_COL_MIN;
+  const colW = cols.length ? Math.max(colMin, plotW / cols.length) : colMin;
+  const rMax = Math.min(colW, LANE_H) / 2 - 1;
+  const radius = (n: number) => Math.max(1.5, Math.sqrt(n / max) * rMax);
+
+  // Axis labels: the year at each January, months or quarters between, kept
+  // on round steps (every 2nd, 3rd, 6th month…) that stand LANE_LABEL_PITCH
+  // apart. A label at either end is pulled inside the axis, not cut.
+  const ticks = useMemo(() => {
+    const steps = unit === "year" ? [1, 2, 5, 10, 20, 50] : unit === "quarter" ? [1, 2, 4] : unit === "month" ? [1, 2, 3, 6, 12] : [1, 2, 7, 14, 28];
+    const k = steps.find((st) => colW * st >= LANE_LABEL_PITCH) ?? steps[steps.length - 1];
+    const total = cols.length * colW;
+    const halfW = LANE_LABEL_PITCH / 2 - 4;
+    const out: { i: number; label: string; x: number }[] = [];
+    cols.forEach((c, i) => {
+      const d = new Date(c.start);
+      const y = d.getUTCFullYear();
+      const m = d.getUTCMonth();
+      const rank = unit === "year" ? y : unit === "quarter" ? m / 3 : unit === "month" ? m : i;
+      if (rank % k !== 0) return;
+      const label =
+        unit === "year" || (unit !== "day" && m === 0) ? String(y) : unit === "quarter" ? `Q${m / 3 + 1}` : unit === "month" ? MONTH_SHORT[m] : c.label;
+      const x = Math.min(Math.max((i + 0.5) * colW, halfW), total - halfW);
+      if (out.length && x - out[out.length - 1].x < LANE_LABEL_PITCH * 0.8) return;
+      out.push({ i, label, x });
+    });
+    return out;
+  }, [cols, colW, unit]);
 
   const anyType = Object.values(typeFilters).some(Boolean);
-  const colW = 26;
+  const key = [1, roundCount(max / 4), max].filter((v, i, all) => all.indexOf(v) === i && v <= max);
 
   return (
-    <div className="h-full overflow-auto no-scrollbar">
-      <div dir="ltr" className="inline-block min-w-full">
-        {/* Column heads */}
-        <div className="flex sticky top-0 z-10 bg-warm pb-1">
-          <div className="shrink-0 w-40" />
-          {cols.map((c, i) => (
-            <div key={c.key} className="shrink-0 text-center" style={{ width: colW }}>
-              {i % Math.ceil(cols.length / 11 || 1) === 0 && (
-                <span className="block text-meta leading-none tabular-nums text-ink-tertiary -rotate-45 origin-center whitespace-nowrap">
-                  {c.label}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {lanes.map((lane) => {
-          const laneOn = !anyType || !!typeFilters[lane.typeId];
-          return (
-            <div key={lane.typeId} className="flex items-center h-8">
-              <div className="shrink-0 w-40 pe-2 flex items-center gap-1.5 min-w-0">
+    <div ref={paneRef} data-component="Lanes" className="h-full overflow-auto">
+      {cols.length > 0 && paneW > 0 && (
+        <div dir="ltr" className="relative" style={{ width: labelW + countW + cols.length * colW }}>
+          {/* The time axis, kept in view while the lanes scroll. */}
+          <div className="sticky top-0 z-20 flex h-6 bg-warm">
+            <div className="sticky left-0 z-10 shrink-0 bg-warm" style={{ width: labelW + countW }} />
+            <div className="relative" style={{ width: cols.length * colW }}>
+              {ticks.map((t) => (
                 <span
-                  className="w-2 h-2 rounded-[2px] shrink-0"
-                  style={{ backgroundColor: lane.color, opacity: laneOn ? 1 : 0.35 }}
-                />
-                <span
-                  className={`text-meta font-medium truncate ${laneOn ? "text-ink-secondary" : "text-ink-tertiary"}`}
+                  key={t.i}
+                  className="absolute bottom-1 -translate-x-1/2 text-meta leading-none tabular-nums text-ink-tertiary whitespace-nowrap"
+                  style={{ left: t.x }}
                 >
-                  {lane.name}
+                  {t.label}
                 </span>
-                <span className="ms-auto text-meta tabular-nums text-ink-tertiary">
-                  {lane.total.toLocaleString()}
-                </span>
-              </div>
-              {cols.map((c) => {
-                const cell = lane.cells.get(c.key);
-                const n = cell?.length ?? 0;
-                const id = `${lane.typeId}:${c.key}`;
-                const r = n ? 5 + Math.sqrt(n / max) * 9 : 0;
-                const inRange = range.overlaps(c);
-                const picked = laneOn && !range.isAll && range.covers(c) && anyType;
-                return (
-                  <div
-                    key={c.key}
-                    className="shrink-0 h-full flex items-center justify-center relative"
-                    style={{ width: colW }}
-                  >
-                    {n > 0 && (
-                      <button
-                        aria-label={`${lane.name} · ${c.label} · ${n} ${n === 1 ? "entity" : "entities"}`}
-                        aria-pressed={picked}
-                        onClick={() => {
-                          setTypeFilters(picked ? {} : { [lane.typeId]: true });
-                          range.toggle(c);
-                        }}
-                        onMouseEnter={() => setHover(id)}
-                        onMouseLeave={() => setHover(null)}
-                        className="rounded-full transition-transform cursor-pointer hover:scale-110
-                          focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-                        style={{
-                          width: r * 2,
-                          height: r * 2,
-                          backgroundColor: lane.color,
-                          opacity: laneOn && inRange ? (picked ? 1 : 0.72) : 0.16,
-                          boxShadow: picked ? `0 0 0 2px ${lane.color}55` : "none",
-                        }}
-                      />
-                    )}
-                    {hover === id && (
-                      <span
-                        className="absolute z-50 bottom-full mb-1 pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
-                        style={{
-                          padding: "3px 7px",
-                          backgroundColor: "var(--text-primary)",
-                          color: "var(--bg-surface)",
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        }}
-                      >
-                        {c.label} · {n.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              ))}
             </div>
-          );
-        })}
+          </div>
 
-        <p className="pt-3 text-meta text-ink-tertiary">
-          A dot is one period of one template, sized by how many entities landed in it. Select one to
-          filter the Library to that slice; select it again to clear.
-        </p>
-      </div>
+          {lanes.map((lane) => {
+            const laneOn = !anyType || !!typeFilters[lane.typeId];
+            return (
+              <div key={lane.typeId} className="flex items-center" style={{ height: LANE_H }}>
+                <div
+                  className="sticky left-0 z-10 shrink-0 h-full flex items-center gap-1.5 pe-2 bg-warm"
+                  style={{ width: labelW + countW }}
+                  title={lane.name}
+                >
+                  <span
+                    className="w-2 h-2 rounded-[2px] shrink-0"
+                    style={{ backgroundColor: lane.color, opacity: laneOn ? 1 : 0.35 }}
+                  />
+                  <span
+                    className={`min-w-0 flex-1 text-meta font-medium leading-tight line-clamp-2 ${laneOn ? "text-ink-secondary" : "text-ink-tertiary"}`}
+                  >
+                    {lane.name}
+                  </span>
+                  <span className="shrink-0 text-end text-meta tabular-nums text-ink-tertiary" style={{ width: countW - 8 }}>
+                    {lane.total.toLocaleString()}
+                  </span>
+                </div>
+                <div className="relative h-full flex" style={{ width: cols.length * colW }}>
+                  {/* The lane's guide. */}
+                  <span
+                    aria-hidden
+                    className="absolute left-0 right-0 top-1/2 h-px pointer-events-none"
+                    style={{ backgroundColor: "var(--border-soft)" }}
+                  />
+                  {cols.map((c) => {
+                    const n = lane.cells.get(c.key)?.length ?? 0;
+                    const id = `${lane.typeId}:${c.key}`;
+                    const inRange = range.overlaps(c);
+                    const picked = laneOn && !range.isAll && range.covers(c) && anyType;
+                    const r = radius(n);
+                    return (
+                      <div key={c.key} className="relative shrink-0 h-full flex items-center justify-center" style={{ width: colW }}>
+                        {n > 0 && (
+                          <button
+                            aria-label={`${lane.name}, ${c.label}: ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}`}
+                            aria-pressed={picked}
+                            onClick={() => {
+                              setTypeFilters(picked ? {} : { [lane.typeId]: true });
+                              range.toggle(c);
+                            }}
+                            onMouseEnter={() => setHover(id)}
+                            onMouseLeave={() => setHover(null)}
+                            // The target is the whole cell, so a 1-record dot is
+                            // as easy to hit as a large one.
+                            className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-sm
+                              focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                          >
+                            <span
+                              className="rounded-full"
+                              style={{
+                                width: r * 2,
+                                height: r * 2,
+                                backgroundColor: lane.color,
+                                opacity: laneOn && inRange ? (picked || hover === id ? 1 : 0.8) : 0.16,
+                                boxShadow: picked ? "0 0 0 2px var(--bg-warm), 0 0 0 3px var(--text-secondary)" : "none",
+                              }}
+                            />
+                          </button>
+                        )}
+                        {hover === id && (
+                          <ChartTip anchor="above">
+                            {lane.name} · {c.label} · {n.toLocaleString()} {n === 1 ? "entity" : "entities"}
+                          </ChartTip>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="sticky left-0 flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 text-meta text-ink-tertiary" style={{ maxWidth: paneW }}>
+            <span className="flex items-center gap-2" aria-label="Dot size key">
+              {key.map((v) => (
+                <span key={v} className="flex items-center gap-1 tabular-nums">
+                  <span className="rounded-full bg-ink-tertiary" style={{ width: radius(v) * 2, height: radius(v) * 2 }} />
+                  {v.toLocaleString()}
+                </span>
+              ))}
+            </span>
+            <span>Dot area is the number of entities. Select a dot to filter to that template and period.</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const TIMELINE_LAYOUTS: { id: TimelineLayout; label: string }[] = [
   { id: "rail", label: "Rail" },
