@@ -373,7 +373,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   needs `--use-angle=metal --enable-gpu-rasterization` to measure fps; SwiftShader raster runs
   zoomed-in pans at ~7 fps.
   Interaction: hover lifts a node's one-hop neighbourhood (the rest recede); a selection keeps
-  it until Escape or a click on empty canvas (`onClear`). The tooltip is anchored to its target
+  it until Escape or a click on empty canvas (`onClear`). While a selection or the find cursor
+  anchors the lift, or Focus is arranging, hover is locked: a node outside the neighbourhood
+  draws nothing and gets a title-only tooltip after 450 ms; a neighbour gets its ring, label and
+  link to the anchor; edges answer clicks only. Neighbours are labelled by link weight, and the
+  anchor's edges draw over the receded nodes. On phones the sheet's entity
+  (`previewEntityIdAtom`) is the canvas's selection. The tooltip is anchored to its target
   (above, else below, right, left), never to the pointer. Edges answer hover and click with their
   types and, for Nepal, quotes and status (`pairEvidence`). With a search, the camera flies to the
   best match by relevance; Enter / Shift+Enter in the masthead search (`networkFindStepAtom`)

@@ -400,7 +400,7 @@ export function LibraryView() {
   const draftId = useAtomValue(draftEntityIdAtom);
   const setSelectMode = useSetAtom(librarySelectModeAtom);
   const discardDraft = useSetAtom(discardDraftAtom);
-  const setOverlayEntity = useSetAtom(previewEntityIdAtom);
+  const [previewEntityId, setOverlayEntity] = useAtom(previewEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setPassageFile = useSetAtom(passageFileIdAtom);
@@ -1065,7 +1065,10 @@ export function LibraryView() {
     },
     [selectFrom, setPassageFile],
   );
-  const clearNetworkSelection = useCallback(() => setSelectedId(null), [setSelectedId]);
+  const clearNetworkSelection = useCallback(() => {
+    if (isMobile) setOverlayEntity(null);
+    else setSelectedId(null);
+  }, [isMobile, setOverlayEntity, setSelectedId]);
   useTouchSelection(toggleSelection);
   useTapGuard();
 
@@ -1447,7 +1450,9 @@ export function LibraryView() {
             <LibraryNetworkView
               matches={filtered}
               filtering={filtered.length !== entities.length}
-              selectedId={selectedId}
+              // A phone's tap opens the sheet, not the drawer: its entity is
+              // the canvas's selection, drawn over the sheet's top.
+              selectedId={isMobile ? previewEntityId : selectedId}
               onSelect={handleSelect}
               onClear={clearNetworkSelection}
               query={query}
