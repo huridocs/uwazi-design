@@ -418,7 +418,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   back when what it applied is cleared (a view picked by hand drops it). The Network teaser
   opens the canvas centred on a community through `networkCentreCommunityAtom`. A community is
   named by its best-connected member that `canNameCommunity` allows: never a Source record
-  (`NETWORK_UNNAMING_TEMPLATES`) nor one linked to more than half the collection. Where the time
+  (`NETWORK_UNNAMING_TEMPLATES`). Where the time
   section draws a concentrated window (`focusWindow`), the header's Dates names it and keeps the
   full span in its tooltip. Sections the
   collection has nothing for are left out; the header and the first two rows keep fixed
