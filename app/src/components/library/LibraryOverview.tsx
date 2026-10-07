@@ -47,10 +47,11 @@ const OverviewMap = lazy(() => import("./OverviewMap"));
  * nothing above the fold moves when it lands. */
 
 /** Fixed heights, shared by the loading state and the loaded one. */
-const HEADER_H = "8.5rem";
+const HEADER_H = "10.5rem";
 const ROW_A_H = "20rem";
 const LANES_H = "16.5rem";
-const ROW_C_H = "18rem";
+/** Map and Network, the second band: at 1440 × 900 it sits above the fold. */
+const ROW_C_H = "15rem";
 const FACET_H = "16rem";
 const ROW_E_H = "14rem";
 
@@ -60,9 +61,12 @@ const LANE_H = 24;
 const LANE_COL_MIN = 12;
 const LANE_YEAR_MIN = 6;
 const LANE_LABEL_PITCH = 40;
-/** Facet values and communities listed per card. */
+/** Templates, facet values and communities listed per card. */
+const TOP_TEMPLATES = 8;
 const TOP_VALUES = 6;
-const TOP_COMMUNITIES = 5;
+const TOP_COMMUNITIES = 4;
+/** "Other" is listed as a content language only from this share up. */
+const OTHER_LANGUAGE_MIN = 0.05;
 const RECENT = 5;
 /** The map is drawn when this share of the records, or this many, are located. */
 const MAP_SHARE = 0.1;
@@ -127,7 +131,6 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
     const languages = new Map<string, number>();
     let quoted = 0;
     let located = 0;
-    let lastModified = -Infinity;
     for (const e of entities) {
       byType.set(e.typeId, (byType.get(e.typeId) ?? 0) + 1);
       const c = entityContent(e, source);
@@ -135,16 +138,15 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
       for (const k of c.language ?? []) languages.set(k, (languages.get(k) ?? 0) + 1);
       if (c.quotes?.includes("has")) quoted++;
       if (e.geo) located++;
-      const m = e.updatedAt ? Date.parse(e.updatedAt) : NaN;
-      if (m > lastModified) lastModified = m;
     }
     return {
       byType: [...byType.entries()].sort((a, b) => b[1] - a[1]),
       contains,
-      languages: [...languages.entries()].sort((a, b) => b[1] - a[1]),
+      languages: [...languages.entries()]
+        .filter(([l, c]) => l !== "Other" || c / Math.max(1, entities.length) >= OTHER_LANGUAGE_MIN)
+        .sort((a, b) => b[1] - a[1]),
       quoted,
       located,
-      lastModified: Number.isFinite(lastModified) ? lastModified : null,
       extent: timeExtent(entities),
     };
   }, [entities, source]);
@@ -170,7 +172,9 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
       .filter((r) => r.count > 0),
     ...(summary.quoted > 0 ? [{ id: "has", label: "Quoted passages", count: summary.quoted, group: "quotes" as const }] : []),
   ];
-  const showContent = ready && contentRows.length > 0;
+  const showContains = ready && contentRows.length > 0;
+  const showLanguages = ready && summary.languages.length > 0;
+  const showContent = showContains || showLanguages;
   const showLanes = !ready || !!summary.extent;
   const notebook = useAtomValue(notebookAtom);
   const views = useAtomValue(savedViewsAtom);
@@ -181,34 +185,38 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   const span = summary.extent ? formatSpan(summary.extent.min, summary.extent.max) : null;
 
   return (
-    <div data-component="LibraryOverview" aria-busy={loading} className="@container flex flex-col gap-3 pb-3">
+    <div data-component="LibraryOverview" aria-busy={loading} className="@container flex flex-col gap-2 pb-3">
       {/* ── Header ── */}
-      {/* Fixed height from two columns up; narrower, the stats may wrap onto
-          a second line, the same while loading as once loaded. */}
-      <header data-part="header" className="flex flex-col justify-between gap-3 pt-1 @3xl:h-[var(--overview-header-h)]" style={{ "--overview-header-h": HEADER_H } as React.CSSProperties}>
+      {/* The collection's title page: its name, what it is at a reading
+          measure, and the key figures. Fixed height from two columns up;
+          narrower, the figures may wrap, the same while loading as loaded. */}
+      <header
+        data-part="header"
+        className="flex flex-col justify-between gap-4 pt-2 pb-3 @3xl:h-[var(--overview-header-h)]"
+        style={{ "--overview-header-h": HEADER_H } as React.CSSProperties}
+      >
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-ink leading-tight truncate">{settings.name || "Untitled collection"}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink leading-tight truncate">{settings.name || "Untitled collection"}</h1>
           {settings.description && (
-            <p className="mt-1.5 max-w-[40rem] text-sm text-ink-secondary leading-snug line-clamp-2">{settings.description}</p>
+            <p className="mt-2 max-w-[40rem] text-sm text-ink-secondary leading-relaxed line-clamp-3 @xl:line-clamp-2">{settings.description}</p>
           )}
         </div>
-        <dl data-part="stats" className="flex flex-wrap items-end gap-x-8 gap-y-2 @3xl:h-11 @3xl:overflow-hidden">
+        <dl data-part="stats" className="grid grid-cols-2 gap-x-4 gap-y-3 @xl:flex @xl:flex-wrap @xl:items-end @xl:gap-x-10 @3xl:h-[3.25rem] @3xl:overflow-hidden">
           <Stat label="Records" value={ready ? n(total) : null} />
           {(!ready || span) && <Stat label="Dates" value={ready ? span : null} ltr />}
           {(!ready || summary.languages.length > 0) && (
-            <Stat
-              label={summary.languages.length === 1 ? "Language" : "Languages"}
-              value={ready ? summary.languages.map(([l]) => l).join(", ") : null}
-            />
+            <Stat label={summary.languages.length === 1 ? "Language" : "Languages"} value={ready ? n(summary.languages.length) : null} />
           )}
-          {(!ready || summary.lastModified !== null) && (
-            <Stat label="Last modified" value={ready && summary.lastModified !== null ? formatDay(summary.lastModified) : null} ltr />
+          <Stat label={summary.byType.length === 1 ? "Template" : "Templates"} value={ready ? n(summary.byType.length) : null} />
+          {(!ready || (summary.contains.get("document") ?? 0) > 0) && (
+            <Stat label="Documents" value={ready ? n(summary.contains.get("document") ?? 0) : null} />
           )}
+          {(!ready || summary.located > 0) && <Stat label="Located" value={ready ? n(summary.located) : null} />}
         </dl>
       </header>
 
-      {/* ── What's in it · Content ── */}
-      <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-3">
+      {/* ── What's in it · Contains, Language ── */}
+      <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
         <Section
           title="What's in it"
           height={ROW_A_H}
@@ -218,7 +226,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           {ready ? (
             <BarList
               label="Records per template"
-              rows={summary.byType.map(([id, count]) => ({
+              rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
                 key: id,
                 label: typeOf(id).name,
                 color: typeOf(id).color,
@@ -226,20 +234,30 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
                 action: `Show the ${n(count)} ${typeOf(id).name} records`,
                 onClick: () => enter("cards", () => setTypes({ [id]: true })),
               }))}
+              more={
+                summary.byType.length > TOP_TEMPLATES
+                  ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
+                  : undefined
+              }
             />
           ) : (
-            <BarSkeleton rows={8} />
+            <BarSkeleton rows={TOP_TEMPLATES} />
           )}
         </Section>
         {(!ready || showContent) && (
-          <Section title="Content" height={ROW_A_H}>
-            {ready ? (
-              <>
-                <div className="flex-1 min-h-0 overflow-y-auto">
+          // Two sections side by side, each the band's height (Nepal lists
+          // five kinds of content; stacked, Language had no room).
+          <div
+            className={`grid grid-cols-1 gap-2 min-w-0 ${(!ready || (showContains && showLanguages)) ? "@xl:grid-cols-2" : ""} @3xl:grid-rows-1 @3xl:h-[var(--overview-row-a-h)]`}
+            style={{ "--overview-row-a-h": ROW_A_H } as React.CSSProperties}
+          >
+            {(!ready || showContains) && (
+              <Section title="Contains" note={ready ? `of ${plural(total, "record")}` : undefined}>
+                {ready ? (
                   <BarList
                     label="Records by what they contain"
                     scaleTo={total}
-                    scroll={false}
+                    narrow
                     rows={contentRows.map((r) => ({
                       key: `${r.group}:${r.id}`,
                       label: r.label,
@@ -248,62 +266,38 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
                       onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
                     }))}
                   />
-                  {summary.languages.length > 0 && (
-                    <>
-                      <h3 className="mt-3 mb-1 text-xs text-ink-tertiary">Language of the content</h3>
-                      <BarList
-                        label="Records by the language of their content"
-                        scaleTo={total}
-                        scroll={false}
-                        rows={summary.languages.map(([l, count]) => ({
-                          key: `language:${l}`,
-                          label: l,
-                          count,
-                          action: `Show the ${n(count)} records in ${l}`,
-                          onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
-                        }))}
-                      />
-                    </>
-                  )}
-                </div>
-                <p className="shrink-0 pt-2 text-xs text-ink-tertiary">Bars are the share of all {n(total)} records.</p>
-              </>
-            ) : (
-              <BarSkeleton rows={4} />
+                ) : (
+                  <BarSkeleton rows={2} />
+                )}
+              </Section>
             )}
-          </Section>
+            {(!ready || showLanguages) && (
+              <Section title="Language" note={ready ? `of ${plural(total, "record")}` : undefined}>
+                {ready ? (
+                  <BarList
+                    label="Records by the language of their content"
+                    scaleTo={total}
+                    narrow
+                    rows={summary.languages.map(([l, count]) => ({
+                      key: `language:${l}`,
+                      label: l,
+                      count,
+                      action: `Show the ${n(count)} records in ${l}`,
+                      onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
+                    }))}
+                  />
+                ) : (
+                  <BarSkeleton rows={2} />
+                )}
+              </Section>
+            )}
+          </div>
         )}
       </div>
 
-      {/* ── Timeline ── */}
-      {showLanes && (
-        <Section
-          title="Over time"
-          height={LANES_H}
-          action={ready ? { label: "Open Timeline", onClick: () => setView("timeline") } : undefined}
-        >
-          {ready ? (
-            <OverviewLanes
-              entities={entities}
-              typeOf={typeOf}
-              onLane={(typeId) => enter("timeline", () => setTypes({ [typeId]: true }))}
-              onCell={(typeId, b) =>
-                enter("timeline", () => {
-                  setTypes({ [typeId]: true });
-                  setFrom(toISODate(b.start));
-                  setTo(toISODate(b.end - DAY));
-                })
-              }
-            />
-          ) : (
-            <BarSkeleton rows={LANES} />
-          )}
-        </Section>
-      )}
-
       {/* ── Map · Network ── */}
       {(showMap || showNetwork) && (
-        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
           {showMap && (
             <Section
               title="Where"
@@ -361,10 +355,38 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         </div>
       )}
 
+      {/* ── Timeline ── */}
+      {showLanes && (
+        <Section
+          title="Over time"
+          // A phone stacks each lane's name over its dots, so the band grows.
+          className="@3xl:h-[var(--overview-lanes-h)]"
+          style={{ "--overview-lanes-h": LANES_H } as React.CSSProperties}
+          action={ready ? { label: "Open Timeline", onClick: () => setView("timeline") } : undefined}
+        >
+          {ready ? (
+            <OverviewLanes
+              entities={entities}
+              typeOf={typeOf}
+              onLane={(typeId) => enter("timeline", () => setTypes({ [typeId]: true }))}
+              onCell={(typeId, b) =>
+                enter("timeline", () => {
+                  setTypes({ [typeId]: true });
+                  setFrom(toISODate(b.start));
+                  setTo(toISODate(b.end - DAY));
+                })
+              }
+            />
+          ) : (
+            <BarSkeleton rows={LANES} />
+          )}
+        </Section>
+      )}
+
       {/* ── Facets ── */}
       {ready && facets.length > 0 && (
         <div
-          className={`grid grid-cols-1 gap-3 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3"}`}
+          className={`grid grid-cols-1 gap-2 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3 [&>*:nth-child(3)]:@3xl:col-span-2 [&>*:nth-child(3)]:@6xl:col-span-1"}`}
         >
           {facets.map((f) => (
             <Section key={f.key} title={f.title} height={FACET_H} note={`${plural(f.distinct, "value")}`}>
@@ -390,7 +412,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
       {/* ── Recently modified · Yours ── */}
       {(showRecent || showYours) && (
-        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
           {showRecent && (
             <Section title="Recently modified" height={ROW_E_H} className={showYours ? "" : "@3xl:col-span-2"}>
               <RecordList
@@ -439,11 +461,11 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
 function Stat({ label, value, ltr = false }: { label: string; value: string | null; ltr?: boolean }) {
   return (
-    <div className="flex flex-col gap-0.5 min-w-0">
+    <div className="flex flex-col gap-1 min-w-0">
       <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{label}</dt>
-      <dd className="h-6 flex items-center text-sm font-medium text-ink tabular-nums truncate">
+      <dd className="h-7 flex items-center text-xl font-semibold text-ink tabular-nums truncate">
         {value === null ? (
-          <span aria-hidden className="block w-16 h-3 rounded-sm bg-vellum" />
+          <span aria-hidden className="block w-16 h-4 rounded-sm bg-vellum" />
         ) : (
           // Dates and ranges read left to right in an RTL page too.
           <span dir={ltr ? "ltr" : undefined}>{value}</span>
@@ -457,13 +479,16 @@ function Section({
   title,
   height,
   className = "",
+  style,
   action,
   note,
   children,
 }: {
   title: string;
-  height: string;
+  /** A fixed height; without one the section takes what its box gives it. */
+  height?: string;
   className?: string;
+  style?: React.CSSProperties;
   action?: { label: string; onClick: () => void };
   note?: string;
   children: ReactNode;
@@ -472,10 +497,10 @@ function Section({
     <section
       data-part="section"
       aria-label={title}
-      className={`flex flex-col min-w-0 p-4 rounded-lg bg-paper ${className}`}
-      style={{ height }}
+      className={`flex flex-col min-w-0 min-h-0 p-4 rounded-lg bg-paper ${className}`}
+      style={{ height, ...style }}
     >
-      <header className="shrink-0 flex items-center gap-3 h-6 mb-2">
+      <header className="shrink-0 flex items-center gap-2 h-6 mb-2">
         <SectionLabel as="h2" className="shrink-0">{title}</SectionLabel>
         {note && <span className="min-w-0 truncate text-xs text-ink-tertiary tabular-nums">{note}</span>}
         {action && (
@@ -512,7 +537,7 @@ function RowButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`w-full flex items-center gap-2 ${tall ? "h-11" : "h-8"} px-2 rounded-md text-start hover:bg-warm transition-colors cursor-pointer
+      className={`group w-full flex items-center gap-3 ${tall ? "h-11" : "h-7"} px-2 rounded-md text-start hover:bg-warm transition-colors cursor-pointer
         focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40`}
     >
       {children}
@@ -544,34 +569,36 @@ interface BarRow {
 }
 
 /** A ranked list of horizontal bars, each drawn to scale from zero against
- *  `scaleTo` (the largest row when absent), its exact count beside it. One
- *  neutral hue: identity, where there is one, is the template dot. */
+ *  `scaleTo` (the largest row when absent), its exact count in a fixed
+ *  column at the end. One quiet ink tint for every bar: identity, where
+ *  there is one, is the template dot, and the label stays ink. */
 function BarList({
   rows,
   label,
   scaleTo,
-  scroll = true,
+  more,
+  narrow = false,
 }: {
   rows: BarRow[];
   label: string;
   scaleTo?: number;
-  /** Scroll inside the card (false: the caller's box scrolls). */
-  scroll?: boolean;
+  /** A last row for what the list leaves out ("4 more templates in Cards"). */
+  more?: { label: string; onClick: () => void };
+  /** A half-width card: the label takes half the row, the bar the rest. */
+  narrow?: boolean;
 }) {
   const max = scaleTo ?? Math.max(1, ...rows.map((r) => r.count));
   return (
-    <ul aria-label={label} className={`flex flex-col -mx-2 ${scroll ? "min-h-0 overflow-y-auto" : ""}`}>
+    <ul aria-label={label} className="flex flex-col -mx-2 min-h-0 overflow-y-auto">
       {rows.map((r) => (
         <li key={r.key}>
           <RowButton onClick={r.onClick} label={r.action} tall={!!r.sub}>
-            <span className="min-w-0 w-[42%] shrink-0 flex flex-col justify-center">
+            {/* A phone gives the label most of the row; the bar stays a bar. */}
+            <span className={`min-w-0 ${narrow ? "w-3/5 @xl:w-1/2" : "w-3/5 @xl:w-[42%]"} shrink-0 flex flex-col justify-center`}>
               <span className="min-w-0 flex items-center gap-1.5">
                 {r.color && <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px]" style={{ backgroundColor: r.color }} />}
-                <span
-                  className={`min-w-0 truncate text-sm ${r.color ? "" : "text-ink"}`}
-                  style={r.color ? { color: typeLabelColor(r.color) } : undefined}
-                  title={r.label}
-                >
+                {/* A truncated name keeps its whole text in the tooltip. */}
+                <span className="min-w-0 truncate text-sm text-ink" title={r.label}>
                   {r.label}
                 </span>
               </span>
@@ -579,14 +606,22 @@ function BarList({
             </span>
             <span aria-hidden className="relative flex-1 min-w-0 h-1.5">
               <span
-                className="absolute inset-y-0 start-0 rounded-full bg-carbon/60"
+                className="absolute inset-y-0 start-0 rounded-full bg-ink/15 group-hover:bg-ink/30 transition-colors"
                 style={{ width: `${Math.max(0.5, (r.count / max) * 100)}%` }}
               />
             </span>
-            <span className="shrink-0 min-w-[3.5rem] text-end text-xs text-ink-secondary tabular-nums">{n(r.count)}</span>
+            <span className="shrink-0 w-14 text-end text-xs text-ink-secondary tabular-nums">{n(r.count)}</span>
           </RowButton>
         </li>
       ))}
+      {more && (
+        <li>
+          <RowButton onClick={more.onClick} label={`Open Cards: ${more.label}`}>
+            <span className="min-w-0 truncate text-xs font-medium text-ink-secondary group-hover:text-ink">{more.label}</span>
+            <ArrowRight size={12} aria-hidden className="shrink-0 text-ink-tertiary rtl:-scale-x-100" />
+          </RowButton>
+        </li>
+      )}
     </ul>
   );
 }
@@ -595,7 +630,7 @@ function BarSkeleton({ rows }: { rows: number }) {
   return (
     <div aria-hidden className="flex flex-col">
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-2 h-8">
+        <div key={i} className="flex items-center gap-3 h-7">
           <span className="w-[42%] shrink-0 h-3 rounded-sm bg-vellum" />
           <span className="h-1.5 rounded-full bg-vellum" style={{ width: `${Math.max(8, 50 - i * 6)}%` }} />
         </div>
@@ -669,8 +704,12 @@ function OverviewLanes({
 
   const dated = useMemo(() => entities.filter((e) => entityTime(e) !== null), [entities]);
   const extent = useMemo(() => timeExtent(dated), [dated]);
-  const labelW = w < 560 ? 96 : 176;
-  const countW = 48;
+  // Wide enough at desktop widths for the longest template names CEJIL has
+  // ("Geolocalización de los hechos del caso"); a cut name keeps a tooltip.
+  // Below 560 each lane's name sits on its own line over the dots.
+  const stacked = w > 0 && w < 560;
+  const labelW = stacked ? 0 : w < 900 ? 200 : 264;
+  const countW = stacked ? 0 : 48;
   const plotW = Math.max(0, w - labelW - countW);
 
   const unit = useMemo((): TimeUnit => {
@@ -732,26 +771,30 @@ function OverviewLanes({
           <div dir="ltr" className="flex flex-col overflow-x-auto overflow-y-hidden">
             {lanes.map((lane) => {
               const type = typeOf(lane.typeId);
+              const name = (
+                <>
+                  <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px] ms-1" style={{ backgroundColor: type.color }} />
+                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink-secondary">{type.name}</span>
+                  <span className="shrink-0 w-10 text-end text-xs tabular-nums text-ink-tertiary">{n(lane.total)}</span>
+                </>
+              );
+              const laneButton = (
+                <button
+                  type="button"
+                  onClick={() => onLane(lane.typeId)}
+                  aria-label={`Open Timeline on ${type.name}, ${plural(lane.total, "dated record")}`}
+                  className={`shrink-0 flex items-center gap-1.5 pe-2 rounded-md text-start hover:bg-warm cursor-pointer
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40 ${stacked ? "h-5 w-full" : "h-full"}`}
+                  style={stacked ? undefined : { width: labelW + countW }}
+                  title={type.name}
+                >
+                  {name}
+                </button>
+              );
               return (
-                <div key={lane.typeId} className="flex items-center" style={{ height: LANE_H }}>
-                  <button
-                    type="button"
-                    onClick={() => onLane(lane.typeId)}
-                    aria-label={`Open Timeline on ${type.name}, ${plural(lane.total, "dated record")}`}
-                    className="shrink-0 h-full flex items-center gap-1.5 pe-2 rounded-md text-start hover:bg-warm cursor-pointer
-                      focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
-                    style={{ width: labelW + countW }}
-                    title={type.name}
-                  >
-                    <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px] ms-1" style={{ backgroundColor: type.color }} />
-                    <span className="min-w-0 flex-1 truncate text-xs font-medium" style={{ color: typeLabelColor(type.color) }}>
-                      {type.name}
-                    </span>
-                    <span className="shrink-0 text-end text-xs tabular-nums text-ink-tertiary" style={{ width: countW - 8 }}>
-                      {n(lane.total)}
-                    </span>
-                  </button>
-                  <div className="relative h-full flex" style={{ width: cols.length * colW }}>
+                <div key={lane.typeId} className={stacked ? "flex flex-col" : "flex items-center"} style={stacked ? undefined : { height: LANE_H }}>
+                  {laneButton}
+                  <div className="relative flex" style={{ width: cols.length * colW, height: LANE_H }}>
                     <span
                       aria-hidden
                       className="absolute inset-x-0 top-1/2 h-px pointer-events-none"
