@@ -29,7 +29,7 @@
  *  place: turning Thumbnail off must not make three sections vanish from under
  *  the pointer that is still travelling toward them. */
 
-export type LibraryViewMode = "overview" | "cards" | "list" | "map" | "timeline" | "results" | "evidence" | "network";
+export type LibraryViewMode = "overview" | "cards" | "list" | "map" | "timeline" | "results" | "evidence" | "network" | "sync";
 
 export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "overview",
@@ -40,6 +40,7 @@ export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
   "results",
   "evidence",
   "network",
+  "sync",
 ];
 
 export type DisplayValue = string | boolean;
@@ -171,6 +172,7 @@ export const LIBRARY_VIEWS: Choice[] = [
   { id: "timeline", label: "Timeline" },
   { id: "evidence", label: "Evidence" },
   { id: "network", label: "Network" },
+  { id: "sync", label: "Sync" },
   { id: "results", label: "Adv. Search" },
 ];
 /** The collection's landing page. Listed first, and only where it is offered
@@ -520,6 +522,10 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** Claims against their sources: the sort orders the claims; nothing else
    *  here has a card or a column to configure. */
   evidence: [VIEW, CHART, SORT, LANGUAGE],
+
+  /** Recordings on one clock: the lanes are ordered by kind and start, so
+   *  Sort has nothing to order. */
+  sync: [VIEW, CHART, LANGUAGE],
 
   /** The whole collection as a graph. Its options decide which edges and
    *  records are drawn; none of them moves a node (the layout is fixed per

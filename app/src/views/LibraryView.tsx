@@ -91,6 +91,7 @@ import {
   libraryOverviewOfferedAtom,
   libraryOverviewOriginAtom,
   libraryHasClaimEvidenceAtom,
+  libraryHasSyncAtom,
   matchTypeFiltersAtom,
   librarySearchScopeAtom,
   librarySearchMatchAtom,
@@ -157,6 +158,7 @@ import { HighlightedText, SearchMarkProvider } from "../components/shared/Highli
 import { Select } from "../components/shared/Select";
 import { MobileEntityList } from "../components/library/MobileEntityList";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
+import { LibrarySyncView } from "../components/library/LibrarySyncView";
 import { LibraryOverview } from "../components/library/LibraryOverview";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
@@ -339,6 +341,7 @@ export function LibraryView() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const hasClaimEvidence = useAtomValue(libraryHasClaimEvidenceAtom);
+  const hasSync = useAtomValue(libraryHasSyncAtom);
   const cardInfo = useAtomValue(libraryCardInfoAtom);
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
@@ -1638,6 +1641,7 @@ export function LibraryView() {
                   setViewMode(v as typeof viewMode);
                 }}
                 evidence={hasClaimEvidence}
+                sync={hasSync}
                 overview={overviewOffered}
               />
             </div>
@@ -1707,7 +1711,7 @@ export function LibraryView() {
         // The map and the network are canvases: they fill the lane to the pane
         // edges, no gutter and no inset; their overlays sit on the gutter.
         className={`flex-1 min-h-0 bg-warm ${viewMode === "map" || viewMode === "network" ? "bleed-flush" : "bleed py-3"} ${
-          viewMode === "map" || viewMode === "timeline" || viewMode === "results" || viewMode === "network"
+          viewMode === "map" || viewMode === "timeline" || viewMode === "results" || viewMode === "network" || viewMode === "sync"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
@@ -1800,6 +1804,12 @@ export function LibraryView() {
               relevanceOf={scoreOf}
             />
           </div>
+        ) : viewMode === "sync" ? (
+          // Owns its scroll and its empty state: the clock and the readout
+          // stay while the filters leave no recording.
+          <div className="flex-1 min-h-0">
+            <LibrarySyncView entities={filtered} selectedId={isMobile ? previewEntityId : selectedId} onSelect={handleSelect} />
+          </div>
         ) : viewMode === "evidence" ? (
           // Owns its empty state: an empty set and a set without claims say
           // the same thing here.
@@ -1862,7 +1872,7 @@ export function LibraryView() {
         )}
 
         {/* Hidden while the table has no columns: there is nothing to show more of. */}
-        {!cejilLoading && viewMode !== "overview" && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" &&
+        {!cejilLoading && viewMode !== "overview" && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" && viewMode !== "sync" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button

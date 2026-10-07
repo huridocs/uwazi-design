@@ -28,6 +28,7 @@ import {
   libraryCorpusReadyAtom,
   libraryHasQuotesAtom,
   libraryHasClaimEvidenceAtom,
+  libraryHasSyncAtom,
   libraryDisplayAtom,
   libraryTimelineScopeAtom,
   libraryResultsSheetOpenAtom,
@@ -205,7 +206,8 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   // Evidence likewise, where the collection has loaded and holds no claim
   // evidence; before it loads, `libraryViewModeAtom` reads it as the default.
   const noEvidence = s.viewMode === "evidence" && get(libraryCorpusReadyAtom) && !get(libraryHasClaimEvidenceAtom);
-  set(L.viewModeChosenAtom, noEvidence ? null : s.viewMode);
+  const noSync = s.viewMode === "sync" && get(libraryCorpusReadyAtom) && !get(libraryHasSyncAtom);
+  set(L.viewModeChosenAtom, noEvidence || noSync ? null : s.viewMode);
   set(libraryResultsSheetOpenAtom, false);
   set(L.resultsSheetArmedAtom, false);
   set(libraryDisplayAtom, s.display);

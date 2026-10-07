@@ -22,6 +22,9 @@ import { legacyMetaColumnId, listColumnOptions } from "../components/library/lis
 import { networkTypeOptionsAtom } from "./network";
 import { NETWORK_EVIDENCE_TEMPLATES } from "../data/network/graph";
 import { nepalClaimEvidence } from "../data/nepal/claimEvidence";
+import { vegasLoaded } from "../data/vegas/load";
+import { vegasHasSync } from "../data/vegas/syncLanes";
+import { syncFoldedAtom, syncPlayheadAtom, syncWindowAtom } from "./syncView";
 import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type MapBounds, type RangeBounds } from "../utils/libraryFilter";
 import { registerSettingsReset } from "./settingsReset";
 import { carriesContent } from "../utils/entityContent";
@@ -83,6 +86,13 @@ export const libraryHasQuotesAtom = atom((get) =>
  *  state instead. */
 export const libraryHasClaimEvidenceAtom = atom((get) =>
   get(libraryEntitiesAtom).some((e) => e.typeId === "nepal_claim" && !!nepalClaimEvidence(e.id)),
+);
+
+/** Whether the collection holds recordings placed on its clock and synced by
+ *  anchors, so the Sync view has lanes to draw (Las Vegas only, today). Read
+ *  over the whole collection, as the Evidence check is. */
+export const libraryHasSyncAtom = atom(
+  (get) => get(dataSourceAtom) === "vegas" && get(libraryEntitiesAtom).length > 0 && vegasLoaded() && vegasHasSync(),
 );
 
 /** Whether the collection's entities have loaded, so an empty list means
@@ -562,6 +572,9 @@ export const dropSyncedMapAreaAtom = atom(null, (_get, set) => set(syncedMapArea
  *  through its own scope (`atoms/librarySplit.ts`). */
 export const resetLibraryPaneAtom = atom(null, (_get, set) => {
   set(mapBoundsStateAtom, null);
+  set(syncWindowAtom, null);
+  set(syncPlayheadAtom, null);
+  set(syncFoldedAtom, {});
   set(syncedMapAreaAtom, null);
 });
 registerSettingsReset((set) => set(resetLibraryPaneAtom));
@@ -611,6 +624,7 @@ const viewModeStateAtom = atom(
     const offered = get(libraryOverviewOfferedAtom);
     const chosen = get(viewModeChosenAtom);
     if (chosen === "evidence" && !get(libraryHasClaimEvidenceAtom)) return fallback;
+    if (chosen === "sync" && !get(libraryHasSyncAtom)) return fallback;
     if (chosen === "overview" && !offered) return fallback;
     return chosen ?? (offered ? "overview" : fallback);
   },
@@ -845,7 +859,9 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     viewInMenu: !isMobile && get(libraryViewInMenuAtom),
     viewChoices: [
       ...(get(libraryOverviewOfferedAtom) ? [OVERVIEW_VIEW] : []),
-      ...(get(libraryHasClaimEvidenceAtom) ? LIBRARY_VIEWS : LIBRARY_VIEWS.filter((v) => v.id !== "evidence")),
+      ...LIBRARY_VIEWS.filter(
+        (v) => (v.id !== "evidence" || get(libraryHasClaimEvidenceAtom)) && (v.id !== "sync" || get(libraryHasSyncAtom)),
+      ),
     ],
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom), source: get(dataSourceAtom) }),
@@ -1217,10 +1233,14 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   // Likewise the Evidence view: the default view where the new collection has
   // no claim evidence. Before it loads it cannot say, so it is dropped then too.
   if (get(viewModeChosenAtom) === "evidence" && !get(libraryHasClaimEvidenceAtom)) set(viewModeChosenAtom, null);
+  if (get(viewModeChosenAtom) === "sync" && !get(libraryHasSyncAtom)) set(viewModeChosenAtom, null);
   // Where it is offered, a collection opens on its Overview.
   if (get(libraryOverviewOfferedAtom)) set(viewModeChosenAtom, null);
   set(libraryOverviewOriginAtom, false);
   set(networkCentreCommunityAtom, null);
+  set(syncWindowAtom, null);
+  set(syncPlayheadAtom, null);
+  set(syncFoldedAtom, {});
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});
@@ -1442,6 +1462,9 @@ export const libraryPaneScopedAtoms = [
   viewModeChosenAtom,
   libraryOverviewOriginAtom,
   networkCentreCommunityAtom,
+  syncWindowAtom,
+  syncPlayheadAtom,
+  syncFoldedAtom,
   libraryDisplayStoreAtom,
   libraryTimelineScopeAtom,
   sortStateAtom,

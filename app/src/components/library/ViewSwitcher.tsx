@@ -29,16 +29,21 @@ export function ViewSwitcher({
   value,
   onChange,
   evidence = true,
+  sync = false,
   overview = false,
 }: {
   value: string;
   onChange: (id: string) => void;
   /** Whether to list Evidence. */
   evidence?: boolean;
+  /** Whether to list Sync. */
+  sync?: boolean;
   /** Whether to list Overview. */
   overview?: boolean;
 }) {
-  const options = VIEWS.filter((v) => (v.value !== "evidence" || evidence) && (v.value !== "overview" || overview));
+  const options = VIEWS.filter(
+    (v) => (v.value !== "evidence" || evidence) && (v.value !== "sync" || sync) && (v.value !== "overview" || overview),
+  );
   return (
     <Select
       value={value}
