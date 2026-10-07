@@ -30,11 +30,13 @@ import {
   libraryTimelineScopeAtom,
   libraryResultsSheetOpenAtom,
   librarySelectedClusterAtom,
+  libraryMapBoundsAtom,
   switchDataSourceAtom,
   whenBulkClean,
   ALL_MATCH_TYPES,
   type LibraryDisplayState,
   type LibraryMatch,
+  type MapBounds,
   type LibrarySort,
   type LibrarySortDir,
   type LibraryViewMode,
@@ -89,6 +91,9 @@ export interface LibrarySnapshot {
    *  in ones that kept the defaults (`all`, `partial`). */
   searchScope?: SearchScope;
   searchMatch?: QueryMatchMode;
+  /** The Map view's area filter, which is also where the map opens. Missing
+   *  in older snapshots and wherever the reader had not moved the map. */
+  mapBounds?: MapBounds;
   /** The view the reader picked; null = the collection's default view. */
   viewMode: LibraryViewMode | null;
   display: LibraryDisplayState;
@@ -136,6 +141,7 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     // Written only when set, so a plain search's link stays as short as before.
     ...(get(librarySearchScopeAtom) !== "all" ? { searchScope: get(librarySearchScopeAtom) } : {}),
     ...(get(librarySearchMatchAtom) !== "partial" ? { searchMatch: get(librarySearchMatchAtom) } : {}),
+    ...(get(libraryMapBoundsAtom) ? { mapBounds: get(libraryMapBoundsAtom)! } : {}),
     viewMode: get(L.viewModeChosenAtom),
     display: get(libraryDisplayAtom),
     sort: {
@@ -203,7 +209,14 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   set(L.searchSortDirOverrideAtom, s.query ? s.sort.searchDir : null);
   set(libraryTimelineScopeAtom, s.timelineScope);
   set(librarySelectedClusterAtom, null);
+  // After the view: the bound is read only while the Map view is in front.
+  set(L.mapBoundsStateAtom, isMapBounds(s.mapBounds) ? { ...s.mapBounds } : null);
 }
+
+const isMapBounds = (b: unknown): b is MapBounds =>
+  !!b &&
+  typeof b === "object" &&
+  (["south", "west", "north", "east"] as const).every((k) => Number.isFinite((b as Record<string, unknown>)[k]));
 
 /** Open a snapshot: its collection (behind the bulk form's guard, as the
  *  collection picker is), the Library, and its state. */
@@ -264,7 +277,8 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
     rangeNames.size +
     (s.groups ?? []).filter((g) => groupEffective(g, narrows)).length +
     nn(s.chains) +
-    nn(s.content)
+    nn(s.content) +
+    (isMapBounds(s.mapBounds) ? 1 : 0)
   );
 }
 
@@ -273,7 +287,7 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
 const facetKey = (s: LibrarySnapshot) =>
   JSON.stringify([s.types, s.hasDoc, s.status, s.countries, s.descriptors, snapshotMatch(s), s.ranges ?? {},
     s.groups ?? [], s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode,
-    s.searchScope ?? "all", s.searchMatch ?? "partial"]);
+    s.searchScope ?? "all", s.searchMatch ?? "partial", s.mapBounds ?? null]);
 
 /** A snapshot read from storage or a link is untrusted: anything that is not
  *  the shape is dropped rather than half-applied. */

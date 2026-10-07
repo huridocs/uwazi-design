@@ -40,6 +40,7 @@ import {
   collapseSelectionAtom,
   defaultSortDir,
   libraryActiveFilterCountAtom,
+  libraryMapBoundsAtom,
   libraryCardInfoAtom,
   libraryResultsPreviewCountAtom,
   previewCount,
@@ -110,7 +111,7 @@ import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
 import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
 import { templatesAtom } from "../atoms/templates";
-import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, activeRangesOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
+import { entityInMapBounds, matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, activeRangesOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
 import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from "../utils/librarySnippets";
@@ -757,7 +758,10 @@ export function LibraryView() {
     [entities, filterState, q],
   );
 
-  const filtered = useMemo(() => {
+  // Everything but the map's area: what the map draws, so panning brings pins
+  // in and out of the area without rebuilding the map. `filtered` narrows it
+  // by the area with the same test the `map` node compiles to.
+  const unbounded = useMemo(() => {
     const list = q
       ? matchTypeBase.filter((e) =>
           passesMatchTypes(matchTypes, q, () => categoriesOf(e)),
@@ -815,6 +819,16 @@ export function LibraryView() {
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
   }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes, searchScope, searchMatch]);
+  const mapBounds = useAtomValue(libraryMapBoundsAtom);
+  const filtered = useMemo(
+    () => (mapBounds ? unbounded.filter((e) => entityInMapBounds(e, mapBounds)) : unbounded),
+    [unbounded, mapBounds],
+  );
+  // The filter with the map's area, for the passes that go through `compile`.
+  const boundedState = useMemo(
+    () => (mapBounds ? { ...filterState, mapBounds } : filterState),
+    [filterState, mapBounds],
+  );
 
   // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -849,8 +863,8 @@ export function LibraryView() {
   // The brush histogram applies every facet except the date one, so the bars
   // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
-    () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush, searchScope, searchMatch],
+    () => (showBrush ? entities.filter((e) => matchesAll(e, boundedState, "date")) : []),
+    [entities, mapBounds, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, rangesKey, groups, chainKey, contentKey, activeChains, language, q, searchIndex, showBrush, searchScope, searchMatch],
   );
   // …and the Lanes grid drops the template facet too, so drilling into one lane
   // doesn't shrink the grid to that single lane.
@@ -1365,7 +1379,7 @@ export function LibraryView() {
                 </div>
               }
             >
-              <LibraryMapView entities={filtered} />
+              <LibraryMapView entities={unbounded} />
             </Suspense>
           </div>
         ) : viewMode === "timeline" ? (

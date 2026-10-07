@@ -149,6 +149,25 @@ export function matchInterval(
   }
 }
 
+/** The map's visible area, in degrees. West can be below -180 or east above
+ *  180 when the map shows the world wrapped. */
+export interface MapBounds {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** Is the record's geolocation inside the map area? A record without one is
+ *  not. Longitudes are tried one world to each side, so a wrapped view keeps
+ *  the pins it draws. */
+export function entityInMapBounds(e: Entity, b: MapBounds): boolean {
+  const g = e.geo;
+  if (!g || g.lat < b.south || g.lat > b.north) return false;
+  if (b.east - b.west >= 360) return true;
+  return [g.lng, g.lng - 360, g.lng + 360].some((lng) => lng >= b.west && lng <= b.east);
+}
+
 /** The types that carry a country, and a descriptor: the fixed facets'
  *  carriers for `none` and `missing`. */
 export const countryCarriersOf = (entities: readonly Entity[], source: DataSource, language: Language) =>
@@ -266,6 +285,9 @@ export interface LibraryFilterState {
   /** The Content card: ticked rows per group, and Contains' Any/All. */
   content: ContentSelection;
   contentMode: "AND" | "OR";
+  /** The map's visible area, while the Map view is open and the reader has
+   *  moved it. Absent = no spatial narrowing. */
+  mapBounds?: MapBounds | null;
 }
 
 /** One independent filter dimension. A facet's own key is excluded when
@@ -281,7 +303,8 @@ export type FacetKey =
   | "date"
   | "search"
   | "matchType"
-  | "content";
+  | "content"
+  | "map";
 
 export function entityIsDoc(e: Entity, source: DataSource): boolean {
   switch (source) {
@@ -417,6 +440,7 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
     content: s.content ?? {},
     contentMode: s.contentMode ?? "OR",
+    mapBounds: s.mapBounds ?? null,
   };
   normalizedStates.set(s, out);
   normalizedStates.set(out, out);
@@ -481,6 +505,10 @@ function compile(s: LibraryFilterState): FilterNode[] {
   // are faceted inside it.
   if (hasContentSelection(s.content))
     leaf("content", (e) => matchesContent(entityContent(e, s.source), s.content, s.contentMode));
+  if (s.mapBounds) {
+    const b = s.mapBounds;
+    leaf("map", (e) => entityInMapBounds(e, b));
+  }
   for (const f of s.inherited)
     leaf(inheritedKey(f.def.propId), (e) =>
       matchValues(entityInheritedValues(e, f.def, s.language, s.source), f.values, f.mode, f.carriers.has(e.typeId)),

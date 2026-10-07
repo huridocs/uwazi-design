@@ -35,6 +35,7 @@ import {
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
+  libraryMapBoundsAtom,
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
   librarySearchScopeAtom,
@@ -139,6 +140,8 @@ export function LibraryFilters() {
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  // The Map view's area narrows every card's counts, as it narrows the results.
+  const mapBounds = useAtomValue(libraryMapBoundsAtom);
   const matchTypes = useAtomValue(matchTypeFiltersAtom);
   // Adv. Search's modifiers narrow the facet counts as they narrow the results.
   const searchScope = useAtomValue(librarySearchScopeAtom);
@@ -265,12 +268,13 @@ export function LibraryFilters() {
       matchTypes,
       content: contentSelection,
       contentMode,
+      mapBounds,
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
     dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, groups, chainDefs, chainFilters, query, matchTypes,
-    contentSelection, contentMode, entities, searchScope, searchMatch,
+    contentSelection, contentMode, entities, searchScope, searchMatch, mapBounds,
   ]);
 
   const typeCounts = useMemo(() => {

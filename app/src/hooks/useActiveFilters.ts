@@ -17,6 +17,7 @@ import {
   libraryFacetMatchAtom,
   libraryRangeFiltersAtom,
   libraryFilterGroupsAtom,
+  libraryMapBoundsAtom,
   type LibraryMatch,
 } from "../atoms/library";
 import { groupEffective, inheritedKey, rangeKey } from "../utils/libraryFilter";
@@ -69,6 +70,7 @@ export function useActiveFilters(): ActiveFilter[] {
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
   const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
   const [groups, setGroups] = useAtom(libraryFilterGroupsAtom);
+  const [mapBounds, setMapBounds] = useAtom(libraryMapBoundsAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -167,6 +169,15 @@ export function useActiveFilters(): ActiveFilter[] {
           setDateTo("");
         },
         facetKey: "date",
+      });
+
+    // The map's area; × drops the bound and leaves the map where it is.
+    if (mapBounds)
+      out.push({
+        id: "map",
+        group: "Map",
+        label: "In map area",
+        remove: () => setMapBounds(null),
       });
 
     for (const g of CONTENT_GROUPS)
@@ -273,6 +284,8 @@ export function useActiveFilters(): ActiveFilter[] {
     facetMatch,
     rangeFilters,
     groups,
+    mapBounds,
+    setMapBounds,
     dataSource,
     language,
     datePattern,

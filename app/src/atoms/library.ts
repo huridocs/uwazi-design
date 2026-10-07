@@ -20,7 +20,8 @@ import { legacyMetaColumnId, listColumnOptions } from "../components/library/lis
 import { networkTypeOptionsAtom } from "./network";
 import { NETWORK_EVIDENCE_TEMPLATES } from "../data/network/graph";
 import { nepalClaimEvidence } from "../data/nepal/claimEvidence";
-import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type RangeBounds } from "../utils/libraryFilter";
+import { groupEffective, inheritedKey, type FilterGroup, type LibraryMatch, type MapBounds, type RangeBounds } from "../utils/libraryFilter";
+import { registerSettingsReset } from "./settingsReset";
 import { carriesContent } from "../utils/entityContent";
 import type { Entity } from "../data/entities";
 import type { SearchScope } from "../utils/librarySnippets";
@@ -474,6 +475,18 @@ export const libraryRangeFiltersAtom = atom<Record<string, RangeBounds>>({});
 export const libraryDateFromAtom = atom<string>("");
 export const libraryDateToAtom = atom<string>("");
 
+/** The map's visible area as a filter: set when the reader pans or zooms the
+ *  Map view (never by the map's own fit), dropped when they leave it. Read
+ *  as null in any other view, so no view without a map can be narrowed by
+ *  one. */
+const mapBoundsStateAtom = atom<MapBounds | null>(null);
+export type { MapBounds };
+export const libraryMapBoundsAtom = atom(
+  (get) => (get(viewModeStateAtom) === "map" ? get(mapBoundsStateAtom) : null),
+  (_get, set, next: MapBounds | null) => set(mapBoundsStateAtom, next),
+);
+registerSettingsReset((set) => set(mapBoundsStateAtom, null));
+
 /** Facets generated from inherited relationship properties, keyed
  *  `inheritProperty → (value → on)`, as in Uwazi. */
 export const libraryInheritedFiltersAtom = atom<
@@ -516,7 +529,10 @@ const viewModeStateAtom = atom(
 );
 /** Forget the reader's pick, so the Library opens on the saved default view
  *  again (Settings › Collection writes this when it saves a new default). */
-export const resetLibraryViewChoiceAtom = atom(null, (_get, set) => set(viewModeChosenAtom, null));
+export const resetLibraryViewChoiceAtom = atom(null, (_get, set) => {
+  set(viewModeChosenAtom, null);
+  set(mapBoundsStateAtom, null);
+});
 
 /** Phones: the Results sheet a search opened. Opened once per query, so refining
  *  never reopens a sheet the user closed; closing it keeps the query;
@@ -539,7 +555,11 @@ export const submitLibrarySearchAtom = atom(null, (get, set) => {
  *  `librarySearchDraftAtom`); Adv. Search is a view the reader picks. */
 export const libraryViewModeAtom = atom(
   (get) => get(viewModeStateAtom),
-  (_get, set, next: LibraryViewMode) => set(viewModeStateAtom, next),
+  (_get, set, next: LibraryViewMode) => {
+    // The map area is a filter only while its map is in front.
+    if (next !== "map") set(mapBoundsStateAtom, null);
+    set(viewModeStateAtom, next);
+  },
 );
 
 /** Results body layout, four readings of the same snippets:
@@ -1076,6 +1096,7 @@ function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   set(libraryContentModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
+  set(mapBoundsStateAtom, null);
   set(libraryOpenEntityIdAtom, null);
   set(librarySelectedClusterAtom, null);
   // A selection belongs to the collection it was made in.
@@ -1099,6 +1120,7 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
+  set(mapBoundsStateAtom, null);
 });
 
 /** Clear every filter and the search. The one definition, so callers cannot drift. */
@@ -1120,6 +1142,7 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
   set(libraryContentFiltersAtom, {});
   set(libraryContentModeAtom, "OR");
+  set(mapBoundsStateAtom, null);
 });
 
 /** Count of active facets (not the search; see `libraryActiveSearchAtom`). The
@@ -1157,6 +1180,7 @@ export const libraryActiveFilterCountAtom = atom((get) => {
     n += Object.values(vals).filter(Boolean).length;
   for (const vals of Object.values(get(libraryContentFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
+  if (get(libraryMapBoundsAtom)) n += 1;
   return n;
 });
 
@@ -1209,6 +1233,7 @@ export const libraryStateInternals = {
   searchSortOverrideAtom,
   searchSortDirOverrideAtom,
   resultsSheetArmedAtom,
+  mapBoundsStateAtom,
 };
 
 /** Switch collection without the bulk guard, for callers already behind it. */

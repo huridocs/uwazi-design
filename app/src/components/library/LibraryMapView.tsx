@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { startTransition, useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -9,11 +9,14 @@ import {
   libraryOpenEntityIdAtom,
   libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
+  libraryMapBoundsAtom,
   type LibraryCluster,
+  type MapBounds,
 } from "../../atoms/library";
 import { collectionSettings } from "../../atoms/settingsSingletons";
 import { MapPinOff } from "lucide-react";
 import { entityCountries } from "../../utils/libraryFacets";
+import { entityInMapBounds } from "../../utils/libraryFilter";
 import { getEntity, getEntityType, type Entity } from "../../data/entities";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 
@@ -22,6 +25,18 @@ import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
  *  every filter: Kathmandu District opened on all of northern India. */
 const FIT_MAX_ZOOM = 12;
 const PIN = 14;
+/** The map area is written this long after the map stops, not on every frame. */
+const BOUNDS_SETTLE_MS = 150;
+/** A move that starts this long after the reader's last wheel, click, key or
+ *  pinch is theirs (the wheel waits 40 ms before it zooms). */
+const GESTURE_WINDOW_MS = 1000;
+
+/** The area as stored: rounded, so a link stays short. */
+const boundsOf = (b: L.LatLngBounds): MapBounds => {
+  const r = (n: number) => Math.round(n * 1e4) / 1e4;
+  return { south: r(b.getSouth()), west: r(b.getWest()), north: r(b.getNorth()), east: r(b.getEast()) };
+};
+const latLngBoundsOf = (b: MapBounds) => L.latLngBounds([b.south, b.west], [b.north, b.east]);
 
 interface PinOptions extends L.MarkerOptions {
   entityId: string;
@@ -40,7 +55,12 @@ const isActivation = (e: L.LeafletEvent) => {
  *  and one whose members cannot split any further (they share a point, or the
  *  map is at its last zoom) opens them as a list in the drawer. A pin opens the
  *  entity's preview. Pins and badges are buttons: Tab reaches them, Enter or
- *  Space opens them. */
+ *  Space opens them.
+ *
+ *  `entities` is the result set without the map's area. When the reader pans
+ *  or zooms, the visible area becomes a filter (`libraryMapBoundsAtom`); the
+ *  map's own fits never write it, so opening the view narrows nothing. While
+ *  an area is set the map keeps the reader's view instead of refitting. */
 export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
@@ -50,6 +70,12 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const startingPoint = useAtomValue(collectionSettings.valueAtom).mapStartingPoint;
+  const [mapBounds, setMapBounds] = useAtom(libraryMapBoundsAtom);
+  const mapBoundsRef = useRef(mapBounds);
+  mapBoundsRef.current = mapBounds;
+  // The area this map last wrote; any other value (a saved view) moves the map.
+  const written = useRef<MapBounds | null>(null);
+  const gestureAt = useRef(-Infinity);
 
   const host = useRef<HTMLDivElement>(null);
   const map = useLeafletMap(host, {
@@ -133,6 +159,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         // After a zoom the badge is gone; the map itself takes focus, and Tab
         // goes on to the pins and badges now in view.
         if (fromKeyboard) map.once("zoomend", () => map.getContainer().focus({ preventScroll: true }));
+        gestureAt.current = performance.now();
         cluster.zoomToBounds({ padding: [24, 24] });
       }
     };
@@ -168,7 +195,15 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
 
     group.addTo(map);
     groupRef.current = group;
-    if (located.length) map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32] });
+    // With an area set, the reader's view stays; the first time with one (a
+    // saved view), the map opens on it.
+    const area = mapBoundsRef.current;
+    if (area) {
+      if (written.current !== area) fitArea(area);
+    } else if (located.length) {
+      gestureAt.current = -Infinity;
+      map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32], animate: false });
+    }
 
     return () => {
       groupRef.current = null;
@@ -177,6 +212,79 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     // `located` follows `entities`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, entities, setSelectedCluster, setSelectedId]);
+
+  /** Show a stored area, as the map's own move. */
+  function fitArea(area: MapBounds) {
+    if (!map) return;
+    gestureAt.current = -Infinity;
+    written.current = area;
+    map.fitBounds(latLngBoundsOf(area), { animate: false });
+  }
+
+  // A saved view or link opened while the map is in front moves it to its area.
+  useEffect(() => {
+    if (map && mapBounds && written.current !== mapBounds) fitArea(mapBounds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitArea` reads only refs and `map`
+  }, [map, mapBounds]);
+
+  // The reader's pans and zooms write the visible area, once the map settles.
+  // Only moves that follow a gesture count: the map's fits, a resize of its
+  // pane and a pin's click do not.
+  useEffect(() => {
+    if (!map) return;
+    const container = map.getContainer();
+    const mark = () => (gestureAt.current = performance.now());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.startsWith("Arrow") || ["+", "-", "=", "_"].includes(e.key)) mark();
+    };
+    const onTouch = (e: TouchEvent) => e.touches.length > 1 && mark();
+    let timer = 0;
+    // Decided when the move starts, which Leaflet does in step with the
+    // gesture; its end can come seconds later on a busy main thread, and a
+    // drag's inertia runs as long as it runs.
+    let userMove = false;
+    const onMoveStart = () => (userMove = performance.now() - gestureAt.current < GESTURE_WINDOW_MS);
+    const onDragStart = () => (userMove = true);
+    const onMoveEnd = () => {
+      if (!userMove) return;
+      userMove = false;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const next = boundsOf(map.getBounds());
+        written.current = next;
+        startTransition(() => setMapBounds(next));
+      }, BOUNDS_SETTLE_MS);
+    };
+    // The zoom buttons, a double-click zoom and a shift-drag box zoom.
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element).closest(".leaflet-control-zoom")) mark();
+    };
+    const onDown = (e: MouseEvent) => e.shiftKey && mark();
+    // In the capture phase, before Leaflet's own handlers: a zoom it does not
+    // animate ends inside them.
+    const opts = { capture: true, passive: true };
+    container.addEventListener("wheel", mark, opts);
+    container.addEventListener("keydown", onKey, true);
+    container.addEventListener("touchstart", onTouch, opts);
+    container.addEventListener("click", onClick, true);
+    container.addEventListener("dblclick", mark, true);
+    container.addEventListener("mousedown", onDown, true);
+    map.on("movestart", onMoveStart);
+    map.on("dragstart", onDragStart);
+    map.on("moveend", onMoveEnd);
+    return () => {
+      window.clearTimeout(timer);
+      container.removeEventListener("wheel", mark, true);
+      container.removeEventListener("keydown", onKey, true);
+      container.removeEventListener("touchstart", onTouch, true);
+      container.removeEventListener("click", onClick, true);
+      container.removeEventListener("dblclick", mark, true);
+      container.removeEventListener("mousedown", onDown, true);
+      map.off("movestart", onMoveStart);
+      map.off("dragstart", onDragStart);
+      map.off("moveend", onMoveEnd);
+    };
+  }, [map, setMapBounds]);
 
   // Redraw the badges to mark the selected one, or to rename them in a new language.
   useEffect(() => {
@@ -188,6 +296,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   }, [selectedCluster, language]);
 
   const unlocated = entities.length - located.length;
+  const inArea = mapBounds ? located.filter((e) => entityInMapBounds(e, mapBounds)).length : null;
 
   return (
     <div data-component="LibraryMapView" className="relative w-full h-full">
@@ -234,7 +343,9 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
         <p data-part="caption" className="absolute top-3 start-3 z-[1000] text-meta text-ink-tertiary bg-paper/80 backdrop-blur-sm rounded px-2 py-0.5">
+          {inArea !== null && <>{inArea.toLocaleString()} of </>}
           {located.length.toLocaleString()} located {located.length === 1 ? "entity" : "entities"}
+          {inArea !== null && " in map area"}
           {unlocated > 0 && (
             <span className="text-ink-tertiary">
               {" · "}
