@@ -8,6 +8,7 @@ import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
 import { LibraryView } from "./views/LibraryView";
+import { LibrarySplitSpike, splitSpikePanes } from "./views/LibrarySplitSpike";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { useCsvImportRunner } from "./atoms/csvImports";
 import { ImportCSVView } from "./views/ImportCSVView";
@@ -146,7 +147,7 @@ export function App() {
         ) : appView === "settings" ? (
           <SettingsView onNavigate={handleNavigate} />
         ) : appView === "library" ? (
-          <LibraryView />
+          splitSpikePanes() ? <LibrarySplitSpike panes={splitSpikePanes() as 1 | 2} /> : <LibraryView />
         ) : (
           <EntityView />
         )}

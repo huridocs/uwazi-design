@@ -1249,3 +1249,63 @@ export const libraryStateInternals = {
 
 /** Switch collection without the bulk guard, for callers already behind it. */
 export const switchDataSourceAtom = atom(null, (get, set, source: DataSource) => switchDataSource(get, set, source));
+
+/** Split spike (dev/results/split-view/spike.md): every primitive that holds
+ *  one Library pane's state, private bases included. A pane wraps its subtree
+ *  in a `ScopeProvider` over these; the derived atoms above read them through
+ *  the scope. Shared on purpose: the collection, the language, the entities
+ *  and every Settings store. */
+export const libraryPaneScopedAtoms = [
+  // Search
+  libraryQueryAtom,
+  searchDraftStateAtom,
+  searchScopeShownAtom,
+  searchScopeStateAtom,
+  searchMatchShownAtom,
+  searchMatchStateAtom,
+  matchTypeFiltersAtom,
+  // Facets
+  libraryTypeFiltersAtom,
+  libraryHasDocAtom,
+  libraryContentFiltersAtom,
+  libraryContentModeAtom,
+  libraryStatusFiltersAtom,
+  libraryCountryFiltersAtom,
+  libraryDescriptorFiltersAtom,
+  libraryFacetMatchAtom,
+  libraryFilterGroupsAtom,
+  libraryRangeFiltersAtom,
+  libraryDateFromAtom,
+  libraryDateToAtom,
+  libraryInheritedFiltersAtom,
+  libraryChainFiltersAtom,
+  mapBoundsStateAtom,
+  // View, display, sort
+  viewModeChosenAtom,
+  libraryDisplayStoreAtom,
+  libraryTimelineScopeAtom,
+  sortStateAtom,
+  sortDirStateAtom,
+  userSortedAtom,
+  searchSortOverrideAtom,
+  searchSortDirOverrideAtom,
+  // Selection and what the pane has open
+  librarySelectionAtom,
+  librarySelectionAnchorAtom,
+  lastRangeAtom,
+  librarySelectModeAtom,
+  librarySelectionDrawerOpenAtom,
+  librarySelectionListAskedAtom,
+  libraryDrawnIdsAtom,
+  libraryOpenEntityIdAtom,
+  librarySelectedClusterAtom,
+  resultsCurrentPageAtom,
+  libraryRailPanelAtom,
+  libraryResultsSheetOpenAtom,
+  resultsSheetArmedAtom,
+  // Measured from the pane's own width and results
+  librarySortInMenuAtom,
+  libraryLanguageInMenuAtom,
+  libraryCardColumnsInEffectAtom,
+  libraryResultsPreviewCountAtom,
+];

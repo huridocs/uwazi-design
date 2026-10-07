@@ -20,6 +20,7 @@
     "graphology": "^0.26.0",
     "graphology-layout-forceatlas2": "^0.10.1",
     "jotai": "^2.12.3",
+    "jotai-scope": "^0.10.0",
     "leaflet": "^1.9.4",
     "leaflet.gridlayer.googlemutant": "^0.16.0",
     "leaflet.markercluster": "^1.5.3",
