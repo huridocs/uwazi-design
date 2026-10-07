@@ -582,6 +582,13 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - Camera paths and venue footprints are `Entity.shape`, drawn under the pins by
     `LibraryMapView`. `sync_offset_seconds` is a range facet. Verification leads the facets, then
     Recording kind.
+  - Sync analysis: `utils/syncAnalysis.ts` (pure, `vegasSyncAtom`) recomputes the seed's sync check
+    from the `captures` anchors: per moment the median clock, spread, MAD and outliers (> 2 s);
+    per recording the offset to the medians, drift (spread of implied starts), title check and
+    confidence; volley intervals; the NYT and official comparisons, all from summaries. Check:
+    `npm run check:sync`. It shows as the Sync card on a recording, Sync quality on the Overview
+    (with a full table), and the Map's "Bearing to source, computed" layer, which is never a
+    camera's facing.
 - Paragraph extraction: extractors and per-entity statuses are per-corpus stores
   (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
   rich text and a numeric property; only Red Travesía has one, so it holds the seed and the
