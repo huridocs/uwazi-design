@@ -45,6 +45,13 @@ const dayOf = (t: number) => new Date(t * 1000).toISOString().slice(0, 10);
 const dayLabel = (t: number) =>
   new Date(t * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
+/** What a volley is and how the marks read, for the legend and the tooltip
+ *  on the volley numbers. */
+const volleyNote = (n: number) =>
+  `Volley: a burst of continuous gunfire. The ${n} volleys are numbered across all recordings. ` +
+  "Bands mark each volley at the median time its recordings give; ticks mark single gunshots and other moments; " +
+  "marks on a lane are that recording's own annotations.";
+
 /* ── Geometry ─────────────────────────────────────────────────────────── */
 
 /** Below this pane width the label sits over its bar (stacked lanes). */
@@ -821,7 +828,10 @@ export const LibrarySyncView = memo(function LibrarySyncView({
     const m: SyncMoment | undefined = tick ?? volley;
     if (!m) return null;
     const lines = [`${clock(m.at)}, consensus of ${m.anchorCount.toLocaleString()} ${m.anchorCount === 1 ? "anchor" : "anchors"}`];
-    if (volley) lines.push(`Band: anchors within ${OUTLIER_SECONDS} s, ${clock(m.bandFrom)}–${clock(m.bandTo - 1)}`);
+    if (volley) {
+      lines.push(`Band: anchors within ${OUTLIER_SECONDS} s, ${clock(m.bandFrom)}–${clock(m.bandTo - 1)}`);
+      lines.push(volleyNote(model.volleys.length));
+    }
     return { x: x(m.at), y: r.bottom + 6, title: m.label, lines };
   };
 
@@ -1101,6 +1111,8 @@ export const LibrarySyncView = memo(function LibrarySyncView({
         </div>
       </div>
 
+      <SyncLegend note={volleyNote(model.volleys.length)} />
+
       {/* ── Clock and lanes ── */}
       <div className="flex-1 min-h-0 flex gap-2">
       <div data-part="plot" className="relative flex-1 min-w-0 min-h-0 flex flex-col rounded-lg bg-paper overflow-hidden">
@@ -1358,6 +1370,44 @@ function SyncTip({ tip }: { tip: Tip }) {
         <p key={l} className="text-meta text-ink-secondary tabular-nums">
           {l}
         </p>
+      ))}
+    </div>
+  );
+}
+
+/** One line under the toolbar: a swatch per mark, the volley explained in
+ *  its tooltip and to screen readers. Scrolls sideways where it does not fit. */
+function SyncLegend({ note }: { note: string }) {
+  const items: { mark: ReactNode; label: string; title?: string }[] = [
+    { mark: <span className="w-2.5 h-3 rounded-[1px] bg-vellum" />, label: "Volley, a burst of continuous gunfire", title: note },
+    { mark: <span className="w-px h-3" style={{ backgroundColor: "var(--border-soft)" }} />, label: "Single shot or moment" },
+    { mark: <span className="w-0.5 h-3 rounded-[1px]" style={{ backgroundColor: "var(--success)" }} />, label: "Annotation on a recording" },
+    {
+      mark: (
+        <span className="flex items-center">
+          <span className="w-2 h-px" style={{ backgroundColor: "var(--text-tertiary)" }} />
+          <span className="w-2 h-2 rounded-full border-2" style={{ borderColor: "var(--success)" }} />
+        </span>
+      ),
+      label: "Outlier",
+      title: `An annotation more than ${OUTLIER_SECONDS} s off its volley's time, tied to it`,
+    },
+    {
+      mark: <span className="w-4 h-1.5 rounded-[3px]" style={{ backgroundColor: "color-mix(in srgb, var(--warning) 40%, transparent)" }} />,
+      label: "Drift",
+      title: `A recording whose annotations disagree with each other by more than ${OUTLIER_SECONDS} s`,
+    },
+  ];
+  return (
+    <div data-part="legend" className="shrink-0 -mt-1 h-5 flex items-center gap-x-4 overflow-x-auto overflow-y-hidden whitespace-nowrap text-meta text-ink-tertiary">
+      <p className="sr-only">{note}</p>
+      {items.map((it) => (
+        <span key={it.label} className="shrink-0 inline-flex items-center gap-1.5" title={it.title}>
+          <span aria-hidden className="w-4 flex items-center justify-center">
+            {it.mark}
+          </span>
+          {it.label}
+        </span>
       ))}
     </div>
   );
