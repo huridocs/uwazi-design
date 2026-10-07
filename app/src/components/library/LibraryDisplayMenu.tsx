@@ -8,6 +8,7 @@ import { SegmentedControl } from "../shared/SegmentedControl";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 import { SheetDone } from "../layout/SheetDone";
 import { breakpointAtom } from "../../atoms/viewport";
+import { libraryLayoutAtom } from "../../atoms/session";
 import {
   libraryDisplayAtom,
   libraryDisplayContextAtom,
@@ -28,6 +29,7 @@ import {
   sectionOptions,
   storageId,
   THUMBS_SHOWN,
+  cardColumnsDefault,
   type DisplaySection,
   type DisplayValue,
   type DisplayValues,
@@ -49,6 +51,7 @@ import { t } from "../../utils/i18n";
  *  toolbar row is the same width whatever is selected. */
 export function LibraryDisplayMenu() {
   const [state, setState] = useAtom(libraryDisplayAtom);
+  const layout = useAtomValue(libraryLayoutAtom);
   const [mode, setMode] = useAtom(libraryViewModeAtom);
   const ctx = useAtomValue(libraryDisplayContextAtom);
   const modified = useAtomValue(libraryDisplayModifiedAtom);
@@ -216,7 +219,10 @@ export function LibraryDisplayMenu() {
     const scope = option.scope ?? "mode";
     const bound = scope === "external" ? external[option.id] : undefined;
     const key = storageId(option, values);
-    const current = bound ? bound.value : (valueOf(key, scope, option.default) as string);
+    // Card columns default by layout (`cardColumnsDefault`), so the menu shows
+    // the count the grid uses when nothing is picked.
+    const fallback = option.id === "cardCols" ? cardColumnsDefault(layout) : option.default;
+    const current = bound ? bound.value : (valueOf(key, scope, fallback) as string);
     if (option.layout === "segmented") {
       // The line under the row is always mounted. Dimmed, it names what turns
       // the control back on. Columns: the grid reports what it drew; Auto names

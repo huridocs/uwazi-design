@@ -15,7 +15,7 @@ import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { libraryLayoutAtom, librarySyncFiltersAtom } from "./session";
 import { propertyColumns } from "../utils/entityFields";
-import { LIBRARY_SORTS, LIBRARY_VIEWS, type Choice } from "../data/libraryDisplay";
+import { LIBRARY_SORTS, LIBRARY_VIEWS, cardColumnsDefault, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { networkTypeOptionsAtom } from "./network";
@@ -928,7 +928,7 @@ export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
 export type CardColumns = "auto" | 2 | 3 | 4 | 5 | 6;
 export const libraryCardColumnsAtom = atom((get): CardColumns => {
   const frame = get(libraryThumbFrameAtom);
-  const raw = readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), `cardCols:${frame}`, "mode", "auto");
+  const raw = readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), `cardCols:${frame}`, "mode", cardColumnsDefault(get(libraryLayoutAtom)));
   const n = Number(raw);
   return n >= 2 && n <= 6 ? (n as CardColumns) : "auto";
 });

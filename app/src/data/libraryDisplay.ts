@@ -293,6 +293,10 @@ const CARD_FIELDS: DisplaySection = {
  *  picture only; in portrait (and side cards) it steps Auto's minimum width,
  *  because there the picture's width is the column's. */
 export const CARD_COLUMNS_CHOICES = ["auto", "2", "3", "4", "5", "6"] as const;
+/** Columns when the reader has not picked any: 3 in the Drawer layout, where
+ *  the drawer takes a third of the window and Auto gave two wide cards; Auto in
+ *  Full width and Split, which size the grid to their own pane. */
+export const cardColumnsDefault = (layout: string): string => (layout === "drawer" ? "3" : "auto");
 const CARD_COLUMNS: DisplaySection = {
   id: "cardCols",
   label: "Columns",
