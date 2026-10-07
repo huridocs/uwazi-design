@@ -61,3 +61,15 @@ export const drawerWidthAtom = sessionSetting<number | null>(
       v >= DRAWER_WIDTH_SANE.min &&
       v <= DRAWER_WIDTH_SANE.max),
 );
+
+/** How the Library's collection view is laid out, switched from the Dev panel
+ *  for testing. `drawer` is the docked drawer (the default); `full` gives the
+ *  main pane the whole width with a floating rail of slide-over panels;
+ *  `split` is listed but not built. Desktop only: below 1024px the Library
+ *  keeps its drawer and sheets whatever this says. */
+export type LibraryLayout = "drawer" | "full" | "split";
+export const libraryLayoutAtom = sessionSetting<LibraryLayout>(
+  "libraryLayout",
+  "drawer",
+  (v): v is LibraryLayout => v === "drawer" || v === "full",
+);

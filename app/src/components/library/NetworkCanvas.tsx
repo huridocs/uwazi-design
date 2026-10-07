@@ -1907,7 +1907,8 @@ export function NetworkCanvas({
           data-part="find" data-overlay
           role="group"
           aria-label="Matches"
-          className="absolute top-0 right-0 flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+          // `--rail-reserve`: the Library's Full width rail sits at this corner.
+          className="absolute top-0 right-[var(--rail-reserve,0px)] flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
         >
           <button
             type="button"

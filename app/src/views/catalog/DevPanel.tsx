@@ -9,6 +9,7 @@ import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
 import { clearSavedViewsAndHistoryAtom } from "../../atoms/savedViews";
 import { clearAllNotebooksAtom } from "../../atoms/notebook";
+import { libraryLayoutAtom, type LibraryLayout } from "../../atoms/session";
 import {
   FAIL_SCOPES,
   emptyDomainAtom,
@@ -47,6 +48,7 @@ export function DevPanel() {
   const clearViews = useSetAtom(clearSavedViewsAndHistoryAtom);
   const clearNotebooks = useSetAtom(clearAllNotebooksAtom);
   const [researchCleared, setResearchCleared] = useState(false);
+  const [libraryLayout, setLibraryLayout] = useAtom(libraryLayoutAtom);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -65,6 +67,26 @@ export function DevPanel() {
               { value: "collaborator", label: "Collaborator" },
             ]}
             ariaLabel="Role"
+          />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Library layout</h3>
+        <p className="text-xs text-ink-tertiary text-pretty">
+          The collection view only, from 1024px up; kept for the session. Full width drops the drawer for a rail of
+          panels over the results.
+        </p>
+        <div className="w-44">
+          <Select
+            value={libraryLayout}
+            onChange={(v) => setLibraryLayout(v as LibraryLayout)}
+            options={[
+              { value: "drawer", label: "Drawer" },
+              { value: "full", label: "Full width" },
+              { value: "split", label: "Split (coming next)", disabled: true },
+            ]}
+            ariaLabel="Library layout"
           />
         </div>
       </section>

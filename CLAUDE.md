@@ -383,6 +383,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   The canvas region is a tab stop (arrows, + / −, 0, Escape) and its keyboard list is the
   records in view. Settings › Collection can make Network the default view. `window.__network`
   (dev builds) gives node screen positions for scripted checks.
+- Library layout (`libraryLayoutAtom`, session; Dev panel › Library layout): Drawer (default),
+  Full width, Split (listed, not built). Full width applies to the collection view at ≥1024
+  only. The drawer goes; `LibraryRail` floats at the view lane's top end with Filters,
+  Results, Notebook and Views and history (`libraryRailPanelAtom`, one panel at a time,
+  focus-trapped, Escape closes), each the drawer's or menu's own body. The preview, the
+  selection list and a map cluster slide over the lane (`LibraryPaneSlideOver`, non-modal,
+  drawer width); opening one closes the rail panel. Scrolling views pad their end by
+  `RAIL_RESERVE`; Map and Network run under the rail and read `--rail-reserve` for their
+  top-end controls.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with

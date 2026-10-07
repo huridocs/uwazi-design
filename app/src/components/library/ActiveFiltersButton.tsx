@@ -5,6 +5,7 @@ import { SectionLabel } from "../shared/SectionLabel";
 import {
   clearLibraryFiltersAtom,
   libraryOpenEntityIdAtom,
+  libraryRailPanelAtom,
   librarySelectedClusterAtom,
 } from "../../atoms/library";
 import { useActiveFilters } from "../../hooks/useActiveFilters";
@@ -29,6 +30,8 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
   const clearAll = useSetAtom(clearLibraryFiltersAtom);
   const setSelectedId = useSetAtom(libraryOpenEntityIdAtom);
   const setSelectedCluster = useSetAtom(librarySelectedClusterAtom);
+  // Full width keeps Filters in the rail; the Library resets it in Drawer.
+  const setRailPanel = useSetAtom(libraryRailPanelAtom);
   const items = useActiveFilters();
   // The readout counts what the popover LISTS — facets plus the search. The
   // facet count excludes the search by design, and this button is the only
@@ -152,6 +155,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
             onClick={() => {
               setSelectedId(null);
               setSelectedCluster(null);
+              setRailPanel("filters");
               setOpen(false);
             }}
             className="w-full flex items-center gap-1.5 px-3 py-2 text-meta font-medium text-ink-secondary

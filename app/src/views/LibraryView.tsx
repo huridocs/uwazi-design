@@ -3,7 +3,7 @@ import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckSquare, FileDown, FileUp, Filter, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
+import { CheckSquare, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
@@ -69,6 +69,7 @@ import {
   librarySelectModeAtom,
   librarySelectedClusterAtom,
   libraryOpenEntityIdAtom,
+  libraryRailPanelAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
   librarySortAtom,
@@ -154,6 +155,10 @@ import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 import { useTapGuard } from "../hooks/useTapGuard";
 import { previewEntityIdAtom } from "../atoms/entityPreview";
+import { libraryLayoutAtom } from "../atoms/session";
+import { LibraryFullWidthLayer, LibraryPaneSlideOver, LibraryRail, RAIL_RESERVE, type RailItem } from "../components/library/LibraryRail";
+import { NotebookBody } from "../components/notebook/NotebookPanel";
+import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -389,7 +394,7 @@ export function LibraryView() {
   const [language, setLanguage] = useAtom(languageAtom);
   const breakpoint = useAtomValue(breakpointAtom);
   const [selectedId, setSelectedId] = useAtom(libraryOpenEntityIdAtom);
-  const selectedCluster = useAtomValue(librarySelectedClusterAtom);
+  const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
   const setSelectMode = useSetAtom(librarySelectModeAtom);
@@ -479,6 +484,13 @@ export function LibraryView() {
   }
 
   const isMobile = breakpoint === "mobile";
+  /* Library layout (Dev panel › Library layout). Full width is desktop only:
+     below 1024px the drawer, sheets and Filters button stay as they are. */
+  const fullWidth = useAtomValue(libraryLayoutAtom) === "full" && breakpoint === "desktop";
+  const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
+  // The lane's host, in state so the slide-over measures it once it exists.
+  const [laneHost, setLaneHost] = useState<HTMLDivElement | null>(null);
+  const laneHostRef = useMemo(() => ({ current: laneHost }), [laneHost]);
 
   /* ── Masthead fold ──────────────────────────────────────────────────────
      The toolbar row folds on its own width, not the viewport's: the pane is
@@ -943,7 +955,7 @@ export function LibraryView() {
     },
     [selectionActive, viewMode, clearSelection],
   );
-  const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
+  const [selectionDrawerOpen, setSelectionDrawerOpen] = useAtom(librarySelectionDrawerOpenAtom);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
   // The grid's and the table's order — Timeline and Results register their own,
@@ -1332,7 +1344,9 @@ export function LibraryView() {
       )}
       </div>
 
-      {/* Results */}
+      {/* Results. In Full width the lane and the brush share a positioned
+          host: the rail, its panels and the pane slide-over cover them. */}
+      {wrapLane(<>
       <div
         // A Shift+click is a range, not a text selection across the grid.
         onMouseDown={(e) => {
@@ -1352,6 +1366,9 @@ export function LibraryView() {
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
+        // Full width: the scrolling views keep their end clear of the rail;
+        // the canvases run under it and move their top-end controls aside.
+        style={fullWidth ? railReserve : undefined}
       >
         {cejilLoading ? (
           cejilError ? (
@@ -1505,6 +1522,7 @@ export function LibraryView() {
 
       {/* Time brush — map + timeline */}
       {showBrush && <TimeBrush entities={timeChart} />}
+      </>)}
 
       {/* Footer action bar. A container, so the four actions fold to their
           icons (each keeps its name) when the pane is too narrow for their
@@ -1755,6 +1773,98 @@ export function LibraryView() {
     filtersDrawer
   );
 
+  /* ── Full width ─────────────────────────────────────────────────────────
+     The drawer's Filters and Results tabs, the Notebook and the Views menu's
+     body become the rail's panels; what else the drawer would show (the
+     preview, the selection list, a map cluster) slides over the pane. */
+  const railReserve = (
+    viewMode === "map" || viewMode === "network"
+      ? { "--rail-reserve": RAIL_RESERVE }
+      : { paddingInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})` }
+  ) as React.CSSProperties;
+  const railItems: RailItem[] = [
+    {
+      id: "filters",
+      label: t("System", "Filters"),
+      icon: <Filter size={15} aria-hidden />,
+      dot: activeFilterCount > 0,
+      body: <LibraryFilters />,
+    },
+    {
+      // Where Results goes in this layout is open; it is a rail item for now.
+      id: "results",
+      label: t("System", "Results"),
+      icon: <TextSearch size={15} aria-hidden />,
+      dot: hasQuery && filtered.length > 0,
+      disabledReason: showResultsTab ? undefined : "Adv. Search shows them in the main pane",
+      body: resultsBody,
+    },
+    {
+      id: "notebook",
+      label: t("System", "Notebook"),
+      icon: <MessageSquare size={15} aria-hidden />,
+      ownHeader: true,
+      body: (
+        <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
+          <NotebookBody onClose={() => setRailPanel(null)} />
+        </div>
+      ),
+    },
+    {
+      id: "views",
+      label: "Views and history",
+      icon: <Clock size={15} aria-hidden />,
+      fit: true,
+      // The Views menu's popover body, with the popover's own inset.
+      body: (
+        <div className="bleed-flush min-h-0 overflow-y-auto p-1">
+          <SavedViewsPanel onDone={() => setRailPanel(null)} />
+        </div>
+      ),
+    },
+  ];
+  const pane = !fullWidth
+    ? null
+    : selectedId
+      ? {
+          key: "preview",
+          label: getEntity(selectedId)?.title ?? "Entity",
+          onClose: () =>
+            guard(() => {
+              if (selectedId === draftId) discardDraft(selectedId);
+              setSelectedId(null);
+            }),
+          body: drawer,
+        }
+      : selectionActive && selectionDrawerOpen
+        ? { key: "selection", label: "Selection", onClose: () => setSelectionDrawerOpen(false), body: drawer }
+        : selectedCluster && viewMode === "map"
+          ? { key: "cluster", label: "Map cluster", onClose: () => setSelectedCluster(null), body: drawer }
+          : null;
+  // Opening any of those closes the rail's panel: one surface over the pane.
+  const paneKey = pane?.key ?? null;
+  useEffect(() => {
+    if (paneKey) setRailPanel(null);
+  }, [paneKey, setRailPanel]);
+  // Outside Full width no panel stays set, so none opens when it is chosen.
+  useEffect(() => {
+    if (!fullWidth && railPanel) setRailPanel(null);
+  }, [fullWidth, railPanel, setRailPanel]);
+  function wrapLane(node: ReactNode) {
+    if (!fullWidth) return node;
+    return (
+      <div ref={setLaneHost} data-part="lane-host" className="relative flex-1 min-h-0 flex flex-col">
+        {node}
+        <LibraryFullWidthLayer>
+          <LibraryRail items={railItems} />
+          <LibraryPaneSlideOver hostRef={laneHostRef} open={!!pane} label={pane?.label ?? ""} onClose={pane?.onClose ?? null}>
+            {pane?.body}
+          </LibraryPaneSlideOver>
+        </LibraryFullWidthLayer>
+      </div>
+    );
+  }
+
   return (
     <>
     {/* One lightbox for the whole grid rather than one per card; it portals to
@@ -1780,6 +1890,11 @@ export function LibraryView() {
         {selectedId && <EntityDrawerPreview entityId={selectedId} />}
       </MobileBottomSheet>
     )}
+    {fullWidth ? (
+      <div data-component="LibraryFullWidth" className="flex flex-1 overflow-hidden">
+        <div data-part="content" className="flex-1 overflow-hidden">{renderLeft()}</div>
+      </div>
+    ) : (
     <AdaptiveSplitView
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
@@ -1823,6 +1938,7 @@ export function LibraryView() {
           : []),
       ]}
     />
+    )}
     </>
   );
 }

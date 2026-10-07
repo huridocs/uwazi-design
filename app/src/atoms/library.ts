@@ -206,6 +206,11 @@ export const libraryFiltersOpenAtom = atom(false);
 /** Entity previewed in the right drawer. null → the drawer shows Filters. */
 export const libraryOpenEntityIdAtom = atom<string | null>(null);
 
+/** Full width layout: the rail panel open over the pane, or null. One at a
+ *  time; the ids are the rail's items (`LibraryRail`). */
+export type LibraryRailPanel = "filters" | "results" | "notebook" | "views";
+export const libraryRailPanelAtom = atom<LibraryRailPanel | null>(null);
+
 /** The Results-tab full-text page the user last jumped to. Kept here, not in the
  *  drawer subtree (which unmounts while a preview shows), so its spine node stays
  *  active and `aria-pressed` after the preview closes. */
