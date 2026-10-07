@@ -389,6 +389,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
   use `entityInRange`. Time fields show only where a record is timed to the hour.
+- Map area filter: in the Map view, a pan or zoom by the reader writes the visible bounds to
+  `libraryMapBoundsAtom` (150 ms after the map settles); the map's own fits, a pane resize and
+  a pin click do not, so opening the view narrows nothing. The bounds compile to one `map` node
+  (`entityInMapBounds`; records without geo fail it), so the brush, facet counts and masthead
+  follow. The map draws `unbounded` (the results without the area) and keeps the reader's view
+  while an area is set; `filtered` narrows that list. The "In map area" chip clears it without
+  a refit. The atom reads null outside the Map view, and leaving the view, a collection switch,
+  Clear all and Reset demo data drop it. Snapshots carry it as the optional `mapBounds` key,
+  which also sets where the map opens.
 - Facets compile to an AND of nodes (`compile` in `utils/libraryFilter.ts`); a group (OR of two
   facets, NOT of one) is one node. A facet's counts skip the whole node it sits in, so inside a
   group they show what a tick would add or remove. Value facets and ranges have a Match mode
