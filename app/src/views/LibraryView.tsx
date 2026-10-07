@@ -76,6 +76,7 @@ import {
   librarySortAtom,
   librarySortDirAtom,
   librarySortInMenuAtom,
+  libraryViewInMenuAtom,
   libraryStatusFiltersAtom,
   libraryThumbFrameAtom,
   libraryThumbSizeAtom,
@@ -161,7 +162,7 @@ import { notebookPinCountAtom } from "../atoms/notebook";
 import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, type RailItem, type RailPane } from "../components/library/LibraryRail";
 import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
-import { paneHoldsEvent, useLibraryPane } from "../components/library/libraryPane";
+import { paneHoldsEvent, useLibraryPane, useMastheadFold } from "../components/library/libraryPane";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -498,56 +499,113 @@ export function LibraryView() {
 
   /* ── Masthead fold ──────────────────────────────────────────────────────
      The toolbar row folds on its own width, not the viewport's: the pane is
-     whatever the drawer leaves of the window. Thresholds are the parts'
-     measured widths with the search box held at 16rem; Sort and Language have
-     a second place in the Display menu, so they give way before the box does.
-     In order: Sort moves to the Display menu (`librarySortInMenuAtom`), the
-     readout moves to its own line under the row, Language moves to the menu.
-     A tier changes only with width (drawer drag, window resize), never with
-     typing or the readout's number. */
+     whatever the drawer, or Split's divider, leaves of the window. As the row
+     narrows:
+       tier 0  everything on one row; the search box gives way down to 12rem;
+       tier 1  the readout moves to its own line under the row;
+       tier 2  Sort folds into the Display menu, which then carries it
+               (`library*InMenuAtom`);
+       tier 3  Language folds into it too, and the rule before Display goes;
+       tier 4  View folds into it too.
+     A phone always has Sort in the menu, the readout on its own line and View
+     on the row. The parts' widths are measured while they are on the row
+     (Sort's trigger is as wide as its longest label, which depends on the
+     collection), so the thresholds follow the parts. A tier changes only with
+     width, never with typing or the readout's number. In Split both panes draw
+     the more folded tier of the two (`useMastheadFold`), so the two mastheads
+     have the same parts and the same height. */
   const [mastheadW, setMastheadW] = useState(0);
-  const mastheadRO = useRef<ResizeObserver | null>(null);
-  const mastheadRef = useCallback((el: HTMLDivElement | null) => {
-    mastheadRO.current?.disconnect();
-    mastheadRO.current = null;
-    if (!el) return;
+  // As last measured on the row; `display` is Views, Display and Language.
+  const [partW, setPartW] = useState({ sort: 137, view: 89, lang: 56, display: 132 });
+  type FoldPart = "masthead" | "sort" | "view" | "lang" | "display";
+  const foldEls = useRef<Partial<Record<FoldPart, HTMLElement>>>({});
+  const foldRO = useRef<ResizeObserver | null>(null);
+  const foldRefs = useMemo(() => {
     const measure = () => {
-      const cs = getComputedStyle(el);
-      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-      setMastheadW((prev) => (Math.round(w) === prev ? prev : Math.round(w)));
+      const { masthead, sort, view, lang, display } = foldEls.current;
+      if (masthead) {
+        const cs = getComputedStyle(masthead);
+        const w = Math.round(masthead.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+        setMastheadW((prev) => (prev === w ? prev : w));
+      }
+      const width = (el: HTMLElement | undefined, prev: number) => (el ? Math.ceil(el.getBoundingClientRect().width) : prev);
+      setPartW((prev) => {
+        const next = {
+          sort: width(sort, prev.sort),
+          view: width(view, prev.view),
+          lang: width(lang, prev.lang),
+          // The whole group only while Language is in it.
+          display: lang ? width(display, prev.display) : prev.display,
+        };
+        return next.sort === prev.sort && next.view === prev.view && next.lang === prev.lang && next.display === prev.display
+          ? prev
+          : next;
+      });
     };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    mastheadRO.current = ro;
+    const ro = () => (foldRO.current ??= new ResizeObserver(measure));
+    const track = (key: FoldPart) => (el: HTMLDivElement | null) => {
+      const prev = foldEls.current[key];
+      if (prev) ro().unobserve(prev);
+      foldEls.current[key] = el ?? undefined;
+      if (el) ro().observe(el);
+    };
+    return {
+      masthead: track("masthead"),
+      sort: track("sort"),
+      view: track("view"),
+      lang: track("lang"),
+      display: track("display"),
+      ro,
+    };
   }, []);
-  useEffect(() => () => mastheadRO.current?.disconnect(), []);
+  useEffect(() => {
+    // Observe again after a remount of effects (StrictMode) disconnected it.
+    for (const el of Object.values(foldEls.current)) if (el) foldRefs.ro().observe(el);
+    return () => {
+      foldRO.current?.disconnect();
+      foldRO.current = null;
+    };
+  }, [foldRefs]);
   const mastheadExtra = isMobile ? 40 : 0;
+  const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  // `gap-2` between the row's parts, `gap-1.5` inside a group, the 1px rule.
+  const gap = 0.5 * remPx, inner = 0.375 * remPx;
+  const search = 12 * remPx, readout = 15 * remPx;
+  const arrange = (isMobile ? 0 : partW.sort + inner) + partW.view;
+  const needs = [
+    search + gap + readout + gap + arrange + gap + 1 + gap + partW.display,
+    search + gap + arrange + gap + 1 + gap + partW.display,
+    search + gap + partW.view + gap + 1 + gap + partW.display,
+    search + gap + partW.view + gap + (partW.display - inner - partW.lang),
+  ].map((n) => n + mastheadExtra);
   // Unmeasured (the first render) counts as wide; the observer corrects it
   // before paint.
-  const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
-  const SEARCH_FLOOR = 256; // 16rem
-  // DISPLAY is Views and Display, two 2rem squares 6px apart.
-  const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 70, LANG = 56, READOUT = 240;
-  const rowWithout = (...gone: number[]) =>
-    // +5: the hairline (1 + its 8px gap) less the two 6px gaps inside the groups.
-    SEARCH_FLOOR + 5 + [READOUT, SORT, VIEW, DISPLAY, LANG]
-      .filter((w) => !gone.includes(w))
-      .reduce((sum, w) => sum + GAP + w, 0);
-  // Sort folds first: it has a place in the Display menu, and dropping it keeps
-  // the readout on the row down to a 743px pane instead of 864. A folded part
-  // stays folded as the row narrows further.
-  const sortInline = fits(rowWithout()); // 864
-  const readoutInline = fits(rowWithout(SORT)); // 743
-  const langInline = fits(rowWithout(READOUT, SORT)); // 495
+  const fitting = needs.findIndex((n) => mastheadW >= n);
+  const ownTier = mastheadW === 0 ? 0 : Math.max(isMobile ? 1 : 0, fitting === -1 ? needs.length : fitting);
+  const mastheadFold = useMastheadFold();
+  const reportFold = mastheadFold?.report;
+  const paneSide = splitPane?.side;
+  useEffect(() => {
+    if (reportFold && paneSide) reportFold(paneSide, ownTier);
+  }, [reportFold, paneSide, ownTier]);
+  // Never less folded than this pane needs, even before Split has the report.
+  const foldTier = Math.max(mastheadFold?.tier ?? 0, ownTier);
+  const readoutInline = foldTier === 0;
+  const sortInline = foldTier < 2 && !isMobile;
+  const langInline = foldTier < 3;
+  const viewInline = foldTier < 4 || isMobile;
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
   const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
+  const setViewInMenu = useSetAtom(libraryViewInMenuAtom);
   useEffect(() => {
     setLanguageInMenu(!langInline);
   }, [langInline, setLanguageInMenu]);
   useEffect(() => {
     setSortInMenu(!sortInline);
   }, [sortInline, setSortInMenu]);
+  useEffect(() => {
+    setViewInMenu(!viewInline);
+  }, [viewInline, setViewInMenu]);
 
   const countByEntity = useMemo(() => {
     const m = new Map<string, number>();
@@ -1187,8 +1245,9 @@ export function LibraryView() {
       {/* Toolbar — a row of controls, and under it (when the row can't hold
           it) the readout's own line. See "Masthead fold" above. */}
       <div
-        ref={mastheadRef}
+        ref={foldRefs.masthead}
         data-part="masthead"
+        data-fold-tier={foldTier}
         className="bleed shrink-0 py-2 bg-parchment"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
@@ -1295,9 +1354,10 @@ export function LibraryView() {
         {/* Arrange: sort and view, one group. Sort can move to the Display
             menu; the view switcher stays on the row at every width, phones
             included. */}
-        <div data-part="arrange" className="flex items-center gap-1.5">
+        {(sortInline || viewInline) && (
+        <div data-part="arrange" className="shrink-0 flex items-center gap-1.5">
           {sortInline && (
-          <div>
+          <div ref={foldRefs.sort}>
             <Select
               value={sort}
               onChange={(v) => {
@@ -1319,15 +1379,20 @@ export function LibraryView() {
           )}
           {/* A dropdown like Sort and Language, and narrower than a five-segment
               control; its `steady` trigger keeps the width fixed across views. */}
-          <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} evidence={hasClaimEvidence} />
+          {viewInline && (
+            <div ref={foldRefs.view}>
+              <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} evidence={hasClaimEvidence} />
+            </div>
+          )}
         </div>
+        )}
         {/* One hairline between what is listed (sort, view) and how it is drawn
             (Display, Language). It folds with Language, since past that point
             each side is one control. Width decides it, never state. */}
         {langInline && (
           <span aria-hidden="true" data-part="rule" className="shrink-0 w-px h-4 bg-border" />
         )}
-        <div data-part="display" className="flex items-center gap-1.5">
+        <div ref={foldRefs.display} data-part="display" className="shrink-0 flex items-center gap-1.5">
           {/* Display is icon-only and always mounted; view-specific options live
               in its popover, so changing view never shifts this row. */}
           <SavedViewsMenu />
@@ -1335,7 +1400,7 @@ export function LibraryView() {
           {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
               label would resize the trigger and shift the row again). */}
           {langInline && (
-          <div>
+          <div ref={foldRefs.lang}>
             <Select
               value={language}
               onChange={(v) => setLanguage(v as Language)}

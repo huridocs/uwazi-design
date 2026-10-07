@@ -14,7 +14,7 @@ import { collectionSettings, type DefaultLibraryView } from "./settingsSingleton
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { propertyColumns } from "../utils/entityFields";
-import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
+import { LIBRARY_SORTS, LIBRARY_VIEWS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { networkTypeOptionsAtom } from "./network";
@@ -729,6 +729,9 @@ export const librarySortInMenuAtom = atom(false);
 /** The same for the Language select, which otherwise has no place on a narrow
  *  desktop pane. */
 export const libraryLanguageInMenuAtom = atom(false);
+/** The same for the View select, which folds only on the narrowest desktop
+ *  pane; a phone keeps it on the row. */
+export const libraryViewInMenuAtom = atom(false);
 
 /** Context the registry cannot know itself: viewport, whether a query runs, and
  *  the columns this corpus offers. One atom, so the menu, its dot and the table
@@ -740,6 +743,8 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     isMobile,
     sortInMenu: isMobile || get(librarySortInMenuAtom),
     languageInMenu: get(libraryLanguageInMenuAtom),
+    viewInMenu: !isMobile && get(libraryViewInMenuAtom),
+    viewChoices: get(libraryHasClaimEvidenceAtom) ? LIBRARY_VIEWS : LIBRARY_VIEWS.filter((v) => v.id !== "evidence"),
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom), source: get(dataSourceAtom) }),
     sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],
@@ -1317,6 +1322,7 @@ export const libraryPaneScopedAtoms = [
   // Measured from the pane's own width and results
   librarySortInMenuAtom,
   libraryLanguageInMenuAtom,
+  libraryViewInMenuAtom,
   libraryCardColumnsInEffectAtom,
   libraryResultsPreviewCountAtom,
   // Bulk edit, the selection's dialogs, and what the pane's preview was asked to do

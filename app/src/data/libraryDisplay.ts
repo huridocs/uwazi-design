@@ -100,6 +100,11 @@ export interface DisplayContext {
   sortInMenu: boolean;
   /** The toolbar's Language select has folded away; the menu carries it. */
   languageInMenu: boolean;
+  /** The toolbar's View select has folded away (the narrowest desktop pane);
+   *  the menu carries it, first. */
+  viewInMenu: boolean;
+  /** The views this collection offers (Evidence only where it has claims). */
+  viewChoices?: Choice[];
   hasQuery: boolean;
   /** The sort keys on offer: the fixed ones and the templates'
    *  `prioritySorting` properties. */
@@ -149,6 +154,31 @@ const CHART: DisplaySection = {
   label: "Chart",
   kind: "toggles",
   options: (ctx) => [{ id: "timeStrip", label: "Time strip", default: !ctx.isMobile, scope: "shared" }],
+};
+
+/** The Library's views, once: the toolbar's View select and this menu's View
+ *  section read this list. Evidence is listed only where the collection holds
+ *  claim evidence; Adv. Search is last and always listed, and its value stays
+ *  "results". */
+export const LIBRARY_VIEWS: Choice[] = [
+  { id: "cards", label: "Cards" },
+  { id: "list", label: "List" },
+  { id: "map", label: "Map" },
+  { id: "timeline", label: "Timeline" },
+  { id: "evidence", label: "Evidence" },
+  { id: "network", label: "Network" },
+  { id: "results", label: "Adv. Search" },
+];
+
+/** The view, while the toolbar's View select has folded into this menu (see the
+ *  masthead fold in `LibraryView`). First, since every section under it
+ *  depends on it. `external`: the toolbar Select writes the same atom. */
+const VIEW: DisplaySection = {
+  id: "view",
+  label: "View",
+  kind: "choice",
+  visible: (ctx) => ctx.viewInMenu,
+  option: { id: "view", scope: "external", default: "cards", choices: LIBRARY_VIEWS },
 };
 
 /** The sort keys, once — the toolbar Select reads this list and so does the
@@ -343,6 +373,7 @@ const thumbSections = (): DisplaySection[] => {
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   cards: [
+    VIEW,
     CHART,
     SORT,
     LANGUAGE,
@@ -373,6 +404,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
    *  the same reason: rows are the only thing in the Library with a height you
    *  might want back. */
   list: [
+    VIEW,
     CHART,
     SORT,
     LANGUAGE,
@@ -400,6 +432,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   ],
 
   timeline: [
+    VIEW,
     CHART,
     SORT,
     LANGUAGE,
@@ -425,6 +458,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   ],
 
   results: [
+    VIEW,
     CHART,
     SORT,
     LANGUAGE,
@@ -449,16 +483,17 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** The map draws neither cards nor rows, so it offers the chart and the phone's
    *  sort and nothing else. An empty-feeling menu is the honest answer; a menu
    *  full of controls that act on nothing is not. */
-  map: [CHART, SORT, LANGUAGE],
+  map: [VIEW, CHART, SORT, LANGUAGE],
 
   /** Claims against their sources: the sort orders the claims; nothing else
    *  here has a card or a column to configure. */
-  evidence: [CHART, SORT, LANGUAGE],
+  evidence: [VIEW, CHART, SORT, LANGUAGE],
 
   /** The whole collection as a graph. Its options decide which edges and
    *  records are drawn; none of them moves a node (the layout is fixed per
    *  collection). Sort orders nothing here, so it is not offered. */
   network: [
+    VIEW,
     CHART,
     LANGUAGE,
     {

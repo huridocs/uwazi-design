@@ -1,4 +1,5 @@
 import { Select } from "../shared/Select";
+import { LIBRARY_VIEWS } from "../../data/libraryDisplay";
 
 /** The Library's view switcher, folded into the same dropdown Sort and Language
  *  use so the toolbar reads as three of one control instead of two dropdowns
@@ -15,23 +16,9 @@ import { Select } from "../shared/Select";
  *  component: 65.45px on "Title", 112.67px on "Connections"), and this row is
  *  Sort · View · Display · Language — anything that resizes shoves every control
  *  beside it sideways the moment you switch view. */
-const VIEWS = [
-  { value: "cards", label: "Cards" },
-  { value: "list", label: "List" },
-  { value: "map", label: "Map" },
-  { value: "timeline", label: "Timeline" },
-  // Listed only where the collection holds claim evidence (`evidence`, from
-  // `libraryHasClaimEvidenceAtom`). That is read over the whole collection, so
-  // filters never add or remove it; a filtered set with no claims gets the
-  // view's empty state.
-  { value: "evidence", label: "Evidence" },
-  // The whole collection as a graph; filters dim it in place.
-  { value: "network", label: "Network" },
-  // Last, and always listed, query or not — the view renders its own "search to
-  // see where terms match" state rather than appearing and disappearing from the
-  // menu. Labelled "Adv. Search"; the value stays "results".
-  { value: "results", label: "Adv. Search" },
-];
+// The list is `LIBRARY_VIEWS`, which the Display menu's View section reads when
+// this select folds into it.
+const VIEWS = LIBRARY_VIEWS.map((v) => ({ value: v.id, label: v.label }));
 
 const VIEWS_NO_EVIDENCE = VIEWS.filter((v) => v.value !== "evidence");
 

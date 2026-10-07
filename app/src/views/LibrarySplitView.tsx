@@ -3,7 +3,13 @@ import { useAtom, useStore } from "jotai";
 import { ScopeProvider } from "jotai-scope";
 import { librarySplitRatioAtom } from "../atoms/session";
 import { rightPaneStore } from "../atoms/librarySplit";
-import { LibraryPaneProvider, notePointerPane, type LibraryPaneSide } from "../components/library/libraryPane";
+import {
+  LibraryPaneProvider,
+  MastheadFoldProvider,
+  notePointerPane,
+  type LibraryPaneSide,
+  type MastheadFoldValue,
+} from "../components/library/libraryPane";
 import { SelectionOrderHost, type SelectionOrderHolder } from "../components/library/EntitySelectBox";
 import { LibraryView } from "./LibraryView";
 
@@ -85,10 +91,19 @@ export function LibrarySplitView() {
     setStored(clamp(next));
   };
 
+  // Each pane's masthead tier; both draw the more folded one.
+  const [tiers, setTiers] = useState<Record<LibraryPaneSide, number>>({ left: 0, right: 0 });
+  const report = useCallback(
+    (side: LibraryPaneSide, tier: number) => setTiers((t) => (t[side] === tier ? t : { ...t, [side]: tier })),
+    [],
+  );
+  const fold = useMemo<MastheadFoldValue>(() => ({ tier: Math.max(tiers.left, tiers.right), report }), [tiers, report]);
+
   const dragging = drag !== null;
   const percent = (r: number) => Math.round(r * 100);
 
   return (
+    <MastheadFoldProvider value={fold}>
     <div
       ref={containerRef}
       data-component="LibrarySplit"
@@ -142,6 +157,7 @@ export function LibrarySplitView() {
         <LibraryPane side="right" style={{ flex: "1 1 0" }} />
       </ScopeProvider>
     </div>
+    </MastheadFoldProvider>
   );
 }
 

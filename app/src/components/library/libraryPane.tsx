@@ -37,3 +37,21 @@ export function paneHoldsEvent(pane: LibraryPaneValue | null, e: Event): boolean
   if (inPane) return inPane === root;
   return pointerPane === pane.side;
 }
+
+/* Split's masthead fold. Each pane works out the tier its own width needs (see
+   the masthead fold in `LibraryView`) and reports it; both panes draw the most
+   folded of the two, so the two mastheads have the same parts and the same
+   height, and both bodies start at the same y. Outside Split there is no
+   provider and a pane draws its own tier. */
+export interface MastheadFoldValue {
+  /** The tier both panes draw. */
+  tier: number;
+  report: (side: LibraryPaneSide, tier: number) => void;
+}
+
+const MastheadFoldContext = createContext<MastheadFoldValue | null>(null);
+export const MastheadFoldProvider = MastheadFoldContext.Provider;
+
+export function useMastheadFold(): MastheadFoldValue | null {
+  return useContext(MastheadFoldContext);
+}

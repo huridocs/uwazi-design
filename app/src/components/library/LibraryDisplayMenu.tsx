@@ -49,7 +49,7 @@ import { t } from "../../utils/i18n";
  *  toolbar row is the same width whatever is selected. */
 export function LibraryDisplayMenu() {
   const [state, setState] = useAtom(libraryDisplayAtom);
-  const mode = useAtomValue(libraryViewModeAtom);
+  const [mode, setMode] = useAtom(libraryViewModeAtom);
   const ctx = useAtomValue(libraryDisplayContextAtom);
   const modified = useAtomValue(libraryDisplayModifiedAtom);
   const reset = useSetAtom(resetLibraryDisplayAtom);
@@ -110,11 +110,15 @@ export function LibraryDisplayMenu() {
         setSortDir(defaultSortDir(v as typeof sort));
       },
     },
+    // The toolbar's View select folds into this menu on the narrowest pane.
+    view: { value: mode, set: (v) => setMode(v as typeof mode) },
     // The toolbar's Language select folds into this menu on a narrow pane.
     language: { value: language, set: (v) => setLanguage(v as Language) },
   };
 
-  const renderSection = (section: DisplaySection) => {
+  const renderSection = (section: DisplaySection, i: number) => {
+    // A hairline under View, when it has folded in from the toolbar.
+    const separator = section.separator || sections[i - 1]?.id === "view";
     // Values-only, and it DIMS rather than unmounts: turning Thumbnail off must
     // not make three sections vanish from under a pointer already travelling
     // toward them.
@@ -181,7 +185,7 @@ export function LibraryDisplayMenu() {
 
     return (
       <div key={section.id} data-part="section" data-section={section.id} role="group" aria-label={section.label}>
-        {section.separator && (
+        {separator && (
           <div role="separator" className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
         )}
         <SectionLabel as="p" className={`px-2 pt-1 pb-1 ${live ? "" : "opacity-40"}`}>
@@ -251,7 +255,12 @@ export function LibraryDisplayMenu() {
     }
     // Relevance is an order only while a query runs; with none it isn't offered.
     // Sort also offers the templates' prioritySorting properties.
-    const all = option.id === "sort" && ctx.sortChoices ? ctx.sortChoices : option.choices;
+    const all =
+      option.id === "sort" && ctx.sortChoices
+        ? ctx.sortChoices
+        : option.id === "view" && ctx.viewChoices
+          ? ctx.viewChoices
+          : option.choices;
     const choices = bound && !searching ? all.filter((c) => c.id !== "relevance") : all;
     return choices.map((c) => (
       <OptionRow
