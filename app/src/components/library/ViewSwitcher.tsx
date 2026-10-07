@@ -1,5 +1,5 @@
 import { Select } from "../shared/Select";
-import { LIBRARY_VIEWS } from "../../data/libraryDisplay";
+import { LIBRARY_VIEWS, OVERVIEW_VIEW } from "../../data/libraryDisplay";
 
 /** The Library's view switcher, folded into the same dropdown Sort and Language
  *  use so the toolbar reads as three of one control instead of two dropdowns
@@ -20,7 +20,7 @@ import { LIBRARY_VIEWS } from "../../data/libraryDisplay";
 // this select folds into it. Overview, the collection's landing page, leads
 // where it is offered (Drawer and Full width, not Split's panes).
 const VIEWS = [
-  { value: "overview", label: "Overview" },
+  { value: OVERVIEW_VIEW.id, label: OVERVIEW_VIEW.label },
   ...LIBRARY_VIEWS.map((v) => ({ value: v.id, label: v.label })),
 ];
 

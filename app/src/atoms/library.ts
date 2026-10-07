@@ -16,7 +16,7 @@ import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { libraryLayoutAtom, librarySyncFiltersAtom } from "./session";
 import { propertyColumns } from "../utils/entityFields";
-import { LIBRARY_SORTS, LIBRARY_VIEWS, cardColumnsDefault, type Choice } from "../data/libraryDisplay";
+import { LIBRARY_SORTS, LIBRARY_VIEWS, OVERVIEW_VIEW, cardColumnsDefault, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { networkTypeOptionsAtom } from "./network";
@@ -837,7 +837,10 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     sortInMenu: isMobile || get(librarySortInMenuAtom),
     languageInMenu: get(libraryLanguageInMenuAtom),
     viewInMenu: !isMobile && get(libraryViewInMenuAtom),
-    viewChoices: get(libraryHasClaimEvidenceAtom) ? LIBRARY_VIEWS : LIBRARY_VIEWS.filter((v) => v.id !== "evidence"),
+    viewChoices: [
+      ...(get(libraryOverviewOfferedAtom) ? [OVERVIEW_VIEW] : []),
+      ...(get(libraryHasClaimEvidenceAtom) ? LIBRARY_VIEWS : LIBRARY_VIEWS.filter((v) => v.id !== "evidence")),
+    ],
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom), source: get(dataSourceAtom) }),
     sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],

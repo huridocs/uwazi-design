@@ -15,6 +15,7 @@ import {
   libraryDisplayModifiedAtom,
   resetLibraryDisplayAtom,
   libraryViewModeAtom,
+  libraryOverviewOriginAtom,
   librarySortAtom,
   librarySortDirAtom,
   libraryActiveSearchAtom,
@@ -53,6 +54,7 @@ export function LibraryDisplayMenu() {
   const [state, setState] = useAtom(libraryDisplayAtom);
   const layout = useAtomValue(libraryLayoutAtom);
   const [mode, setMode] = useAtom(libraryViewModeAtom);
+  const setOverviewOrigin = useSetAtom(libraryOverviewOriginAtom);
   const ctx = useAtomValue(libraryDisplayContextAtom);
   const modified = useAtomValue(libraryDisplayModifiedAtom);
   const reset = useSetAtom(resetLibraryDisplayAtom);
@@ -114,7 +116,14 @@ export function LibraryDisplayMenu() {
       },
     },
     // The toolbar's View select folds into this menu on the narrowest pane.
-    view: { value: mode, set: (v) => setMode(v as typeof mode) },
+    // A view picked by hand drops the Overview origin, as the select does.
+    view: {
+      value: mode,
+      set: (v) => {
+        setOverviewOrigin(false);
+        setMode(v as typeof mode);
+      },
+    },
     // The toolbar's Language select folds into this menu on a narrow pane.
     language: { value: language, set: (v) => setLanguage(v as Language) },
   };

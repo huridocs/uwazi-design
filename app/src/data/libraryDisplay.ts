@@ -170,6 +170,10 @@ export const LIBRARY_VIEWS: Choice[] = [
   { id: "network", label: "Network" },
   { id: "results", label: "Adv. Search" },
 ];
+/** The collection's landing page. Listed first, and only where it is offered
+ *  (`libraryOverviewOfferedAtom`): the toolbar select and this menu's View
+ *  section both put it ahead of `LIBRARY_VIEWS`. */
+export const OVERVIEW_VIEW: Choice = { id: "overview", label: "Overview" };
 
 /** The view, while the toolbar's View select has folded into this menu (see the
  *  masthead fold in `LibraryView`). First, since every section under it
@@ -499,7 +503,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
    *  collection). Sort orders nothing here, so it is not offered. */
   /** The collection's landing page: it draws the whole collection, so only
    *  the content language (its property values' labels) applies. */
-  overview: [LANGUAGE],
+  overview: [VIEW, LANGUAGE],
 
   network: [
     VIEW,
