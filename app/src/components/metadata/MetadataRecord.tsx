@@ -11,6 +11,8 @@ import { MetadataCard } from "./MetadataCard";
 import { EvidenceEntityContext } from "./FieldEvidence";
 import { ImageCard } from "./ImageCard";
 import { LazyMediaItemCard } from "./lazyMediaItemCard";
+import { VegasSyncCard, hasSyncCard } from "./VegasSyncCard";
+import { vegasSyncAtom } from "../../atoms/vegasSync";
 import { ImageLightbox } from "../shared/ImageLightbox";
 import { SectionLabel } from "../shared/SectionLabel";
 import { imageFocusKey, type EntityImage } from "../../data/entities";
@@ -118,6 +120,7 @@ export function MetadataRecord({
 }) {
   // Subscribing here keeps the record live when a value is edited at source.
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
+  const sync = useAtomValue(vegasSyncAtom);
 
   // Deep-focus from the Results tab: when a field of THIS entity is requested,
   // scroll it into view and flash it (the shared `flash-highlight` keyframe),
@@ -258,6 +261,14 @@ export function MetadataRecord({
             <Suspense fallback={null}>
               <LazyMediaItemCard key={profile.id} item={profile.mediaItem} onOpenImage={setLightbox} />
             </Suspense>
+          </div>
+        </MasonryItem>
+      )}
+      {hasSyncCard(sync, profile.id) && (
+        // A Las Vegas recording's place on the shared clock, under its player.
+        <MasonryItem key={`sync:${profile.id}`} full>
+          <div data-part="field" data-field-key="sync">
+            <VegasSyncCard recordingId={profile.id} />
           </div>
         </MasonryItem>
       )}
