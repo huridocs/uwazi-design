@@ -50,6 +50,21 @@ export const NETWORK_EVIDENCE_TEMPLATES: Partial<Record<DataSource, string[]>> =
   vegas: ["vegas_source", "vegas_claim", "vegas_finding"],
 };
 
+/** Templates whose records never name a community: a source is cited by many
+ *  records it says nothing about (every Vegas recording links to the map it
+ *  was listed on), so naming a community after it names nothing. */
+export const NETWORK_UNNAMING_TEMPLATES: Partial<Record<DataSource, string[]>> = {
+  nepal: ["nepal_source"],
+  vegas: ["vegas_source"],
+};
+
+/** Whether node `i` may name its community: not a source record, and not
+ *  linked to more than half the collection. */
+export function canNameCommunity(g: NetworkGraph, i: number): boolean {
+  if (NETWORK_UNNAMING_TEMPLATES[g.source]?.includes(g.typeIds[i])) return false;
+  return g.degree[i] * 2 <= g.ids.length;
+}
+
 export interface NetworkGraph {
   source: DataSource;
   ids: string[];

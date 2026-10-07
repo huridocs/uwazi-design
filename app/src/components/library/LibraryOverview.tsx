@@ -20,6 +20,7 @@ import {
   type LibraryViewMode,
 } from "../../atoms/library";
 import { networkGraphAtom } from "../../atoms/network";
+import { canNameCommunity } from "../../data/network/graph";
 import { notebookAtom } from "../../atoms/notebook";
 import { applyLibrarySnapshotAtom, savedViewsAtom, snapshotFilterCount } from "../../atoms/savedViews";
 import { templatesAtom } from "../../atoms/templates";
@@ -222,7 +223,14 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
   const located = useMemo(() => entities.filter((e) => e.geo), [entities]);
   const [scaleNote, setScaleNote] = useState<string | null>(null);
-  const span = summary.extent ? formatSpan(summary.extent.min, summary.extent.max) : null;
+  const fullSpan = summary.extent ? formatSpan(summary.extent.min, summary.extent.max) : null;
+  // Where the time section draws a concentrated window, the Dates figure
+  // names that window; the whole span stays in its tooltip.
+  const datesFocus = useMemo(
+    () => (summary.extent ? focusWindow(entities.filter((e) => entityTime(e) !== null), summary.extent) : null),
+    [entities, summary.extent],
+  );
+  const span = datesFocus ? formatWindow(datesFocus.min, datesFocus.max) : fullSpan;
   const mapCard = showMap && (
     <Section
       title="Where"
@@ -374,7 +382,12 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         </div>
         <dl data-part="stats" className="grid grid-cols-2 gap-x-4 gap-y-3 @xl:flex @xl:flex-wrap @xl:items-end @xl:gap-x-12">
           <Stat label="Records" value={ready ? n(total) : null} />
-          {(!ready || span) && <Stat label="Dates" value={ready ? span : null} ltr />}
+          {(!ready || span) && <Stat
+              label="Dates"
+              value={ready ? span : null}
+              title={datesFocus && fullSpan ? `${Math.round(FOCUS_SHARE * 100)}% of the dated records fall in this window. All dates: ${fullSpan}` : undefined}
+              ltr
+            />}
           {(!ready || summary.languages.length > 0) && (
             <Stat label={summary.languages.length === 1 ? "Language" : "Languages"} value={ready ? n(summary.languages.length) : null} />
           )}
@@ -598,7 +611,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
 /* ── Parts ────────────────────────────────────────────────────────────── */
 
-function Stat({ label, value, ltr = false }: { label: string; value: string | null; ltr?: boolean }) {
+function Stat({ label, value, title, ltr = false }: { label: string; value: string | null; title?: string; ltr?: boolean }) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
       <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{label}</dt>
@@ -607,7 +620,9 @@ function Stat({ label, value, ltr = false }: { label: string; value: string | nu
           <span aria-hidden className="block w-16 h-4 rounded-sm bg-vellum" />
         ) : (
           // Dates and ranges read left to right in an RTL page too.
-          <span dir={ltr ? "ltr" : undefined}>{value}</span>
+          <span dir={ltr ? "ltr" : undefined} title={title}>
+            {value}
+          </span>
         )}
       </dd>
     </div>
@@ -845,6 +860,37 @@ function formatSpan(min: number, max: number): string {
   return a === b ? String(a) : `${a} – ${b}`;
 }
 
+/** The shortest window that holds FOCUS_SHARE of the dated records, by each
+ *  record's precise time, when it is under FOCUS_RATIO of the whole span;
+ *  null otherwise. The lanes draw it instead of the whole span, and the
+ *  header's Dates figure names it. */
+function focusWindow(dated: Entity[], full: { min: number; max: number } | null) {
+  if (!full || dated.length === 0) return null;
+  const times = dated.map((e) => preciseTime(e)!).sort((a, b) => a - b);
+  const k = Math.max(1, Math.ceil(times.length * FOCUS_SHARE));
+  let lo = times[0], hi = times[times.length - 1];
+  for (let i = 0; i + k - 1 < times.length; i++) {
+    const w = times[i + k - 1] - times[i];
+    if (w < hi - lo) {
+      lo = times[i];
+      hi = times[i + k - 1];
+    }
+  }
+  if (hi - lo >= (full.max - full.min) * FOCUS_RATIO) return null;
+  const outside = times.filter((t) => t < lo || t > hi).length;
+  return { min: lo, max: hi, outside };
+}
+
+/** A focused window in words: "1 Oct 2017, 22:00–22:20" within a day (to the
+ *  minute, as the time section's columns read), else as `formatSpan`. */
+function formatWindow(min: number, max: number): string {
+  if (!sameDay(min, max)) return formatSpan(min, max);
+  const lo = Math.floor(min / 60_000) * 60_000;
+  const hi = Math.floor(max / 60_000) * 60_000;
+  const day = new Date(min).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  return `${day}, ${clock(lo, "minute")}–${clock(hi, "minute")}`;
+}
+
 /* ── Timeline lanes ───────────────────────────────────────────────────── */
 
 /** The Timeline view's Lanes, reduced: the six largest templates, one column
@@ -885,25 +931,7 @@ function OverviewLanes({
 
   const dated = useMemo(() => entities.filter((e) => entityTime(e) !== null), [entities]);
   const full = useMemo(() => timeExtent(dated), [dated]);
-  // The shortest window that holds FOCUS_SHARE of the dated records, by each
-  // record's precise time. Drawn instead of the whole span when it is under
-  // FOCUS_RATIO of it.
-  const focus = useMemo(() => {
-    if (!full) return null;
-    const times = dated.map((e) => preciseTime(e)!).sort((a, b) => a - b);
-    const k = Math.max(1, Math.ceil(times.length * FOCUS_SHARE));
-    let lo = times[0], hi = times[times.length - 1];
-    for (let i = 0; i + k - 1 < times.length; i++) {
-      const w = times[i + k - 1] - times[i];
-      if (w < hi - lo) {
-        lo = times[i];
-        hi = times[i + k - 1];
-      }
-    }
-    if (hi - lo >= (full.max - full.min) * FOCUS_RATIO) return null;
-    const outside = times.filter((t) => t < lo || t > hi).length;
-    return { min: lo, max: hi, outside };
-  }, [dated, full]);
+  const focus = useMemo(() => focusWindow(dated, full), [dated, full]);
   const extent = focus ?? full;
   // Wide enough at desktop widths for the longest template names CEJIL has
   // ("Geolocalización de los hechos del caso"); a cut name keeps a tooltip.
@@ -1178,7 +1206,8 @@ function useNetworkSummary(source: DataSource, ready: boolean): { communities: C
         .filter((c) => c.members.length > 1)
         .map((c) => {
           const title = (i: number) => getEntity(graph.ids[i])?.title ?? graph.ids[i];
-          const lead = [...c.members].sort((p, q) => graph.degree[q] - graph.degree[p] || p - q).filter((i) => i !== c.top);
+          const lead = [...c.members].sort((p, q) => graph.degree[q] - graph.degree[p] || p - q)
+            .filter((i) => i !== c.top && canNameCommunity(graph, i));
           return {
           id: c.id,
           name: title(c.top),

@@ -4,7 +4,7 @@
 // the centre of its placed neighbours, or on a ring outside the drawing.
 import type { DataSource } from "../../atoms/dataSource";
 import { asset } from "../../utils/asset";
-import { otherEnd, type NetworkGraph } from "./graph";
+import { canNameCommunity, otherEnd, type NetworkGraph } from "./graph";
 
 const FILES: Partial<Record<DataSource, string>> = {
   cejil: "/cejil-data/network.json",
@@ -72,7 +72,8 @@ export interface Community {
   spread: number;
   /** The template most members share. */
   typeId: string;
-  /** The member with most neighbours, which names the community. */
+  /** The member with most neighbours that may name it (`canNameCommunity`);
+   *  the member with most neighbours where none may. */
   top: number;
 }
 
@@ -203,12 +204,15 @@ export function placeNetwork(g: NetworkGraph, stored: StoredLayout | null): Netw
     let sx = 0, sy = 0;
     const types = new Map<string, number>();
     let top = members[0];
+    let namer = -1;
     for (const i of members) {
       sx += pos[i * 2];
       sy += pos[i * 2 + 1];
       types.set(g.typeIds[i], (types.get(g.typeIds[i]) ?? 0) + 1);
       if (g.degree[i] > g.degree[top]) top = i;
+      if (canNameCommunity(g, i) && (namer < 0 || g.degree[i] > g.degree[namer])) namer = i;
     }
+    if (namer >= 0) top = namer;
     const x = sx / members.length;
     const y = sy / members.length;
     let ss = 0;
