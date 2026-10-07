@@ -101,7 +101,8 @@ export const seedCsvImports: CsvImport[] = [
     id: "imp2",
     filename: "locations.csv",
     templateId: "country",
-    status: "entities",
+    status: "cancelled",
+    stoppedAt: "entities",
     created: at("2026-02-19T10:08:31"),
     updated: at("2026-02-19T10:12:05"),
     user: "mlopez",
@@ -117,8 +118,6 @@ export const seedCsvImports: CsvImport[] = [
       { row: 203, property: "", message: "Row is empty or malformed." },
       { row: 388, property: "capital", message: "Related entity “Ciudad Vieja” not found." },
     ],
-    // A long job, so it is still running when someone opens it.
-    rate: 1,
   },
   {
     id: "imp3",
@@ -168,7 +167,8 @@ export const seedCsvImports: CsvImport[] = [
     id: "imp5",
     filename: "hearings-2026.csv",
     templateId: "hearing",
-    status: "queued",
+    status: "cancelled",
+    stoppedAt: "queued",
     created: at("2026-02-20T11:17:26"),
     updated: at("2026-02-20T11:17:26"),
     user: "mlopez",
@@ -180,6 +180,5 @@ export const seedCsvImports: CsvImport[] = [
     thesauriValuesCreated: 0,
     relatedEntitiesCreated: 0,
     rowErrors: [],
-    waitFor: "imp2",
   },
 ];
