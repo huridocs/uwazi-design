@@ -10,6 +10,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryDescriptorFiltersAtom,
+  libraryHasSyncAtom,
   libraryInheritedFiltersAtom,
   libraryMapBoundsAtom,
   libraryOpenEntityIdAtom,
@@ -47,6 +48,9 @@ import { ChartTip } from "./BucketBreakdown";
 import { vegasSyncAtom } from "../../atoms/vegasSync";
 import { formatClock } from "../../data/vegas/links";
 import { ComparisonList, VegasSyncTable, momentName } from "./VegasSyncTable";
+import { OverviewSync } from "./OverviewSync";
+import { vegasSyncModel } from "../../data/vegas/syncLanes";
+import { syncPlayheadAtom, syncWindowAtom } from "../../atoms/syncView";
 
 const OverviewMap = lazy(() => import("./OverviewMap"));
 
@@ -200,6 +204,20 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   const vegasSync = useAtomValue(vegasSyncAtom);
   const sync = source === "vegas" ? vegasSync : null;
   const [syncTableOpen, setSyncTableOpen] = useState(false);
+  const hasSync = useAtomValue(libraryHasSyncAtom);
+  const syncModel = useMemo(() => (hasSync ? vegasSyncModel() : null), [hasSync]);
+  const setSyncWindow = useSetAtom(syncWindowAtom);
+  const setSyncPlayhead = useSetAtom(syncPlayheadAtom);
+  /** Sync at the first volley: a five-minute window from just before it,
+   *  the playhead on it. */
+  const openSync = useCallback(() => {
+    const first = syncModel?.volleys[0];
+    if (first) {
+      setSyncWindow({ from: first.at - 66, to: first.at + 234 });
+      setSyncPlayhead(first.at);
+    }
+    setView("sync");
+  }, [syncModel, setSyncWindow, setSyncPlayhead, setView]);
   const network = useNetworkSummary(source, ready);
 
   const total = entities.length;
@@ -467,6 +485,17 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           ) : (
             <BarSkeleton rows={LANES} />
           )}
+        </Section>
+      )}
+
+      {/* ── Sync ── recordings on one clock (Las Vegas only, today). */}
+      {ready && hasSync && syncModel && (
+        <Section
+          title="Sync"
+          note={`${plural(syncModel.lanes.filter((l) => l.start !== undefined).length, "recording")} on one clock · ${plural(syncModel.volleys.length, "volley")}`}
+          action={{ label: "Open Sync", onClick: openSync }}
+        >
+          <OverviewSync model={syncModel} onOpen={openSync} />
         </Section>
       )}
 
