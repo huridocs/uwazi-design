@@ -40,11 +40,18 @@ const VEGAS_CHAINS: Record<string, ChainDecl[]> = {
   ],
 };
 
+/** Properties the Library lists as facets without a Template selection, on
+ *  top of the seed's `defaultfilter`s: the sync flags sit beside Sync
+ *  confidence, so a reader can find the recordings the sync check flags. */
+const DEFAULT_FACETS: Record<string, string[]> = { vegas_recording: ["sync_flags"] };
+
 let built: TemplateDef[] | null = null;
 /** Built on first read (see data/sample/templates.ts). */
 export const vegasTemplateDefs = (): TemplateDef[] =>
   (built ??= vegasTemplates.map((t) => ({
     ...t,
-    properties: t.properties.map((p) => ({ ...p })),
+    properties: t.properties.map((p) =>
+      DEFAULT_FACETS[t.id]?.includes(p.name) && p.filter ? { ...p, defaultfilter: true } : { ...p },
+    ),
     ...(VEGAS_CHAINS[t.id] ? { chains: VEGAS_CHAINS[t.id] } : {}),
   })));
