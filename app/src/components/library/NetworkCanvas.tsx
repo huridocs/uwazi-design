@@ -3,7 +3,7 @@ import { otherEnd, type NetworkGraph } from "../../data/network/graph";
 import type { Community, NetworkPlacement } from "../../data/network/layout";
 import type { FocusLayout } from "../../data/network/focus";
 import type { PairEvidence } from "../../data/network/graph";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { RefStatus } from "../relationships/rows/RefStatus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
@@ -653,9 +653,43 @@ export function NetworkCanvas({
         }
       }
       strokeEdges(true);
+
+      /* The hovered or pinned edge: carbon, under the nodes it joins. An end
+         that is not lifted is drawn again over it, so a line never crosses
+         its own dots. */
+      const dot = (i: number, alpha: number) => {
+        const x = sx(i), y = sy(i);
+        if (x < -pad || x > W + pad || y < -pad || y > H + pad) return;
+        const rd = rad(i);
+        ctx.globalAlpha = nodesAlpha * alpha;
+        ctx.fillStyle = colors.dot.get(graph.typeIds[i]) ?? t.inkTertiary;
+        ctx.beginPath();
+        ctx.arc(x, y, rd, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = t.bg;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      };
+      if (edgeHi >= 0) {
+        const i = graph.a[edgeHi];
+        const j = graph.b[edgeHi];
+        ctx.globalAlpha = nodesAlpha;
+        ctx.strokeStyle = t.carbon;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx(i), sy(i));
+        ctx.lineTo(sx(j), sy(j));
+        ctx.stroke();
+        for (const e of [i, j]) if (!lifted(e) && nodeOn[e]) dot(e, 1);
+      }
+
+      /* The lifted neighbourhood over the lifted edges; the anchor and the
+         selection last, so no neighbour draws inside them. */
+      const last = hood ? [liftI, selected].filter((i, k, all) => i >= 0 && all.indexOf(i) === k && hood.node[i] === 1) : [];
       if (hood) {
         const groups = new Map<string, number[]>();
         for (const i of hood.list) {
+          if (last.includes(i)) continue;
           const x = sx(i), y = sy(i);
           if (x < -pad || x > W + pad || y < -pad || y > H + pad) continue;
           const level = strength ? strength[i] : 2;
@@ -683,17 +717,9 @@ export function NetworkCanvas({
         }
       }
 
-      /* The hovered or pinned edge: carbon, over the nodes it joins. */
-      if (edgeHi >= 0) {
-        const i = graph.a[edgeHi];
-        const j = graph.b[edgeHi];
-        ctx.globalAlpha = nodesAlpha;
-        ctx.strokeStyle = t.carbon;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(sx(i), sy(i));
-        ctx.lineTo(sx(j), sy(j));
-        ctx.stroke();
+      for (const i of last) {
+        const a0 = baseAlpha(strength ? strength[i] : 2);
+        dot(i, a0 + (1 - a0) * la);
       }
 
       /* Rings: selected (carbon), keyboard focus (carbon, wider), hover (ink). */
@@ -1950,8 +1976,7 @@ export function NetworkCanvas({
         </div>
       )}
       {/* Where the camera is, once a community has opened into nodes. The
-          slot is kept on collections with an overview, so the legend under
-          it does not move. */}
+          Templates button sits under it while it is drawn. */}
       {marksOn && crumb && (
         <nav
           aria-label="Where you are"
@@ -1975,53 +2000,67 @@ export function NetworkCanvas({
         </nav>
       )}
       {legend.length > 1 && (
+        // Under the breadcrumb when it is drawn, else at the top of the
+        // canvas: placed from its presence, nothing moves in between.
         <div
           data-part="legend" data-overlay
-          className={`absolute left-3 ${marksOn ? "top-11" : "top-3"} w-fit max-w-[16rem] bg-paper border border-border-soft rounded-md shadow-sm`}
+          className={`absolute left-3 ${marksOn && crumb ? "top-11" : "top-3"} flex flex-col items-start gap-1.5 max-w-[16rem]`}
         >
           <button
             type="button"
+            aria-label="Templates"
+            title="Templates"
             aria-expanded={legendShown}
-            className="w-full h-6 flex items-center gap-1 px-2 rounded-md text-meta font-semibold uppercase tracking-wider text-ink-tertiary hover:text-ink cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+            className={`relative w-7 h-7 flex items-center justify-center rounded-md border border-border-soft shadow-sm cursor-pointer
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40
+              ${legendShown ? "bg-parchment text-ink" : "bg-paper text-ink-secondary hover:text-ink hover:bg-parchment"}`}
             onClick={() => setLegendOpen(!legendShown)}
           >
-            Templates
-            {hiddenTypes.size > 0 && <span className="normal-case tracking-normal font-medium">· {hiddenTypes.size} hidden</span>}
-            {legendShown ? <ChevronUp size={12} aria-hidden className="ms-auto" /> : <ChevronDown size={12} aria-hidden className="ms-auto" />}
+            <Layers size={14} aria-hidden />
+            {/* Some template is hidden. */}
+            {hiddenTypes.size > 0 && (
+              <span aria-hidden className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-carbon" />
+            )}
+            {hiddenTypes.size > 0 && <span className="sr-only">, {hiddenTypes.size} hidden</span>}
           </button>
           {legendShown && (
-            <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn ? 136 : 104), 96, 244) }}>
-              {legend.map(({ typeId, count }) => {
-                const on = !hiddenTypes.has(typeId);
-                const name = typeNameOf(typeId);
-                return (
-                  <li key={typeId}>
-                    <button
-                      type="button"
-                      aria-pressed={on}
-                      title={on ? `Hide ${name}` : `Show ${name}`}
-                      className="w-full h-6 flex items-center gap-1.5 px-1 rounded-sm text-meta hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-                      onClick={() =>
-                        setHiddenTypes((prev) => {
-                          const next = new Set(prev);
-                          if (on) next.add(typeId);
-                          else next.delete(typeId);
-                          return next;
-                        })
-                      }
-                    >
-                      <span
-                        aria-hidden
-                        className="w-2 h-2 rounded-[2px] shrink-0 border"
-                        style={{ backgroundColor: on ? colors.dot.get(typeId) : "transparent", borderColor: colors.dot.get(typeId) }}
-                      />
-                      <span className={`min-w-0 truncate ${on ? "text-ink-secondary" : "text-ink-tertiary line-through"}`}>{name}</span>
-                      <span className="ms-auto ps-2 text-ink-tertiary tabular-nums">{count.toLocaleString()}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="w-fit max-w-full bg-paper border border-border-soft rounded-md shadow-sm">
+              <p className="px-2 pt-1.5 pb-0.5 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+                Templates{hiddenTypes.size > 0 && <span className="normal-case tracking-normal font-medium"> · {hiddenTypes.size} hidden</span>}
+              </p>
+              <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn && crumb ? 176 : 144), 96, 244) }}>
+                {legend.map(({ typeId, count }) => {
+                  const on = !hiddenTypes.has(typeId);
+                  const name = typeNameOf(typeId);
+                  return (
+                    <li key={typeId}>
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        title={on ? `Hide ${name}` : `Show ${name}`}
+                        className="w-full h-6 flex items-center gap-1.5 px-1 rounded-sm text-meta hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                        onClick={() =>
+                          setHiddenTypes((prev) => {
+                            const next = new Set(prev);
+                            if (on) next.add(typeId);
+                            else next.delete(typeId);
+                            return next;
+                          })
+                        }
+                      >
+                        <span
+                          aria-hidden
+                          className="w-2 h-2 rounded-[2px] shrink-0 border"
+                          style={{ backgroundColor: on ? colors.dot.get(typeId) : "transparent", borderColor: colors.dot.get(typeId) }}
+                        />
+                        <span className={`min-w-0 truncate ${on ? "text-ink-secondary" : "text-ink-tertiary line-through"}`}>{name}</span>
+                        <span className="ms-auto ps-2 text-ink-tertiary tabular-nums">{count.toLocaleString()}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </div>
       )}
