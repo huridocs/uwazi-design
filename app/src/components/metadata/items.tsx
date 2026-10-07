@@ -108,7 +108,10 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
           ))}
         </ul>
       ) : f.type === "media" ? (
-        <MediaFieldValue raw={f.value} />
+        // The video's still behind the play button, as on its Library card.
+        // Content warnings live on Nepal media items, which draw through
+        // MediaItemCard and decide the still there.
+        <MediaFieldValue raw={f.value} poster />
       ) : f.type === "country" ? (
         <span className="inline-flex items-center gap-1.5 text-sm text-ink leading-relaxed">
           <span className="leading-none">{f.flag}</span>

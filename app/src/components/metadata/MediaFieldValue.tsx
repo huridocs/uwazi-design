@@ -20,8 +20,9 @@ export function MediaFieldValue({
   raw: string;
   segment?: MediaSegment;
   /** Draw the video's YouTube still behind the play button. Off by default:
-   *  the still is a request to YouTube before the reader presses play. The
-   *  Nepal media item turns it on for items with no content warning. */
+   *  the still is a request to YouTube before the reader presses play. Record
+   *  fields turn it on (the Library card already shows the same still); the
+   *  Nepal media item turns it on only for items with no content warning. */
   poster?: boolean;
   /** What the record says the recording is, for an address that does not
    *  (an outlet's episode page). The address wins when it knows. */
