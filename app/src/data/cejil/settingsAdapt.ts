@@ -87,11 +87,23 @@ export const cejilFilterGroups = cejilFilterGroupIndex.map((x) => ({
   name: x.node.name,
 }));
 
-export const cejilFilterRows = cejilSettings.filters.flatMap((n, i) => {
+const cejilConfiguredRows = cejilSettings.filters.flatMap((n, i) => {
   if (!n.items) return [{ templateId: n.id!, active: true, groupId: "" }];
   const gid = `cejil-grp-${i}`;
   return n.items.map((c) => ({ templateId: c.id!, active: true, groupId: gid }));
 });
+
+// CEJIL's `settings.filters` leaves out some templates that hold records (País,
+// the Organismos), so the Library's Template card could not filter 378 of
+// them. They follow the configured rows, shown; Settings › Filters can hide
+// them again.
+const cejilConfigured = new Set(cejilConfiguredRows.map((r) => r.templateId));
+export const cejilFilterRows = [
+  ...cejilConfiguredRows,
+  ...cejilTemplates
+    .filter((t) => !cejilConfigured.has(t._id) && (entityCountByTpl[t._id] ?? 0) > 0)
+    .map((t) => ({ templateId: t._id, active: true, groupId: "" })),
+];
 
 /** name / colour / entity-count for every CEJIL template, by id — drives the
  *  Filters page row rendering when the source is CEJIL. */
