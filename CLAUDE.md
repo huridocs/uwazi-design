@@ -390,8 +390,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
   use `entityInRange`. Time fields show only where a record is timed to the hour.
 - Map area filter: in the Map view, a pan or zoom by the reader writes the visible bounds to
-  `libraryMapBoundsAtom` (150 ms after the map settles); the map's own fits, a pane resize and
-  a pin click do not, so opening the view narrows nothing. The bounds compile to one `map` node
+  `libraryMapBoundsAtom` (150 ms after the map settles); a cluster click zooms, so it counts.
+  The map's own fits, a pane resize and a pin click do not, so opening the view narrows nothing. The bounds compile to one `map` node
   (`entityInMapBounds`; records without geo fail it), so the brush, facet counts and masthead
   follow. The map draws `unbounded` (the results without the area) and keeps the reader's view
   while an area is set; `filtered` narrows that list. The "In map area" chip clears it without
