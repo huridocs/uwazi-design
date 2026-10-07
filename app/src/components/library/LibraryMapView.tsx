@@ -19,6 +19,7 @@ import { entityCountries } from "../../utils/libraryFacets";
 import { entityInMapBounds } from "../../utils/libraryFilter";
 import { getEntity, getEntityType, type Entity } from "../../data/entities";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
+import { CANVAS_OVERLAY } from "../shared/canvasOverlay";
 
 /** Zoom a fit to the pins stops at, so one pin (or pins on one building)
  *  does not open at street level. At 6 the map stayed at country scale for
@@ -314,7 +315,6 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             <div
               role="status"
               className="pointer-events-auto max-w-[20rem] text-center bg-paper/90 backdrop-blur-sm rounded-lg px-4 py-3"
-              style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.08)" }}
             >
               <MapPinOff size={18} aria-hidden className="mx-auto text-ink-muted" />
               <p className="mt-2 text-xs font-semibold text-ink">
@@ -342,7 +342,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <p data-part="caption" className="absolute top-3 start-3 z-[1000] text-meta text-ink-tertiary bg-paper/80 backdrop-blur-sm rounded px-2 py-0.5">
+        <p data-part="caption" className={`absolute top-3 start-3 z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
           {inArea !== null && <>{inArea.toLocaleString()} of </>}
           {located.length.toLocaleString()} located {located.length === 1 ? "entity" : "entities"}
           {inArea !== null && " in map area"}

@@ -23,28 +23,55 @@
   color: var(--text-secondary);
 }
 
-/* Zoom and layer controls: warm buttons with no edge, as on the bars. */
+/* Zoom and layer controls: the canvas overlay recipe (`canvasOverlay.ts`):
+   translucent paper with a blur, no border, no shadow, a 2rem bar with 1.75rem
+   ghost buttons. The zoom buttons sit in a row, − before +, as the Network
+   view's do. */
 .leaflet-container .leaflet-bar,
 .leaflet-container .leaflet-control-layers {
   border: none;
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  box-shadow: none;
   overflow: hidden;
 }
 
-.leaflet-container .leaflet-bar a {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border-bottom-color: var(--border-soft);
+.leaflet-container .leaflet-bar {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-bar a:first-child,
+.leaflet-container .leaflet-bar a:last-child {
+  width: 1.75rem;
+  height: 1.75rem;
+  line-height: 1.75rem;
+  font-size: var(--text-sm);
+  font-weight: 400;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 0.375rem;
 }
 
 .leaflet-container .leaflet-bar a:hover,
 .leaflet-container .leaflet-bar a:focus-visible {
   background: var(--bg-warm);
+  color: var(--text-primary);
+}
+
+.leaflet-container .leaflet-bar a:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-carbon) 40%, transparent);
+  outline-offset: 0;
 }
 
 .leaflet-container .leaflet-bar a.leaflet-disabled {
-  background: var(--bg-surface);
+  background: transparent;
   color: var(--text-muted);
 }
 

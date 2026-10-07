@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { RefStatus } from "../relationships/rows/RefStatus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
+import { CANVAS_OVERLAY, CANVAS_OVERLAY_BUTTON, CANVAS_OVERLAY_GROUP, CANVAS_PANEL } from "../shared/canvasOverlay";
 
 /** A whole-collection graph on one canvas.
  *
@@ -1875,11 +1876,10 @@ export function NetworkCanvas({
         ? `${isolatedMatches.toLocaleString()} ${isolatedMatches === 1 ? "match has" : "matches have"} no relationships`
         : null;
 
-  const zoomButton =
-    "h-6 min-w-6 px-1 text-sm text-ink-secondary hover:text-ink rounded-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40";
+  const zoomButton = `${CANVAS_OVERLAY_BUTTON} text-sm`;
   const switchButton = (on: boolean) =>
-    `h-6 px-1.5 text-meta font-medium rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 ${
-      on ? "bg-parchment text-ink" : "text-ink-secondary hover:text-ink cursor-pointer"
+    `h-7 px-2 text-meta font-medium rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 ${
+      on ? "bg-parchment text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink cursor-pointer"
     }`;
   const centre = () => ({ x: size.w / 2, y: size.h / 2 });
   // Open where it is short and there is room; a long list starts closed.
@@ -1954,7 +1954,7 @@ export function NetworkCanvas({
           ref={tipRef}
           role="presentation"
           data-part="tooltip"
-          className="pointer-events-none absolute left-0 top-0 z-10 w-max max-w-[18rem] px-2 py-1.5 rounded-md bg-paper shadow-md border border-border-soft"
+          className="pointer-events-none absolute left-0 top-0 z-10 w-max max-w-[18rem] px-2.5 py-1.5 rounded-lg bg-paper/90 backdrop-blur-sm"
           style={{ visibility: "hidden" }}
         >
           <p className="text-xs font-medium text-ink truncate">{tip.title}</p>
@@ -1981,11 +1981,11 @@ export function NetworkCanvas({
         <nav
           aria-label="Where you are"
           data-part="breadcrumb" data-overlay
-          className="absolute top-3 left-3 h-6 max-w-[calc(100%-10.5rem)] flex items-center gap-1 px-1 bg-paper border border-border-soft rounded-md shadow-sm text-meta"
+          className={`absolute top-3 left-3 max-w-[calc(100%-11rem-var(--rail-reserve,0px))] ${CANVAS_OVERLAY_GROUP} gap-1 text-meta`}
         >
           <button
             type="button"
-            className="h-5 px-1 rounded-sm text-ink-secondary hover:text-ink hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+            className={`${CANVAS_OVERLAY_BUTTON} text-meta`}
             onClick={() => setCamera(frameOf(baseExtent), true)}
           >
             Collection
@@ -1996,7 +1996,7 @@ export function NetworkCanvas({
           <span aria-current="location" className="min-w-0 truncate font-medium text-ink">
             Around {titleOf(crumb.top)}
           </span>
-          <span className="shrink-0 pe-1 text-ink-tertiary tabular-nums">{crumb.members.length.toLocaleString()}</span>
+          <span className="shrink-0 pe-2 text-ink-tertiary tabular-nums">{crumb.members.length.toLocaleString()}</span>
         </nav>
       )}
       {legend.length > 1 && (
@@ -2004,16 +2004,16 @@ export function NetworkCanvas({
         // canvas: placed from its presence, nothing moves in between.
         <div
           data-part="legend" data-overlay
-          className={`absolute left-3 ${marksOn && crumb ? "top-11" : "top-3"} flex flex-col items-start gap-1.5 max-w-[16rem]`}
+          className={`absolute left-3 ${marksOn && crumb ? "top-13" : "top-3"} flex flex-col items-start gap-1.5 max-w-[16rem]`}
         >
           <button
             type="button"
             aria-label="Templates"
             title="Templates"
             aria-expanded={legendShown}
-            className={`relative w-7 h-7 flex items-center justify-center rounded-md border border-border-soft shadow-sm cursor-pointer
+            className={`relative w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer transition-colors
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40
-              ${legendShown ? "bg-parchment text-ink" : "bg-paper text-ink-secondary hover:text-ink hover:bg-parchment"}`}
+              ${legendShown ? "bg-parchment text-ink" : "bg-paper/80 backdrop-blur-sm text-ink-secondary hover:bg-warm hover:text-ink"}`}
             onClick={() => setLegendOpen(!legendShown)}
           >
             <Layers size={14} aria-hidden />
@@ -2024,11 +2024,11 @@ export function NetworkCanvas({
             {hiddenTypes.size > 0 && <span className="sr-only">, {hiddenTypes.size} hidden</span>}
           </button>
           {legendShown && (
-            <div className="w-fit max-w-full bg-paper border border-border-soft rounded-md shadow-sm">
+            <div className={`w-fit max-w-full ${CANVAS_PANEL}`}>
               <p className="px-2 pt-1.5 pb-0.5 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                 Templates{hiddenTypes.size > 0 && <span className="normal-case tracking-normal font-medium"> · {hiddenTypes.size} hidden</span>}
               </p>
-              <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn && crumb ? 176 : 144), 96, 244) }}>
+              <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (marksOn && crumb ? 188 : 148), 96, 244) }}>
                 {legend.map(({ typeId, count }) => {
                   const on = !hiddenTypes.has(typeId);
                   const name = typeNameOf(typeId);
@@ -2038,7 +2038,7 @@ export function NetworkCanvas({
                         type="button"
                         aria-pressed={on}
                         title={on ? `Hide ${name}` : `Show ${name}`}
-                        className="w-full h-6 flex items-center gap-1.5 px-1 rounded-sm text-meta hover:bg-parchment cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                        className="w-full h-7 flex items-center gap-1.5 px-1.5 rounded-md text-meta hover:bg-warm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
                         onClick={() =>
                           setHiddenTypes((prev) => {
                             const next = new Set(prev);
@@ -2070,7 +2070,7 @@ export function NetworkCanvas({
           role="group"
           aria-label="Matches"
           // `--rail-reserve`: the Library's Full width rail sits at this corner.
-          className="absolute top-3 right-[calc(var(--rail-reserve,0px)+0.75rem)] flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+          className={`absolute top-3 right-[calc(var(--rail-reserve,0px)+0.75rem)] ${CANVAS_OVERLAY_GROUP}`}
         >
           <button
             type="button"
@@ -2099,7 +2099,7 @@ export function NetworkCanvas({
       {chip && (
         <p
           data-part="isolated" data-overlay
-          className="absolute left-3 bottom-3 w-fit px-2 h-6 flex items-center rounded-md bg-paper border border-border-soft text-meta text-ink-tertiary"
+          className={`absolute left-3 bottom-3 w-fit px-2.5 flex items-center ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}
         >
           {chip}
         </p>
@@ -2110,7 +2110,7 @@ export function NetworkCanvas({
             data-part="layout" data-overlay
             role="group"
             aria-label="Layout"
-            className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+            className={CANVAS_OVERLAY_GROUP}
           >
             <span role="status" className="sr-only">
               {layoutSwitch.pending ? "Arranging the matches" : ""}
@@ -2140,7 +2140,7 @@ export function NetworkCanvas({
           data-part="zoom" data-overlay
           role="group"
           aria-label="Zoom"
-          className="flex items-center gap-0.5 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5"
+          className={CANVAS_OVERLAY_GROUP}
         >
           <button type="button" aria-label="Zoom out" className={zoomButton} onClick={() => zoomAt(1 / 1.6, centre().x, centre().y, true)}>
             −
@@ -2151,7 +2151,7 @@ export function NetworkCanvas({
           <button
             type="button"
             title={strength ? "Fit the matches" : "Fit the collection"}
-            className={`${zoomButton} text-meta`}
+            className={`${CANVAS_OVERLAY_BUTTON} text-meta`}
             onClick={() => setCamera(fitCamera(), true)}
           >
             Fit
