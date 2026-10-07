@@ -31,6 +31,7 @@ import {
   storageId,
   THUMBS_SHOWN,
   cardColumnsDefault,
+  LIBRARY_VIEWS,
   type DisplaySection,
   type DisplayValue,
   type DisplayValues,
@@ -319,28 +320,34 @@ export function LibraryDisplayMenu() {
     </>
   );
 
-  // The Overview draws no results, so it has no display options of its own;
-  // the menu holds only what folds in from a narrow toolbar. With nothing
-  // folded the trigger keeps its slot, hidden, so the row does not move when
-  // the view changes.
-  const idle = mode === "overview" && sections.length === 0;
+  // The Overview and Sync have no display options of their own; the menu
+  // holds only what folds in from a narrow toolbar. With nothing folded the
+  // trigger stays in its slot, inactive: dimmed, no hover, a click does
+  // nothing, still focusable so a screen reader finds it and its reason.
+  const idle = sections.length === 0;
+  const viewName = mode === "overview" ? "Overview" : (LIBRARY_VIEWS.find((v) => v.id === mode)?.label ?? mode);
 
   return (
-    <div data-component="LibraryDisplayMenu" className={`relative ${idle ? "invisible" : ""}`} aria-hidden={idle || undefined}>
+    <div data-component="LibraryDisplayMenu" className="relative">
       <button
         type="button"
         data-part="trigger"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => !idle && setOpen((o) => !o)}
         aria-label={t("System", "Display options")}
-        aria-haspopup="menu"
-        aria-expanded={open}
+        aria-haspopup={idle ? undefined : "menu"}
+        aria-expanded={idle ? undefined : open}
+        aria-disabled={idle || undefined}
+        aria-description={idle ? `No display options for ${viewName}` : undefined}
+        title={idle ? `No display options for ${viewName}` : undefined}
         // Background tint on hover, nothing raised. Open/modified keeps the
         // shadow and the ink border — the same split as FiltersButton beside it,
         // so a hovered trigger can't be mistaken for an open one.
-        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors cursor-pointer ${
-          open || modified
-            ? "bg-paper text-ink border-ink/40 shadow-sm"
-            : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink"
+        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors ${
+          idle
+            ? "bg-paper text-ink-muted border-border cursor-default"
+            : open || modified
+              ? "bg-paper text-ink border-ink/40 shadow-sm cursor-pointer"
+              : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink cursor-pointer"
         }`}
       >
         <SlidersHorizontal size={14} aria-hidden />
@@ -356,14 +363,14 @@ export function LibraryDisplayMenu() {
       {mobile ? (
         // Phones: a bottom sheet on the shared stack, the rows at touch size,
         // Done at the foot. The options apply as they are picked.
-        <MobileBottomSheet open={open} onClose={() => setOpen(false)} title="Display options" defaultSnap="full" footer={<SheetDone onClick={() => setOpen(false)} />}>
+        <MobileBottomSheet open={open && !idle} onClose={() => setOpen(false)} title="Display options" defaultSnap="full" footer={<SheetDone onClick={() => setOpen(false)} />}>
           <TouchRows.Provider value={true}>
             <div data-part="menu" role="menu" aria-label="Display options" className="px-2 py-2">
               {contents}
             </div>
           </TouchRows.Provider>
         </MobileBottomSheet>
-      ) : open && (
+      ) : open && !idle && (
         <>
           <div data-part="scrim" className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
           {/* The list's column list can run long on a corpus with a dozen

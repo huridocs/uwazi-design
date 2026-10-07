@@ -348,8 +348,8 @@ body {
   opacity: 1;
 }
 
-/* Buttons should always show pointer cursor */
-button:not(:disabled) {
+/* Buttons should always show pointer cursor, unless inactive */
+button:not(:disabled):not([aria-disabled="true"]) {
   cursor: pointer;
 }
 
