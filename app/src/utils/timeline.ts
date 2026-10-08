@@ -5,7 +5,7 @@ import { formatMoment as formatMomentIn } from "./dateFormat";
  *  timeline view bodies). One scale, shared — so the histogram, the vertical
  *  rail and the spine can never disagree about where a year sits. */
 
-export type TimeUnit = "decade" | "year" | "quarter" | "month" | "day" | "hour" | "minute" | "second";
+export type TimeUnit = "decade" | "year" | "quarter" | "month" | "week" | "day" | "hour" | "minute" | "second";
 
 export interface TimeBucket {
   key: string;
@@ -90,6 +90,12 @@ export function bucketOf(t: number, unit: TimeUnit): Omit<TimeBucket, "entities"
     case "day": {
       const start = Date.UTC(y, m, d.getUTCDate());
       return { key: `${start}`, label: formatDay(start), start, end: start + 86_400_000 };
+    }
+    case "week": {
+      // ISO weeks: Monday to Sunday.
+      const day = Date.UTC(y, m, d.getUTCDate());
+      const start = day - ((d.getUTCDay() + 6) % 7) * 86_400_000;
+      return { key: `w${start}`, label: `Week of ${formatDay(start)}`, start, end: start + 7 * 86_400_000 };
     }
     case "decade": {
       const dy = Math.floor(y / 10) * 10;

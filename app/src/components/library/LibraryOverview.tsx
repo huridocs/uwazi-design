@@ -88,8 +88,13 @@ const CONTAINS_WORDS: Record<string, string> = { document: "documents", image: "
 /** Lanes the Overview's timeline draws; the Timeline view draws every one. */
 const LANES = 6;
 const LANE_H = 24;
-const LANE_COL_MIN = 12;
-const LANE_YEAR_MIN = 6;
+/** A column's least width: the lanes take the finest unit that leaves every
+ *  column this much, so the busiest days of a short window stay apart. */
+const LANE_COL_MIN = 9;
+/** The largest dot's least diameter: a narrow column still draws a dot that
+ *  reads; a dot may then reach into its neighbours' columns. */
+const LANE_DOT_MIN = 14;
+const LANE_UNITS: TimeUnit[] = ["second", "minute", "hour", "day", "week", "month", "quarter", "year", "decade"];
 const LANE_LABEL_PITCH = 40;
 /** Templates, facet values and communities listed per card. */
 const TOP_TEMPLATES = 8;
@@ -111,6 +116,7 @@ const UNIT_MS: Record<TimeUnit, number> = {
   minute: 60_000,
   hour: 3_600_000,
   day: 86_400_000,
+  week: 7 * 86_400_000,
   month: 30.44 * 86_400_000,
   quarter: 91.3 * 86_400_000,
   year: 365.25 * 86_400_000,
@@ -121,6 +127,7 @@ const TICK_STEPS: Record<TimeUnit, number[]> = {
   minute: [1, 2, 5, 10, 15, 30],
   hour: [1, 2, 3, 6, 12],
   day: [1, 2, 7, 14],
+  week: [1, 2, 4, 8],
   month: [1, 2, 3, 6, 12],
   quarter: [1, 2, 4],
   year: [1, 2, 5, 10, 20, 50],
@@ -1299,12 +1306,12 @@ function OverviewLanes({
   const unit = useMemo((): TimeUnit => {
     if (!extent) return "year";
     const span = extent.max - extent.min;
-    const fits = (u: TimeUnit) => (span / UNIT_MS[u] + 1) * (u === "year" ? LANE_YEAR_MIN : LANE_COL_MIN) <= plotW;
-    // Whole collections stay at month or coarser; a focused window may go
-    // down to the minute.
-    const units: TimeUnit[] = focus ? ["second", "minute", "hour", "day", "month", "quarter", "year"] : ["month", "quarter", "year"];
-    return units.find(fits) ?? "year";
-  }, [extent, plotW, focus]);
+    // The finest unit whose columns fit the width: Nepal's weeks of protest
+    // by day on a wide sheet, by week on a phone; CEJIL by year; the Vegas
+    // window by minute. The column count follows the width, not the span.
+    const fits = (u: TimeUnit) => (span / UNIT_MS[u] + 1) * LANE_COL_MIN <= plotW;
+    return LANE_UNITS.find(fits) ?? "decade";
+  }, [extent, plotW]);
   const fine = unit === "second" || unit === "minute" || unit === "hour";
 
   const { cols, lanes, max, more } = useMemo(() => {
@@ -1333,14 +1340,17 @@ function OverviewLanes({
       ? sameDay(first.start, last.start)
         ? `${formatDay(first.start)}, ${clock(first.start, unit)}–${clock(last.start, unit)}`
         : `${formatMoment(first.start, true)} – ${formatMoment(last.start, true)}`
-      : first.label === last.label
-        ? first.label
-        : `${first.label} – ${last.label}`;
+      : unit === "week" || unit === "day"
+        ? `${formatDay(first.start)} – ${formatDay(last.end - DAY)}`
+        : first.label === last.label
+          ? first.label
+          : `${first.label} – ${last.label}`;
     onScale(`By ${unit}, ${range}`);
   }, [cols, unit, fine, onScale]);
 
-  const colW = cols.length ? Math.max(unit === "year" ? LANE_YEAR_MIN : LANE_COL_MIN, plotW / cols.length) : 0;
-  const rMax = Math.min(colW, LANE_H) / 2 - 1;
+  const colW = cols.length ? Math.max(LANE_COL_MIN, plotW / cols.length) : 0;
+  // One scale for every dot: area is count over the busiest cell's.
+  const rMax = Math.min(Math.max(colW, LANE_DOT_MIN), LANE_H) / 2 - 1;
   const radius = (v: number) => Math.max(1.5, Math.sqrt(v / max) * rMax);
 
   const ticks = useMemo(() => {
@@ -1357,6 +1367,7 @@ function OverviewLanes({
         : unit === "quarter" ? m / 3
         : unit === "month" ? m
         : unit === "day" ? d.getUTCDate() - 1
+        : unit === "week" ? i
         : unit === "hour" ? d.getUTCHours()
         : unit === "minute" ? d.getUTCMinutes()
         : d.getUTCSeconds();
@@ -1370,7 +1381,7 @@ function OverviewLanes({
       const label =
         unit === "second" ? clock(c.start, "second")
         : fine ? clock(c.start, unit)
-        : unit === "day" ? `${d.getUTCDate()} ${MONTH_SHORT[m]}`
+        : unit === "day" || unit === "week" ? `${d.getUTCDate()} ${MONTH_SHORT[m]}`
         : unit === "year" || m === 0 ? String(y)
         : unit === "quarter" ? `Q${m / 3 + 1}`
         : MONTH_SHORT[m];
