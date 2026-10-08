@@ -345,7 +345,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
     top.length === 0
       ? null
       : bindSentences(
-          `The collection uses ${plural(summary.byType.length, "template")}. ${top[0].name} is the largest, with ${plural(top[0].count, "record")}` +
+          `${top[0].name} is the largest, with ${plural(top[0].count, "record")}` +
             (top.length > 1 ? `, then ${listWords(top.slice(1).map((t) => t.name))}.` : "."),
         );
   const whenCopy = !summary.extent
@@ -359,12 +359,12 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           : `Dated records run ${rangePhrase(summary.extent.min, summary.extent.max)}.` +
               (total - dated.length > 0 ? ` ${plural(total - dated.length, "record has", "records have")} no date.` : ""),
       );
-  const whereCopy = bindSentences(`${n(summary.located)} of ${plural(total, "record")} have a location.`);
+  const whereCopy = bindSentences(`${pct(summary.located, total)} of the ${plural(total, "record")} in the collection.`);
   const firstCommunity = network?.communities[0];
   const connectsCopy =
     network && firstCommunity
       ? bindSentences(
-          `Links between records form ${plural(network.communities.length, "community", "communities")}. The largest, with ${plural(firstCommunity.size, "record")}, gathers around ${firstCommunity.name}` +
+          `The largest, with ${plural(firstCommunity.size, "record")}, gathers around ${firstCommunity.name}` +
             (firstCommunity.with.length ? `, with ${listWords(firstCommunity.with)}.` : "."),
         )
       : null;
@@ -643,12 +643,12 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
               title="Sync quality"
               figure={{ value: pct(sync.totals.within2, sync.totals.counted), label: `of ${n(sync.totals.counted)} annotations within 2 s` }}
               copy={bindSentences(
-                `${pct(sync.totals.within2, sync.totals.counted)} of ${n(sync.totals.counted)} annotations sit within 2 s of their moment's median time. A volley's spread is how far its recordings disagree.`,
+                "Measured against each moment's median time. A volley's spread is how far apart its recordings place it; an outlier is more than 2 s off.",
               )}
               action={{ label: "Open table", onClick: () => setSyncTableOpen(true) }}
              
             >
-              <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-x-12 gap-y-8">
+              <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-x-6 gap-y-10">
                 <div className="min-w-0">
                   <div aria-hidden className="flex items-center gap-3 h-6 px-0 text-xs font-semibold text-ink-secondary">
                     <span className="flex-1 min-w-0">Volley</span>
