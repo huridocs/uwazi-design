@@ -29,6 +29,11 @@ import { DATE_PATTERNS, datePatternLabel, type DatePattern } from "../../../util
 import type { ValidationIssue } from "../../../utils/validation";
 import { emailIssue, landingIssue, mapKeyIssue, matomoIssue, nameIssue, pointIssues } from "../../../utils/collectionRules";
 import type { ActivityChange } from "../../../atoms/activityLog";
+import type { OverviewConfig } from "../../../atoms/overviewConfig";
+import { appViewAtom } from "../../../atoms/navigation";
+import { libraryViewModeAtom } from "../../../atoms/library";
+import { useDirtyGuard } from "../../../hooks/useDirtyGuard";
+import { OverviewSettings, PreviewOverviewButton } from "./OverviewSettings";
 
 /** The form's value: the stored settings, with the starting point as the two
  *  inputs' text, so a half-filled pair is kept as typed until Save. */
@@ -58,7 +63,9 @@ const INPUT_ID: Record<FieldId, string> = {
 function validate(f: CollectionForm): Partial<Record<FieldId, string>> {
   const all: Partial<Record<FieldId, string | null>> = {
     name: nameIssue(f.name),
-    landing: landingIssue(f.landing),
+    // The address is asked for only when the landing page is a custom one.
+    landing:
+      f.overview.landing !== "page" ? null : f.landing.trim() === "" ? "Enter the page's address, or choose Overview or Library." : landingIssue(f.landing),
     matomo: matomoIssue(f.matomo),
     senderEmail: emailIssue(f.senderEmail),
     contactEmail: emailIssue(f.contactEmail),
@@ -93,6 +100,26 @@ const FIELD_LABEL: Partial<Record<keyof CollectionSettings, string>> = {
   mapStartingPoint: "Map starting point",
 };
 
+/** The Overview's fields, for the log: one change per field that moved. */
+const OVERVIEW_LABEL: Record<keyof OverviewConfig, string> = {
+  landing: "Landing page",
+  intro: "Introduction",
+  heroVisual: "Hero visual",
+  sections: "Overview sections",
+  valueFacets: "Most used values",
+  featured: "Featured records",
+  actions: "Primary actions",
+  savedViewId: "Saved view action",
+};
+const showOverview = (k: keyof OverviewConfig, v: OverviewConfig[keyof OverviewConfig]): string => {
+  if (k === "sections") return (v as OverviewConfig["sections"]).map((x) => `${x.id}${x.on ? "" : " (off)"}`).join(", ");
+  if (k === "featured") {
+    const f = v as OverviewConfig["featured"];
+    return f.mode === "manual" ? `manual: ${f.ids.length} records` : f.mode;
+  }
+  return show(v);
+};
+
 const show = (v: unknown): string => {
   if (v === null || v === undefined || v === "") return "(empty)";
   if (typeof v === "boolean") return v ? "On" : "Off";
@@ -105,9 +132,13 @@ const show = (v: unknown): string => {
 };
 
 function changesBetween(before: CollectionSettings, after: CollectionSettings): ActivityChange[] {
-  return (Object.keys(FIELD_LABEL) as (keyof CollectionSettings)[])
+  const top = (Object.keys(FIELD_LABEL) as (keyof CollectionSettings)[])
     .filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]))
     .map((k) => ({ field: FIELD_LABEL[k]!, before: show(before[k]), after: show(after[k]) }));
+  const overview = (Object.keys(OVERVIEW_LABEL) as (keyof OverviewConfig)[])
+    .filter((k) => JSON.stringify(before.overview[k]) !== JSON.stringify(after.overview[k]))
+    .map((k) => ({ field: OVERVIEW_LABEL[k], before: showOverview(k, before.overview[k]), after: showOverview(k, after.overview[k]) }));
+  return [...top, ...overview];
 }
 
 /** Uwazi's tooltip copy, as text under the control. `*x*` in the source
@@ -284,6 +315,15 @@ export function CollectionPage() {
   });
   const [attempted, setAttempted] = useState(false);
   const [picking, setPicking] = useState(false);
+  const guard = useDirtyGuard();
+  const setAppView = useSetAtom(appViewAtom);
+  const setLibraryView = useSetAtom(libraryViewModeAtom);
+  /** The Library's Overview for this collection; a draft with changes asks first. */
+  const previewOverview = () =>
+    guard(() => {
+      setLibraryView("overview");
+      setAppView("library");
+    });
 
   const errors = attempted ? validate(draft) : {};
   const favicon = allUploads.find((u) => u.id === draft.favicon);
@@ -340,6 +380,9 @@ export function CollectionPage() {
     <SettingsFormPage
       component="CollectionPage"
       title="Collection"
+      // The whole width of the content area (Juan, 2026-10): each section's
+      // heading takes a column beside its fields, which keep a 46rem measure.
+      wide
       dirty={dirty}
       onSave={save}
       onDiscard={() => {
@@ -362,7 +405,8 @@ export function CollectionPage() {
         )
       }
     >
-      <SettingsSection title="General">
+      <div className="@container flex flex-col gap-6 min-w-0">
+      <SettingsSection title="General" aside>
         <SettingsFieldRow>
           <SettingsField label="Collection Name" issue={err(errors.name)}>
             <TextInput
@@ -409,15 +453,6 @@ export function CollectionPage() {
             />
           </SettingsField>
         </SettingsFieldRow>
-        <SettingsField label="Custom landing page" issue={err(errors.landing)} description={LANDING_HELP}>
-          <TextInput
-            id={INPUT_ID.landing}
-            addon="https://yourdomain"
-            value={draft.landing}
-            issue={err(errors.landing)}
-            onChange={(e) => update({ landing: e.target.value })}
-          />
-        </SettingsField>
         <div className="flex flex-col gap-2">
           <ToggleRow
             label="Public instance"
@@ -442,6 +477,24 @@ export function CollectionPage() {
       </SettingsSection>
 
       <SettingsSection
+        title="Overview"
+        aside
+        description="What a visitor lands on, and what the Library's Overview shows: the introduction, the picture under it, the sections and their order, the featured records and the buttons."
+        action={<PreviewOverviewButton onClick={previewOverview} />}
+      >
+        <OverviewSettings
+          value={draft.overview}
+          onChange={(overview) => update({ overview })}
+          landingPath={draft.landing}
+          onLandingPath={(landing) => update({ landing })}
+          landingIssue={err(errors.landing)}
+          landingInputId={INPUT_ID.landing}
+          landingHelp={LANDING_HELP}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        aside
         title="Analytics"
         description="If you want to track analytics related to your collection visits, Uwazi supports both Google Analytics and Matomo."
       >
@@ -461,7 +514,7 @@ export function CollectionPage() {
         </SettingsFieldRow>
       </SettingsSection>
 
-      <SettingsSection title="Forms and email configuration">
+      <SettingsSection title="Forms and email configuration" aside>
         <SettingsFieldRow>
           <SettingsField
             label="Sending email"
@@ -522,7 +575,7 @@ export function CollectionPage() {
         </SettingsField>
       </SettingsSection>
 
-      <SettingsSection title="Map">
+      <SettingsSection title="Map" aside>
         <SettingsFieldRow>
           <SettingsField label="Map Provider">
             <Select
@@ -590,6 +643,7 @@ export function CollectionPage() {
           </SettingsFieldRow>
         </div>
       </SettingsSection>
+      </div>
     </SettingsFormPage>
   );
 }

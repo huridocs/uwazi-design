@@ -1359,6 +1359,39 @@ function windowWords(min: number, max: number): string {
   return `${longDay(min)} to ${longDay(max)}`;
 }
 
+/** The hero's facts sentence as plain text, in the hero's words: Settings ›
+ *  Collection shows it as the Introduction's placeholder (an empty
+ *  introduction means this sentence). Keep it in step with `facts` above. */
+export function overviewFactsText(entities: Entity[], source: DataSource): string {
+  if (entities.length === 0) return "";
+  const contains = new Map<string, number>();
+  const languages = new Map<string, number>();
+  let located = 0;
+  for (const e of entities) {
+    const c = entityContent(e, source);
+    for (const k of c.contains ?? []) contains.set(k, (contains.get(k) ?? 0) + 1);
+    for (const k of c.language ?? []) languages.set(k, (languages.get(k) ?? 0) + 1);
+    if (e.geo) located++;
+  }
+  const extent = timeExtent(entities);
+  const focus = extent ? focusWindow(entities.filter((e) => entityTime(e) !== null), extent) : null;
+  const langs = [...languages.entries()].filter(([l]) => l !== "Other").sort((a, b) => b[1] - a[1]).map(([l]) => l);
+  const withParts = [
+    ...CONTENT_ROWS.contains
+      .map((r) => [contains.get(r.id) ?? 0, CONTAINS_WORDS[r.id] ?? r.label.toLowerCase()] as const)
+      .filter(([c]) => c > 0)
+      .map(([c, w]) => `${n(c)} with ${w}`),
+    ...(located > 0 ? [`${n(located)} with a place on the map`] : []),
+  ];
+  return (
+    plural(entities.length, "record") +
+    (focus ? `, most of them from ${windowWords(focus.min, focus.max)}` : extent ? ` ${rangePhrase(extent.min, extent.max)}` : "") +
+    (langs.length ? `, in ${listWords(langs)}` : "") +
+    (withParts.length ? `; ${listWords(withParts)}` : "") +
+    "."
+  ).replace(/\u00a0/g, " ");
+}
+
 /* ── Timeline lanes ───────────────────────────────────────────────────── */
 
 /** The Timeline view's Lanes, reduced: the six largest templates, one column

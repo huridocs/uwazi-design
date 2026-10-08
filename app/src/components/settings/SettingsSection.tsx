@@ -46,14 +46,41 @@ export function SettingsSection({
   title,
   description,
   action,
+  aside = false,
   children,
 }: {
   title?: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  /** On a full-width form (no measure), from a wide container the heading and
+   *  description take a column of their own beside the fields, which keep
+   *  a 46rem measure; stacked below that. Needs an `@container` ancestor. */
+  aside?: boolean;
   children: ReactNode;
 }) {
   const headingId = useId();
+  if (aside)
+    return (
+      <section
+        data-component="SettingsSection"
+        data-layout="aside"
+        aria-labelledby={title ? headingId : undefined}
+        className="grid grid-cols-1 gap-3 @4xl:grid-cols-[minmax(12rem,17rem)_minmax(0,46rem)] @4xl:gap-x-12 min-w-0 pt-6 border-t border-border-soft first:pt-0 first:border-t-0"
+      >
+        <div data-part="heading" className="min-w-0 flex flex-col items-start gap-2">
+          {title && (
+            <h3 id={headingId} className="text-sm font-semibold text-ink">
+              {title}
+            </h3>
+          )}
+          {description && <p className="text-xs text-ink-tertiary text-pretty max-w-[40rem]">{description}</p>}
+          {action && <div className="flex flex-wrap items-center gap-2">{action}</div>}
+        </div>
+        <div className="min-w-0 flex flex-col gap-3">
+          <HeadingId.Provider value={title ? headingId : undefined}>{children}</HeadingId.Provider>
+        </div>
+      </section>
+    );
   return (
     <section
       data-component="SettingsSection"
