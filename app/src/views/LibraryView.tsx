@@ -167,12 +167,12 @@ import { useTapGuard } from "../hooks/useTapGuard";
 import { previewEntityIdAtom } from "../atoms/entityPreview";
 import { libraryLayoutAtom } from "../atoms/session";
 import { notebookPinCountAtom } from "../atoms/notebook";
-import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, type RailItem, type RailPane } from "../components/library/LibraryRail";
+import { LibraryFullWidthLayer, LibraryRail, RAIL_RESERVE, SPLIT_RAIL_RESERVE, type RailItem, type RailPane, type RailShare } from "../components/library/LibraryRail";
 import { NotebookBody } from "../components/notebook/NotebookPanel";
 import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
 import { createPortal } from "react-dom";
 import { identityOf, sharedPass } from "../utils/sharedPass";
-import { paneHoldsEvent, useLibraryPane, useMastheadFold, usePaneResultCount, useSplitFooter, type LibraryPaneSide, type PaneResults } from "../components/library/libraryPane";
+import { paneHoldsEvent, useLibraryPane, useMastheadFold, usePaneResultCount, useSplitFooter, useSplitShared, type LibraryPaneSide, type PaneResults } from "../components/library/libraryPane";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -540,6 +540,9 @@ export function LibraryView() {
      of Split's panes is a Full width Library (`LibrarySplitView`). */
   const splitPane = useLibraryPane();
   const splitFooter = useSplitFooter();
+  // Synced Split: one time strip and one rail for both panes.
+  const splitShared = useSplitShared();
+  const shared = splitPane ? splitShared : null;
   const layout = useAtomValue(libraryLayoutAtom);
   const fullWidth = !!splitPane || (layout === "full" && breakpoint === "desktop");
   const [railPanel, setRailPanel] = useAtom(libraryRailPanelAtom);
@@ -1059,6 +1062,16 @@ export function LibraryView() {
   // Sync, whose own clock is the time axis there; a date filter set elsewhere
   // still applies, and the Sync toolbar names it.
   const showBrush = timeHub && !cejilLoading && viewMode !== "overview" && viewMode !== "sync";
+  // Synced Split draws one strip under both panes: the left pane's when it
+  // wants one, else the right pane's. Both write the one synced date range.
+  const reportBrush = shared?.reportBrush;
+  useEffect(() => {
+    if (!reportBrush || !paneSide) return;
+    reportBrush(paneSide, showBrush);
+    return () => reportBrush(paneSide, false);
+  }, [reportBrush, paneSide, showBrush]);
+  const drawsSharedBrush =
+    !!shared?.brushSlot && showBrush && (paneSide === "left" || !shared.brushWanted.left);
 
   // The brush histogram applies every facet except the date one, so the bars
   // outside the range (dimmed) show what widening the window would add.
@@ -1887,8 +1900,15 @@ export function LibraryView() {
         )}
       </div>
 
-      {/* Time brush — map + timeline */}
-      {showBrush && <TimeBrush entities={timeChart} />}
+      {/* Time brush — map + timeline. Synced Split draws one under both panes. */}
+      {showBrush && !shared && <TimeBrush entities={timeChart} />}
+      {drawsSharedBrush &&
+        createPortal(
+          <div data-library-pane-owner={paneSide} className="contents">
+            <TimeBrush entities={timeChart} />
+          </div>,
+          shared!.brushSlot!,
+        )}
       </>)}
 
       {/* The footer's dialogs and file input, mounted whichever bar shows the
@@ -2061,10 +2081,22 @@ export function LibraryView() {
      The drawer's Filters and Results tabs, the Notebook and the Views menu's
      body become the rail's panels; what else the drawer would show (the
      preview, the selection list, a map cluster) opens in the same panel. */
+  /* Synced Split: the rail sits over the divider, so each pane keeps its
+     facing edge clear instead: the left pane its end, the right pane its start
+     (logical sides, so RTL mirrors). */
+  const canvasLane = viewMode === "map" || viewMode === "network";
   const railReserve = (
-    viewMode === "map" || viewMode === "network"
-      ? { "--rail-reserve": RAIL_RESERVE }
-      : { paddingInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})` }
+    shared
+      ? paneSide === "left"
+        ? canvasLane
+          ? { "--rail-reserve": SPLIT_RAIL_RESERVE }
+          : { paddingInlineEnd: `calc(var(--gutter, 0px) + ${SPLIT_RAIL_RESERVE})` }
+        : canvasLane
+          ? { "--rail-reserve-start": SPLIT_RAIL_RESERVE }
+          : { paddingInlineStart: `calc(var(--gutter, 0px) + ${SPLIT_RAIL_RESERVE})` }
+      : canvasLane
+        ? { "--rail-reserve": RAIL_RESERVE }
+        : { paddingInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})` }
   ) as React.CSSProperties;
   const railItems: RailItem[] = [
     {
@@ -2164,8 +2196,36 @@ export function LibraryView() {
   useEffect(() => {
     if ((!fullWidth || overview) && railPanel) setRailPanel(null);
   }, [fullWidth, overview, railPanel, setRailPanel]);
+  const panelOwner = shared?.panelOwner ?? null;
+  const claimPanel = shared?.claimPanel;
+  const releasePanel = shared?.releasePanel;
+  const railShare = useMemo<RailShare | undefined>(
+    () =>
+      paneSide && claimPanel && releasePanel
+        ? { side: paneSide, owner: panelOwner, claim: claimPanel, release: releasePanel }
+        : undefined,
+    [paneSide, panelOwner, claimPanel, releasePanel],
+  );
   function wrapLane(node: ReactNode) {
     if (!fullWidth || overview) return node;
+    if (shared?.railLayer && railShare) {
+      // Synced Split: the rail and its panels portal to Split's layer over
+      // both panes. Only the left pane draws the rail; either pane's preview,
+      // selection or cluster opens in the shared spot.
+      return (
+        <div data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
+          {node}
+          {createPortal(
+            <LibraryRail
+              items={paneSide === "left" ? railItems : []}
+              pane={pane && { ...pane, key: pane.focusKey }}
+              share={railShare}
+            />,
+            shared.railLayer,
+          )}
+        </div>
+      );
+    }
     return (
       // `isolate`: the rail's layer stacks inside the lane, so the masthead's
       // popovers (Sort, Language, Display, Views) open over it.

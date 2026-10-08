@@ -34,8 +34,10 @@ export function paneHoldsEvent(pane: LibraryPaneValue | null, e: Event): boolean
   const root = pane.root.current;
   if (!root) return false;
   const t = e.target instanceof Element ? e.target : null;
-  const inPane = t?.closest("[data-library-pane]");
-  if (inPane) return inPane === root;
+  const inPane = t?.closest("[data-library-pane], [data-library-pane-owner]");
+  // Synced Split's shared rail and panel sit outside both panes; what one
+  // pane portalled there is marked with its side.
+  if (inPane) return inPane === root || inPane.getAttribute("data-library-pane-owner") === pane.side;
   return pointerPane === pane.side;
 }
 
@@ -105,4 +107,34 @@ export const SplitFooterProvider = SplitFooterContext.Provider;
 
 export function useSplitFooter(): SplitFooterValue | null {
   return useContext(SplitFooterContext);
+}
+
+/* Synced Split's shared chrome. While Sync filters is on, the two panes hold
+   one filter set, so Split draws one time strip under both panes and one rail
+   centred over the divider instead of one of each per pane. The panes still
+   own what they portal there (the left pane the rail and its panels, either
+   pane its own preview, selection list or map cluster), so each body reads its
+   own pane's store. One panel shows at a time: the pane that opens one claims
+   the centred spot, and the other pane closes its own. */
+export interface SplitSharedValue {
+  /** The positioned layer over both panes the rail and panels portal into. */
+  railLayer: HTMLElement | null;
+  /** The strip's slot under both panes. */
+  brushSlot: HTMLElement | null;
+  /** The pane whose panel holds the centred spot, if any. */
+  panelOwner: LibraryPaneSide | null;
+  claimPanel: (side: LibraryPaneSide) => void;
+  releasePanel: (side: LibraryPaneSide) => void;
+  /** Which panes would draw a time strip; the left pane's draws the shared one,
+   *  else the right pane's. */
+  brushWanted: Record<LibraryPaneSide, boolean>;
+  reportBrush: (side: LibraryPaneSide, wanted: boolean) => void;
+}
+
+const SplitSharedContext = createContext<SplitSharedValue | null>(null);
+export const SplitSharedProvider = SplitSharedContext.Provider;
+
+/** Synced Split's shared chrome, or null outside Split and while not synced. */
+export function useSplitShared(): SplitSharedValue | null {
+  return useContext(SplitSharedContext);
 }

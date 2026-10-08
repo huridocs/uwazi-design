@@ -578,7 +578,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <p data-part="caption" className={`absolute top-3 start-3 z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
+        <p data-part="caption" className={`absolute top-3 start-[calc(0.75rem+var(--rail-reserve-start,0px))] z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px)-var(--rail-reserve-start,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
           {inArea !== null && <>{inArea.toLocaleString()} of </>}
           {located.length.toLocaleString()} located {located.length === 1 ? "entity" : "entities"}
           {inArea !== null && " in map area"}
@@ -590,7 +590,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
           )}
         </p>
         {bearingsOn && sync && (
-          <p data-part="bearing-caption" className={`absolute top-[3.25rem] start-3 z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
+          <p data-part="bearing-caption" className={`absolute top-[3.25rem] start-[calc(0.75rem+var(--rail-reserve-start,0px))] z-[1000] max-w-[calc(100%-1.5rem-var(--rail-reserve,0px)-var(--rail-reserve-start,0px))] truncate leading-8 px-2.5 ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}>
             <span aria-hidden className="inline-block w-4 align-middle me-1.5 border-t border-dashed border-ink-secondary" />
             Bearing to source, computed: {bearings.length.toLocaleString()} {bearings.length === 1 ? "line" : "lines"}
           </p>

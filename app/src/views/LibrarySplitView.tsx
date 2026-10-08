@@ -10,11 +10,13 @@ import {
   LibraryPaneProvider,
   MastheadFoldProvider,
   SplitFooterProvider,
+  SplitSharedProvider,
   createPaneResults,
   notePointerPane,
   type LibraryPaneSide,
   type MastheadFoldValue,
   type SplitFooterValue,
+  type SplitSharedValue,
 } from "../components/library/libraryPane";
 import { SelectionOrderHost, type SelectionOrderHolder } from "../components/library/EntitySelectBox";
 import { LibraryView } from "./LibraryView";
@@ -146,17 +148,66 @@ export function LibrarySplitView() {
     [footerSlot, active, sync, results],
   );
 
+  /* Synced: one time strip under both panes and one rail over the divider
+     (`SplitSharedValue`). The panes portal into the layer and the slot below;
+     this view owns where they are and which pane's panel shows. */
+  const [railLayer, setRailLayer] = useState<HTMLDivElement | null>(null);
+  const [brushSlot, setBrushSlot] = useState<HTMLDivElement | null>(null);
+  const [panelOwner, setPanelOwner] = useState<LibraryPaneSide | null>(null);
+  const claimPanel = useCallback((side: LibraryPaneSide) => setPanelOwner(side), []);
+  const releasePanel = useCallback(
+    (side: LibraryPaneSide) => setPanelOwner((o) => (o === side ? null : o)),
+    [],
+  );
+  const [brushWanted, setBrushWanted] = useState<Record<LibraryPaneSide, boolean>>({ left: false, right: false });
+  const reportBrush = useCallback(
+    (side: LibraryPaneSide, wanted: boolean) =>
+      setBrushWanted((b) => (b[side] === wanted ? b : { ...b, [side]: wanted })),
+    [],
+  );
+  const shared = useMemo<SplitSharedValue | null>(
+    () =>
+      sync
+        ? { railLayer, brushSlot, panelOwner, claimPanel, releasePanel, brushWanted, reportBrush }
+        : null,
+    [sync, railLayer, brushSlot, panelOwner, claimPanel, releasePanel, brushWanted, reportBrush],
+  );
+  /* The layer starts where the panes' lanes start, under the mastheads (the
+     fold gives both the same height), so the rail sits where each pane's did. */
+  const [laneTop, setLaneTop] = useState(0);
+  useLayoutEffect(() => {
+    const box = containerRef.current;
+    if (!sync || !box) return;
+    const measure = () => {
+      const lane = box.querySelector<HTMLElement>('[data-library-pane="left"] [data-part="lane-host"]');
+      if (!lane) return;
+      const top = Math.round(lane.getBoundingClientRect().top - box.getBoundingClientRect().top);
+      setLaneTop((t) => (t === top ? t : top));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    const mo = new MutationObserver(measure);
+    mo.observe(box, { childList: true, subtree: true });
+    for (const el of box.querySelectorAll('[data-library-pane] > *')) ro.observe(el);
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+    };
+  }, [sync, fold.tier]);
+
   const dragging = drag !== null;
   const percent = (r: number) => Math.round(r * 100);
 
   return (
     <MastheadFoldProvider value={fold}>
     <SplitFooterProvider value={footer}>
+    <SplitSharedProvider value={shared}>
     <div data-component="LibrarySplit" className="flex flex-col flex-1 min-h-0">
     <div
       ref={containerRef}
       data-part="panes"
-      className={`flex flex-1 min-h-0 overflow-hidden ${dragging ? "select-none cursor-col-resize" : ""}`}
+      className={`relative flex flex-1 min-h-0 overflow-hidden ${dragging ? "select-none cursor-col-resize" : ""}`}
     >
       <LibraryPane
         side="left"
@@ -206,7 +257,24 @@ export function LibrarySplitView() {
       <ScopeProvider scope={right}>
         <LibraryPane side="right" style={{ flex: "1 1 0" }} onActive={setActive} />
       </ScopeProvider>
+      {/* Synced: the shared rail's layer, from the lanes' top to the panes'
+          foot. `--split-at` is the divider's centre from the left pane's outer
+          edge; the rail and its panel centre on it and follow a drag. Its own
+          trap scope: a panel holds Tab only while the focus is in it. */}
+      {sync && (
+        <div
+          ref={setRailLayer}
+          data-part="split-rail-layer"
+          data-trap-scope
+          className="absolute inset-x-0 bottom-0 z-40 isolate pointer-events-none overflow-clip"
+          style={{ top: laneTop, "--split-at": `calc((100% - ${DIVIDER_PX}px) * ${share} + ${DIVIDER_PX / 2}px)` } as CSSProperties}
+        />
+      )}
     </div>
+    {/* Synced: the one time strip, under both panes. */}
+    {sync && (
+      <div ref={setBrushSlot} data-part="split-brush" data-gutter-host className="gutter-host shrink-0 flex flex-col" />
+    )}
     {/* One footer bar for both panes: the active pane's actions (its
         selection's, while it has one) in the slot, then Sync filters. A
         container, so the actions fold to their icons as in a pane's bar. */}
@@ -242,6 +310,7 @@ export function LibrarySplitView() {
       </button>
     </div>
     </div>
+    </SplitSharedProvider>
     </SplitFooterProvider>
     </MastheadFoldProvider>
   );

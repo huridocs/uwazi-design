@@ -473,6 +473,16 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     and "View entity" for the rest; a draft is the exception. A passage hit goes to the entity
     view, as on phones. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input, so
     both panes share one array and one graph.
+  - Sync filters on: one time strip under both panes and one rail centred on the divider
+    (`SplitSharedValue` in `libraryPane.tsx`). The panes portal into Split's layer and strip
+    slot, so each body keeps its own store: the left pane draws the rail and its items, either
+    pane's preview, selection or cluster opens in the same centred spot, under the rail. The
+    pane that opens a panel claims the spot and the other closes its own. The strip is the left
+    pane's when it wants one, else the right's. The layer is its own `data-trap-scope`;
+    portalled parts carry `data-library-pane-owner` for `paneHoldsEvent`. The panes clear their
+    facing edges by `SPLIT_RAIL_RESERVE` (`--rail-reserve-start` for the right pane's
+    canvases). An open panel covers the divider's middle; it stays draggable above and below
+    the panel and by keyboard.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the only count and `ActiveSearchChip`.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with

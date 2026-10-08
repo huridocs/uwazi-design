@@ -5,6 +5,7 @@ import { libraryRailInsetAtom, libraryRailPanelAtom, NO_RAIL_INSET, type Library
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { DrawerWidthProvider } from "../../hooks/useDrawerWidth";
+import type { LibraryPaneSide } from "./libraryPane";
 
 /* Full width layout (`libraryLayoutAtom = "full"`): the Library's main pane
    takes the whole width, and what the drawer held moves to two places over the
@@ -62,6 +63,19 @@ export interface RailPane {
   close: (next: () => void) => void;
 }
 
+/** Synced Split: what a pane's rail needs to share the one centred spot. */
+export interface RailShare {
+  side: LibraryPaneSide;
+  /** The pane whose panel holds the spot. */
+  owner: LibraryPaneSide | null;
+  claim: (side: LibraryPaneSide) => void;
+  release: (side: LibraryPaneSide) => void;
+}
+
+/** Synced Split's rail sits over the divider, so the panes keep this much of
+ *  their facing edges clear past the gutter: half the rail and a gap. */
+export const SPLIT_RAIL_RESERVE = "1rem";
+
 /** The positioned layer over the view lane. `bleed-flush` geometry by hand:
  *  the lane's wrapper sits on the gutter, the layer reaches the pane edges. */
 export function LibraryFullWidthLayer({ children }: { children: ReactNode }) {
@@ -82,8 +96,23 @@ export function LibraryFullWidthLayer({ children }: { children: ReactNode }) {
 /** The rail and its one open panel. `fitContent` (Full width, not Split's
  *  panes): every panel is as tall as its content, up to the lane, and the
  *  width it covers is published (`libraryRailInsetAtom`) for Map and Network
- *  to fit and centre beside it. */
-export function LibraryRail({ items, pane, fitContent = false }: { items: RailItem[]; pane: RailPane | null; fitContent?: boolean }) {
+ *  to fit and centre beside it.
+ *
+ *  `share` (synced Split): the rail and panel portal into Split's layer over
+ *  both panes and centre on the divider (`--split-at`), the panel under the
+ *  rail. Only the left pane passes items; the right pane draws its panel only.
+ *  The pane that opens a panel claims the spot and the other closes its own. */
+export function LibraryRail({
+  items,
+  pane,
+  fitContent = false,
+  share,
+}: {
+  items: RailItem[];
+  pane: RailPane | null;
+  fitContent?: boolean;
+  share?: RailShare;
+}) {
   const [open, setOpen] = useAtom(libraryRailPanelAtom);
   const ids = useId();
   const railItem = items.find((i) => i.id === open && !i.disabledReason) ?? null;
@@ -123,12 +152,55 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
     if (open && !railItem) setOpen(null);
   }, [open, railItem, setOpen]);
 
-  const isOpen = current !== null;
+  const opened = current !== null;
+  /* Synced Split: claim the centred spot on opening a panel (or another in its
+     place), give it up on closing. When the other pane claims it, close this
+     pane's panel the way its own controls would; a dirty edit may keep it,
+     and then it stays open but hidden until it closes. */
+  const side = share?.side;
+  const claim = share?.claim;
+  const release = share?.release;
+  const owner = share?.owner ?? null;
+  const currentId = current?.id;
+  useEffect(() => {
+    if (!side || !claim || !release) return;
+    if (currentId) claim(side);
+    else release(side);
+  }, [currentId, side, claim, release]);
+  useEffect(() => () => {
+    if (side && release) release(side);
+  }, [side, release]);
+  const yieldRef = useRef<() => void>(() => {});
+  yieldRef.current = () => {
+    if (!opened) return;
+    if (pane) pane.close(() => {});
+    else setOpen(null);
+  };
+  useEffect(() => {
+    if (side && owner && owner !== side) yieldRef.current();
+  }, [owner, side]);
+  const isOpen = opened && (!share || owner === null || owner === share.side);
   const panelRef = useFocusTrap<HTMLDivElement>(isOpen, shown?.id);
   useEffect(() => {
     panelRef.current?.toggleAttribute("inert", !isOpen);
   }, [isOpen, panelRef]);
   const layer = useOverlayLayer(isOpen);
+
+  // Synced Split: the panel opens under the rail, so the rail's foot is
+  // published on the shared layer for both panes' panels.
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const hasToolbar = items.length > 0;
+  const sharing = !!share;
+  useLayoutEffect(() => {
+    const bar = toolbarRef.current;
+    const host = bar?.offsetParent as HTMLElement | null;
+    if (!sharing || !bar || !host) return;
+    const measure = () => host.style.setProperty("--rail-bottom", `${bar.offsetTop + bar.offsetHeight}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, [sharing, hasToolbar]);
 
   // The covered width, from the lane's edge to the panel's far side. Layout
   // offsets, not the box on screen: the slide-in's translate is not counted.
@@ -186,15 +258,23 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
   const panelId = `${ids}-panel`;
   const titleId = `${ids}-title`;
 
+  const centred = !!share;
+  const owned = share ? { "data-library-pane-owner": share.side } : {};
+
   return (
     <>
+      {hasToolbar && (
       <div
+        ref={toolbarRef}
+        {...owned}
         role="toolbar"
         aria-orientation="vertical"
         aria-label="Library panels"
         data-component="LibraryRail"
-        className="pointer-events-auto absolute top-3 flex flex-col gap-0.5 p-0.5 bg-paper border border-border rounded-lg shadow-sm"
-        style={{ insetInlineEnd: "var(--gutter, 0px)" }}
+        className={`pointer-events-auto absolute top-3 flex flex-col gap-0.5 p-0.5 bg-paper border border-border rounded-lg shadow-sm ${
+          centred ? "-translate-x-1/2 rtl:translate-x-1/2" : ""
+        }`}
+        style={centred ? { insetInlineStart: "var(--split-at)" } : { insetInlineEnd: "var(--gutter, 0px)" }}
       >
         {items.map((item) => {
           const active = current?.id === item.id;
@@ -253,9 +333,11 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
           );
         })}
       </div>
+      )}
 
       <div
         ref={panelRef}
+        {...owned}
         id={panelId}
         role="dialog"
         aria-labelledby={shown && !shown.ownHeader ? titleId : undefined}
@@ -266,15 +348,31 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
         data-state={isOpen ? "open" : "closed"}
         // A body with no height of its own (a document, a graph) marks itself
         // `data-panel-fill` and gets the lane's, as before.
-        className={`absolute top-3 ${fit ? "max-h-[calc(100%-1.5rem)] has-[[data-panel-fill]]:bottom-3" : "bottom-3"} flex flex-col bg-paper border border-border rounded-lg shadow-lg overflow-hidden
+        className={`absolute ${centred ? "" : "top-3"} ${
+          fit
+            ? `${centred ? "max-h-[calc(100%-var(--rail-bottom,0.75rem)-1.25rem)]" : "max-h-[calc(100%-1.5rem)]"} has-[[data-panel-fill]]:bottom-3`
+            : "bottom-3"
+        } flex flex-col bg-paper border border-border rounded-lg shadow-lg overflow-hidden
           transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none ${
-            isOpen ? "pointer-events-auto opacity-100 translate-x-0" : "pointer-events-none opacity-0 translate-x-2 rtl:-translate-x-2"
+            centred
+              ? `-translate-x-1/2 rtl:translate-x-1/2 ${isOpen ? "pointer-events-auto opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-1"}`
+              : isOpen
+                ? "pointer-events-auto opacity-100 translate-x-0"
+                : "pointer-events-none opacity-0 translate-x-2 rtl:-translate-x-2"
           }`}
-        style={{
-          insetInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})`,
-          width: `min(${PANEL_REM}rem, calc(100% - 2 * var(--gutter, 0px) - ${RAIL_RESERVE}))`,
-          minHeight: fitContent ? `min(${PANEL_MIN_REM}rem, calc(100% - 1.5rem))` : undefined,
-        }}
+        style={
+          centred
+            ? {
+                insetInlineStart: "var(--split-at)",
+                top: "calc(var(--rail-bottom, 0.75rem) + 0.5rem)",
+                width: `min(${PANEL_REM}rem, calc(100% - 1.5rem))`,
+              }
+            : {
+                insetInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})`,
+                width: `min(${PANEL_REM}rem, calc(100% - 2 * var(--gutter, 0px) - ${RAIL_RESERVE}))`,
+                minHeight: fitContent ? `min(${PANEL_MIN_REM}rem, calc(100% - 1.5rem))` : undefined,
+              }
+        }
       >
         {shown &&
           (shown.ownHeader ? (

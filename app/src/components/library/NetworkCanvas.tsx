@@ -2153,7 +2153,7 @@ export function NetworkCanvas({
         <nav
           aria-label="Where you are"
           data-part="breadcrumb" data-overlay
-          className={`absolute top-3 left-3 max-w-[calc(100%-11rem-var(--rail-reserve,0px))] ${CANVAS_OVERLAY_GROUP} gap-1 text-meta`}
+          className={`absolute top-3 left-[calc(0.75rem+var(--rail-reserve-start,0px))] max-w-[calc(100%-11rem-var(--rail-reserve,0px)-var(--rail-reserve-start,0px))] ${CANVAS_OVERLAY_GROUP} gap-1 text-meta`}
         >
           <button
             type="button"
