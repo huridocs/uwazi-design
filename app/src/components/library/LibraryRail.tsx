@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { X } from "lucide-react";
 import { libraryRailInsetAtom, libraryRailPanelAtom, NO_RAIL_INSET, type LibraryRailPanel } from "../../atoms/library";
@@ -104,9 +104,15 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
   // The body lags the close by the slide-out, so the panel does not empty on
   // its way off.
   const [shown, setShown] = useState<Shown | null>(current);
+  const shownId = useRef(shown?.id);
+  shownId.current = shown?.id;
   useEffect(() => {
     if (current) {
-      setShown(current);
+      // A panel opening (or another taking its place) mounts its body as a
+      // transition: rendering a record's preview yields to the frames of the
+      // camera easing it into view. A body that only re-renders is urgent.
+      if (current.id !== shownId.current) startTransition(() => setShown(current));
+      else setShown(current);
       return;
     }
     const t = window.setTimeout(() => setShown(null), 200);
@@ -133,7 +139,7 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
     const layerEl = panel?.offsetParent as HTMLElement | null;
     const lane = panel?.closest<HTMLElement>('[data-part="lane-host"]');
     if (!fitContent || !isOpen || !panel || !layerEl || !lane) {
-      setInset(NO_RAIL_INSET);
+      setInset((prev) => (prev.left || prev.right ? NO_RAIL_INSET : prev));
       return;
     }
     const measure = () => {
@@ -141,9 +147,12 @@ export function LibraryRail({ items, pane, fitContent = false }: { items: RailIt
       const start = panel.offsetLeft - gutter;
       const end = start + panel.offsetWidth;
       const rtl = getComputedStyle(panel).direction === "rtl";
-      setInset(
-        rtl ? { left: Math.max(0, Math.round(end)), right: 0 } : { left: 0, right: Math.max(0, Math.round(lane.clientWidth - start)) },
-      );
+      const next = rtl
+        ? { left: Math.max(0, Math.round(end)), right: 0 }
+        : { left: 0, right: Math.max(0, Math.round(lane.clientWidth - start)) };
+      // The panel's height changes as its body fills in; the width it covers
+      // does not, and Map and Network do not render again for it.
+      setInset((prev) => (prev.left === next.left && prev.right === next.right ? prev : next));
     };
     measure();
     const ro = new ResizeObserver(measure);

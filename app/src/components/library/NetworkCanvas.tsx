@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { RefStatus } from "../relationships/rows/RefStatus";
 import { buildQuadtree } from "../../utils/quadtree";
 import { typeLabelColor } from "../../utils/typeColor";
+import { noteCameraMove } from "../../utils/cameraMotion";
 import { CANVAS_OVERLAY, CANVAS_OVERLAY_BUTTON, CANVAS_OVERLAY_GROUP, CANVAS_PANEL } from "../shared/canvasOverlay";
 
 /** A whole-collection graph on one canvas.
@@ -139,6 +140,22 @@ type Box = [number, number, number, number];
  *  reference count (1, 2–3, 4+). */
 const BASE = 0, HUB = 1, LIGHT = 2, STRONG = 3, LIFT = 4, SEL = 5;
 const EDGE_WIDTHS = [0.8, 1.3, 2];
+
+/** A label placed by the label pass: a node's (`cap` -1, at `spot`: right,
+ *  left, above, below) or a community caption's (`cap`, `dy` off its centre). */
+interface LabelOp {
+  i: number;
+  cap: number;
+  spot: number;
+  dy: number;
+  text: string;
+  tw: number;
+  force: boolean;
+}
+interface LabelPlan {
+  key: string;
+  ops: LabelOp[];
+}
 
 /** Label boxes on screen, hashed into 64px cells so a collision check reads
  *  a few cells rather than every label placed. */
@@ -307,6 +324,11 @@ export function NetworkCanvas({
   const cam = useRef<Camera>({ k: 1, tx: 0, ty: 0 });
   const fitK = useRef(1);
   const frame = useRef(0);
+  /** A camera move or a glide is drawing every frame: nothing else schedules
+   *  a draw (the lift, a hover, a re-render), so a frame draws once. */
+  const animOn = useRef(false);
+  const glideOn = useRef(false);
+  const driven = () => animOn.current || glideOn.current;
   const [hover, setHover] = useState<Hover | null>(null);
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
@@ -558,6 +580,12 @@ export function NetworkCanvas({
 
   /** Frames drawn, for the scripted checks (dev only). */
   const drawCount = useRef(0);
+  /** Label widths by font and text: `measureText` is the label pass's cost. */
+  const textWidths = useRef(new Map<string, number>());
+  /** The labels placed on a drive's first frame (a move or a glide), drawn
+   *  at their nodes on the frames after it; placed again when what is
+   *  labelled or the zoom step changes, and at rest. */
+  const labelPlan = useRef<LabelPlan | null>(null);
   /** Edge endpoints per (style, width), reused from frame to frame. */
   const edgeBuckets = useRef<number[][]>(Array.from({ length: 6 * EDGE_WIDTHS.length }, () => []));
   const draw = useCallback(() => {
@@ -585,6 +613,16 @@ export function NetworkCanvas({
     const sx = (i: number) => pos[i * 2] * k + tx;
     const sy = (i: number) => pos[i * 2 + 1] * k + ty;
     const pad = 40;
+    const widths = textWidths.current;
+    const widthOf = (text: string) => {
+      const key = `${ctx.font}|${text}`;
+      let w = widths.get(key);
+      if (w === undefined) {
+        if (widths.size > 20000) widths.clear();
+        widths.set(key, (w = ctx.measureText(text).width));
+      }
+      return w;
+    };
 
     /* The lifted neighbourhood (hover, else selection, else the find cursor):
        it and its links draw full, the rest recede by `recede`. */
@@ -813,121 +851,161 @@ export function NetworkCanvas({
       {
         ctx.textBaseline = "middle";
         ctx.lineJoin = "round";
-        const boxes = new LabelBoxes();
-        // The controls over the canvas (legend, breadcrumb, stepper, zoom).
-        for (const b of overlays.current) boxes.add(b);
-        const density = clamp(0.15 + 0.25 * Math.log2(Math.max(1, r)), 0.15, 1);
-        const budget = Math.round(clamp(((W * H) / 16000) * density, 8, 120));
-        const want = [
+        // Captions are gone by about 1.6× the first fit: past it the dots are
+        // apart enough for the records' own labels.
+        const capAlpha = (1 - clamp((r - LOD_FROM) / CAPTION_FADE, 0, 1)) * 0.85 * recede;
+        // What is labelled, and the zoom in steps of about 19%: a drive places
+        // labels again only when one of these changes.
+        const labelKey = [
           selected,
           focused,
-          ...(hv?.kind === "node" ? [hv.i] : []),
-          ...(hood ? [liftI] : []),
-          ...(find ? [find.node] : []),
-          ...(edgeHi >= 0 ? [graph.a[edgeHi], graph.b[edgeHi]] : []),
-        ].filter((i, k, all) => i >= 0 && nodeOn[i] && all.indexOf(i) === k);
-        // Their dots are kept clear of other labels.
-        for (const i of want) {
-          const rd = rad(i) + 2;
-          boxes.add([sx(i) - rd, sy(i) - rd, sx(i) + rd, sy(i) + rd]);
-        }
-        let placed = 0;
-        const place = (i: number, force: boolean) => {
-          if (!nodeOn[i]) return;
-          const x = sx(i);
-          const y = sy(i);
-          if (x < 0 || x > W || y < 0 || y > H) return;
-          const text = truncate(titleOf(i));
-          ctx.font = `${force ? 600 : 500} 11px ${t.font}`;
-          const tw = ctx.measureText(text).width;
-          const rd = rad(i);
-          const spots: [number, number][] = [
-            [x + rd + 4, y],
-            [x - rd - 4 - tw, y],
-            [x - tw / 2, y - rd - 9],
-            [x - tw / 2, y + rd + 9],
-          ];
-          let at: [number, number] | null = null;
-          for (const [lx, ly] of spots) {
-            const box: Box = [lx - 2, ly - 7, lx + tw + 2, ly + 7];
-            // A label cut by the pane's edge reads as a different name.
-            if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H) continue;
-            if (boxes.hits(box)) continue;
-            at = [lx, ly];
-            boxes.add(box);
-            break;
-          }
-          if (!at) {
-            if (!force) return;
-            // Always labelled: on its right, even where it overlaps.
-            at = spots[0];
-            boxes.add([at[0] - 2, at[1] - 7, at[0] + tw + 2, at[1] + 7]);
-          }
-          ctx.globalAlpha = force || lifted(i) ? 1 : recede;
+          hv?.kind === "node" ? hv.i : -1,
+          hood ? liftI : -1,
+          hood && la > 0.5 ? 1 : 0,
+          find?.node ?? -1,
+          edgeHi,
+          capAlpha > 0.02 ? 1 : 0,
+          Math.round(Math.log2(r) * 4),
+          W,
+          H,
+        ].join();
+        const plan = labelPlan.current;
+        const reuse = driven() && plan?.key === labelKey;
+        /** One label's text, drawn with its halo. */
+        const paint = (text: string, x: number, y: number, alpha: number, fill: string) => {
+          ctx.globalAlpha = alpha;
           ctx.strokeStyle = t.bg;
           ctx.lineWidth = 3;
-          ctx.strokeText(text, at[0], at[1]);
-          ctx.fillStyle = colors.mark.get(graph.typeIds[i]) ?? t.inkSecondary;
-          ctx.fillText(text, at[0], at[1]);
-          placed++;
+          ctx.strokeText(text, x, y);
+          ctx.fillStyle = fill;
+          ctx.fillText(text, x, y);
         };
-        for (const i of want) place(i, true);
-        /* Captions: the name of each of the largest communities (by matches
-           while filtering), centred on it in tertiary ink, fading out as the
-           zoom comes in. Its best-connected record then gets no label of its
-           own, which would repeat the name. */
-        const captioned = new Set<number>();
-        // Gone by about 1.6× the first fit: past it the dots are apart enough
-        // for the records' own labels.
-        const capAlpha = (1 - clamp((r - LOD_FROM) / CAPTION_FADE, 0, 1)) * 0.85 * recede;
-        if (capAlpha > 0.02) {
-          ctx.font = `500 11px ${t.font}`;
-          ctx.textAlign = "center";
-          let shown = 0;
-          // A phone's pane has room for two next to the records' labels.
-          const most = Math.round(clamp((W * H) / 160000, 2, CAPTIONS));
-          for (const idx of captionOrder) {
-            if (shown >= most) break;
-            const c = communities[idx];
-            const text = truncate(titleOf(c.top), 28);
-            const tw = ctx.measureText(text).width;
-            // On the centre, else just above or below it; never over the
-            // dot of the record it names.
-            const x = c.x * k + tx;
-            const rd = rad(c.top) + 2;
-            const dotBox: Box = [sx(c.top) - rd, sy(c.top) - rd, sx(c.top) + rd, sy(c.top) + rd];
-            let y = NaN;
-            for (const dy of [0, -14, 14]) {
-              const cy = c.y * k + ty + dy;
-              const box: Box = [x - tw / 2 - 2, cy - 7, x + tw / 2 + 2, cy + 7];
-              if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H || boxes.hits(box)) continue;
-              if (box[0] < dotBox[2] && dotBox[0] < box[2] && box[1] < dotBox[3] && dotBox[1] < box[3]) continue;
+        /** Where spot `s` puts a label `tw` wide beside a node at x, y. */
+        const spotAt = (s: number, x: number, y: number, rd: number, tw: number): [number, number] =>
+          s === 0 ? [x + rd + 4, y] : s === 1 ? [x - rd - 4 - tw, y] : s === 2 ? [x - tw / 2, y - rd - 9] : [x - tw / 2, y + rd + 9];
+        if (reuse) {
+          for (const op of plan.ops) {
+            if (op.cap >= 0) {
+              const c = communities[op.cap];
+              if (!c || capAlpha <= 0.02) continue;
+              ctx.font = `500 11px ${t.font}`;
+              ctx.textAlign = "center";
+              paint(op.text, c.x * k + tx, c.y * k + ty + op.dy, capAlpha, t.inkTertiary);
+              ctx.textAlign = "start";
+              continue;
+            }
+            if (!nodeOn[op.i]) continue;
+            ctx.font = `${op.force ? 600 : 500} 11px ${t.font}`;
+            const [lx, ly] = spotAt(op.spot, sx(op.i), sy(op.i), rad(op.i), op.tw);
+            paint(op.text, lx, ly, op.force || lifted(op.i) ? 1 : recede, colors.mark.get(graph.typeIds[op.i]) ?? t.inkSecondary);
+          }
+        } else {
+          const ops: LabelOp[] = [];
+          const boxes = new LabelBoxes();
+          // The controls over the canvas (legend, breadcrumb, stepper, zoom).
+          for (const b of overlays.current) boxes.add(b);
+          const density = clamp(0.15 + 0.25 * Math.log2(Math.max(1, r)), 0.15, 1);
+          const budget = Math.round(clamp(((W * H) / 16000) * density, 8, 120));
+          const want = [
+            selected,
+            focused,
+            ...(hv?.kind === "node" ? [hv.i] : []),
+            ...(hood ? [liftI] : []),
+            ...(find ? [find.node] : []),
+            ...(edgeHi >= 0 ? [graph.a[edgeHi], graph.b[edgeHi]] : []),
+          ].filter((i, k, all) => i >= 0 && nodeOn[i] && all.indexOf(i) === k);
+          // Their dots are kept clear of other labels.
+          for (const i of want) {
+            const rd = rad(i) + 2;
+            boxes.add([sx(i) - rd, sy(i) - rd, sx(i) + rd, sy(i) + rd]);
+          }
+          let placed = 0;
+          const place = (i: number, force: boolean) => {
+            if (!nodeOn[i]) return;
+            const x = sx(i);
+            const y = sy(i);
+            if (x < 0 || x > W || y < 0 || y > H) return;
+            const text = truncate(titleOf(i));
+            ctx.font = `${force ? 600 : 500} 11px ${t.font}`;
+            const tw = widthOf(text);
+            const rd = rad(i);
+            let at: [number, number] | null = null;
+            let spot = 0;
+            for (let s = 0; s < 4; s++) {
+              const [lx, ly] = spotAt(s, x, y, rd, tw);
+              const box: Box = [lx - 2, ly - 7, lx + tw + 2, ly + 7];
+              // A label cut by the pane's edge reads as a different name.
+              if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H) continue;
+              if (boxes.hits(box)) continue;
+              at = [lx, ly];
+              spot = s;
               boxes.add(box);
-              y = cy;
               break;
             }
-            if (Number.isNaN(y)) continue;
-            captioned.add(c.top);
-            shown++;
-            ctx.globalAlpha = capAlpha;
-            ctx.strokeStyle = t.bg;
-            ctx.lineWidth = 3;
-            ctx.strokeText(text, x, y);
-            ctx.fillStyle = t.inkTertiary;
-            ctx.fillText(text, x, y);
+            if (!at) {
+              if (!force) return;
+              // Always labelled: on its right, even where it overlaps.
+              at = spotAt(0, x, y, rd, tw);
+              boxes.add([at[0] - 2, at[1] - 7, at[0] + tw + 2, at[1] + 7]);
+            }
+            paint(text, at[0], at[1], force || lifted(i) ? 1 : recede, colors.mark.get(graph.typeIds[i]) ?? t.inkSecondary);
+            ops.push({ i, cap: -1, spot, dy: 0, text, tw, force });
+            placed++;
+          };
+          for (const i of want) place(i, true);
+          /* Captions: the name of each of the largest communities (by matches
+             while filtering), centred on it in tertiary ink, fading out as the
+             zoom comes in. Its best-connected record then gets no label of its
+             own, which would repeat the name. */
+          const captioned = new Set<number>();
+          if (capAlpha > 0.02) {
+            ctx.font = `500 11px ${t.font}`;
+            ctx.textAlign = "center";
+            let shown = 0;
+            // A phone's pane has room for two next to the records' labels.
+            const most = Math.round(clamp((W * H) / 160000, 2, CAPTIONS));
+            for (const idx of captionOrder) {
+              if (shown >= most) break;
+              const c = communities[idx];
+              const text = truncate(titleOf(c.top), 28);
+              const tw = widthOf(text);
+              // On the centre, else just above or below it; never over the
+              // dot of the record it names.
+              const x = c.x * k + tx;
+              const rd = rad(c.top) + 2;
+              const dotBox: Box = [sx(c.top) - rd, sy(c.top) - rd, sx(c.top) + rd, sy(c.top) + rd];
+              let y = NaN;
+              let at = 0;
+              for (const dy of [0, -14, 14]) {
+                const cy = c.y * k + ty + dy;
+                const box: Box = [x - tw / 2 - 2, cy - 7, x + tw / 2 + 2, cy + 7];
+                if (box[0] < 0 || box[2] > W || box[1] < 0 || box[3] > H || boxes.hits(box)) continue;
+                if (box[0] < dotBox[2] && dotBox[0] < box[2] && box[1] < dotBox[3] && dotBox[1] < box[3]) continue;
+                boxes.add(box);
+                y = cy;
+                at = dy;
+                break;
+              }
+              if (Number.isNaN(y)) continue;
+              captioned.add(c.top);
+              shown++;
+              paint(text, x, y, capAlpha, t.inkTertiary);
+              ops.push({ i: c.top, cap: idx, spot: 0, dy: at, text, tw, force: false });
+            }
+            ctx.textAlign = "start";
           }
-          ctx.textAlign = "start";
-        }
-        if (hood && la > 0.5) {
-          for (const i of hood.list) {
+          if (hood && la > 0.5) {
+            for (const i of hood.list) {
+              if (placed >= budget) break;
+              if (!want.includes(i)) place(i, false);
+            }
+          }
+          for (const i of matchOrder ?? byDegree) {
             if (placed >= budget) break;
-            if (!want.includes(i)) place(i, false);
+            if (want.includes(i) || lifted(i) || captioned.has(i)) continue;
+            place(i, false);
           }
-        }
-        for (const i of matchOrder ?? byDegree) {
-          if (placed >= budget) break;
-          if (want.includes(i) || lifted(i) || captioned.has(i)) continue;
-          place(i, false);
+          labelPlan.current = driven() ? { key: labelKey, ops } : null;
         }
       }
     }
@@ -948,20 +1026,31 @@ export function NetworkCanvas({
       painted.current = true;
       performance.mark("network-first-paint");
     }
-    if (lifting) frame.current = requestAnimationFrame(() => drawRef.current());
+    if (lifting && !driven()) frame.current = requestAnimationFrame(() => drawRef.current());
     // `lodAt` and `radiusAt` close over props and the memos listed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, arranging, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, captionOrder, lodOn, degreeRank, drawnCount, baseExtent]);
 
   const drawRef = useRef(draw);
   drawRef.current = draw;
-  const request = useCallback(() => {
-    if (!frame.current) frame.current = requestAnimationFrame(draw);
+  // A new draw reads other props: the next drive frame places labels again.
+  useEffect(() => {
+    labelPlan.current = null;
   }, [draw]);
+  const request = useCallback(() => {
+    if (!frame.current && !driven()) frame.current = requestAnimationFrame(draw);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draw]);
+  /** A loop that draws every frame takes over from a pending draw. */
+  const dropRequest = () => {
+    cancelAnimationFrame(frame.current);
+    frame.current = 0;
+  };
 
   /* ── Tooltip placement ───────────────────────────────────────────────── */
 
   const tipRef = useRef<HTMLDivElement>(null);
+  const tipSize = useRef<{ target: Hover | null; w: number; h: number } | null>(null);
   /** Where a tooltip's target is on screen, and the radius it must keep clear. */
   const anchorOf = (h: Hover) => {
     const { k, tx, ty } = cam.current;
@@ -987,8 +1076,11 @@ export function NetworkCanvas({
       el.style.visibility = "hidden";
       return;
     }
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
+    // Measured at rest; a drive reuses the size, so its frames read no
+    // layout that a commit beside the canvas (a panel opening) has dirtied.
+    let box = tipSize.current;
+    if (!box || box.target !== target || !driven()) box = tipSize.current = { target, w: el.offsetWidth, h: el.offsetHeight };
+    const { w, h } = box;
     const gap = 8;
     const edge = 4;
     let x = clamp(a.x - w / 2, edge, Math.max(edge, W - w - edge));
@@ -1121,6 +1213,14 @@ export function NetworkCanvas({
   const anim = useRef(0);
   /** An inertial pan in progress. */
   const glide = useRef(0);
+  const stopAnim = () => {
+    cancelAnimationFrame(anim.current);
+    animOn.current = false;
+  };
+  const stopGlide = () => {
+    cancelAnimationFrame(glide.current);
+    glideOn.current = false;
+  };
   /** Tests hover again at the pointer (set below, once hit testing exists). */
   const rehover = useRef<() => void>(() => {});
   /** After the camera rests: the relative zoom, the breadcrumb, the keyboard
@@ -1146,14 +1246,15 @@ export function NetworkCanvas({
    *  Positions and fade only change when given. */
   const move = useCallback(
     (next: Camera, animate: boolean, to?: Float32Array, toFade?: number, ms = MOVE_MS) => {
-      cancelAnimationFrame(anim.current);
-      cancelAnimationFrame(glide.current);
+      stopAnim();
+      stopGlide();
       settle();
       const from = { ...cam.current };
       const fromPos = to ? new Float32Array(shown.current) : null;
       const fromFade = fade.current;
       const endFade = toFade ?? fromFade;
       const finish = () => {
+        animOn.current = false;
         cam.current = next;
         if (to) shown.current.set(to);
         fade.current = endFade;
@@ -1163,10 +1264,17 @@ export function NetworkCanvas({
       };
       if (!animate || reducedMotion()) return finish();
       if (to) moving.current = { to, fade: endFade, cam: next };
-      const start = performance.now();
+      dropRequest();
+      animOn.current = true;
+      labelPlan.current = null;
+      noteCameraMove(ms);
+      // Timed from the first frame, as one frame in: a frame's timestamp is
+      // when it began, before this call, and the first would not move.
+      let start = -1;
       let frames = 0;
       const step = (now: number) => {
         frames++;
+        if (start < 0) start = now - 1000 / 60;
         const p = Math.min(1, (now - start) / ms);
         const e = ease(p);
         // Interpolate the zoom geometrically so the centre path stays straight.
@@ -1183,11 +1291,12 @@ export function NetworkCanvas({
           for (let q = 0; q < s.length; q++) s[q] = fromPos[q] + (to[q] - fromPos[q]) * e;
         }
         fade.current = fromFade + (endFade - fromFade) * e;
-        draw();
         if (p < 1) {
+          draw();
           anim.current = requestAnimationFrame(step);
           return;
         }
+        // The last frame is the end: drawn once, by `finish`.
         finish();
         if (import.meta.env.DEV && to) {
           const ms = performance.now() - start;
@@ -1210,8 +1319,8 @@ export function NetworkCanvas({
    *  events in one frame draw once. */
   const nudge = useCallback(
     (next: Camera) => {
-      cancelAnimationFrame(anim.current);
-      cancelAnimationFrame(glide.current);
+      stopAnim();
+      stopGlide();
       settle();
       cam.current = next;
       request();
@@ -1295,6 +1404,7 @@ export function NetworkCanvas({
         return out;
       },
       rel: () => cam.current.k / fitK.current,
+      cam: () => cam.current,
       lift: () => [liftNode.current, liftAmt.current],
       anchor: () => anchorNode(),
       hood: (i: number) => [...hoodOf(i).list],
@@ -1572,22 +1682,31 @@ export function NetworkCanvas({
       const decay = Math.exp(-dt / GLIDE_MS);
       vx *= decay;
       vy *= decay;
+      const more = Math.hypot(vx, vy) > 0.02;
+      // Off before the last frame's draw, so a lift still easing goes on.
+      glideOn.current = more;
       drawRef.current();
-      if (Math.hypot(vx, vy) > 0.02) glide.current = requestAnimationFrame(step);
+      if (more) glide.current = requestAnimationFrame(step);
       else sync.current();
     };
+    dropRequest();
+    glideOn.current = true;
+    labelPlan.current = null;
     glide.current = requestAnimationFrame(step);
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
     // A press stops a glide, and takes the keyboard to the canvas.
-    cancelAnimationFrame(glide.current);
+    if (glideOn.current) {
+      stopGlide();
+      request();
+    }
     velocity.current = { vx: 0, vy: 0, t: 0 };
     // A press during a move ends it where it is going, so a click hits the
     // positions it sees drawn next (Review #4).
     if (moving.current) {
-      cancelAnimationFrame(anim.current);
+      stopAnim();
       cam.current = moving.current.cam;
       settle();
       draw();
@@ -1639,7 +1758,7 @@ export function NetworkCanvas({
     if (!g.moved && Math.hypot(p.x - g.x, p.y - g.y) < 4) return;
     if (!g.moved) {
       // A drag takes over from a move in progress.
-      cancelAnimationFrame(anim.current);
+      stopAnim();
       settle();
     }
     g.moved = true;
@@ -1853,6 +1972,61 @@ export function NetworkCanvas({
       // keyboard's reach (Review #3).
       .sort((p, q) => q.m - p.m || q.c.members.length - p.c.members.length);
   }, [lodOn, communities, communityMatch, shownCount]);
+
+  /* The keyboard lists (every group, the records in view), built again only
+     when what they list changes: a selection or a camera move re-renders the
+     canvas, and these were most of its render. */
+  const kbd = useRef({ request, centreCommunity, focusNode, onSelect });
+  kbd.current = { request, centreCommunity, focusNode, onSelect };
+  const communityList = useMemo(
+    () =>
+      keyboardCommunities.length > 0 && (
+        <ul aria-label={communityMatch ? "Where the matches are" : "Groups"} className="sr-only">
+          {keyboardCommunities.map(({ c, idx, m }) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onFocus={() => {
+                  setFocusedCommunity(idx);
+                  kbd.current.request();
+                }}
+                onBlur={() => setFocusedCommunity((f) => (f === idx ? -1 : f))}
+                onClick={() => kbd.current.centreCommunity(idx)}
+              >
+                Group around {titleOf(c.top)}:{" "}
+                {m >= 0
+                  ? `${m.toLocaleString()} of ${c.members.length.toLocaleString()} records match`
+                  : `${c.members.length.toLocaleString()} records`}
+                . Press Enter to centre it.
+              </button>
+            </li>
+          ))}
+        </ul>
+      ),
+    // `kbd` holds the handlers.
+    [keyboardCommunities, communityMatch, titleOf],
+  );
+  const nodeList = useMemo(
+    () => (
+      <ul aria-label={label} className="sr-only">
+        {keyboardNodes.map((i) => (
+          <li key={graph.ids[i]}>
+            <button
+              type="button"
+              aria-pressed={i === selected}
+              onFocus={() => kbd.current.focusNode(i)}
+              onBlur={() => setFocused((f) => (f === i ? -1 : f))}
+              onClick={(e) => kbd.current.onSelect(i, e)}
+            >
+              {titleOf(i)}, {typeNameOf(graph.typeIds[i])}
+              {strength ? (strength[i] === 2 ? ", match" : strength[i] === 1 ? ", linked to a match" : "") : ""}
+            </button>
+          </li>
+        ))}
+      </ul>
+    ),
+    [keyboardNodes, selected, strength, label, graph, titleOf, typeNameOf],
+  );
 
   /* While filtering, the chip counts matches with no relationship, or says
      nothing matches. */
@@ -2156,45 +2330,8 @@ export function NetworkCanvas({
           </button>
         </div>
       </div>
-      {keyboardCommunities.length > 0 && (
-        <ul aria-label={communityMatch ? "Where the matches are" : "Groups"} className="sr-only">
-          {keyboardCommunities.map(({ c, idx, m }) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                onFocus={() => {
-                  setFocusedCommunity(idx);
-                  request();
-                }}
-                onBlur={() => setFocusedCommunity((f) => (f === idx ? -1 : f))}
-                onClick={() => centreCommunity(idx)}
-              >
-                Group around {titleOf(c.top)}:{" "}
-                {m >= 0
-                  ? `${m.toLocaleString()} of ${c.members.length.toLocaleString()} records match`
-                  : `${c.members.length.toLocaleString()} records`}
-                . Press Enter to centre it.
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <ul aria-label={label} className="sr-only">
-        {keyboardNodes.map((i) => (
-          <li key={graph.ids[i]}>
-            <button
-              type="button"
-              aria-pressed={i === selected}
-              onFocus={() => focusNode(i)}
-              onBlur={() => setFocused((f) => (f === i ? -1 : f))}
-              onClick={(e) => onSelect(i, e)}
-            >
-              {titleOf(i)}, {typeNameOf(graph.typeIds[i])}
-              {strength ? (strength[i] === 2 ? ", match" : strength[i] === 1 ? ", linked to a match" : "") : ""}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {communityList}
+      {nodeList}
     </div>
   );
 }

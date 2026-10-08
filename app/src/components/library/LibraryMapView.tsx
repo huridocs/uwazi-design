@@ -26,6 +26,7 @@ import { getEntity, getEntityType, type Entity } from "../../data/entities";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 import { CANVAS_OVERLAY } from "../shared/canvasOverlay";
 import { vegasSyncAtom } from "../../atoms/vegasSync";
+import { noteCameraMove } from "../../utils/cameraMotion";
 
 /** Zoom a fit to the pins stops at, so one pin (or pins on one building)
  *  does not open at street level. At 6 the map stayed at country scale for
@@ -40,9 +41,12 @@ const GESTURE_WINDOW_MS = 1000;
 /** A second click on a badge within this long is a double click: a zoom, not
  *  a selection. */
 const DOUBLE_CLICK_MS = 250;
-/** The ease into the width a rail panel leaves, as the Network's camera. */
-const INSET_MOVE_S = 0.38;
+/** The ease into the width a rail panel leaves: one short pan. */
+const INSET_MOVE_S = 0.3;
 const FIT_PAD = 32;
+/** A cluster badge's identity while the map stays at one zoom: its size and
+ *  first member (the check `iconCreateFunction` uses for the active one). */
+const clusterKey = (ids: string[]) => `${ids.length}:${ids[0]}`;
 /** Lucide's `maximize`, for the Fit control Leaflet draws outside React. */
 const FIT_ICON =
   '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
@@ -175,7 +179,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             iconSize: [size, size],
           },
           `${label} · ${n} entities`,
-          active ? { "data-active": "" } : {},
+          { "data-cluster": clusterKey(ids), ...(active ? { "data-active": "" } : {}) },
         );
       },
     });
@@ -472,10 +476,11 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     });
     return pts.length ? L.latLngBounds(pts).getCenter() : null;
   };
-  const panOpts = (): L.PanOptions => ({
-    animate: !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-    duration: INSET_MOVE_S,
-  });
+  const panOpts = (): L.PanOptions => {
+    const animate = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (animate) noteCameraMove(INSET_MOVE_S * 1000);
+    return { animate, duration: INSET_MOVE_S };
+  };
   const centreShown = (at: L.LatLng) => {
     if (!map) return;
     const size = map.getSize();
@@ -510,14 +515,22 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new record or cluster only
   }, [openId, selectedCluster]);
 
-  // Redraw the badges to mark the selected one, or to rename them in a new language.
+  // Rename the badges in a new language.
   useEffect(() => {
     groupRef.current?.refreshClusters();
+  }, [language]);
+  // Mark the selected badge on the element: redrawing every badge (as a
+  // language change does) would land in the first frames of the pan to it.
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    for (const b of el.querySelectorAll(".map-cluster[data-active]")) b.removeAttribute("data-active");
+    if (selectedCluster) el.querySelector(`.map-cluster[data-cluster="${CSS.escape(clusterKey(selectedCluster.ids))}"]`)?.setAttribute("data-active", "");
     if (keyboardOpen.current) {
       keyboardOpen.current = false;
       host.current?.querySelector<HTMLElement>(".map-cluster[data-active]")?.focus({ preventScroll: true });
     }
-  }, [selectedCluster, language]);
+  }, [selectedCluster]);
 
   const unlocated = entities.length - located.length;
   const inArea = mapBounds ? located.filter((e) => entityInMapBounds(e, mapBounds)).length : null;

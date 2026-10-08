@@ -29,6 +29,7 @@ import "../../utils/pdfWorker";
 import { RefMinimap } from "./RefMinimap";
 import { DocumentRendition } from "./DocumentRendition";
 import { docHighlightQueryAtom } from "../../atoms/docSearch";
+import { afterCameraMove, cameraMoving } from "../../utils/cameraMotion";
 
 
 interface DocumentViewerProps {
@@ -66,6 +67,17 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   // Drawer previews (fileOverride) always render the PDF; the format picker
   // only governs the main Document-tab pane.
   const docFormat = useAtomValue(documentFormatAtom);
+  // Opened while the Library's camera eases to its record: the pages wait for
+  // the ease to end (see `utils/cameraMotion.ts`).
+  const [pdfReady, setPdfReady] = useState(() => !cameraMoving());
+  useEffect(() => {
+    if (!pdfReady) return afterCameraMove(() => setPdfReady(true));
+  }, [pdfReady]);
+  const docLoading = (
+    <div data-part="loading" className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
+      <p className="text-ink-tertiary text-sm">Loading document…</p>
+    </div>
+  );
   const renditionMode = !fileOverride && docFormat !== "pdf";
 
   // Search-term marking over the PDF. `customTextRenderer` is react-pdf's
@@ -571,14 +583,13 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           onPointerCancel={onPinchUp}
         >
         <div ref={zoomLayer} data-part="zoom-layer" className="flex flex-col gap-4" style={{ alignItems: "safe center" }}>
+        {!pdfReady ? (
+          docLoading
+        ) : (
         <Document
           file={filePath}
           onLoadSuccess={onDocumentLoadSuccess}
-          loading={
-            <div data-part="loading" className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
-              <p className="text-ink-tertiary text-sm">Loading document…</p>
-            </div>
-          }
+          loading={docLoading}
           error={
             <div data-part="error" className="flex flex-col items-center justify-center h-[56.25rem] bg-paper rounded-md gap-3" style={{ width: "100%", maxWidth: "56.25rem" }}>
               <p className="text-ink-tertiary text-sm">
@@ -622,6 +633,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             </div>
           ))}
         </Document>
+        )}
         </div>
         </div>
         {renditionMode && <DocumentRendition format={docFormat} />}
