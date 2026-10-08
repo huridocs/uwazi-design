@@ -70,6 +70,7 @@ const ACTION_LABEL: Record<OverviewActionId, string> = {
   map: "Explore the map",
   network: "Open the network",
   timeline: "Open the timeline",
+  sync: "Open the Sync view",
   savedView: "Open a saved view",
 };
 
