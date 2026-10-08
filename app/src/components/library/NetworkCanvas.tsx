@@ -1993,7 +1993,7 @@ export function NetworkCanvas({
               <p className="px-2 pt-1.5 pb-0.5 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                 Templates{hiddenTypes.size > 0 && <span className="normal-case tracking-normal font-medium"> · {hiddenTypes.size} hidden</span>}
               </p>
-              <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: clamp(size.h - (lodOn && crumb ? 188 : 148), 96, 244) }}>
+              <ul className="pb-1 px-1 overflow-y-auto" style={{ maxHeight: Math.max(96, size.h - (lodOn && crumb ? 188 : 148)) }}>
                 {legend.map(({ typeId, count }) => {
                   const on = !hiddenTypes.has(typeId);
                   const name = typeNameOf(typeId);
