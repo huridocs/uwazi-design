@@ -246,9 +246,13 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
       .filter((r) => r.count > 0),
     ...(summary.quoted > 0 ? [{ id: "has", label: "Quoted passages", count: summary.quoted, group: "quotes" as const }] : []),
   ];
-  const showContains = ready && contentRows.length > 0;
+  const containsRows = contentRows.filter((r) => r.group === "contains");
+  const showContains = ready && containsRows.length > 0;
+  /** Every template when only one or two would be left out. */
+  const templatesShown = summary.byType.length <= TOP_TEMPLATES + 2 ? summary.byType.length : TOP_TEMPLATES;
+  const withContent = useMemo(() => (ready ? entities.filter((e) => carriesContent(e, source)).length : 0), [ready, entities, source]);
   const showLanguages = ready && summary.languages.length > 0;
-  const showContent = showContains || showLanguages;
+  const showContent = showContains || showLanguages || (ready && summary.quoted > 0);
   const showLanes = !ready || !!summary.extent;
   const notebook = useAtomValue(notebookAtom);
   const views = useAtomValue(savedViewsAtom);
@@ -350,6 +354,10 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           `${top[0].name} is the largest, with ${plural(top[0].count, "record")}` +
             (top.length > 1 ? `, then ${listWords(top.slice(1).map((t) => t.name))}.` : "."),
         );
+  const contentLanguages = summary.languages.filter(([l]) => l !== "Other").map(([l]) => l);
+  const contentCopy = contentLanguages.length
+    ? bindSentences(`Their content is in ${listWords(contentLanguages)}${summary.languages.some(([l]) => l === "Other") ? " and other languages" : ""}.`)
+    : null;
   const whenCopy = !summary.extent
     ? null
     : bindSentences(
@@ -427,6 +435,10 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   // A community's template is shown only where the listed ones differ; the
   // same template under every row says nothing.
   const listed = network?.communities.slice(0, TOP_COMMUNITIES) ?? [];
+  // Bands are numbered in the order they are drawn; one that is left out
+  // takes no number.
+  let bandCount = 0;
+  const nextBand = () => String(++bandCount).padStart(2, "0");
   const mixedTemplates = new Set(listed.map((c) => c.typeId)).size > 1;
 
   return (
@@ -474,7 +486,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
         {/* ── Hero visual ── edge to edge of the sheet. */}
         {heroKind && (
-          <figure data-part="hero-visual" className="m-0 border-t border-ink">
+          <figure data-part="hero-visual" className="m-0 border-t border-border">
             {heroKind === "map" ? (
               <div className="relative h-[20rem] @3xl:h-[26rem] bg-vellum">{ready && mapView}</div>
             ) : (
@@ -513,76 +525,105 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         )}
 
         <div className={SHEET_X}>
-          {/* ── What's in it ── templates, then what the records contain and
-              the languages of their content. */}
+          {/* ── What's in it ── the templates. */}
           <Band
+            number={nextBand()}
             title="What's in it"
             figure={ready ? { value: n(summary.byType.length), label: summary.byType.length === 1 ? "template" : "templates" } : undefined}
             copy={ready ? templatesCopy : null}
             action={ready ? { label: "Open Cards", onClick: () => setView("cards") } : undefined}
-           
           >
             {ready ? (
-              <div className="flex flex-col gap-6">
-                <BarList
-                  label="Records per template"
-                  rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
-                    key: id,
-                    label: typeOf(id).name,
-                    color: typeOf(id).color,
-                    count,
-                    action: `Show the ${n(count)} ${typeOf(id).name} records`,
-                    onClick: () => enter("cards", () => setTypes({ [id]: true })),
-                  }))}
-                  more={
-                    summary.byType.length > TOP_TEMPLATES
-                      ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
-                      : undefined
-                  }
-                />
-                {showContent && (
-                  <div className={`grid grid-cols-1 gap-x-8 gap-y-6 ${showContains && showLanguages ? "@xl:grid-cols-2" : ""}`}>
-                    {showContains && (
-                      <Group title="Contains" note={`of ${plural(total, "record")}`}>
-                        <BarList
-                          label="Records by what they contain"
-                          scaleTo={total}
-                          rows={contentRows.map((r) => ({
-                            key: `${r.group}:${r.id}`,
-                            label: r.label,
-                            count: r.count,
-                            action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
-                            onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
-                          }))}
-                        />
-                      </Group>
-                    )}
-                    {showLanguages && (
-                      <Group title="Language" note={`of ${plural(total, "record")}`}>
-                        <BarList
-                          label="Records by the language of their content"
-                          scaleTo={total}
-                          rows={summary.languages.map(([l, count]) => ({
-                            key: `language:${l}`,
-                            label: l,
-                            count,
-                            action: `Show the ${n(count)} records in ${l}`,
-                            onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
-                          }))}
-                        />
-                      </Group>
-                    )}
-                  </div>
-                )}
-              </div>
+              <BarList
+                label="Records per template"
+                rows={summary.byType.slice(0, templatesShown).map(([id, count]) => ({
+                  key: id,
+                  label: typeOf(id).name,
+                  color: typeOf(id).color,
+                  count,
+                  action: `Show the ${n(count)} ${typeOf(id).name} records`,
+                  onClick: () => enter("cards", () => setTypes({ [id]: true })),
+                }))}
+                more={
+                  summary.byType.length > templatesShown
+                    ? { label: `${plural(summary.byType.length - templatesShown, "more template")} in Cards`, onClick: () => setView("cards") }
+                    : undefined
+                }
+              />
             ) : (
               <BarSkeleton rows={TOP_TEMPLATES} />
             )}
           </Band>
 
+          {/* ── Content ── what the records carry and the languages of their
+              content; quoted passages apart, as they are not a kind of file. */}
+          {ready && showContent && (
+            <Band
+              number={nextBand()}
+              title="Content"
+              figure={withContent > 0 ? { value: pct(withContent, total), label: "carry a document, an image or a recording" } : undefined}
+              copy={contentCopy}
+            >
+              <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-6 gap-y-8">
+                {(showContains || summary.quoted > 0) && (
+                  <div className="grid content-start gap-8 min-w-0">
+                    {showContains && (
+                      <Group title="Contains" note={`of ${plural(total, "record")}`}>
+                        <BarList
+                          label="Records by what they contain"
+                          scaleTo={total}
+                          rows={containsRows.map((r) => ({
+                            key: `contains:${r.id}`,
+                            label: r.label,
+                            count: r.count,
+                            action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
+                            onClick: () => enter("cards", () => setContent({ contains: { [r.id]: true } })),
+                          }))}
+                        />
+                      </Group>
+                    )}
+                    {summary.quoted > 0 && (
+                      <Group title="Passages" note={`of ${plural(total, "record")}`}>
+                        <BarList
+                          label="Records with quoted passages"
+                          scaleTo={total}
+                          rows={[
+                            {
+                              key: "quotes:has",
+                              label: "Quoted passages",
+                              count: summary.quoted,
+                              action: `Show the ${n(summary.quoted)} records with quoted passages`,
+                              onClick: () => enter("cards", () => setContent({ quotes: { has: true } })),
+                            },
+                          ]}
+                        />
+                      </Group>
+                    )}
+                  </div>
+                )}
+                {showLanguages && (
+                  <Group title="Language" note={`of ${plural(total, "record")}`}>
+                    <BarList
+                      label="Records by the language of their content"
+                      scaleTo={total}
+                      rows={summary.languages.map(([l, count]) => ({
+                        key: `language:${l}`,
+                        label: l,
+                        count,
+                        action: `Show the ${n(count)} records in ${l}`,
+                        onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
+                      }))}
+                    />
+                  </Group>
+                )}
+              </div>
+            </Band>
+          )}
+
           {/* ── When ── unless the hero already draws the lanes. */}
           {ready && summary.extent && heroKind !== "time" && (
             <Band
+            number={nextBand()}
               title="When"
               figure={
                 datesFocus
@@ -601,7 +642,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
           {/* ── Where ── unless the hero is the map. */}
           {showMap && heroKind !== "map" && (
-            <Band title="Where" figure={{ value: n(summary.located), label: summary.located === 1 ? "record with a location" : "records with a location" }} copy={whereCopy} action={{ label: "Open Map", onClick: () => setView("map") }}>
+            <Band number={nextBand()} title="Where" figure={{ value: n(summary.located), label: summary.located === 1 ? "record with a location" : "records with a location" }} copy={whereCopy} action={{ label: "Open Map", onClick: () => setView("map") }}>
               <div className="relative h-[18rem] @3xl:h-[22rem] rounded-md overflow-hidden bg-vellum">{mapView}</div>
             </Band>
           )}
@@ -609,6 +650,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           {/* ── How it connects ── */}
           {(!ready || showNetwork) && (
             <Band
+            number={nextBand()}
               title="How it connects"
               figure={ready && network ? { value: n(network.communities.length), label: network.communities.length === 1 ? "community of linked records" : "communities of linked records" } : undefined}
               copy={ready ? connectsCopy : null}
@@ -642,6 +684,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
               every aligned moment. */}
           {ready && sync && sync.moments.some((m) => m.volley) && (
             <Band
+            number={nextBand()}
               title="Sync quality"
               figure={{ value: pct(sync.totals.within2, sync.totals.counted), label: `of ${n(sync.totals.counted)} annotations within 2 s` }}
               copy={bindSentences(
@@ -650,7 +693,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
               action={{ label: "Open table", onClick: () => setSyncTableOpen(true) }}
              
             >
-              <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-x-6 gap-y-10">
+              <div className="flex flex-col gap-10">
                 <div className="min-w-0">
                   <div aria-hidden className="flex items-center gap-3 h-6 px-0 text-xs font-semibold text-ink-secondary">
                     <span className="flex-1 min-w-0">Volley</span>
@@ -699,11 +742,12 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           {/* ── Most used values ── a column per property. */}
           {ready && facets.length > 0 && (
             <Band
+            number={nextBand()}
               title="Most used values"
               copy={bindSentences(`The values the records share most often, in ${listWords(facets.map((f) => f.title))}.`)}
              
             >
-              <div className={`grid grid-cols-1 gap-x-8 gap-y-6 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3"}`}>
+              <div className={`grid grid-cols-1 gap-x-8 gap-y-6 ${facets.length === 1 ? "" : "@3xl:grid-cols-2"}`}>
                 {facets.map((f) => (
                   <Group key={f.key} title={f.title} note={plural(f.distinct, "value")}>
                     <BarList
@@ -730,6 +774,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           {/* ── Featured records ── as the Library's own cards. */}
           {featured.records.length > 0 && (
             <Band
+            number={nextBand()}
               title={featured.kind === "connected" ? "Most connected records" : "Recently modified"}
               copy={
                 featured.kind === "connected"
@@ -738,7 +783,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
               }
              
             >
-              <ul className="grid grid-cols-1 @2xl:grid-cols-2 @5xl:grid-cols-3 gap-3">
+              <ul className="grid grid-cols-1 @2xl:grid-cols-2 gap-3">
                 {featured.records.map((e) => (
                   // Each card its own grid: standalone cards differ in rows (a
                   // preview or none), so they do not share one grid's tracks.
@@ -761,7 +806,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
           {/* ── Recently modified · Yours ── */}
           {((showRecent && featured.kind !== "recent") || showYours) && (
-            <section data-part="lists" className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-6 gap-y-8 pt-3 pb-12 border-t border-ink">
+            <section data-part="lists" className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-6 gap-y-8 pt-3 pb-12 border-t border-border">
               {showRecent && featured.kind !== "recent" && (
                 <Group title="Recently modified">
                   <RecordList
@@ -820,11 +865,15 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
 /* ── Parts ────────────────────────────────────────────────────────────── */
 
-/** A narrative band on the sheet's grid: a thin rule, then the text column
- *  (a short heading, the figure that carries the band, a sentence or two and
- *  the way into its view) flush left over four columns, and the visual over
- *  the other eight. One column on a phone. */
+/** A narrative band on the sheet's grid, hung from a hairline rule: a label
+ *  column (the band's number over its heading), a text column (the figure
+ *  that carries the band, a sentence or two, the way into its view) and the
+ *  visual. Wide sheet: three columns side by side (2 · 3 · 7). Medium: label
+ *  and text stacked on the start four columns, the visual on the other
+ *  eight. Phone: one column, in reading order. Every column starts at the
+ *  rule, so nothing leaves a gap under the heading. */
 function Band({
+  number,
   title,
   figure,
   copy,
@@ -832,6 +881,8 @@ function Band({
   action,
   children,
 }: {
+  /** "01": the band's place on the page. */
+  number: string;
   title: string;
   /** A large number with what it counts under it. */
   figure?: { value: string; label: string };
@@ -842,19 +893,27 @@ function Band({
   children?: ReactNode;
 }) {
   return (
-    <section data-part="band" aria-label={title} className={`${GRID} gap-y-8 pt-3 pb-16 border-t border-ink`}>
-      <div className="col-span-4 min-w-0 flex flex-col items-start">
+    <section data-part="band" aria-label={title} className={`${GRID} gap-y-6 @3xl:grid-rows-[auto_1fr] pt-3 pb-16 border-t border-border`}>
+      <header className="col-span-4 @6xl:col-span-2 flex items-baseline gap-3 @6xl:flex-col @6xl:gap-1">
+        <span aria-hidden className="text-sm font-semibold tabular-nums text-ink-tertiary">
+          {number}
+        </span>
         <h2 className="text-sm font-semibold text-ink">{title}</h2>
+      </header>
+      <div className="col-span-4 @3xl:row-start-2 @6xl:row-start-1 @6xl:col-start-3 @6xl:col-span-3 min-w-0 flex flex-col items-start">
         {figure && (
-          <p className="mt-8 flex flex-col gap-2">
-            <span className="text-5xl @3xl:text-6xl font-semibold tracking-tight leading-none text-ink tabular-nums" dir="ltr">
+          <p className="flex flex-col gap-2 mb-6">
+            <span
+              className={`${figure.value.length > 9 ? "text-4xl" : "text-5xl @3xl:text-6xl"} font-semibold tracking-tight leading-none text-ink tabular-nums`}
+              dir="ltr"
+            >
               {figure.value}
             </span>
             <span className="text-sm text-ink-secondary">{figure.label}</span>
           </p>
         )}
         {copy !== undefined && (
-          <p className="mt-6 max-w-[30rem] min-h-6 text-sm leading-6 text-ink-secondary">
+          <p className="max-w-[30rem] min-h-6 text-sm leading-6 text-ink-secondary">
             {copy ?? <span aria-hidden className="block h-3 w-[min(22rem,90%)] mt-1.5 rounded-sm bg-vellum" />}
           </p>
         )}
@@ -865,7 +924,11 @@ function Band({
           </div>
         )}
       </div>
-      {children && <div className="col-span-4 @3xl:col-span-8 min-w-0 @3xl:pt-1">{children}</div>}
+      {children && (
+        <div className="col-span-4 min-w-0 @3xl:col-start-5 @3xl:col-span-8 @3xl:row-start-1 @3xl:row-span-2 @6xl:col-start-6 @6xl:col-span-7 @6xl:row-span-1">
+          {children}
+        </div>
+      )}
     </section>
   );
 }
@@ -998,7 +1061,7 @@ function BarList({
       {rows.map((r) => (
         <li key={r.key}>
           <RowButton onClick={r.onClick} label={r.action} tall={!!r.sub}>
-            <span className="min-w-0 flex-1 flex flex-col justify-center">
+            <span className="min-w-0 flex-1 max-w-[16rem] flex flex-col justify-center">
               <span className="min-w-0 flex items-center gap-1.5">
                 {r.color && <span aria-hidden className="w-2 h-2 shrink-0 rounded-[2px]" style={{ backgroundColor: r.color }} />}
                 {/* A truncated name keeps its whole text in the tooltip. */}
