@@ -107,6 +107,15 @@ const CRUMB_FROM = 2.25;
  *  out. */
 const CAPTIONS = 5;
 const CAPTION_FADE = 0.6;
+/** Dot size (screen px). At the first fit a typical record is `DOT_FIT`, less
+ *  where the records crowd (a radius of `DOT_SPACING` of the mean distance
+ *  between them, to `DOT_MIN`); a record's degree percentile within its
+ *  collection adds up to `DOT_HUB`, almost all of it in the top 1%. */
+const DOT_FIT = 2.4;
+const DOT_MIN = 1.4;
+const DOT_SPACING = 0.3;
+const DOT_HUB = 6;
+const DOT_HUB_CURVE = 60;
 const MIN_REL = 0.5;
 const MAX_REL = 60;
 const KEYBOARD_LIST = 60;
@@ -396,14 +405,37 @@ export function NetworkCanvas({
   /** Detail at relative zoom `r`: 0 at the first fit, 1 from `LOD_TO` on,
    *  where the drawing is the full node view. */
   const lodAt = (r: number) => (lodOn ? Math.max(fade.current, clamp((r - LOD_FROM) / (LOD_TO - LOD_FROM), 0, 1)) : 1);
-  /* The size rule is the same at every zoom. Zoomed out it shrinks a dot
-     further, to a 2px floor, and the degree term (hubs) most, so 4,000
-     records read as a structure and no hub covers its neighbours. */
+  /* Degree percentile per record (ties take the middle of their run), so
+     the size reads the same in a collection of few links as in one of many. */
+  const degreeRank = useMemo(() => {
+    const out = new Float32Array(n);
+    for (let a = 0; a < n; ) {
+      let b = a;
+      while (b + 1 < n && graph.degree[byDegree[b + 1]] === graph.degree[byDegree[a]]) b++;
+      const p = 1 - (a + b + 1) / 2 / Math.max(1, n);
+      for (let q = a; q <= b; q++) out[byDegree[q]] = p;
+      a = b + 1;
+    }
+    return out;
+  }, [graph, n, byDegree]);
+  /* Records drawn, for the typical dot's crowding cap at the fit. */
+  const drawnCount = useMemo(() => {
+    let c = 0;
+    for (let i = 0; i < n; i++) if (nodeOn[i] && (!member || member[i])) c++;
+    return Math.max(1, c);
+  }, [nodeOn, member, n]);
+  /* The size rule is the same at every zoom: a typical dot from the eye's
+     minimum at the fit, scaled with the square root of the zoom; the hub term
+     grows less zoomed in and shrinks faster zoomed out. Only an overview
+     zoomed out on a crowded pane reaches the 2px floor. */
   const nodeRadius = (i: number, r: number) => {
-    const lod = lodAt(r);
-    const floor = lodOn ? 1 + 0.4 * lod : 1.4;
-    const hubs = lodOn ? 0.5 + 0.5 * lod : 1;
-    return clamp((1.6 + 0.55 * hubs * Math.sqrt(graph.degree[i])) * clamp(Math.sqrt(r / 2), lodOn ? 0.5 : 0.75, 1.8), floor, 16);
+    const fk = fitK.current;
+    const area = (baseExtent.maxX - baseExtent.minX) * (baseExtent.maxY - baseExtent.minY) * fk * fk;
+    const typical = clamp(DOT_SPACING * Math.sqrt(area / drawnCount), DOT_MIN, DOT_FIT);
+    const hub = DOT_HUB * degreeRank[i] ** DOT_HUB_CURVE;
+    const grow = r >= 1 ? Math.min(Math.sqrt(r), 2.2) : Math.sqrt(r);
+    const hubGrow = r >= 1 ? Math.min(r ** 0.25, 1.6) : r;
+    return clamp(typical * grow + hub * hubGrow, lodOn ? 1 : DOT_MIN, 16);
   };
   /* Node size and strength while filtering: a neighbour is small, the rest a point. */
   const radiusAt = (i: number, r: number) =>
@@ -909,9 +941,9 @@ export function NetworkCanvas({
       performance.mark("network-first-paint");
     }
     if (lifting) frame.current = requestAnimationFrame(() => drawRef.current());
-    // `lodAt` and `radiusAt` close over props only.
+    // `lodAt` and `radiusAt` close over props and the memos listed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, arranging, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, captionOrder, lodOn]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, arranging, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, captionOrder, lodOn, degreeRank, drawnCount, baseExtent]);
 
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -1264,6 +1296,19 @@ export function NetworkCanvas({
           if (nodeOn[i] && (!member || member[i])) pts.push([shown.current[i * 2] * c.k + c.tx, shown.current[i * 2 + 1] * c.k + c.ty]);
         return pts.filter(([x, y]) => overlays.current.some((b) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3])).length;
       },
+      /** Drawn radii (screen px) at the current zoom: percentiles and the
+       *  degree percentiles, to compare collections. */
+      radii: () => {
+        const r = cam.current.k / fitK.current;
+        const rs: number[] = [];
+        const ds: number[] = [];
+        for (let i = 0; i < n; i++) if (nodeOn[i]) (rs.push(radiusAt(i, r)), ds.push(graph.degree[i]));
+        const q = (a: number[], p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))];
+        rs.sort((x, y) => x - y);
+        ds.sort((x, y) => x - y);
+        const at = [0.1, 0.5, 0.9, 0.99, 1];
+        return { n: rs.length, rel: r, radius: at.map((p) => +q(rs, p).toFixed(2)), degree: at.map((p) => q(ds, p)) };
+      },
     };
   });
 
@@ -1342,7 +1387,7 @@ export function NetworkCanvas({
       return d <= radiusAt(i, r) + 5 ? { kind: "node", i } : null;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [quad, nodeOn, member, target, lodOn, size, strength],
+    [quad, nodeOn, member, target, lodOn, size, strength, degreeRank, drawnCount, baseExtent],
   );
 
   /** The drawn edge within 5px of a point. While a node is lifted or
