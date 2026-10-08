@@ -82,7 +82,9 @@ export function App() {
       link.href = faviconSrc;
     } else {
       link.type = "image/svg+xml";
-      link.href = "/favicon.svg";
+      // Under the build's base, as index.html links it (GitHub Pages serves
+      // the app from /uwazi-design/…, not the domain root).
+      link.href = `${import.meta.env.BASE_URL}favicon.svg`;
     }
   }, [faviconSrc]);
 
