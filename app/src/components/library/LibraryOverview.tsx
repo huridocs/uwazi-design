@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { noWidow } from "../../utils/typography";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ArrowRight, Bookmark, Pin, Search } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, type DataSource } from "../../atoms/dataSource";
@@ -325,7 +326,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
         <> {rangePhrase(summary.extent.min, summary.extent.max)}</>
       ) : null}
       {summary.languages.filter(([l]) => l !== "Other").length > 0 &&
-        `, in ${listWords(summary.languages.filter(([l]) => l !== "Other").map(([l]) => l))}`}
+        noWidow(`, in ${listWords(summary.languages.filter(([l]) => l !== "Other").map(([l]) => l))}`)}
       {(() => {
         const withParts = [
           ...CONTENT_ROWS.contains
@@ -334,7 +335,8 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
             .map(([c, w]) => `${n(c)}\u00a0with ${w}`),
           ...(summary.located > 0 ? [`${n(summary.located)}\u00a0with a place on the map`] : []),
         ];
-        return withParts.length ? `; ${listWords(withParts)}` : "";
+        // The sentence's last two words stay together (no lone "map." on a line).
+        return withParts.length ? noWidow(`; ${listWords(withParts)}`) : "";
       })()}
       .
     </>
@@ -441,7 +443,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
               before the actions. */}
           {settings.description && (
             <p className="col-span-4 @3xl:col-span-5 @3xl:row-start-2 text-base leading-7 text-ink-secondary">
-              {bindSentences(settings.description)}
+              {noWidow(bindSentences(settings.description))}
             </p>
           )}
           <p data-part="facts" className="col-span-4 @3xl:col-start-7 @3xl:col-span-6 @3xl:row-start-2 @3xl:row-span-2 min-h-[5.25rem] text-xl leading-8 text-ink tabular-nums">
