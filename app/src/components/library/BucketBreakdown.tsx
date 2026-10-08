@@ -1,3 +1,5 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { TypeSlice } from "../../utils/timeline";
 
 /** What a period is made of — the tooltip body shared by the timeline's density
@@ -46,22 +48,69 @@ export function ChartTip({
   children: React.ReactNode;
   anchor?: "start" | "above";
 }) {
+  // The tip is portalled and fixed, so no clipping ancestor (a scrolling
+  // chart, the Overview's sheet) can cut it. A hidden marker stays where the
+  // tip is mounted; its parent is the hovered mark, measured once on mount.
+  // "above": over the mark, below it where there is no room; "start": beside
+  // it on the start side, the end side where there is no room. Never over
+  // the mark, always inside the viewport.
+  const markerRef = useRef<HTMLSpanElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useLayoutEffect(() => {
+    const host = markerRef.current?.parentElement;
+    const tip = tipRef.current;
+    if (!host || !tip) return;
+    const r = host.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const GAP = 6;
+    const EDGE = 8;
+    let left: number;
+    let top: number;
+    if (anchor === "above") {
+      left = r.left + r.width / 2 - w / 2;
+      top = r.top - GAP - h;
+      if (top < EDGE) top = r.bottom + GAP;
+    } else {
+      top = r.top + r.height / 2 - h / 2;
+      left = r.left - GAP - w;
+      if (left < EDGE) left = r.right + GAP;
+    }
+    left = Math.max(EDGE, Math.min(vw - w - EDGE, left));
+    top = Math.max(EDGE, Math.min(vh - h - EDGE, top));
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+    tip.style.visibility = "visible";
+  });
   return (
-    <span
-      data-component="ChartTip"
-      data-anchor={anchor}
-      className="absolute z-50 pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
-      style={{
-        ...(anchor === "start"
-          ? { right: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)" }
-          : { bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)" }),
-        padding: "4px 7px",
-        backgroundColor: "var(--text-primary)",
-        color: "var(--bg-surface)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-      }}
-    >
-      {children}
-    </span>
+    <>
+      <span ref={markerRef} aria-hidden className="hidden" />
+      {mounted &&
+        createPortal(
+          <span
+            ref={tipRef}
+            data-component="ChartTip"
+            data-anchor={anchor}
+            role="tooltip"
+            className="fixed z-[60] pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
+            style={{
+              left: 0,
+              top: 0,
+              visibility: "hidden",
+              padding: "4px 7px",
+              backgroundColor: "var(--text-primary)",
+              color: "var(--bg-surface)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            }}
+          >
+            {children}
+          </span>,
+          document.body,
+        )}
+    </>
   );
 }

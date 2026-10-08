@@ -1076,13 +1076,6 @@ const sameDay = (a: number, b: number) => toISODate(a) === toISODate(b);
 /** "22:05", or "22:05:10" for seconds, in UTC like every collection date. */
 const clock = (ms: number, unit: TimeUnit) => new Date(ms).toISOString().slice(11, unit === "second" ? 19 : 16);
 
-/** "1969 – 2025", or days for a span shorter than two years. */
-function formatSpan(min: number, max: number): string {
-  if (max - min < 2 * 365 * DAY) return min === max ? formatDay(min) : `${formatDay(min)} – ${formatDay(max)}`;
-  const a = new Date(min).getUTCFullYear();
-  const b = new Date(max).getUTCFullYear();
-  return a === b ? String(a) : `${a} – ${b}`;
-}
 
 /** The shortest window that holds FOCUS_SHARE of the dated records, by each
  *  record's precise time, when it is under FOCUS_RATIO of the whole span;
@@ -1103,6 +1096,25 @@ function focusWindow(dated: Entity[], full: { min: number; max: number } | null)
   if (hi - lo >= (full.max - full.min) * FOCUS_RATIO) return null;
   const outside = times.filter((t) => t < lo || t > hi).length;
   return { min: lo, max: hi, outside };
+}
+
+/* ── Axis labels ──────────────────────────────────────────────────────── */
+
+/** Least space between two axis labels. */
+const TICK_GAP = 8;
+let measureCtx: CanvasRenderingContext2D | null = null;
+/** An axis label's width in the `text-meta` face, measured, not guessed. */
+function labelWidth(text: string): number {
+  if (typeof document === "undefined") return text.length * 6;
+  if (!measureCtx) {
+    measureCtx = document.createElement("canvas").getContext("2d");
+    if (measureCtx) {
+      const root = getComputedStyle(document.documentElement);
+      const rem = parseFloat(root.getPropertyValue("--text-meta")) || 0.6875;
+      measureCtx.font = `400 ${rem * (parseFloat(root.fontSize) || 16)}px ${getComputedStyle(document.body).fontFamily}`;
+    }
+  }
+  return measureCtx ? Math.ceil(measureCtx.measureText(text).width) : text.length * 6;
 }
 
 /* ── Copy ─────────────────────────────────────────────────────────────── */
@@ -1272,8 +1284,7 @@ function OverviewLanes({
     const steps = TICK_STEPS[unit];
     const k = steps.find((st) => colW * st >= LANE_LABEL_PITCH) ?? steps[steps.length - 1];
     const totalW = cols.length * colW;
-    const half = LANE_LABEL_PITCH / 2 - 4;
-    const out: { i: number; label: string; x: number }[] = [];
+    const out: { i: number; label: string; x: number; w: number; start: boolean }[] = [];
     cols.forEach((c, i) => {
       const d = new Date(c.start);
       const y = d.getUTCFullYear();
@@ -1287,6 +1298,12 @@ function OverviewLanes({
         : unit === "minute" ? d.getUTCMinutes()
         : d.getUTCSeconds();
       if (rank % k !== 0) return;
+      // A day label just before the next month's first ("29 Aug", "1 Sep")
+      // breaks the step; the month start keeps its place.
+      if (unit === "day" && k > 1) {
+        const left = (Date.UTC(y, m + 1, 1) - c.start) / DAY;
+        if (left < k * 0.6) return;
+      }
       const label =
         unit === "second" ? clock(c.start, "second")
         : fine ? clock(c.start, unit)
@@ -1294,9 +1311,21 @@ function OverviewLanes({
         : unit === "year" || m === 0 ? String(y)
         : unit === "quarter" ? `Q${m / 3 + 1}`
         : MONTH_SHORT[m];
-      const x = Math.min(Math.max((i + 0.5) * colW, half), totalW - half);
-      if (out.length && x - out[out.length - 1].x < LANE_LABEL_PITCH * 0.8) return;
-      out.push({ i, label, x });
+      // Thinned by the labels' measured widths: two never touch. Where a
+      // start of a larger period ("1 Sep", "2024") meets an ordinary label,
+      // the start wins.
+      const w = labelWidth(label);
+      const x = Math.min(Math.max((i + 0.5) * colW, w / 2), totalW - w / 2);
+      const start =
+        unit === "day" ? d.getUTCDate() === 1 : unit === "month" || unit === "quarter" ? m === 0 : unit === "hour" ? d.getUTCHours() === 0 : false;
+      const prev = out[out.length - 1];
+      if (prev && x - w / 2 < prev.x + prev.w / 2 + TICK_GAP) {
+        if (!start || prev.start) return;
+        out.pop();
+        const before = out[out.length - 1];
+        if (before && x - w / 2 < before.x + before.w / 2 + TICK_GAP) return;
+      }
+      out.push({ i, label, x, w, start });
     });
     return out;
   }, [cols, colW, unit, fine]);
@@ -1396,7 +1425,6 @@ function OverviewLanes({
           </div>
           <p className="mt-auto pt-1 text-xs text-ink-tertiary">
             Dot area is the number of dated records per {unit}.
-            {focus && focus.outside > 0 && ` ${plural(focus.outside, "dated record")} outside this window${full ? `, ${formatSpan(full.min, full.max)},` : ""} in Timeline.`}
             {more > 0 && ` ${plural(more, "more template")} in Timeline.`}
           </p>
         </>
