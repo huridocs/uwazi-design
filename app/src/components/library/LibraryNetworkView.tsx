@@ -11,8 +11,9 @@ import { NetworkCanvas } from "./NetworkCanvas";
 
 type Select = (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void;
 
-/** Community marks open into nodes only past this many records; below it the
- *  whole collection reads as nodes at the first fit. */
+/** From this many records the canvas draws with less detail when zoomed out
+ *  (smaller dots, hairline edges, community captions); below it every zoom
+ *  draws the same. */
 const OVERVIEW_FROM = 500;
 
 /** The Library's Network view: the whole collection, narrowed by the
@@ -22,8 +23,8 @@ const OVERVIEW_FROM = 500;
  *  `matches` is the list every other view draws (`filtered` in LibraryView, the
  *  same `matchesAll` set), and `filtering` says whether anything narrows it.
  *  With no filter, nodes sit at the collection's stored layout. With one:
- *  - the overview marks each community with the share of its records that
- *    match, and the camera fits the matches;
+ *  - matches draw full and the rest faded, at every zoom, and the camera
+ *    fits the matches;
  *  - up to `FOCUS_MAX` matches, Focus (on by default) lays out the matches and
  *    their neighbours on their own in a worker, hubs pinned at the edge, and
  *    the nodes move there from their global positions;

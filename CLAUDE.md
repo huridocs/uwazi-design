@@ -360,19 +360,24 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   (the Sample's in `public/sample-data/`); rerun it when a corpus's records or references change.
   Records the file lacks sit at their neighbours' centre. Filters, facets, brush and search
   (Adv. Search's modifiers included) read the same `filtered` list, and a search does not switch
-  this view to Adv. Search. While filtering: community marks carry an arc for their matching
-  share (none: an outline), the camera fits the matches (Fit too), and at node level matches
-  draw full, neighbours small, the rest as points, edges only with a matching end. Up to
+  this view to Adv. Search. Every record is a dot at every zoom; there are no community marks.
+  From 500 records (`OVERVIEW_FROM`) zooming out lowers the detail continuously (`lodAt`,
+  relative zoom 1 → 2.8): dots shrink to a 2px floor (hubs most), edges thin and fade to
+  hairlines, and the largest communities (2–5 by pane area) get a faint tertiary caption at
+  their centre that fades out by 1.6×; zoomed in, the drawing is the node view. While
+  filtering, the camera fits the matches (Fit too); matches draw full, neighbours small, the
+  rest as faint points, edges only with a matching end. Up to
   `FOCUS_MAX` (1,000) matches, Focus is on by default: `data/network/focus.ts` sends the
   matches, their non-hub neighbours and the hubs they touch to `focusLayout.worker.ts`
   (ForceAtlas2 seeded from the global positions, hubs fixed on a ring outside), cached by match
   set and drawn edges. "Whole collection" keeps global positions until the filters are cleared.
   Double-click or double-tap centres the community under the pointer (its matches while
-  filtering) and opens it into nodes; the first tap keeps its own action (a node's preview).
+  filtering), zoomed to full detail with the breadcrumb; the first tap keeps its own action
+  (a node's preview).
   The keyboard list's groups do the same on Enter.
   Display: hub edges (`HUB_DEGREE`), relationship types
   (CEJIL's Mecanismo, País, Paises, "Relacionado a" off by default, `NETWORK_TYPES_OFF`), and
-  Nepal's Evidence layer. Collections of 500+ records open on community marks. Headless Chromium
+  Nepal's Evidence layer. CEJIL pans at 60 fps zoomed out with no edge cache. Headless Chromium
   needs `--use-angle=metal --enable-gpu-rasterization` to measure fps; SwiftShader raster runs
   zoomed-in pans at ~7 fps.
   Interaction: hover lifts a node's one-hop neighbourhood (the rest recede); a selection keeps
