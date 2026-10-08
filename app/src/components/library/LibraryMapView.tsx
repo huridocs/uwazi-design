@@ -12,7 +12,9 @@ import {
   clearLibraryFiltersAtom,
   libraryMapBoundsAtom,
   libraryMapBearingsAtom,
+  libraryRailInsetAtom,
   SEARCH_SETTLE_MS,
+  type RailInset,
   type LibraryCluster,
   type MapBounds,
 } from "../../atoms/library";
@@ -38,6 +40,9 @@ const GESTURE_WINDOW_MS = 1000;
 /** A second click on a badge within this long is a double click: a zoom, not
  *  a selection. */
 const DOUBLE_CLICK_MS = 250;
+/** The ease into the width a rail panel leaves, as the Network's camera. */
+const INSET_MOVE_S = 0.38;
+const FIT_PAD = 32;
 /** Lucide's `maximize`, for the Fit control Leaflet draws outside React. */
 const FIT_ICON =
   '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-2px"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
@@ -84,6 +89,12 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(libraryOpenEntityIdAtom);
+  const openId = useAtomValue(libraryOpenEntityIdAtom);
+  // Full width: the open rail panel's covered width. Fits pad that side by it,
+  // and what the panel shows is centred in the rest.
+  const inset = useAtomValue(libraryRailInsetAtom);
+  const insetRef = useRef<RailInset>(inset);
+  insetRef.current = inset;
   // Facets OR the search — this button clears both, and the empty screen it
   // rescues you from is most often a search that matched nothing.
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
@@ -184,7 +195,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
       }
       // A reader zoom: the area it lands on becomes the map-area filter.
       gestureAt.current = performance.now();
-      cluster.zoomToBounds({ padding: [24, 24] });
+      const pad = insetRef.current;
+      cluster.zoomToBounds({ paddingTopLeft: [24 + pad.left, 24], paddingBottomRight: [24 + pad.right, 24] });
     };
     /* A click selects the badge and opens its list; a double click (or double
        tap) zooms to its members. The click waits out the double-click window,
@@ -307,7 +319,13 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   function fitResults(group: L.MarkerClusterGroup, animate: boolean) {
     if (!map || !group.getLayers().length) return;
     gestureAt.current = -Infinity;
-    map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32], animate });
+    const pad = insetRef.current;
+    map.fitBounds(group.getBounds(), {
+      maxZoom: FIT_MAX_ZOOM,
+      paddingTopLeft: [FIT_PAD + pad.left, FIT_PAD],
+      paddingBottomRight: [FIT_PAD + pad.right, FIT_PAD],
+      animate,
+    });
   }
 
   /* Fit, beside − and +: the reader asks for the results. It drops the map
@@ -438,6 +456,59 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
       map.removeLayer(lines);
     };
   }, [map, bearings]);
+
+  /* A rail panel opened or closed over the map (Full width): ease to the
+     width it leaves. Opening one centres what it shows, the record's pin or
+     the cluster, in that width; otherwise the view shifts by the change, and
+     closing shifts it back. A record or cluster opened while a panel is
+     already open is brought out from under it. These are the map's own moves:
+     they write no area. */
+  const shownPoint = (): L.LatLng | null => {
+    const geo = openId ? getEntity(openId)?.geo : null;
+    if (geo) return L.latLng(geo.lat, geo.lng);
+    const pts = (selectedCluster?.ids ?? []).flatMap((id) => {
+      const g = getEntity(id)?.geo;
+      return g ? [L.latLng(g.lat, g.lng)] : [];
+    });
+    return pts.length ? L.latLngBounds(pts).getCenter() : null;
+  };
+  const panOpts = (): L.PanOptions => ({
+    animate: !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+    duration: INSET_MOVE_S,
+  });
+  const centreShown = (at: L.LatLng) => {
+    if (!map) return;
+    const size = map.getSize();
+    const { left, right } = insetRef.current;
+    const p = map.latLngToContainerPoint(at);
+    gestureAt.current = -Infinity;
+    map.panBy([p.x - (left + size.x - right) / 2, p.y - size.y / 2], panOpts());
+  };
+  const lastInset = useRef<RailInset>(inset);
+  useEffect(() => {
+    const prev = lastInset.current;
+    lastInset.current = inset;
+    if (!map || (prev.left === inset.left && prev.right === inset.right)) return;
+    const at = shownPoint();
+    if (inset.left + inset.right > prev.left + prev.right && at) {
+      centreShown(at);
+      return;
+    }
+    gestureAt.current = -Infinity;
+    // The uncovered centre moved by this much; the content moves with it.
+    const shift = (inset.left - inset.right - (prev.left - prev.right)) / 2;
+    map.panBy([-shift, 0], panOpts());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only an inset change moves the map here
+  }, [map, inset]);
+  useEffect(() => {
+    const { left, right } = insetRef.current;
+    if (!map || (!left && !right)) return;
+    const at = shownPoint();
+    if (!at) return;
+    const x = map.latLngToContainerPoint(at).x;
+    if (x < left + FIT_PAD || x > map.getSize().x - right - FIT_PAD) centreShown(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new record or cluster only
+  }, [openId, selectedCluster]);
 
   // Redraw the badges to mark the selected one, or to rename them in a new language.
   useEffect(() => {

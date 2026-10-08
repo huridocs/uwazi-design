@@ -88,6 +88,9 @@ export interface NetworkCanvasProps {
    *  is told when it has (the Overview's Network teaser). */
   centreOn?: number | null;
   onCentred?: () => void;
+  /** Width covered by a panel at each side (the Full width rail's), in px.
+   *  Fits and centring use the rest; opening or closing one eases there. */
+  inset?: { left: number; right: number };
 }
 
 export interface EdgeInfo {
@@ -292,10 +295,15 @@ export function NetworkCanvas({
   label,
   centreOn: centreCommunityId = null,
   onCentred,
+  inset,
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const insetL = inset?.left ?? 0;
+  const insetR = inset?.right ?? 0;
+  /** The centre of the uncovered width: where fits and centring aim. */
+  const viewCx = (insetL + size.w - insetR) / 2;
   const cam = useRef<Camera>({ k: 1, tx: 0, ty: 0 });
   const fitK = useRef(1);
   const frame = useRef(0);
@@ -1039,23 +1047,27 @@ export function NetworkCanvas({
   /** The camera that frames `ext` between the control bars along the
    *  canvas's top (breadcrumb, stepper) and bottom (zoom, Focus switch, chip). */
   const frameOf = useCallback(
-    (ext: Extent): Camera => {
+    (ext: Extent, uncovered = true): Camera => {
       const top = FIT_BAR_MARGIN;
       const bottom = FIT_BAR_MARGIN;
       const w = ext.maxX - ext.minX || 1;
       const h = ext.maxY - ext.minY || 1;
       const availH = Math.max(1, size.h - top - bottom);
-      const k = Math.min(Math.max(1, size.w - 2 * FIT_MARGIN) / w, availH / h);
-      return { k, tx: size.w / 2 - ((ext.minX + ext.maxX) / 2) * k, ty: top + availH / 2 - ((ext.minY + ext.maxY) / 2) * k };
+      // `uncovered`: into the width a panel leaves. The base zoom is always
+      // taken from the whole width, so a panel never changes the detail level.
+      const l = uncovered ? insetL : 0;
+      const r = uncovered ? insetR : 0;
+      const k = Math.min(Math.max(1, size.w - l - r - 2 * FIT_MARGIN) / w, availH / h);
+      return { k, tx: (l + size.w - r) / 2 - ((ext.minX + ext.maxX) / 2) * k, ty: top + availH / 2 - ((ext.minY + ext.maxY) / 2) * k };
     },
-    [size],
+    [size, insetL, insetR],
   );
 
   // The base zoom every relative measure (detail level, labels, zoom limits)
   // is taken from: the layout on screen, framed whole. A resize updates it
   // below, with the camera.
   useLayoutEffect(() => {
-    if (size.w && size.h) fitK.current = frameOf(baseExtent).k;
+    if (size.w && size.h) fitK.current = frameOf(baseExtent, false).k;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseExtent]);
 
@@ -1072,10 +1084,10 @@ export function NetworkCanvas({
     // A single match, or a tight few, would zoom to the limit: stop where
     // nodes are drawn with room around them.
     const k = clamp(f.k, base.k, base.k * (focus ? 4 : LOD_TO * 2.5));
-    const wx = (size.w / 2 - f.tx) / f.k;
+    const wx = (viewCx - f.tx) / f.k;
     const wy = (size.h / 2 - f.ty) / f.k;
-    return { k, tx: size.w / 2 - wx * k, ty: size.h / 2 - wy * k };
-  }, [frameOf, baseExtent, strength, target, matchOrder, focus, size]);
+    return { k, tx: viewCx - wx * k, ty: size.h / 2 - wy * k };
+  }, [frameOf, baseExtent, strength, target, matchOrder, focus, size, viewCx]);
 
   // Fit on first size and whenever the collection changes; a resize keeps the
   // centre and the relative zoom.
@@ -1088,7 +1100,7 @@ export function NetworkCanvas({
     canvas.height = Math.round(size.h * dpr);
     const prev = fitted.current;
     const relNow = cam.current.k / fitK.current;
-    fitK.current = frameOf(baseExtent).k;
+    fitK.current = frameOf(baseExtent, false).k;
     if (!prev || prev.extent !== placement.extent) {
       cam.current = fitCamera();
     } else {
@@ -1243,7 +1255,7 @@ export function NetworkCanvas({
   /** A camera centred on node `i`, close enough to draw it in full detail. */
   const nodeCamera = (i: number, from: Camera | null = null): Camera => {
     const k = Math.max(from?.k ?? 0, fitK.current * (lodOn ? LOD_TO * 1.25 : 2));
-    return { k, tx: size.w / 2 - target[i * 2] * k, ty: size.h / 2 - target[i * 2 + 1] * k };
+    return { k, tx: viewCx - target[i * 2] * k, ty: size.h / 2 - target[i * 2 + 1] * k };
   };
 
   // A record selected elsewhere (the drawer's links, a list behind it) is
@@ -1260,7 +1272,7 @@ export function NetworkCanvas({
     const c = cam.current;
     const x = target[selected * 2] * c.k + c.tx;
     const y = target[selected * 2 + 1] * c.k + c.ty;
-    const inView = x > FIT_PAD / 2 && x < size.w - FIT_PAD / 2 && y > FIT_PAD / 2 && y < size.h - FIT_PAD / 2;
+    const inView = x > insetL + FIT_PAD / 2 && x < size.w - insetR - FIT_PAD / 2 && y > FIT_PAD / 2 && y < size.h - FIT_PAD / 2;
     if (!inView) setCamera(nodeCamera(selected, c), true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
@@ -1345,9 +1357,30 @@ export function NetworkCanvas({
 
   const centreOn = useCallback(
     (wx: number, wy: number, k: number, animate = true) =>
-      setCamera({ k, tx: size.w / 2 - wx * k, ty: size.h / 2 - wy * k }, animate),
-    [setCamera, size],
+      setCamera({ k, tx: viewCx - wx * k, ty: size.h / 2 - wy * k }, animate),
+    [setCamera, size, viewCx],
   );
+
+  // A panel opened or closed over the canvas: ease to the new uncovered
+  // width. Opening one centres the selected record there (the one it shows);
+  // otherwise the view shifts by the change, and closing shifts it back.
+  const lastInset = useRef({ l: insetL, r: insetR });
+  useEffect(() => {
+    const prev = lastInset.current;
+    lastInset.current = { l: insetL, r: insetR };
+    if (!size.w || lastFit.current === undefined) return;
+    const shift = viewCx - (prev.l + size.w - prev.r) / 2;
+    if (!shift) return;
+    settle();
+    const c = cam.current;
+    if (insetL + insetR > prev.l + prev.r && selected >= 0 && nodeOn[selected]) {
+      centreOn(target[selected * 2], target[selected * 2 + 1], c.k);
+      return;
+    }
+    setCamera({ k: c.k, tx: c.tx + shift, ty: c.ty }, true);
+    // Only a change of the inset moves the camera here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insetL, insetR]);
 
   // The wheel needs a native listener: React's is passive and cannot
   // preventDefault the page scroll. A trackpad's two-finger swipe pans; its
@@ -1488,7 +1521,7 @@ export function NetworkCanvas({
     const r = c.k / fitK.current;
     setRel(r);
     if (lodOn && r >= CRUMB_FROM) {
-      const i = quad.nearest((size.w / 2 - c.tx) / c.k, (size.h / 2 - c.ty) / c.k, Math.max(size.w, size.h) / c.k, (j) => nodeOn[j] === 1);
+      const i = quad.nearest((viewCx - c.tx) / c.k, (size.h / 2 - c.ty) / c.k, Math.max(size.w, size.h) / c.k, (j) => nodeOn[j] === 1);
       setOpenCommunity(i >= 0 ? communityIndex.get(placement.community[i]) ?? -1 : -1);
     } else setOpenCommunity(-1);
     const inView: number[] = [];
@@ -1496,7 +1529,7 @@ export function NetworkCanvas({
       if (!nodeOn[i] || (member && !member[i])) continue;
       const x = target[i * 2] * c.k + c.tx;
       const y = target[i * 2 + 1] * c.k + c.ty;
-      if (x >= 0 && x <= size.w && y >= 0 && y <= size.h) inView.push(i);
+      if (x >= insetL && x <= size.w - insetR && y >= 0 && y <= size.h) inView.push(i);
     }
     // Matches first, then their neighbours, then the rest; best-connected
     // first within each.
@@ -1846,7 +1879,7 @@ export function NetworkCanvas({
     `h-7 px-2 text-meta font-medium rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 ${
       on ? "bg-parchment text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink cursor-pointer"
     }`;
-  const centre = () => ({ x: size.w / 2, y: size.h / 2 });
+  const centre = () => ({ x: viewCx, y: size.h / 2 });
   // Open where it is short and there is room; a long list starts closed.
   const [legendOpen, setLegendOpen] = useState<boolean | null>(null);
   const legendShown = legendOpen ?? (legend.length <= 8 && size.w >= 640);

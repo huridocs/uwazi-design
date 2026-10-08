@@ -1,7 +1,7 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
-import { useAtom } from "jotai";
+import { useEffect, useId, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { X } from "lucide-react";
-import { libraryRailPanelAtom, type LibraryRailPanel } from "../../atoms/library";
+import { libraryRailInsetAtom, libraryRailPanelAtom, NO_RAIL_INSET, type LibraryRailPanel } from "../../atoms/library";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { DrawerWidthProvider } from "../../hooks/useDrawerWidth";
@@ -25,6 +25,9 @@ export const RAIL_RESERVE = "2.75rem";
 /** The anchored panel's width, the same for every panel: the drawer's default
  *  (460px), so the record preview's footer keeps "View entity" on one line. */
 const PANEL_REM = 29;
+/** A panel sized to its content starts this tall, so a body that fills in
+ *  after it opens (a preview's files, a list's rows) grows it less. */
+const PANEL_MIN_REM = 10;
 
 export interface RailItem {
   id: LibraryRailPanel;
@@ -76,8 +79,11 @@ export function LibraryFullWidthLayer({ children }: { children: ReactNode }) {
   );
 }
 
-/** The rail and its one open panel. */
-export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane | null }) {
+/** The rail and its one open panel. `fitContent` (Full width, not Split's
+ *  panes): every panel is as tall as its content, up to the lane, and the
+ *  width it covers is published (`libraryRailInsetAtom`) for Map and Network
+ *  to fit and centre beside it. */
+export function LibraryRail({ items, pane, fitContent = false }: { items: RailItem[]; pane: RailPane | null; fitContent?: boolean }) {
   const [open, setOpen] = useAtom(libraryRailPanelAtom);
   const ids = useId();
   const railItem = items.find((i) => i.id === open && !i.disabledReason) ?? null;
@@ -117,6 +123,36 @@ export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane
     panelRef.current?.toggleAttribute("inert", !isOpen);
   }, [isOpen, panelRef]);
   const layer = useOverlayLayer(isOpen);
+
+  // The covered width, from the lane's edge to the panel's far side. Layout
+  // offsets, not the box on screen: the slide-in's translate is not counted.
+  // Zero as soon as the panel starts to close, so the views ease back with it.
+  const setInset = useSetAtom(libraryRailInsetAtom);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const layerEl = panel?.offsetParent as HTMLElement | null;
+    const lane = panel?.closest<HTMLElement>('[data-part="lane-host"]');
+    if (!fitContent || !isOpen || !panel || !layerEl || !lane) {
+      setInset(NO_RAIL_INSET);
+      return;
+    }
+    const measure = () => {
+      const gutter = (layerEl.clientWidth - lane.clientWidth) / 2;
+      const start = panel.offsetLeft - gutter;
+      const end = start + panel.offsetWidth;
+      const rtl = getComputedStyle(panel).direction === "rtl";
+      setInset(
+        rtl ? { left: Math.max(0, Math.round(end)), right: 0 } : { left: 0, right: Math.max(0, Math.round(lane.clientWidth - start)) },
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(panel);
+    ro.observe(lane);
+    return () => ro.disconnect();
+  }, [fitContent, isOpen, panelRef, setInset]);
+  useEffect(() => () => setInset(NO_RAIL_INSET), [setInset]);
+  const fit = fitContent || !!shown?.fit;
   const paneEscape = pane ? pane.onEscape : undefined;
   useEffect(() => {
     if (!isOpen || paneEscape === null) return;
@@ -219,20 +255,23 @@ export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane
         data-component="LibraryRailPanel"
         data-panel={shown?.id}
         data-state={isOpen ? "open" : "closed"}
-        className={`absolute top-3 ${shown?.fit ? "max-h-[calc(100%-1.5rem)]" : "bottom-3"} flex flex-col bg-paper border border-border rounded-lg shadow-lg overflow-hidden
+        // A body with no height of its own (a document, a graph) marks itself
+        // `data-panel-fill` and gets the lane's, as before.
+        className={`absolute top-3 ${fit ? "max-h-[calc(100%-1.5rem)] has-[[data-panel-fill]]:bottom-3" : "bottom-3"} flex flex-col bg-paper border border-border rounded-lg shadow-lg overflow-hidden
           transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none ${
             isOpen ? "pointer-events-auto opacity-100 translate-x-0" : "pointer-events-none opacity-0 translate-x-2 rtl:-translate-x-2"
           }`}
         style={{
           insetInlineEnd: `calc(var(--gutter, 0px) + ${RAIL_RESERVE})`,
           width: `min(${PANEL_REM}rem, calc(100% - 2 * var(--gutter, 0px) - ${RAIL_RESERVE}))`,
+          minHeight: fitContent ? `min(${PANEL_MIN_REM}rem, calc(100% - 1.5rem))` : undefined,
         }}
       >
         {shown &&
           (shown.ownHeader ? (
             <DrawerWidthProvider value={PANEL_REM * 16}>{shown.body}</DrawerWidthProvider>
           ) : (
-            <div data-gutter-host className={`gutter-host flex flex-col min-h-0 ${shown.fit ? "" : "h-full"}`}>
+            <div data-gutter-host className={`gutter-host flex flex-col min-h-0 ${fit ? "flex-1" : "h-full"}`}>
               <div className="shrink-0 h-10 flex items-center justify-between gap-2">
                 <h2 id={titleId} className="text-sm font-semibold text-ink">
                   {shown.label}
@@ -248,7 +287,7 @@ export function LibraryRail({ items, pane }: { items: RailItem[]; pane: RailPane
               </div>
               {/* The drawer's body lane: `bleed` for the lanes inside to reach
                   the panel edge. The panel's width stands in for the drawer's. */}
-              <div className={`bleed flex-1 min-h-0 overflow-hidden ${shown.fit ? "flex flex-col" : ""}`}>
+              <div className={`bleed flex-1 min-h-0 overflow-hidden ${fit ? "flex flex-col" : ""}`}>
                 <DrawerWidthProvider value={PANEL_REM * 16}>{shown.body}</DrawerWidthProvider>
               </div>
             </div>

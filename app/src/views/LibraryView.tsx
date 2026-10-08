@@ -2172,7 +2172,9 @@ export function LibraryView() {
       <div data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
         {node}
         <LibraryFullWidthLayer>
-          <LibraryRail items={railItems} pane={pane && { ...pane, key: pane.focusKey }} />
+          {/* Split's panes keep panels at the lane's height and the views
+              unaware of them. */}
+          <LibraryRail items={railItems} pane={pane && { ...pane, key: pane.focusKey }} fitContent={!splitPane} />
         </LibraryFullWidthLayer>
       </div>
     );

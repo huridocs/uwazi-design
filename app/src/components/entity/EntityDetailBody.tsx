@@ -351,7 +351,13 @@ export function EntityDetailBody({
             against, so the graph collapsed to the SVG's intrinsic height and sat in
             the top half of an empty pane. `bleed`: it clips (`overflow-hidden`), so
             it has to span the panel for the lanes inside it to reach the edge. */}
-        <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
+        {/* `data-panel-fill`: the document and the relationships have no height
+            of their own; a panel sized to its content (the Full width rail's)
+            gives them the lane's. */}
+        <div
+          data-panel-fill={activeTab === "document" || activeTab === "relationships" ? "" : undefined}
+          className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col"
+        >
           {activeTab === "document" ? (
             <DocumentViewer showMinimap={false} hideActionBar />
           ) : activeTab === "relationships" ? (

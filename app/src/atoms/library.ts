@@ -226,6 +226,17 @@ export const libraryOpenEntityIdAtom = atom<string | null>(null);
 export type LibraryRailPanel = "filters" | "results" | "notebook" | "views";
 export const libraryRailPanelAtom = atom<LibraryRailPanel | null>(null);
 
+/** Full width (not Split): how far the open rail panel reaches over the view
+ *  lane from each physical edge, in px; zero on both while none is open. Map
+ *  and Network fit and centre into the rest. Written by `LibraryRail` when the
+ *  panel opens, closes or changes size, never per frame. */
+export interface RailInset {
+  left: number;
+  right: number;
+}
+export const NO_RAIL_INSET: RailInset = { left: 0, right: 0 };
+export const libraryRailInsetAtom = atom<RailInset>(NO_RAIL_INSET);
+
 /** The Results-tab full-text page the user last jumped to. Kept here, not in the
  *  drawer subtree (which unmounts while a preview shows), so its spine node stays
  *  active and `aria-pressed` after the preview closes. */

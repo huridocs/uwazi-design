@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import type { Entity } from "../../data/entities";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
-import { libraryNetworkDisplayAtom, networkCentreCommunityAtom } from "../../atoms/library";
+import { libraryNetworkDisplayAtom, libraryRailInsetAtom, networkCentreCommunityAtom } from "../../atoms/library";
 import { networkFindStepAtom, networkGraphAtom } from "../../atoms/network";
 import { graphId, HUB_DEGREE, NETWORK_EVIDENCE_TEMPLATES, NETWORK_TYPES_OFF, pairEvidence } from "../../data/network/graph";
 import { loadNetworkLayout, placeNetworkCached, type StoredLayout } from "../../data/network/layout";
@@ -58,6 +58,8 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   const entities = useAtomValue(libraryEntitiesAtom);
   const graph = useAtomValue(networkGraphAtom);
   const display = useAtomValue(libraryNetworkDisplayAtom);
+  // Full width: the open rail panel's covered width, for the camera.
+  const railInset = useAtomValue(libraryRailInsetAtom);
   const types = useAtomValue(libraryTypesAtom);
   const [centreOn, setCentreOn] = useAtom(networkCentreCommunityAtom);
 
@@ -278,6 +280,7 @@ export const LibraryNetworkView = memo(function LibraryNetworkView({
   return (
     <div data-component="LibraryNetworkView" className="flex-1 min-h-0 h-full">
       <NetworkCanvas
+        inset={railInset}
         graph={graph}
         placement={placement}
         colorOf={colorOf}
