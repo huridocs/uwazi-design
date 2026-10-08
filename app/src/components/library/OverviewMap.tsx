@@ -66,6 +66,9 @@ export default function OverviewMap({
   useEffect(() => {
     if (!map) return;
     const group = L.markerClusterGroup({
+      // No split/merge animation: on load the map fits after the markers are
+      // added, and the animation made every cluster fly in from the old view.
+      animate: false,
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: false,
       zoomToBoundsOnClick: false,
