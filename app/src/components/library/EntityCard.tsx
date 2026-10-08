@@ -140,6 +140,16 @@ const ROW_SPAN: Record<number, string> = {
   4: "row-span-4",
 };
 
+/** Whether a field's value only repeats the card's title (as a whole word or
+ *  phrase in it) or its template's name: "Volley 9" on "Volley 9 · 22:12:34". */
+function repeatsCard(value: string, title: string, templateName?: string): boolean {
+  const v = value.trim();
+  if (!v) return true;
+  if (templateName && v.toLowerCase() === templateName.toLowerCase()) return true;
+  const esc = v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${esc}($|[^\\p{L}\\p{N}])`, "iu").test(title);
+}
+
 /** A Library result for one entity: title, metadata label/value pairs, footer
  *  (template tag · Open). Clicking the card previews it in the drawer; Open
  *  navigates to it. */
@@ -158,6 +168,8 @@ export const EntityCard = memo(function EntityCard({
   onRemove,
   className = "",
   as: Root = "article",
+  standalone = false,
+  preview,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -193,6 +205,12 @@ export const EntityCard = memo(function EntityCard({
    *  list item itself. A wrapper `li` would take the subgrid row tracks and the
    *  cards would stop sharing them. */
   as?: "article" | "li";
+  /** A card shown outside the Library's grid (the Overview's featured
+   *  records): no field that only repeats the title or the template's name. */
+  standalone?: boolean;
+  /** Thumbnails for this card, decided by its host for the whole set it
+   *  belongs to; absent, the Library's Display setting decides. */
+  preview?: boolean;
 }) {
   const store = useStore();
   const language = useAtomValue(languageAtom);
@@ -204,7 +222,7 @@ export const EntityCard = memo(function EntityCard({
   // Side only in the grid; the atom already falls back on phones and with
   // previews off.
   const side = useAtomValue(libraryCardSideAtom) && layout === "cards";
-  const showPreview = info.preview;
+  const showPreview = preview ?? info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
 
@@ -222,7 +240,8 @@ export const EntityCard = memo(function EntityCard({
 
   // Only fields that resolved to a value; shared with the list table's metadata columns.
   // The template's showInCard properties (utils/entityFields).
-  const scalarFields = entityCardFields(entity, language);
+  const allFields = entityCardFields(entity, language);
+  const scalarFields = standalone ? allFields.filter((f) => !repeatsCard(f.value, entity.title, getEntityType(entity.typeId)?.name)) : allFields;
   /* No fixed ceiling: the count is the Display menu's choice (First 3 /
      First 5 / All), read only while the Metadata switch is on. The subgrid
      keeps rows level whatever the line counts, and no "Language" row is added
