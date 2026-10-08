@@ -412,7 +412,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   collection's landing page, first in the View menu in Drawer and Full width (never in Split's
   panes, `libraryOverviewOfferedAtom`). The Library opens on it, and a collection switch returns
   to it, until the reader picks a view. It always takes the pane's whole width: no drawer, no
-  rail. It reads the whole collection and has nothing applied: a search, a filter or an open
+  rail. It is a landing page on one paper sheet and a 12-column grid: a hero (name, description,
+  the key facts as one generated sentence, Browse / Search / one more view), a hero visual from the
+  collection's data (the Sync strip, the map from 20% located, else the time lanes), then bands
+  divided by thin ink rules, each a heading, a large figure, a sentence and its Open link beside one
+  visual, and featured records as Library cards (most connected, two per template at most,
+  thumbnails by the Auto rule over the set). It reads the whole collection and has nothing applied: a search, a filter or an open
   record leaves it for Cards, and choosing it clears all three. Each chart is an entry point
   that applies its filter and opens a view; `libraryOverviewOriginAtom` then brings the reader
   back when what it applied is cleared (a view picked by hand drops it). The Network teaser
