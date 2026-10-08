@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { ArrowRight, Bookmark, Pin } from "lucide-react";
+import { ArrowRight, Bookmark, Pin, Search } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, type DataSource } from "../../atoms/dataSource";
 import { languageAtom, type Language } from "../../atoms/language";
 import { collectionSettings } from "../../atoms/settingsSingletons";
@@ -27,7 +27,7 @@ import { applyLibrarySnapshotAtom, savedViewsAtom, snapshotFilterCount } from ".
 import { templatesAtom } from "../../atoms/templates";
 import { getEntity, getEntityType, type Entity, type EntityType } from "../../data/entities";
 import { loadNetworkLayout, placeNetworkCached, type StoredLayout } from "../../data/network/layout";
-import { CONTENT_ROWS, entityContent } from "../../utils/entityContent";
+import { CONTENT_ROWS, carriesContent, entityContent } from "../../utils/entityContent";
 import { entityCountries, entityInheritedValues, libraryInheritedDefs } from "../../utils/libraryFacets";
 import type { MapBounds } from "../../utils/libraryFilter";
 import {
@@ -43,7 +43,9 @@ import {
   type TimeUnit,
 } from "../../utils/timeline";
 import { typeLabelColor } from "../../utils/typeColor";
-import { SectionLabel } from "../shared/SectionLabel";
+import { BAR_LEAD, COMMIT_FILL } from "../shared/warmButton";
+import { EntityCard } from "./EntityCard";
+import { openEntityAtom } from "../../atoms/focusedEntity";
 import { ChartTip } from "./BucketBreakdown";
 import { vegasSyncAtom } from "../../atoms/vegasSync";
 import { formatClock } from "../../data/vegas/links";
@@ -66,8 +68,21 @@ const OverviewMap = lazy(() => import("./OverviewMap"));
  * slack (the map, when there is one). While a lazy corpus loads, the
  * skeleton has the loaded layout's parts in the same places. */
 
-/** The map's least height; in the first band it takes what is left over. */
-const MAP_MIN_H = "min-h-[15rem]";
+/** The sheet's side padding: the hero, the captions and the bands. */
+const SHEET_X = "px-5 @3xl:px-10";
+/** The sheet's grid: four columns on a phone, twelve from a wide sheet. Every
+ *  block spans whole columns of it. */
+const GRID = "grid grid-cols-4 @3xl:grid-cols-12 gap-x-6";
+const HERO_BUTTON =
+  "inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-sm font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40";
+/** The map is the hero visual from this share of located records. */
+const HERO_MAP_SHARE = 0.2;
+const HERO_SYNC_H = 120;
+/** Records shown as cards under "Most connected records". */
+const FEATURED = 6;
+const FEATURED_PER_TEMPLATE = 2;
+/** "3,752 with documents": what a record holds, after "with". */
+const CONTAINS_WORDS: Record<string, string> = { document: "documents", image: "images", video: "video", audio: "audio" };
 
 /** Lanes the Overview's timeline draws; the Timeline view draws every one. */
 const LANES = 6;
@@ -138,6 +153,7 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
   const setMapBounds = useSetAtom(libraryMapBoundsAtom);
   const setOpen = useSetAtom(libraryOpenEntityIdAtom);
   const setCentre = useSetAtom(networkCentreCommunityAtom);
+  const openEntity = useSetAtom(openEntityAtom);
   const applySnapshot = useSetAtom(applyLibrarySnapshotAtom);
   /** Apply a filter, then open `view`; clearing that filter comes back here. */
   const enter = useCallback(
@@ -241,316 +257,551 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
 
   const located = useMemo(() => entities.filter((e) => e.geo), [entities]);
   const [scaleNote, setScaleNote] = useState<string | null>(null);
-  const fullSpan = summary.extent ? formatSpan(summary.extent.min, summary.extent.max) : null;
-  // Where the time section draws a concentrated window, the Dates figure
-  // names that window; the whole span stays in its tooltip.
-  const datesFocus = useMemo(
-    () => (summary.extent ? focusWindow(entities.filter((e) => entityTime(e) !== null), summary.extent) : null),
-    [entities, summary.extent],
+  const dated = useMemo(() => entities.filter((e) => entityTime(e) !== null), [entities]);
+  const datesFocus = useMemo(() => (summary.extent ? focusWindow(dated, summary.extent) : null), [dated, summary.extent]);
+
+  /* ── The hero visual ───────────────────────────────────────────────── */
+  // One picture of the collection, from what it holds: the recordings on one
+  // clock where there is a Sync model, the map where a fifth of the records or
+  // more are located, else the time lanes. While a corpus loads, the lazy
+  // collections are known: Las Vegas draws the strip, the others the lanes.
+  const heroKind: "sync" | "map" | "time" | null = !ready
+    ? source === "vegas"
+      ? "sync"
+      : "time"
+    : hasSync && syncModel
+      ? "sync"
+      : showMap && summary.located / Math.max(1, total) >= HERO_MAP_SHARE
+        ? "map"
+        : summary.extent
+          ? "time"
+          : showMap
+            ? "map"
+            : null;
+
+  /* ── Featured records ──────────────────────────────────────────────── */
+  // The records linked to the most others, at most two per template so the
+  // set shows the collection's range (never a source: it is cited by many
+  // records it says nothing about); where the collection has no links, the
+  // most recently changed.
+  const graph = useAtomValue(networkGraphAtom);
+  const featured = useMemo(() => {
+    if (!ready) return { kind: "none" as const, records: [] as Entity[] };
+    if (graph.a.length > 0 && graph.ids.length === entities.length) {
+      const order = graph.ids
+        .map((_, i) => i)
+        .filter((i) => graph.degree[i] > 0 && canNameCommunity(graph, i))
+        .sort((p, q) => graph.degree[q] - graph.degree[p] || p - q);
+      const perType = new Map<string, number>();
+      const picked: number[] = [];
+      for (const i of order) {
+        const t = graph.typeIds[i];
+        if ((perType.get(t) ?? 0) >= FEATURED_PER_TEMPLATE) continue;
+        perType.set(t, (perType.get(t) ?? 0) + 1);
+        picked.push(i);
+        if (picked.length === FEATURED) break;
+      }
+      const records = picked.map((i) => getEntity(graph.ids[i]) ?? entities[i]).filter((e): e is Entity => !!e);
+      if (records.length >= 3) return { kind: "connected" as const, records };
+    }
+    return { kind: "recent" as const, records: recent.slice(0, FEATURED) };
+  }, [ready, graph, entities, recent]);
+
+  // Thumbnails on the featured cards follow the Library's Auto rule, applied
+  // to this set: all of them when half or more carry a preview, else none.
+  const featuredPreview =
+    featured.records.filter((e) => carriesContent(e, source)).length * 2 >= featured.records.length;
+
+  /* ── Copy ──────────────────────────────────────────────────────────── */
+  const docs = summary.contains.get("document") ?? 0;
+  const facts = ready ? (
+    <>
+      {plural(total, "record")}
+      {datesFocus ? (
+        <span title={summary.extent ? `All dates: ${spanWords(summary.extent.min, summary.extent.max)}` : undefined}>
+          , most of them from {windowWords(datesFocus.min, datesFocus.max)}
+        </span>
+      ) : summary.extent ? (
+        <> {rangePhrase(summary.extent.min, summary.extent.max)}</>
+      ) : null}
+      {summary.languages.filter(([l]) => l !== "Other").length > 0 &&
+        `, in ${listWords(summary.languages.filter(([l]) => l !== "Other").map(([l]) => l))}`}
+      {(() => {
+        const withParts = [
+          ...CONTENT_ROWS.contains
+            .map((r) => [summary.contains.get(r.id) ?? 0, CONTAINS_WORDS[r.id] ?? r.label.toLowerCase()] as const)
+            .filter(([c]) => c > 0)
+            .map(([c, w]) => `${n(c)}\u00a0with ${w}`),
+          ...(summary.located > 0 ? [`${n(summary.located)}\u00a0with a place on the map`] : []),
+        ];
+        return withParts.length ? `; ${listWords(withParts)}` : "";
+      })()}
+      .
+    </>
+  ) : null;
+
+  const top = summary.byType.slice(0, 3).map(([id, c]) => ({ name: typeOf(id).name, count: c }));
+  const templatesCopy =
+    top.length === 0
+      ? null
+      : bindSentences(
+          `The collection uses ${plural(summary.byType.length, "template")}. ${top[0].name} is the largest, with ${plural(top[0].count, "record")}` +
+            (top.length > 1 ? `, then ${listWords(top.slice(1).map((t) => t.name))}.` : "."),
+        );
+  const whenCopy = !summary.extent
+    ? null
+    : bindSentences(
+        datesFocus
+          ? `${pct(dated.length - datesFocus.outside, dated.length)} of the dated records fall ${
+              sameDay(datesFocus.min, datesFocus.max) ? `on ${windowWords(datesFocus.min, datesFocus.max)}` : `between ${longDay(datesFocus.min)} and ${longDay(datesFocus.max)}`
+            }.` +
+              (datesFocus.outside > 0 ? ` The other ${n(datesFocus.outside)} run from ${spanWords(summary.extent.min, summary.extent.max)}.` : "")
+          : `Dated records run ${rangePhrase(summary.extent.min, summary.extent.max)}.` +
+              (total - dated.length > 0 ? ` ${plural(total - dated.length, "record has", "records have")} no date.` : ""),
+      );
+  const whereCopy = bindSentences(`${n(summary.located)} of ${plural(total, "record")} have a location.`);
+  const firstCommunity = network?.communities[0];
+  const connectsCopy =
+    network && firstCommunity
+      ? bindSentences(
+          `Links between records form ${plural(network.communities.length, "community", "communities")}. The largest, with ${plural(firstCommunity.size, "record")}, gathers around ${firstCommunity.name}` +
+            (firstCommunity.with.length ? `, with ${listWords(firstCommunity.with)}.` : "."),
+        )
+      : null;
+
+  /* ── Entry points as views ─────────────────────────────────────────── */
+  const rootRef = useRef<HTMLDivElement>(null);
+  /** The masthead's search box: the nearest one above the Overview. */
+  const focusSearch = () => {
+    let el = rootRef.current?.parentElement ?? null;
+    while (el && !el.querySelector('input[aria-label="Search entities"]')) el = el.parentElement;
+    el?.querySelector<HTMLInputElement>('input[aria-label="Search entities"]')?.focus();
+  };
+  const third: { label: string; onClick: () => void } | null =
+    hasSync && syncModel
+      ? { label: "Open Sync", onClick: openSync }
+      : showNetwork
+        ? { label: "Open the network", onClick: () => setView("network") }
+        : showMap
+          ? { label: "Explore the map", onClick: () => setView("map") }
+          : null;
+
+  const mapView = (
+    <Suspense fallback={null}>
+      <OverviewMap
+        located={located}
+        onMap={() => setView("map")}
+        onRecord={(id) => {
+          setView("map");
+          setOpen(id);
+        }}
+        onArea={(b: MapBounds) =>
+          enter("map", () => {
+            // The area is a filter only while the map is in front:
+            // the view first, then the area.
+            setView("map");
+            setMapBounds(b);
+          })
+        }
+      />
+    </Suspense>
   );
-  const span = datesFocus ? formatWindow(datesFocus.min, datesFocus.max) : fullSpan;
-  const mapCard = showMap && (
-    <Section
-      title="Where"
-      // Takes what the column leaves, never less than its own minimum, so the
-      // fitted map is whole in the card.
-      className={`flex-1 ${MAP_MIN_H}`}
-      action={{ label: "Open Map", onClick: () => setView("map") }}
-      note={`${plural(summary.located, "record")} with a location`}
-    >
-      <div className="relative flex-1 min-h-0 rounded-md overflow-hidden bg-vellum">
-        <Suspense fallback={null}>
-          <OverviewMap
-            located={located}
-            onMap={() => setView("map")}
-            onRecord={(id) => {
-              setView("map");
-              setOpen(id);
-            }}
-            onArea={(b: MapBounds) =>
-              enter("map", () => {
-                // The area is a filter only while the map is in front:
-                // the view first, then the area.
-                setView("map");
-                setMapBounds(b);
-              })
-            }
-          />
-        </Suspense>
-      </div>
-    </Section>
-  );
-  const templatesCard = (
-    <Section
-      title="What's in it"
-      note={ready ? plural(summary.byType.length, "template") : undefined}
-      action={ready ? { label: "Open Cards", onClick: () => setView("cards") } : undefined}
-    >
-      {ready ? (
-        <BarList
-          label="Records per template"
-          rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
-            key: id,
-            label: typeOf(id).name,
-            color: typeOf(id).color,
-            count,
-            action: `Show the ${n(count)} ${typeOf(id).name} records`,
-            onClick: () => enter("cards", () => setTypes({ [id]: true })),
-          }))}
-          more={
-            summary.byType.length > TOP_TEMPLATES
-              ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
-              : undefined
-          }
-        />
-      ) : (
-        <BarSkeleton rows={TOP_TEMPLATES} />
-      )}
-    </Section>
-  );
-  // Contains and Language, one card: each holds two to five rows, too few for
-  // a card of their own. `grow`: the last card in its column takes the slack.
-  const contentCard = (grow: boolean) => (
-    <Card label="Content" className={grow ? "flex-1" : ""}>
-      <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${!ready || (showContains && showLanguages) ? "@xl:grid-cols-2" : ""}`}>
-        {(!ready || showContains) && (
-          <Group title="Contains" note={ready ? `of ${plural(total, "record")}` : undefined}>
-            {ready ? (
-              <BarList
-                label="Records by what they contain"
-                scaleTo={total}
-                rows={contentRows.map((r) => ({
-                  key: `${r.group}:${r.id}`,
-                  label: r.label,
-                  count: r.count,
-                  action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
-                  onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
-                }))}
-              />
-            ) : (
-              <BarSkeleton rows={2} />
-            )}
-          </Group>
-        )}
-        {(!ready || showLanguages) && (
-          <Group title="Language" note={ready ? `of ${plural(total, "record")}` : undefined}>
-            {ready ? (
-              <BarList
-                label="Records by the language of their content"
-                scaleTo={total}
-                rows={summary.languages.map(([l, count]) => ({
-                  key: `language:${l}`,
-                  label: l,
-                  count,
-                  action: `Show the ${n(count)} records in ${l}`,
-                  onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
-                }))}
-              />
-            ) : (
-              <BarSkeleton rows={2} />
-            )}
-          </Group>
-        )}
-      </div>
-    </Card>
+  const lanesView = (
+    <OverviewLanes
+      entities={entities}
+      typeOf={typeOf}
+      onScale={setScaleNote}
+      onLane={(typeId) => enter("timeline", () => setTypes({ [typeId]: true }))}
+      onCell={(typeId, b, fine) =>
+        enter("timeline", () => {
+          setTypes({ [typeId]: true });
+          // A minute or an hour is a timed bound; a day and up, days.
+          setFrom(fine ? toBound(b.start) : toISODate(b.start));
+          setTo(fine ? toBound(b.end - 1000) : toISODate(b.end - DAY));
+        })
+      }
+    />
   );
   // A community's template is shown only where the listed ones differ; the
   // same template under every row says nothing.
   const listed = network?.communities.slice(0, TOP_COMMUNITIES) ?? [];
   const mixedTemplates = new Set(listed.map((c) => c.typeId)).size > 1;
-  const networkCard = (grow: boolean) => showNetwork && network && (
-    <Section
-      title="Connections"
-      className={grow ? "flex-1" : ""}
-      action={{ label: "Open Network", onClick: () => setView("network") }}
-      note={`${plural(network.communities.length, "community", "communities")} of linked records`}
-    >
-      <BarList
-        label="Largest communities"
-        rows={listed.map((c) => ({
-          key: String(c.id),
-          label: c.name,
-          color: mixedTemplates ? typeOf(c.typeId).color : undefined,
-          sub: c.with.length ? `with ${c.with.join(", ")}` : undefined,
-          count: c.size,
-          action: `Open the Network on ${c.name}'s community, ${plural(c.size, "record")}`,
-          onClick: () => {
-            setCentre(c.id);
-            setView("network");
-          },
-        }))}
-      />
-    </Section>
-  );
 
   return (
-    <div data-component="LibraryOverview" aria-busy={loading} className="@container flex flex-col gap-2 pb-3">
-      {/* ── Header ── */}
-      {/* The collection's title page: its name, what it is at a reading
-          measure, and the key figures. The same card as the sections below,
-          so its edges, padding and gaps line up with theirs. */}
-      <header data-part="header" className="flex flex-col gap-4 p-4 rounded-lg bg-paper">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink leading-tight truncate">{settings.name || "Untitled collection"}</h1>
+    <div ref={rootRef} data-component="LibraryOverview" aria-busy={loading} className="@container pb-3">
+      <article className="rounded-lg bg-paper overflow-hidden">
+        {/* ── Hero ── the collection's name, what it is at a reading measure,
+            its key facts as one sentence, and the ways in. */}
+        <header data-part="hero" className={`${SHEET_X} ${GRID} gap-y-8 pt-12 pb-12 @3xl:pt-20`}>
+          <h1 className="col-span-4 @3xl:col-span-11 text-5xl @3xl:text-7xl font-semibold tracking-tight text-ink leading-[0.95]">
+            {bindNumbers(settings.name || "Untitled collection")}
+          </h1>
+          {/* Asymmetric: what the collection is on the start columns, the
+              facts as one sentence across from it; on a phone the facts come
+              before the actions. */}
           {settings.description && (
-            <p className="mt-2 max-w-[40rem] text-sm text-ink-secondary leading-relaxed line-clamp-3 @xl:line-clamp-2" title={settings.description}>
-              {settings.description}
+            <p className="col-span-4 @3xl:col-span-5 @3xl:row-start-2 text-base leading-7 text-ink-secondary">
+              {bindSentences(settings.description)}
             </p>
           )}
-        </div>
-        <dl data-part="stats" className="grid grid-cols-2 gap-x-4 gap-y-3 @xl:flex @xl:flex-wrap @xl:items-end @xl:gap-x-12">
-          <Stat label="Records" value={ready ? n(total) : null} />
-          {(!ready || span) && <Stat
-              label="Dates"
-              value={ready ? span : null}
-              title={datesFocus && fullSpan ? `${Math.round(FOCUS_SHARE * 100)}% of the dated records fall in this window. All dates: ${fullSpan}` : undefined}
-              ltr
-            />}
-          {(!ready || summary.languages.length > 0) && (
-            <Stat label={summary.languages.length === 1 ? "Language" : "Languages"} value={ready ? n(summary.languages.length) : null} />
-          )}
-          <Stat label={summary.byType.length === 1 ? "Template" : "Templates"} value={ready ? n(summary.byType.length) : null} />
-          {(!ready || (summary.contains.get("document") ?? 0) > 0) && (
-            <Stat label="Documents" value={ready ? n(summary.contains.get("document") ?? 0) : null} />
-          )}
-          {(!ready || summary.located > 0) && <Stat label="Located" value={ready ? n(summary.located) : null} />}
-        </dl>
-      </header>
-
-      {/* ── What, where, and how it is connected ──
-          Two columns that size to their content. The start side lists: the
-          templates, then the communities. The end side is the map, which
-          takes whatever height the column has left (a tall fit such as the
-          Americas needs it), over the Content card. Without a map the Content
-          card moves under the templates and Connections has the end side. */}
-      <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-        <div className="flex flex-col gap-2 min-w-0">
-          {templatesCard}
-          {ready ? (
-            showMap ? networkCard(true) : showContent && contentCard(true)
-          ) : (
-            // Most collections have a map, so the loading layout is the
-            // mapped one: Connections here, Content under the map. Six short
-            // rows hold the height of four two-line communities.
-            <Section title="Connections" className="flex-1">
-              <BarSkeleton rows={6} />
-            </Section>
-          )}
-        </div>
-        {(!ready || showMap || showNetwork) && (
-          <div className="flex flex-col gap-2 min-w-0">
-            {ready ? (
-              showMap ? (
-                <>
-                  {mapCard}
-                  {showContent && contentCard(false)}
-                </>
-              ) : (
-                networkCard(true)
-              )
-            ) : (
-              <>
-                <Section title="Where" className={`flex-1 ${MAP_MIN_H}`}>
-                  <div aria-hidden className="flex-1 rounded-md bg-vellum" />
-                </Section>
-                {contentCard(false)}
-              </>
+          <p data-part="facts" className="col-span-4 @3xl:col-start-7 @3xl:col-span-6 @3xl:row-start-2 @3xl:row-span-2 min-h-[5.25rem] text-xl leading-8 text-ink tabular-nums">
+            {facts ?? (
+              <span aria-hidden className="flex flex-col gap-3 pt-2">
+                <span className="block h-4 w-full rounded-sm bg-vellum" />
+                <span className="block h-4 w-[80%] rounded-sm bg-vellum" />
+                <span className="block h-4 w-[55%] rounded-sm bg-vellum" />
+              </span>
+            )}
+          </p>
+          <div data-part="actions" className="col-span-4 @3xl:col-span-5 @3xl:row-start-3 flex flex-wrap items-center gap-2 self-start">
+            <button type="button" onClick={() => setView("cards")} className={`${HERO_BUTTON} ${COMMIT_FILL}`}>
+              Browse the collection
+            </button>
+            <button type="button" onClick={focusSearch} className={`${HERO_BUTTON} ${BAR_LEAD}`}>
+              <Search size={14} aria-hidden />
+              Search
+            </button>
+            {third && (
+              <button type="button" onClick={third.onClick} className={`${HERO_BUTTON} ${BAR_LEAD}`}>
+                {third.label}
+                <ArrowRight size={14} aria-hidden className="rtl:-scale-x-100" />
+              </button>
             )}
           </div>
-        )}
-      </div>
+        </header>
 
-      {/* ── Timeline ── */}
-      {showLanes && (
-        <Section
-          title="Over time"
-          note={ready ? scaleNote ?? undefined : undefined}
-          action={ready ? { label: "Open Timeline", onClick: () => setView("timeline") } : undefined}
-        >
-          {ready ? (
-            <OverviewLanes
-              entities={entities}
-              typeOf={typeOf}
-              onScale={setScaleNote}
-              onLane={(typeId) => enter("timeline", () => setTypes({ [typeId]: true }))}
-              onCell={(typeId, b, fine) =>
-                enter("timeline", () => {
-                  setTypes({ [typeId]: true });
-                  // A minute or an hour is a timed bound; a day and up, days.
-                  setFrom(fine ? toBound(b.start) : toISODate(b.start));
-                  setTo(fine ? toBound(b.end - 1000) : toISODate(b.end - DAY));
-                })
+        {/* ── Hero visual ── edge to edge of the sheet. */}
+        {heroKind && (
+          <figure data-part="hero-visual" className="m-0 border-t border-ink">
+            {heroKind === "map" ? (
+              <div className="relative h-[20rem] @3xl:h-[26rem] bg-vellum">{ready && mapView}</div>
+            ) : (
+              <div className={`${SHEET_X} pt-8 pb-4`}>
+                {heroKind === "sync" ? (
+                  ready && syncModel ? (
+                    <OverviewSync model={syncModel} onOpen={openSync} height={HERO_SYNC_H} />
+                  ) : (
+                    <div aria-hidden className="rounded-md bg-vellum" style={{ height: HERO_SYNC_H + 40 }} />
+                  )
+                ) : ready ? (
+                  lanesView
+                ) : (
+                  <BarSkeleton rows={LANES} />
+                )}
+              </div>
+            )}
+            <figcaption className={`${SHEET_X} min-h-12 mb-12 flex flex-wrap items-center gap-x-6 gap-y-1 py-3 text-xs leading-5 text-ink-secondary`}>
+              <span className="min-w-0 flex-1">
+                {!ready
+                  ? " "
+                  : heroKind === "sync" && syncModel
+                    ? `${plural(syncModel.lanes.filter((l) => l.start !== undefined).length, "recording")} on one clock, with the ${plural(syncModel.volleys.length, "volley")} numbered. Bars are the recordings known to run in each ten seconds.`
+                    : heroKind === "map"
+                      ? `${plural(summary.located, "record")} with a location`
+                      : whenCopy ?? scaleNote}
+              </span>
+              {ready && (
+                <OpenLink
+                  label={heroKind === "sync" ? "Open Sync" : heroKind === "map" ? "Open Map" : "Open Timeline"}
+                  onClick={heroKind === "sync" ? openSync : () => setView(heroKind === "map" ? "map" : "timeline")}
+                />
+              )}
+            </figcaption>
+          </figure>
+        )}
+
+        <div className={SHEET_X}>
+          {/* ── What's in it ── templates, then what the records contain and
+              the languages of their content. */}
+          <Band
+            title="What's in it"
+            figure={ready ? { value: n(summary.byType.length), label: summary.byType.length === 1 ? "template" : "templates" } : undefined}
+            copy={ready ? templatesCopy : null}
+            action={ready ? { label: "Open Cards", onClick: () => setView("cards") } : undefined}
+           
+          >
+            {ready ? (
+              <div className="flex flex-col gap-6">
+                <BarList
+                  label="Records per template"
+                  rows={summary.byType.slice(0, TOP_TEMPLATES).map(([id, count]) => ({
+                    key: id,
+                    label: typeOf(id).name,
+                    color: typeOf(id).color,
+                    count,
+                    action: `Show the ${n(count)} ${typeOf(id).name} records`,
+                    onClick: () => enter("cards", () => setTypes({ [id]: true })),
+                  }))}
+                  more={
+                    summary.byType.length > TOP_TEMPLATES
+                      ? { label: `${plural(summary.byType.length - TOP_TEMPLATES, "more template")} in Cards`, onClick: () => setView("cards") }
+                      : undefined
+                  }
+                />
+                {showContent && (
+                  <div className={`grid grid-cols-1 gap-x-8 gap-y-6 ${showContains && showLanguages ? "@xl:grid-cols-2" : ""}`}>
+                    {showContains && (
+                      <Group title="Contains" note={`of ${plural(total, "record")}`}>
+                        <BarList
+                          label="Records by what they contain"
+                          scaleTo={total}
+                          rows={contentRows.map((r) => ({
+                            key: `${r.group}:${r.id}`,
+                            label: r.label,
+                            count: r.count,
+                            action: `Show the ${n(r.count)} records with ${r.label.toLowerCase()}`,
+                            onClick: () => enter("cards", () => setContent({ [r.group]: { [r.id]: true } })),
+                          }))}
+                        />
+                      </Group>
+                    )}
+                    {showLanguages && (
+                      <Group title="Language" note={`of ${plural(total, "record")}`}>
+                        <BarList
+                          label="Records by the language of their content"
+                          scaleTo={total}
+                          rows={summary.languages.map(([l, count]) => ({
+                            key: `language:${l}`,
+                            label: l,
+                            count,
+                            action: `Show the ${n(count)} records in ${l}`,
+                            onClick: () => enter("cards", () => setContent({ language: { [l]: true } })),
+                          }))}
+                        />
+                      </Group>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <BarSkeleton rows={TOP_TEMPLATES} />
+            )}
+          </Band>
+
+          {/* ── When ── unless the hero already draws the lanes. */}
+          {ready && summary.extent && heroKind !== "time" && (
+            <Band
+              title="When"
+              figure={
+                datesFocus
+                  ? sameDay(datesFocus.min, datesFocus.max)
+                    ? { value: `${clock(Math.floor(datesFocus.min / 60_000) * 60_000, "minute")}–${clock(Math.floor(datesFocus.max / 60_000) * 60_000, "minute")}`, label: longDay(datesFocus.min) }
+                    : { value: spanFigure(datesFocus.min, datesFocus.max), label: `${pct(dated.length - datesFocus.outside, dated.length)} of the dated records` }
+                  : { value: spanFigure(summary.extent.min, summary.extent.max), label: plural(dated.length, "dated record") }
               }
-            />
-          ) : (
-            <BarSkeleton rows={LANES} />
+              copy={whenCopy}
+              action={{ label: "Open Timeline", onClick: () => setView("timeline") }}
+             
+            >
+              {lanesView}
+            </Band>
           )}
-        </Section>
-      )}
 
-      {/* ── Sync ── recordings on one clock (Las Vegas only, today). */}
-      {ready && hasSync && syncModel && (
-        <Section
-          title="Sync"
-          note={`${plural(syncModel.lanes.filter((l) => l.start !== undefined).length, "recording")} on one clock · ${plural(syncModel.volleys.length, "volley")}`}
-          action={{ label: "Open Sync", onClick: openSync }}
-        >
-          <OverviewSync model={syncModel} onOpen={openSync} />
-        </Section>
-      )}
+          {/* ── Where ── unless the hero is the map. */}
+          {showMap && heroKind !== "map" && (
+            <Band title="Where" figure={{ value: n(summary.located), label: summary.located === 1 ? "record with a location" : "records with a location" }} copy={whereCopy} action={{ label: "Open Map", onClick: () => setView("map") }}>
+              <div className="relative h-[18rem] @3xl:h-[22rem] rounded-md overflow-hidden bg-vellum">{mapView}</div>
+            </Band>
+          )}
 
-      {/* ── Sync quality (Las Vegas) ──
-          How closely the recordings agree on each volley's clock. A row opens
-          the volley; the full table lists every aligned moment. */}
-      {ready && sync && sync.moments.some((m) => m.volley) && (
-        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-        <Section
-          title="Sync quality"
-          note={`${pct(sync.totals.within2, sync.totals.counted)} of ${n(sync.totals.counted)} annotations within 2 s of their moment's median`}
-          action={{ label: "Open table", onClick: () => setSyncTableOpen(true) }}
-        >
-          <div aria-hidden className="flex items-center gap-3 h-6 px-0 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
-            <span className="flex-1 min-w-0">Volley</span>
-            <span className="hidden @xl:block w-16 text-end">Gap</span>
-            <span className="w-14 @xl:w-20 text-end">Rec.</span>
-            <span className="w-14 @xl:w-20 text-end">Spread</span>
-            <span className="w-16 @xl:w-24 text-end">Outliers</span>
-          </div>
-          <ul aria-label="Sync quality by volley" className="flex flex-col -mx-2">
-            {sync.moments
-              .filter((m) => m.volley)
-              .sort((a, b) => a.volley! - b.volley!)
-              .map((m) => {
-                const gap = sync.intervals.find((i) => i.to === m.volley)?.seconds;
-                return (
-                  <li key={m.momentId}>
-                    <RowButton
-                      onClick={() => openRecord(m.momentId)}
-                      label={`Open ${momentName(m)}: ${plural(m.recordings, "recording")}, spread ${m.spread} s, ${plural(m.outliers.length, "outlier")}`}
-                    >
-                      <span className="min-w-0 flex-1 flex items-baseline gap-2">
-                        <span className="text-sm text-ink truncate">{momentName(m)}</span>
-                        <span className="text-xs text-ink-tertiary tabular-nums">{m.median !== null ? formatClock(m.median) : ""}</span>
-                      </span>
-                      <span className="hidden @xl:block w-16 text-end text-xs text-ink-tertiary tabular-nums">{gap !== undefined ? `+${gap} s` : ""}</span>
-                      <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.recordings}</span>
-                      <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.spread} s</span>
-                      <span className={`w-16 @xl:w-24 text-end text-xs tabular-nums ${m.outliers.length ? "text-warning-label font-semibold" : "text-ink-tertiary"}`}>
-                        {m.outliers.length || "None"}
-                      </span>
-                    </RowButton>
+          {/* ── How it connects ── */}
+          {(!ready || showNetwork) && (
+            <Band
+              title="How it connects"
+              figure={ready && network ? { value: n(network.communities.length), label: network.communities.length === 1 ? "community of linked records" : "communities of linked records" } : undefined}
+              copy={ready ? connectsCopy : null}
+              action={ready ? { label: "Open Network", onClick: () => setView("network") } : undefined}
+             
+            >
+              {ready && network ? (
+                <BarList
+                  label="Largest communities"
+                  rows={listed.map((c) => ({
+                    key: String(c.id),
+                    label: c.name,
+                    color: mixedTemplates ? typeOf(c.typeId).color : undefined,
+                    sub: c.with.length ? `with ${c.with.join(", ")}` : undefined,
+                    count: c.size,
+                    action: `Open the Network on ${c.name}'s community, ${plural(c.size, "record")}`,
+                    onClick: () => {
+                      setCentre(c.id);
+                      setView("network");
+                    },
+                  }))}
+                />
+              ) : (
+                <BarSkeleton rows={6} />
+              )}
+            </Band>
+          )}
+
+          {/* ── Sync quality (Las Vegas) ── how closely the recordings agree on
+              each volley's clock. A row opens the volley; the full table lists
+              every aligned moment. */}
+          {ready && sync && sync.moments.some((m) => m.volley) && (
+            <Band
+              title="Sync quality"
+              figure={{ value: pct(sync.totals.within2, sync.totals.counted), label: `of ${n(sync.totals.counted)} annotations within 2 s` }}
+              copy={bindSentences(
+                `${pct(sync.totals.within2, sync.totals.counted)} of ${n(sync.totals.counted)} annotations sit within 2 s of their moment's median time. A volley's spread is how far its recordings disagree.`,
+              )}
+              action={{ label: "Open table", onClick: () => setSyncTableOpen(true) }}
+             
+            >
+              <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-x-12 gap-y-8">
+                <div className="min-w-0">
+                  <div aria-hidden className="flex items-center gap-3 h-6 px-0 text-xs font-semibold text-ink-secondary">
+                    <span className="flex-1 min-w-0">Volley</span>
+                    <span className="hidden @xl:block w-16 text-end">Gap</span>
+                    <span className="w-14 @xl:w-20 text-end">Rec.</span>
+                    <span className="w-14 @xl:w-20 text-end">Spread</span>
+                    <span className="w-16 @xl:w-24 text-end">Outliers</span>
+                  </div>
+                  <ul aria-label="Sync quality by volley" className="flex flex-col -mx-2">
+                    {sync.moments
+                      .filter((m) => m.volley)
+                      .sort((a, b) => a.volley! - b.volley!)
+                      .map((m) => {
+                        const gap = sync.intervals.find((i) => i.to === m.volley)?.seconds;
+                        return (
+                          <li key={m.momentId}>
+                            <RowButton
+                              onClick={() => openRecord(m.momentId)}
+                              label={`Open ${momentName(m)}: ${plural(m.recordings, "recording")}, spread ${m.spread} s, ${plural(m.outliers.length, "outlier")}`}
+                            >
+                              <span className="min-w-0 flex-1 flex items-baseline gap-2">
+                                <span className="text-sm text-ink truncate">{momentName(m)}</span>
+                                <span className="text-xs text-ink-tertiary tabular-nums">{m.median !== null ? formatClock(m.median) : ""}</span>
+                              </span>
+                              <span className="hidden @xl:block w-16 text-end text-xs text-ink-tertiary tabular-nums">{gap !== undefined ? `+${gap} s` : ""}</span>
+                              <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.recordings}</span>
+                              <span className="w-14 @xl:w-20 text-end text-xs text-ink-secondary tabular-nums">{m.spread} s</span>
+                              <span className={`w-16 @xl:w-24 text-end text-xs tabular-nums ${m.outliers.length ? "text-warning-label font-semibold" : "text-ink-tertiary"}`}>
+                                {m.outliers.length || "None"}
+                              </span>
+                            </RowButton>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </div>
+                {sync.comparisons.length > 0 && (
+                  <Group title="Against other accounts" note="Known from press summaries, not read at source">
+                    <ComparisonList rows={sync.comparisons} onOpen={openRecord} />
+                  </Group>
+                )}
+              </div>
+            </Band>
+          )}
+
+          {/* ── Most used values ── a column per property. */}
+          {ready && facets.length > 0 && (
+            <Band
+              title="Most used values"
+              copy={bindSentences(`The values the records share most often, in ${listWords(facets.map((f) => f.title))}.`)}
+             
+            >
+              <div className={`grid grid-cols-1 gap-x-8 gap-y-6 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3"}`}>
+                {facets.map((f) => (
+                  <Group key={f.key} title={f.title} note={plural(f.distinct, "value")}>
+                    <BarList
+                      label={`${f.title}, most used values`}
+                      rows={f.values.map(([v, count]) => ({
+                        key: v,
+                        label: v,
+                        count,
+                        action: `Show the ${n(count)} records with ${f.title} ${v}`,
+                        onClick: () =>
+                          enter("cards", () => {
+                            if (f.kind === "country") setCountries({ [v]: true });
+                            else if (f.kind === "descriptor") setDescriptors({ [v]: true });
+                            else setInherited({ [f.key]: { [v]: true } });
+                          }),
+                      }))}
+                    />
+                  </Group>
+                ))}
+              </div>
+            </Band>
+          )}
+
+          {/* ── Featured records ── as the Library's own cards. */}
+          {featured.records.length > 0 && (
+            <Band
+              title={featured.kind === "connected" ? "Most connected records" : "Recently modified"}
+              copy={
+                featured.kind === "connected"
+                  ? "The records linked to the most others. Sources are left out: they are cited by many records they say little about."
+                  : "The records changed most recently."
+              }
+             
+            >
+              <ul className="grid grid-cols-1 @2xl:grid-cols-2 @5xl:grid-cols-3 gap-3">
+                {featured.records.map((e) => (
+                  // Each card its own grid: standalone cards differ in rows (a
+                  // preview or none), so they do not share one grid's tracks.
+                  <li key={e.id} className="grid">
+                    <EntityCard
+                      entity={e}
+                      layout="cards"
+                      query=""
+                      selected={false}
+                      onSelect={(id) => openRecord(id)}
+                      onView={openEntity}
+                      standalone
+                      preview={featuredPreview}
+                    />
                   </li>
-                );
-              })}
-          </ul>
-        </Section>
-        {sync.comparisons.length > 0 && (
-          <Section title="Against other accounts" note="Known from press summaries, not read at source">
-            <ComparisonList rows={sync.comparisons} onOpen={openRecord} />
-          </Section>
-        )}
+                ))}
+              </ul>
+            </Band>
+          )}
+
+          {/* ── Recently modified · Yours ── */}
+          {((showRecent && featured.kind !== "recent") || showYours) && (
+            <section data-part="lists" className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-6 gap-y-8 pt-3 pb-12 border-t border-ink">
+              {showRecent && featured.kind !== "recent" && (
+                <Group title="Recently modified">
+                  <RecordList
+                    records={recent.map((e) => ({ e, meta: formatDay(Date.parse(e.updatedAt!)) }))}
+                    typeOf={typeOf}
+                    onOpen={openRecord}
+                  />
+                </Group>
+              )}
+              {showYours && (
+                <Group title="Saved views and pins">
+                  <ul className="flex flex-col -mx-2">
+                    {views.map((v) => {
+                      const k = snapshotFilterCount(v.snapshot);
+                      return (
+                        <li key={v.id}>
+                          <RowButton onClick={() => applySnapshot(v.snapshot)} label={`Open saved view ${v.name}`}>
+                            <Bookmark size={13} aria-hidden className="shrink-0 text-ink-muted" />
+                            <span className="min-w-0 flex-1 truncate text-sm text-ink" title={v.name}>{v.name}</span>
+                            <span className="shrink-0 text-xs text-ink-tertiary tabular-nums">
+                              {k === 0 ? "No filters" : plural(k, "filter")}
+                            </span>
+                          </RowButton>
+                        </li>
+                      );
+                    })}
+                    {pins.map((e) => (
+                      <li key={e.id}>
+                        <RowButton onClick={() => openRecord(e.id)} label={`Open ${e.title}`}>
+                          <Pin size={13} aria-hidden className="shrink-0 text-ink-muted" />
+                          <span className="min-w-0 flex-1 truncate text-sm text-ink" title={e.title}>{e.title}</span>
+                          <TemplateName type={typeOf(e.typeId)} />
+                        </RowButton>
+                      </li>
+                    ))}
+                  </ul>
+                </Group>
+              )}
+            </section>
+          )}
         </div>
-      )}
+      </article>
       {syncTableOpen && sync && (
         <VegasSyncTable
           sync={sync}
@@ -561,109 +812,74 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
           }}
         />
       )}
-
-      {/* ── Facets ──
-          One card, a column per property: a property with two values beside
-          one with six no longer leaves a card mostly empty. */}
-      {ready && facets.length > 0 && (
-        <Card label="Most used values">
-          <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${facets.length === 1 ? "" : facets.length === 2 ? "@3xl:grid-cols-2" : "@3xl:grid-cols-2 @6xl:grid-cols-3"}`}>
-            {facets.map((f) => (
-              <Group key={f.key} title={f.title} note={plural(f.distinct, "value")}>
-                <BarList
-                  label={`${f.title}, most used values`}
-                  rows={f.values.map(([v, count]) => ({
-                    key: v,
-                    label: v,
-                    count,
-                    action: `Show the ${n(count)} records with ${f.title} ${v}`,
-                    onClick: () =>
-                      enter("cards", () => {
-                        if (f.kind === "country") setCountries({ [v]: true });
-                        else if (f.kind === "descriptor") setDescriptors({ [v]: true });
-                        else setInherited({ [f.key]: { [v]: true } });
-                      }),
-                  }))}
-                />
-              </Group>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ── Recently modified · Yours ── */}
-      {(showRecent || showYours) && (
-        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-          {showRecent && (
-            <Section title="Recently modified">
-              <RecordList
-                records={recent.map((e) => ({ e, meta: formatDay(Date.parse(e.updatedAt!)) }))}
-                typeOf={typeOf}
-                onOpen={openRecord}
-              />
-            </Section>
-          )}
-          {showYours && (
-            <Section title="Saved views and pins">
-              <ul className="flex flex-col -mx-2">
-                {views.map((v) => {
-                  const k = snapshotFilterCount(v.snapshot);
-                  return (
-                    <li key={v.id}>
-                      <RowButton onClick={() => applySnapshot(v.snapshot)} label={`Open saved view ${v.name}`}>
-                        <Bookmark size={13} aria-hidden className="shrink-0 text-ink-muted" />
-                        <span className="min-w-0 flex-1 truncate text-sm text-ink" title={v.name}>{v.name}</span>
-                        <span className="shrink-0 text-xs text-ink-tertiary tabular-nums">
-                          {k === 0 ? "No filters" : plural(k, "filter")}
-                        </span>
-                      </RowButton>
-                    </li>
-                  );
-                })}
-                {pins.map((e) => (
-                  <li key={e.id}>
-                    <RowButton onClick={() => openRecord(e.id)} label={`Open ${e.title}`}>
-                      <Pin size={13} aria-hidden className="shrink-0 text-ink-muted" />
-                      <span className="min-w-0 flex-1 truncate text-sm text-ink" title={e.title}>{e.title}</span>
-                      <TemplateName type={typeOf(e.typeId)} />
-                    </RowButton>
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
 /* ── Parts ────────────────────────────────────────────────────────────── */
 
-function Stat({ label, value, title, ltr = false }: { label: string; value: string | null; title?: string; ltr?: boolean }) {
+/** A narrative band on the sheet's grid: a thin rule, then the text column
+ *  (a short heading, the figure that carries the band, a sentence or two and
+ *  the way into its view) flush left over four columns, and the visual over
+ *  the other eight. One column on a phone. */
+function Band({
+  title,
+  figure,
+  copy,
+  note,
+  action,
+  children,
+}: {
+  title: string;
+  /** A large number with what it counts under it. */
+  figure?: { value: string; label: string };
+  copy?: ReactNode;
+  /** A line under the copy that names the visual's scale. */
+  note?: string | null;
+  action?: { label: string; onClick: () => void };
+  children?: ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-1 min-w-0">
-      <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{label}</dt>
-      <dd className="h-7 flex items-center text-xl font-semibold text-ink tabular-nums truncate">
-        {value === null ? (
-          <span aria-hidden className="block w-16 h-4 rounded-sm bg-vellum" />
-        ) : (
-          // Dates and ranges read left to right in an RTL page too.
-          <span dir={ltr ? "ltr" : undefined} title={title}>
-            {value}
-          </span>
+    <section data-part="band" aria-label={title} className={`${GRID} gap-y-8 pt-3 pb-16 border-t border-ink`}>
+      <div className="col-span-4 min-w-0 flex flex-col items-start">
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        {figure && (
+          <p className="mt-8 flex flex-col gap-2">
+            <span className="text-5xl @3xl:text-6xl font-semibold tracking-tight leading-none text-ink tabular-nums" dir="ltr">
+              {figure.value}
+            </span>
+            <span className="text-sm text-ink-secondary">{figure.label}</span>
+          </p>
         )}
-      </dd>
-    </div>
+        {copy !== undefined && (
+          <p className="mt-6 max-w-[30rem] min-h-6 text-sm leading-6 text-ink-secondary">
+            {copy ?? <span aria-hidden className="block h-3 w-[min(22rem,90%)] mt-1.5 rounded-sm bg-vellum" />}
+          </p>
+        )}
+        {note && <p className="mt-2 text-xs text-ink-tertiary">{note}</p>}
+        {action && (
+          <div className="mt-4">
+            <OpenLink {...action} />
+          </div>
+        )}
+      </div>
+      {children && <div className="col-span-4 @3xl:col-span-8 min-w-0 @3xl:pt-1">{children}</div>}
+    </section>
   );
 }
 
-/** A paper card. Its height is its content's unless the layout stretches it. */
-function Card({ label, className = "", children }: { label: string; className?: string; children: ReactNode }) {
+/** "Open Map →": the way from a band or the hero visual into its view. */
+function OpenLink({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <section data-part="section" aria-label={label} className={`flex flex-col min-w-0 p-4 rounded-lg bg-paper ${className}`}>
-      {children}
-    </section>
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 inline-flex items-center gap-1 h-7 px-2 -mx-2 rounded-md text-xs font-medium text-ink-secondary hover:text-ink hover:bg-warm transition-colors cursor-pointer
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+    >
+      {label}
+      <ArrowRight size={12} aria-hidden className="rtl:-scale-x-100" />
+    </button>
   );
 }
 
@@ -685,7 +901,7 @@ function Group({
       {/* A phone has no tooltip to recover a cut note: there it takes a line
           of its own under the label and wraps. */}
       <header className="shrink-0 flex flex-wrap items-center gap-x-2 min-h-6 mb-2">
-        <SectionLabel as="h2" className="shrink-0">{title}</SectionLabel>
+        <h3 className="shrink-0 text-xs font-semibold text-ink">{title}</h3>
         {note && (
           <span className="order-last basis-full text-xs text-ink-tertiary tabular-nums @xl:order-none @xl:basis-auto @xl:min-w-0 @xl:flex-1 @xl:truncate" title={note}>
             {note}
@@ -705,29 +921,6 @@ function Group({
       </header>
       {children}
     </div>
-  );
-}
-
-/** A card with one group. */
-function Section({
-  title,
-  className = "",
-  action,
-  note,
-  children,
-}: {
-  title: string;
-  className?: string;
-  action?: { label: string; onClick: () => void };
-  note?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Card label={title} className={className}>
-      <Group title={title} note={note} action={action}>
-        {children}
-      </Group>
-    </Card>
   );
 }
 
@@ -817,9 +1010,9 @@ function BarList({
                 </span>
               )}
             </span>
-            <span aria-hidden className="relative shrink-0 w-[28%] max-w-[9rem] h-1.5 rounded-full bg-ink/5">
+            <span aria-hidden className="relative shrink-0 w-[28%] max-w-[9rem] h-1.5 bg-ink/5">
               <span
-                className="absolute inset-y-0 start-0 rounded-full bg-ink/20 group-hover:bg-ink/40 transition-colors"
+                className="absolute inset-y-0 start-0 bg-ink/25 group-hover:bg-ink/50 transition-colors"
                 style={{ width: `${Math.max(1, (r.count / max) * 100)}%` }}
               />
             </span>
@@ -845,7 +1038,7 @@ function BarSkeleton({ rows }: { rows: number }) {
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-3 h-7">
           <span className="flex-1 min-w-0"><span className="block h-3 rounded-sm bg-vellum" style={{ width: `${Math.max(30, 70 - i * 5)}%` }} /></span>
-          <span className="shrink-0 w-[28%] max-w-[9rem] h-1.5 rounded-full bg-vellum" />
+          <span className="shrink-0 w-[28%] max-w-[9rem] h-1.5 bg-vellum" />
           <span className="shrink-0 w-12" />
         </div>
       ))}
@@ -910,14 +1103,70 @@ function focusWindow(dated: Entity[], full: { min: number; max: number } | null)
   return { min: lo, max: hi, outside };
 }
 
-/** A focused window in words: "1 Oct 2017, 22:00–22:20" within a day (to the
- *  minute, as the time section's columns read), else as `formatSpan`. */
-function formatWindow(min: number, max: number): string {
-  if (!sameDay(min, max)) return formatSpan(min, max);
-  const lo = Math.floor(min / 60_000) * 60_000;
-  const hi = Math.floor(max / 60_000) * 60_000;
-  const day = new Date(min).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-  return `${day}, ${clock(lo, "minute")}–${clock(hi, "minute")}`;
+/* ── Copy ─────────────────────────────────────────────────────────────── */
+
+/** "a, b and c". */
+function listWords(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+/** Binds the first word of every sentence after the first to the word after
+ *  it, so a line never ends on a sentence's first word. */
+function bindSentences(text: string): string {
+  return text.replace(/([.!?]) (\S+) /g, "$1 $2\u00a0");
+}
+
+/** Binds a number to the word after it ("1 October"), so a display line
+ *  never ends on the number alone. */
+const bindNumbers = (text: string) => text.replace(/(\d) (?=\S)/g, "$1\u00a0");
+
+const longDay = (ms: number) =>
+  bindNumbers(new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }));
+const monthYear = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+
+/** "1986 to 2021"; months for a span shorter than two years; one month alone. */
+function spanWords(min: number, max: number): string {
+  if (max - min >= 2 * 365 * DAY) {
+    const a = new Date(min).getUTCFullYear();
+    const b = new Date(max).getUTCFullYear();
+    return a === b ? String(a) : `${a} to ${b}`;
+  }
+  const a = monthYear(min);
+  const b = monthYear(max);
+  return a === b ? a : `${a} to ${b}`;
+}
+
+/** A span as a figure: "1986–2021", "Jan 2023–Mar 2024", "Aug–Dec 2025". */
+function spanFigure(min: number, max: number): string {
+  if (max - min >= 2 * 365 * DAY) {
+    const a = new Date(min).getUTCFullYear();
+    const b = new Date(max).getUTCFullYear();
+    return a === b ? String(a) : `${a}–${b}`;
+  }
+  const ma = MONTH_SHORT[new Date(min).getUTCMonth()];
+  const mb = MONTH_SHORT[new Date(max).getUTCMonth()];
+  const ya = new Date(min).getUTCFullYear();
+  const yb = new Date(max).getUTCFullYear();
+  if (ya === yb) return ma === mb ? `${ma} ${ya}` : `${ma}–${mb} ${ya}`;
+  return `${ma} ${ya}–${mb} ${yb}`;
+}
+
+/** "from 1986 to 2021", or "in March 2024" for one month or year. */
+function rangePhrase(min: number, max: number): string {
+  const w = spanWords(min, max);
+  return w.includes(" to ") ? `from ${w}` : `in ${w}`;
+}
+
+/** A concentrated window in words: "1 October 2017, between 22:00 and 22:20"
+ *  within a day, else "28 August to 11 December 2025". */
+function windowWords(min: number, max: number): string {
+  if (sameDay(min, max)) {
+    const lo = Math.floor(min / 60_000) * 60_000;
+    const hi = Math.floor(max / 60_000) * 60_000;
+    return `${longDay(min)}, between ${clock(lo, "minute")} and ${clock(hi, "minute")}`;
+  }
+  return `${longDay(min)} to ${longDay(max)}`;
 }
 
 /* ── Timeline lanes ───────────────────────────────────────────────────── */

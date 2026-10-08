@@ -1,14 +1,14 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { formatClock } from "../../data/vegas/links";
 import { SYNC_DEFAULT_WINDOW, type SyncModel } from "../../data/vegas/syncLanes";
 
 const BIN = 10;
-const H = 56;
+const H_DEFAULT = 56;
 
 /** The Overview's Sync teaser: over the shooting's twelve minutes, how many
  *  recordings are known to run in each ten seconds, with the volleys marked.
  *  One button: the strip opens the Sync view at the first volley. */
-export function OverviewSync({ model, onOpen }: { model: SyncModel; onOpen: () => void }) {
+export function OverviewSync({ model, onOpen, height: H = H_DEFAULT }: { model: SyncModel; onOpen: () => void; height?: number }) {
   const { from, to } = SYNC_DEFAULT_WINDOW;
   const bins = useMemo(() => {
     const out = new Array<number>(Math.ceil((to - from) / BIN)).fill(0);
@@ -25,6 +25,29 @@ export function OverviewSync({ model, onOpen }: { model: SyncModel; onOpen: () =
   const x = (t: number) => ((t - from) / (to - from)) * 100;
   const peak = Math.max(...bins);
   const first = model.volleys[0];
+  // Volley numbers that would touch the last one drawn are left out: at a
+  // phone's width 11 and 12 sit a few pixels apart.
+  const [w, setW] = useState(0);
+  const ro = useRef<ResizeObserver | null>(null);
+  const measure = useCallback((el: HTMLDivElement | null) => {
+    ro.current?.disconnect();
+    ro.current = null;
+    if (!el) return;
+    setW(el.clientWidth);
+    ro.current = new ResizeObserver(([e]) => setW(e.contentRect.width));
+    ro.current.observe(el);
+  }, []);
+  const labelled = useMemo(() => {
+    const out = new Set<string>();
+    let last = -Infinity;
+    for (const m of model.volleys) {
+      const px = (x((m.bandFrom + m.bandTo) / 2) / 100) * w;
+      if (px - last < 18) continue;
+      out.add(m.id);
+      last = px;
+    }
+    return out;
+  }, [model, w]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <button
       type="button"
@@ -58,8 +81,8 @@ export function OverviewSync({ model, onOpen }: { model: SyncModel; onOpen: () =
         })}
       </svg>
       {/* Volley numbers in HTML: SVG text stretches with the viewBox. */}
-      <div aria-hidden className="relative h-4">
-        {model.volleys.map((m) => (
+      <div ref={measure} aria-hidden className="relative h-4">
+        {model.volleys.filter((m) => labelled.has(m.id)).map((m) => (
           <span
             key={m.id}
             className="absolute -translate-x-1/2 text-meta font-semibold text-ink-secondary tabular-nums"
