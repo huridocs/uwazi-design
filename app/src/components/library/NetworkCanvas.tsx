@@ -2153,7 +2153,7 @@ export function NetworkCanvas({
         <nav
           aria-label="Where you are"
           data-part="breadcrumb" data-overlay
-          className={`absolute top-3 left-[calc(0.75rem+var(--rail-reserve-start,0px))] max-w-[calc(100%-11rem-var(--rail-reserve,0px)-var(--rail-reserve-start,0px))] ${CANVAS_OVERLAY_GROUP} gap-1 text-meta`}
+          className={`absolute top-3 start-[calc(0.75rem+var(--rail-reserve-start,0px))] max-w-[calc(100%-11rem-var(--rail-reserve,0px)-var(--rail-reserve-start,0px))] ${CANVAS_OVERLAY_GROUP} gap-1 text-meta`}
         >
           <button
             type="button"
@@ -2174,9 +2174,10 @@ export function NetworkCanvas({
       {legend.length > 1 && (
         // Under the breadcrumb when it is drawn, else at the top of the
         // canvas: placed from its presence, nothing moves in between.
+        // `--rail-reserve-start`: Synced Split's rail sits on this edge.
         <div
           data-part="legend" data-overlay
-          className={`absolute left-3 ${lodOn && crumb ? "top-13" : "top-3"} flex flex-col items-start gap-1.5 max-w-[16rem]`}
+          className={`absolute start-[calc(0.75rem+var(--rail-reserve-start,0px))] ${lodOn && crumb ? "top-13" : "top-3"} flex flex-col items-start gap-1.5 max-w-[16rem]`}
         >
           <button
             type="button"
@@ -2191,7 +2192,7 @@ export function NetworkCanvas({
             <Layers size={14} aria-hidden />
             {/* Some template is hidden. */}
             {hiddenTypes.size > 0 && (
-              <span aria-hidden className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-carbon" />
+              <span aria-hidden className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full bg-carbon" />
             )}
             {hiddenTypes.size > 0 && <span className="sr-only">, {hiddenTypes.size} hidden</span>}
           </button>
@@ -2242,7 +2243,7 @@ export function NetworkCanvas({
           role="group"
           aria-label="Matches"
           // `--rail-reserve`: the Library's Full width rail sits at this corner.
-          className={`absolute top-3 right-[calc(var(--rail-reserve,0px)+0.75rem)] ${CANVAS_OVERLAY_GROUP}`}
+          className={`absolute top-3 end-[calc(var(--rail-reserve,0px)+0.75rem)] ${CANVAS_OVERLAY_GROUP}`}
         >
           <button
             type="button"
@@ -2271,12 +2272,12 @@ export function NetworkCanvas({
       {chip && (
         <p
           data-part="isolated" data-overlay
-          className={`absolute left-3 bottom-3 w-fit px-2.5 flex items-center ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}
+          className={`absolute start-[calc(0.75rem+var(--rail-reserve-start,0px))] bottom-3 w-fit px-2.5 flex items-center ${CANVAS_OVERLAY} text-meta text-ink-tertiary`}
         >
           {chip}
         </p>
       )}
-      <div className="absolute bottom-3 right-3 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
+      <div className="absolute bottom-3 end-3 flex flex-wrap-reverse justify-end items-center gap-1.5 max-w-[calc(100%-1.5rem)]">
         {layoutSwitch && (
           <div
             data-part="layout" data-overlay
