@@ -109,6 +109,12 @@ Known gaps, kept on purpose:
   line up; FR/AR use the EN PDF. `DocumentRendition` reads the focused profile's `renditions`
   first (CEJIL's judgment text, Nepal's OCR) and falls back to the sample. The text's script sets
   the direction, not the reading language.
+- `DocumentViewer` renders pages on demand. Every page's size is read up front, so placeholders
+  have the exact height and jumps land on known offsets; only pages within 1.5 viewport heights
+  get a canvas and text layer, and up to 6 more stay cached. Browser find (Cmd+F) sees only
+  rendered pages; the app's search uses extracted text. The match counter and stepper count
+  from pdf.js text (`getTextContent` + `highlightRanges`), not from marks in the DOM. A jump
+  further than 3 viewport heights lands at once instead of scrolling smoothly.
 - `EntityProfile.documentProvenance` (issuer, source URL, licence basis, text note) prints under
   the Document tab's `DocMeta` (`DocProvenance`). Nepal's government PDFs use it to show the
   issuer and source and to mark the text "OCR, unreviewed".

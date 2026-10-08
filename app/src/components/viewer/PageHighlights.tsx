@@ -16,6 +16,9 @@ import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
 
 interface PageHighlightsProps {
   page: number;
+  /** The page's canvas has been drawn. Pages render on demand, so a jump can
+   *  land on a placeholder; highlights and the flash wait for the page. */
+  rendered: boolean;
 }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -54,7 +57,7 @@ function splitIntoLineRects(sel: TextSelection) {
   return rects;
 }
 
-export function PageHighlights({ page }: PageHighlightsProps) {
+export function PageHighlights({ page, rendered }: PageHighlightsProps) {
   const [references] = useAtom(scopedReferencesAtom);
   const [activeRefId] = useAtom(activeRefIdAtom);
   const setScrollToRef = useSetAtom(scrollToRefAtom);
@@ -85,15 +88,19 @@ export function PageHighlights({ page }: PageHighlightsProps) {
     if (scrollToHighlight && pageRefs.some((r) => r.id === scrollToHighlight)) {
       setFlashId(scrollToHighlight);
       setScrollToHighlight(null);
-      const timer = setTimeout(() => setFlashId(null), 1200);
-      return () => clearTimeout(timer);
     }
   }, [scrollToHighlight, pageRefs, setScrollToHighlight]);
+  // The flash runs its course from when the page is drawn, not from the jump.
+  useEffect(() => {
+    if (!flashId || !rendered) return;
+    const timer = setTimeout(() => setFlashId(null), 1200);
+    return () => clearTimeout(timer);
+  }, [flashId, rendered]);
 
   // Only show reference highlights that are active or flashing
   const visibleRefs = pageRefs.filter((r) => r.id === activeRefId || r.id === flashId);
 
-  if (visibleRefs.length === 0 && pageHighlights.length === 0) return null;
+  if (!rendered || (visibleRefs.length === 0 && pageHighlights.length === 0)) return null;
 
   const handleHighlightClick = (refId: string) => {
     setActiveDrawerTab("relationships");

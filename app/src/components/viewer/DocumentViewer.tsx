@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo, ReactNode } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import { X } from "lucide-react";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -11,7 +12,7 @@ import {
   activeRefIdAtom,
 } from "../../atoms/references";
 import { resultsCurrentPageAtom } from "../../atoms/library";
-import { highlightTerms } from "../../utils/queryTokens";
+import { highlightRanges, highlightTerms } from "../../utils/queryTokens";
 import { markSearchHits } from "../../utils/pdfTextHighlight";
 import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
@@ -51,11 +52,24 @@ const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
 const ZOOM_PHONE_DEFAULT = 2;
 const ZOOM_STEPS = [1, 1.25, 1.5, 2, 2.5, 3, 4];
+/** How far past the viewport pages are rendered, above and below: one and a
+ *  half viewport heights, one or two pages each side. */
+const RENDER_MARGIN = "150% 0px";
+/** Rendered pages kept after they leave that range, most recent first. */
+const PAGE_CACHE = 6;
+/** A jump further than this many viewport heights lands at once. A smooth
+ *  scroll across 80 pages would render pages it only passes. */
+const SMOOTH_JUMP_SCREENS = 3;
 
 export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride, hideActionBar = false }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
-  const [numPages, setNumPages] = useState<number>(0);
+  // Every page's size at scale 1, read from pdf.js without rendering. Empty
+  // until the document and its sizes have loaded.
+  const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
+  const pdfRef = useRef<PDFDocumentProxy | null>(null);
+  const [pageSizes, setPageSizes] = useState<{ w: number; h: number }[]>([]);
+  const numPages = pageSizes.length;
   const [currentPage, setCurrentPage] = useAtom(currentPageAtom);
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -241,12 +255,105 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     }
   };
 
-  const onDocumentLoadSuccess = useCallback(
-    ({ numPages }: { numPages: number }) => {
-      setNumPages(numPages);
-    },
-    []
-  );
+  // Pages are laid out before any of them renders: each gets a box of its exact
+  // size, so the scroll height, the scrollbar and every page's offset are right
+  // from the start, and a jump can land on a page nobody has rendered yet.
+  const onDocumentLoadSuccess = useCallback((pdf: PDFDocumentProxy) => {
+    pdfRef.current = pdf;
+    setPdfDoc(pdf);
+    Promise.all(
+      Array.from({ length: pdf.numPages }, (_, i) =>
+        pdf.getPage(i + 1).then((page) => {
+          const v = page.getViewport({ scale: 1 });
+          return { w: v.width, h: v.height };
+        }),
+      ),
+    )
+      .then((sizes) => {
+        if (pdfRef.current === pdf) setPageSizes(sizes);
+      })
+      .catch(() => {});
+  }, []);
+  // A new file starts empty: the old sizes would lay out the wrong pages.
+  useEffect(() => {
+    pdfRef.current = null;
+    setPdfDoc(null);
+    setPageSizes([]);
+  }, [filePath]);
+
+  // ── Pages render on demand ───────────────────────────────────────────────
+  // pdf.js draws a page's canvas and text layer in main-thread tasks of 100 ms
+  // and more, and a 235-page judgment drawn at once held about 900 MB of
+  // canvas. Only pages in or near the viewport mount a `Page`; the rest are
+  // placeholders of the same size. Pages that leave the range stay mounted for
+  // a while (`PAGE_CACHE`), so scrolling back a little does not redraw them.
+  const [mountedPages, setMountedPages] = useState<number[]>([]);
+  const mountedRef = useRef<number[]>([]);
+  // Pages whose canvas has been drawn. Until then the placeholder shows and
+  // reference highlights wait.
+  const [paintedPages, setPaintedPages] = useState<ReadonlySet<number>>(() => new Set());
+  const renditionRef = useRef(renditionMode);
+  renditionRef.current = renditionMode;
+  useEffect(() => {
+    mountedRef.current = [];
+    setMountedPages([]);
+    setPaintedPages(new Set());
+    const root = containerRef.current;
+    if (!root || pageSizes.length === 0) return;
+    const near = new Set<number>();
+    let timer = 0;
+    const commit = () => {
+      timer = 0;
+      // Behind a rendition the pane is `display:none` and every page reports
+      // out of range. Keep what is rendered so switching back shows it at once.
+      if (renditionRef.current || root.clientHeight === 0) return;
+      const prev = mountedRef.current;
+      const next = [
+        ...[...near].sort((a, b) => a - b),
+        ...prev.filter((p) => !near.has(p)).slice(0, PAGE_CACHE),
+      ];
+      if (next.length === prev.length && next.every((p, i) => p === prev[i])) return;
+      mountedRef.current = next;
+      setMountedPages(next);
+      const keep = new Set(next);
+      setPaintedPages((painted) => {
+        const kept = new Set([...painted].filter((p) => keep.has(p)));
+        return kept.size === painted.size ? painted : kept;
+      });
+    };
+    // The root is the scroller itself, as in `PdfPageThumb`: `rootMargin` only
+    // grows the root, so with the viewport as root the margin would do nothing.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const page = Number((e.target as HTMLElement).dataset.page);
+          if (e.isIntersecting) near.add(page);
+          else near.delete(page);
+        }
+        // At most one commit per 80 ms: a fast scroll passes pages that are in
+        // range for a frame or two, and starting their render is wasted work.
+        // The first one goes at once, so opening a document waits for nothing.
+        if (mountedRef.current.length === 0) commit();
+        else if (!timer) timer = window.setTimeout(commit, 80);
+      },
+      { root, rootMargin: RENDER_MARGIN },
+    );
+    pageRefs.current.forEach((el) => io.observe(el));
+    return () => {
+      io.disconnect();
+      clearTimeout(timer);
+    };
+  }, [pageSizes]);
+  const mountedSet = useMemo(() => new Set(mountedPages), [mountedPages]);
+  const markPainted = useCallback((page: number) => {
+    setPaintedPages((painted) => (painted.has(page) ? painted : new Set(painted).add(page)));
+  }, []);
+
+  /** Smooth for a short move; at once for a long one (see `SMOOTH_JUMP_SCREENS`). */
+  const jumpBehavior = useCallback((top: number): ScrollBehavior => {
+    const el = containerRef.current;
+    return el && Math.abs(top - el.scrollTop) > el.clientHeight * SMOOTH_JUMP_SCREENS ? "auto" : "smooth";
+  }, []);
 
   const handleTextSelect = useCallback(() => {
     const sel = window.getSelection();
@@ -333,78 +440,113 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   const scrollToPage = useCallback((page: number) => {
     const pageEl = pageRefs.current.get(page);
     if (pageEl) {
-      pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      pageEl.scrollIntoView({ behavior: jumpBehavior(pageEl.offsetTop), block: "start" });
     }
+  }, [jumpBehavior]);
+
+  // ── Search matches ───────────────────────────────────────────────────────
+  // The marks are innerHTML injected by `customTextRenderer`, so they exist only
+  // on rendered pages. The count and the stepper work from the document's text
+  // instead: read from pdf.js once per document, each text item run through the
+  // same `highlightRanges` that `markSearchHits` uses, item by item as react-pdf
+  // calls it. The k-th match counted on a page is the k-th mark its text layer
+  // draws.
+  const pageTexts = useRef<{ pdf: PDFDocumentProxy; texts: Promise<string[][]> } | null>(null);
+  const [pageHitCounts, setPageHitCounts] = useState<number[]>([]);
+  useEffect(() => {
+    if (!pdfDoc || searchTerms.length === 0) {
+      setPageHitCounts([]);
+      return;
+    }
+    if (pageTexts.current?.pdf !== pdfDoc) {
+      const pdf = pdfDoc;
+      pageTexts.current = {
+        pdf,
+        texts: Promise.all(
+          Array.from({ length: pdf.numPages }, (_, i) =>
+            pdf
+              .getPage(i + 1)
+              .then((page) => page.getTextContent())
+              .then((tc) => tc.items.map((item) => ("str" in item ? item.str : ""))),
+          ),
+        ),
+      };
+    }
+    let live = true;
+    pageTexts.current.texts
+      .then((pages) => {
+        if (!live) return;
+        setPageHitCounts(
+          pages.map((items) => items.reduce((n, str) => n + highlightRanges(str, searchTerms).length, 0)),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfDoc, termsKey]);
+  const hitCount = useMemo(() => pageHitCounts.reduce((n, c) => n + c, 0), [pageHitCounts]);
+
+  // The match the stepper stands on, as its page and its place among that
+  // page's marks. A position, not an element: the page may not be rendered yet,
+  // and its marks are replaced each time it renders again.
+  const [activeHit, setActiveHit] = useState<{ page: number; k: number } | null>(null);
+  const activeHitPos = useRef(activeHit);
+  activeHitPos.current = activeHit;
+  // The mark currently carrying `data-search-active`.
+  const activeHitRef = useRef<HTMLElement | null>(null);
+  // Set by a step; cleared once its mark has been scrolled to.
+  const hitScrollPending = useRef(false);
+  const hitIndex = useMemo(() => {
+    if (!activeHit) return -1;
+    let i = activeHit.k;
+    for (let p = 1; p < activeHit.page; p++) i += pageHitCounts[p - 1] ?? 0;
+    return i;
+  }, [activeHit, pageHitCounts]);
+
+  /** Put the emphasis on the active match's mark, and scroll to it if a step
+   *  is waiting. False when its page has not drawn its marks. */
+  const showActiveHit = useCallback(() => {
+    const hit = activeHitPos.current;
+    if (!hit) return false;
+    const el = pageRefs.current.get(hit.page)?.querySelectorAll<HTMLElement>(".pdf-search-hit")[hit.k];
+    if (!el) return false;
+    if (activeHitRef.current !== el) activeHitRef.current?.removeAttribute("data-search-active");
+    el.setAttribute("data-search-active", "");
+    activeHitRef.current = el;
+    if (hitScrollPending.current) {
+      hitScrollPending.current = false;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return true;
   }, []);
 
-  // Scroll-to-page signal (from ToC clicks, Search-tab / Results snippet jumps).
-  //
-  // Two things have to be true before this can work, and waiting for only the
-  // first is why the jump silently no-op'd: the page element must EXIST, and it
-  // must have been LAID OUT. A snippet jump swaps the drawer to this preview and
-  // fires while the PDF is still rendering — react-pdf mounts every page div
-  // immediately but they're zero-height until each canvas paints, so all of them
-  // sit at the same offset and `scrollIntoView(page 5)` lands at ~0. The pages
-  // then grow underneath the scroll position and nothing appears to have moved.
-  //
-  // So retry until the target has real height, then scroll. `pageRefs` is a ref,
-  // so this effect can't re-run on mount — the frame loop is what waits.
-  // ── Stepping between search matches ──────────────────────────────────────
-  // The marks are innerHTML injected by `customTextRenderer`, so React never
-  // owns those nodes — the stepper walks the DOM instead. `querySelectorAll`
-  // returns document order and pages are mounted in page order, so that list IS
-  // the match sequence, across pages, for free.
-  const activeHitRef = useRef<HTMLElement | null>(null);
-  const [hitCount, setHitCount] = useState(0);
-  const [hitIndex, setHitIndex] = useState(-1);
-  const recountRaf = useRef(0);
-
-  const collectHits = useCallback(
-    () =>
-      Array.from(
-        containerRef.current?.querySelectorAll<HTMLElement>(".pdf-search-hit") ?? [],
-      ),
-    [],
-  );
-
-  // Text layers paint page by page, so a loading document fires this once per
-  // page. Coalesce to one recount per frame — a setState per page would
-  // re-render the whole viewer dozens of times while it loads.
-  const scheduleRecount = useCallback(() => {
-    if (recountRaf.current) return;
-    recountRaf.current = requestAnimationFrame(() => {
-      recountRaf.current = 0;
-      const hits = collectHits();
-      setHitCount(hits.length);
-      // Track the active match by ELEMENT, not index: a page painting above it
-      // inserts hits before it and would silently shift a stored index.
-      const el = activeHitRef.current;
-      setHitIndex(el?.isConnected ? hits.indexOf(el) : -1);
-    });
-  }, [collectHits]);
-
-  useEffect(
-    () => () => {
-      // RESET the handle, don't just cancel it. StrictMode runs mount →
-      // cleanup → mount, so a cancelled-but-still-nonzero handle would make the
-      // coalescing guard above early-return forever and the counter would sit
-      // at 0 / 0 for the life of the viewer, marks on screen or not.
-      cancelAnimationFrame(recountRaf.current);
-      recountRaf.current = 0;
+  // A page's text layer has drawn (on first render and every render after):
+  // if the active match is on it, its new mark takes the emphasis.
+  const onTextLayer = useCallback(
+    (page: number) => {
+      if (activeHitPos.current?.page === page) showActiveHit();
     },
-    [],
+    [showActiveHit],
   );
 
-  // New terms ⇒ the text layers re-render and every mark is replaced. Drop the
-  // active one now rather than let the stepper chase a detached node; the
-  // `onRenderTextLayerSuccess` recounts that follow fill the count back in.
+  // New terms ⇒ the text layers re-render and every mark is replaced.
   useEffect(() => {
     activeHitRef.current?.removeAttribute("data-search-active");
     activeHitRef.current = null;
-    setHitIndex(-1);
-    scheduleRecount();
-  }, [termsKey, scheduleRecount]);
+    hitScrollPending.current = false;
+    setActiveHit(null);
+  }, [termsKey, pdfDoc]);
 
+  // Scroll-to-page signal (from ToC clicks, Search-tab / Results snippet jumps).
+  //
+  // Every page has its final height from the start, so the target's offset is
+  // known before it renders. What can still be missing is the page element: a
+  // snippet jump swaps the drawer to this preview and fires while the document
+  // and its sizes are still loading. So retry until the target exists and has
+  // its height, then scroll. `pageRefs` is a ref, so this effect can't re-run
+  // on mount — the frame loop is what waits.
   const [pageJump, setPageJump] = useAtom(scrollToPageAtom);
   useEffect(() => {
     if (!pageJump) return;
@@ -417,22 +559,20 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     const target = pageJump.page;
     let raf = 0;
     let attempts = 0;
-    const MAX_ATTEMPTS = 240; // ~4s at 60fps — covers PDF mount + canvas paint
-    const MIN_LAID_OUT = 40; // px: a rendered page, not a collapsed placeholder
+    const MAX_ATTEMPTS = 240; // ~4s at 60fps — covers document load + page sizes
+    const MIN_LAID_OUT = 40; // px: a laid-out page, not a collapsed one
     const tryScroll = () => {
       const cached = pageRefs.current.get(target);
       // `isConnected` rejects a node left over from a previously-rendered
-      // document; `offsetHeight` rejects one that's mounted but not yet painted.
+      // document; `offsetHeight` rejects one that's mounted but not laid out.
       const pageEl = cached?.isConnected ? cached : undefined;
       if (pageEl && pageEl.offsetHeight > MIN_LAID_OUT) {
         // A match step aims at the MARK, not the top of its page — a hit near
-        // the bottom would otherwise land off-screen and look like a miss. Same
-        // signal, finer target: one scroll, so nothing fights it.
-        const hit = activeHitRef.current;
-        if (hit?.isConnected && pageEl.contains(hit)) {
-          hit.scrollIntoView({ behavior: "smooth", block: "center" });
-        } else {
-          pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        // the bottom would otherwise land off-screen and look like a miss. If
+        // the page has not drawn its marks yet, it scrolls to the page and the
+        // text layer's callback (`onTextLayer`) finishes on the mark.
+        if (!(hitScrollPending.current && activeHitPos.current?.page === target && showActiveHit())) {
+          pageEl.scrollIntoView({ behavior: jumpBehavior(pageEl.offsetTop), block: "start" });
         }
         setCurrentPage(target); // pager reflects the jump immediately
         setPageJump(null); // serviced — now it's safe to consume
@@ -449,44 +589,37 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
-  }, [pageJump, setPageJump, renditionMode, setCurrentPage]);
+  }, [pageJump, setPageJump, renditionMode, setCurrentPage, showActiveHit, jumpBehavior]);
 
   /** Move to the next (`1`) / previous (`-1`) match, wrapping at the ends. */
   const stepMatch = useCallback(
     (delta: 1 | -1) => {
-      const hits = collectHits();
-      if (hits.length === 0) return;
-      const prev = activeHitRef.current;
-      const from = prev?.isConnected ? hits.indexOf(prev) : -1;
+      if (hitCount === 0) return;
       // First step from nowhere enters at the top going forward, at the bottom
       // going back; after that it wraps.
       const next =
-        from < 0
+        hitIndex < 0
           ? delta > 0
             ? 0
-            : hits.length - 1
-          : (from + delta + hits.length) % hits.length;
+            : hitCount - 1
+          : (hitIndex + delta + hitCount) % hitCount;
+      let page = 1;
+      let k = next;
+      while (k >= (pageHitCounts[page - 1] ?? 0)) k -= pageHitCounts[page++ - 1] ?? 0;
+      const hit = { page, k };
+      setActiveHit(hit);
+      activeHitPos.current = hit;
+      hitScrollPending.current = true;
 
       // Emphasis moves with the step. Page-level `data-search-active` (set from
       // a Results jump) lights every hit on a page; the same attribute ON the
-      // mark singles out the one you're standing on — see index.css.
-      prev?.removeAttribute("data-search-active");
-      const el = hits[next];
-      el.setAttribute("data-search-active", "");
-      activeHitRef.current = el;
-      setHitCount(hits.length);
-      setHitIndex(next);
-
-      // Hand the scroll to the page-jump signal instead of scrolling here: it
-      // already waits out a page that hasn't painted and holds while a
-      // rendition hides the pane, and its NONCE is what makes stepping between
-      // two hits on the same page fire at all (a bare page number wouldn't
-      // change the atom). The effect above scrolls to the mark itself.
-      const pageEl = el.closest<HTMLElement>("[data-page-number]");
-      const page = Number(pageEl?.getAttribute("data-page-number"));
-      if (Number.isFinite(page) && page > 0) setPageJump(page);
+      // mark singles out the one you're standing on — see index.css. The scroll
+      // goes through the page-jump signal: it waits out a document still
+      // loading, and its NONCE is what makes stepping between two hits on the
+      // same page fire at all (a bare page number wouldn't change the atom).
+      setPageJump(page);
     },
-    [collectHits, setPageJump],
+    [hitCount, hitIndex, pageHitCounts, setPageJump],
   );
 
   // Find-next / find-previous keys (⌘G · Ctrl G · F3, shifted to go back).
@@ -521,11 +654,12 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
         const highlightY =
           pageEl.offsetTop + pageEl.offsetHeight * ref.sourceSelection.top;
         const centered = highlightY - container.clientHeight / 2;
-        container.scrollTo({ top: Math.max(0, centered), behavior: "smooth" });
+        const top = Math.max(0, centered);
+        container.scrollTo({ top, behavior: jumpBehavior(top) });
       }
     }
     setScrollToHighlight(null);
-  }, [scrollTarget, references, setScrollToHighlight]);
+  }, [scrollTarget, references, setScrollToHighlight, jumpBehavior]);
 
   return (
     // `bleed-flush`: the viewer runs to the pane edge wherever it is hosted, so
@@ -598,40 +732,52 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             </div>
           }
         >
-          {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
-            <div
-              key={pageNum}
-              ref={(el) => {
-                // DELETE on unmount, don't just set on mount. Without this the
-                // map keeps detached nodes from the previously-rendered document
-                // (the drawer preview swaps documents in place), so a page-jump
-                // looked up page N, got a stale node that is no longer in the
-                // DOM, and "scrolled" it — a silent no-op. That was the jump bug.
-                if (el) pageRefs.current.set(pageNum, el);
-                else pageRefs.current.delete(pageNum);
-              }}
-              data-part="page"
-              // `scroll-mt-8`: a jump lands with the gap above the page in
-              // view, where a page-level reference's name is drawn.
-              className="relative mb-4 scroll-mt-8"
-              data-search-active={activeJumpPage === pageNum ? "" : undefined}
-              style={{
-                boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <Page
-                pageNumber={pageNum}
-                width={pageWidth}
-                renderTextLayer={true}
-                customTextRenderer={customTextRenderer}
-                // The marks only exist once this layer paints, so this is when
-                // the stepper's match list can change.
-                onRenderTextLayerSuccess={scheduleRecount}
-                renderAnnotationLayer={true}
-              />
-              <PageHighlights page={pageNum} />
-            </div>
-          ))}
+          {numPages === 0 && docLoading}
+          {pageSizes.map(({ w, h }, i) => {
+            const pageNum = i + 1;
+            const mounted = mountedSet.has(pageNum);
+            const painted = mounted && paintedPages.has(pageNum);
+            return (
+              <div
+                key={pageNum}
+                ref={(el) => {
+                  // DELETE on unmount, don't just set on mount. Without this the
+                  // map keeps detached nodes from the previously-rendered document
+                  // (the drawer preview swaps documents in place), so a page-jump
+                  // looked up page N, got a stale node that is no longer in the
+                  // DOM, and "scrolled" it — a silent no-op. That was the jump bug.
+                  if (el) pageRefs.current.set(pageNum, el);
+                  else pageRefs.current.delete(pageNum);
+                }}
+                data-part="page"
+                data-page={pageNum}
+                data-state={painted ? "rendered" : mounted ? "loading" : "placeholder"}
+                // `scroll-mt-8`: a jump lands with the gap above the page in
+                // view, where a page-level reference's name is drawn.
+                className="relative mb-4 scroll-mt-8"
+                data-search-active={activeJumpPage === pageNum ? "" : undefined}
+                style={{
+                  // react-pdf floors the canvas to whole pixels; so does the box,
+                  // so nothing moves when the page renders into it.
+                  width: pageWidth,
+                  height: Math.floor((pageWidth * h) / w),
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
+                }}
+              >
+                {!painted && <PagePlaceholder page={pageNum} loading={mounted} />}
+                {mounted && (
+                  <ViewerPage
+                    pageNumber={pageNum}
+                    width={pageWidth}
+                    customTextRenderer={customTextRenderer}
+                    onPainted={markPainted}
+                    onTextLayer={onTextLayer}
+                  />
+                )}
+                <PageHighlights page={pageNum} rendered={painted} />
+              </div>
+            );
+          })}
         </Document>
         )}
         </div>
@@ -686,5 +832,58 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
         />
       )}
     </div>
+  );
+}
+
+/** A page that is not rendered: its number on a blank sheet of the page's size.
+ *  `loading` while its `Page` is mounted and drawing. */
+function PagePlaceholder({ page, loading }: { page: number; loading: boolean }) {
+  return (
+    <div
+      data-part="page-placeholder"
+      data-state={loading ? "loading" : undefined}
+      aria-hidden
+      className="absolute inset-0 grid place-items-center bg-paper"
+    >
+      <span className={`text-xs tabular-nums text-ink-tertiary ${loading ? "motion-safe:animate-pulse" : ""}`}>
+        {page}
+      </span>
+    </div>
+  );
+}
+
+/** One rendered page. Its callbacks are bound to the page number here because
+ *  react-pdf redraws the text layer whenever `onRenderTextLayerSuccess`
+ *  changes identity; an inline arrow at the call site would redraw every
+ *  mounted page on each render of the viewer. */
+function ViewerPage({
+  pageNumber,
+  width,
+  customTextRenderer,
+  onPainted,
+  onTextLayer,
+}: {
+  pageNumber: number;
+  width: number;
+  customTextRenderer?: (item: { str: string }) => string;
+  onPainted: (page: number) => void;
+  onTextLayer: (page: number) => void;
+}) {
+  const painted = useCallback(() => onPainted(pageNumber), [onPainted, pageNumber]);
+  const textLayer = useCallback(() => onTextLayer(pageNumber), [onTextLayer, pageNumber]);
+  return (
+    <Page
+      pageNumber={pageNumber}
+      width={width}
+      // The placeholder under the page is the loading state.
+      loading={null}
+      renderTextLayer={true}
+      customTextRenderer={customTextRenderer}
+      onRenderSuccess={painted}
+      // The marks only exist once this layer paints, so this is when the
+      // active match's mark can take its emphasis.
+      onRenderTextLayerSuccess={textLayer}
+      renderAnnotationLayer={true}
+    />
   );
 }
