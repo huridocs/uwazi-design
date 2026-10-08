@@ -117,6 +117,14 @@ function linksOf(source: DataSource, sampleRefs: Reference[]): RawLink[] {
   }
 }
 
+/** References per target record: how often each record is cited. The graph
+ *  keeps unordered pairs, so this reads the stored links. */
+export function citedCounts(source: DataSource, sampleRefs: Reference[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const l of linksOf(source, sampleRefs)) if (l.from !== l.to) out.set(l.to, (out.get(l.to) ?? 0) + 1);
+  return out;
+}
+
 const cache = new WeakMap<Entity[], { refs: Reference[]; graph: NetworkGraph }>();
 
 /** The collection's graph, built once per entity list (and, for the Sample,

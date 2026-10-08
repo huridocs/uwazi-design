@@ -626,7 +626,12 @@ const viewModeStateAtom = atom(
     if (chosen === "evidence" && !get(libraryHasClaimEvidenceAtom)) return fallback;
     if (chosen === "sync" && !get(libraryHasSyncAtom)) return fallback;
     if (chosen === "overview" && !offered) return fallback;
-    return chosen ?? (offered ? "overview" : fallback);
+    // Settings › Collection › Overview: the Library opens on the Overview, or
+    // on the default view ("library"; "page" sends visitors to the custom
+    // landing page, which the prototype does not render, so the Library is
+    // what is left).
+    const landsOnOverview = get(collectionSettings.valueAtom).overview.landing === "overview";
+    return chosen ?? (offered && landsOnOverview ? "overview" : fallback);
   },
   (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
 );
@@ -1234,7 +1239,7 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   // no claim evidence. Before it loads it cannot say, so it is dropped then too.
   if (get(viewModeChosenAtom) === "evidence" && !get(libraryHasClaimEvidenceAtom)) set(viewModeChosenAtom, null);
   if (get(viewModeChosenAtom) === "sync" && !get(libraryHasSyncAtom)) set(viewModeChosenAtom, null);
-  // Where it is offered, a collection opens on its Overview.
+  // Where it is offered, a collection opens on its Overview (or its landing view).
   if (get(libraryOverviewOfferedAtom)) set(viewModeChosenAtom, null);
   set(libraryOverviewOriginAtom, false);
   set(networkCentreCommunityAtom, null);

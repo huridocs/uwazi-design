@@ -72,6 +72,122 @@ export interface CollectionFields {
   mapLayers: MapLayer[];
   /** `mapStartingPoint`; null = none stored */
   mapStartingPoint: MapPoint | null;
+  /** What the Library's Overview shows. The prototype's own. */
+  overview: OverviewConfig;
+}
+
+/* ── Overview ───────────────────────────────────────────────────────────── */
+
+export type OverviewSectionId = "contents" | "when" | "where" | "connections" | "values" | "content" | "featured" | "sync";
+export type OverviewActionId = "browse" | "search" | "map" | "network" | "timeline" | "savedView" | "sync";
+export type OverviewLanding = "overview" | "library" | "page";
+export type OverviewHeroVisual = "auto" | "map" | "timeline" | "network" | "none";
+export type OverviewFeaturedMode = "connected" | "recent" | "cited" | "manual";
+
+export const OVERVIEW_SECTIONS: OverviewSectionId[] = ["contents", "content", "when", "where", "connections", "sync", "values", "featured"];
+export const OVERVIEW_ACTIONS: OverviewActionId[] = ["browse", "search", "map", "network", "timeline", "savedView", "sync"];
+export const OVERVIEW_MAX_ACTIONS = 3;
+export const OVERVIEW_MAX_FEATURED = 6;
+
+export interface OverviewConfig {
+  /** Where the Library opens: the Overview, the default view, or the custom
+   *  landing page (`landing`, Uwazi's `home_page`). */
+  landing: OverviewLanding;
+  /** "" = the generated facts sentence. */
+  intro: string;
+  /** "auto" picks from the data: Sync, the map from 20% located, else the lanes. */
+  heroVisual: OverviewHeroVisual;
+  /** Order = display order. A section with no data hides itself when on. */
+  sections: { id: OverviewSectionId; on: boolean }[];
+  /** Facet keys or property names; [] = the first two or three that apply. */
+  valueFacets: string[];
+  /** `ids`: manual picks, at most six, in order. */
+  featured: { mode: OverviewFeaturedMode; ids: string[] };
+  /** At most three, in order; one that does not apply to the collection is left out. */
+  actions: OverviewActionId[];
+  /** The saved view the `savedView` action opens. */
+  savedViewId: string;
+}
+
+/** What reproduces the Overview as it was before it could be configured. The
+ *  third action was picked from the data: Sync for Las Vegas, else the network. */
+export function defaultOverviewConfig(corpus: Corpus): OverviewConfig {
+  return {
+    landing: "overview",
+    intro: "",
+    heroVisual: "auto",
+    sections: OVERVIEW_SECTIONS.map((id) => ({ id, on: true })),
+    valueFacets: [],
+    featured: { mode: "connected", ids: [] },
+    actions: ["browse", "search", corpus === "vegas" ? "sync" : corpus === "artworks" ? "map" : "network"],
+    savedViewId: "",
+  };
+}
+
+const oneOf = <T extends string>(list: readonly T[]) => (v: unknown): v is T => typeof v === "string" && (list as readonly string[]).includes(v);
+const isStringList = (v: unknown): v is string[] => Array.isArray(v) && v.every(isString);
+
+/** A stored Overview value, whole and well-formed; anything else reads the defaults. */
+function isOverviewConfig(v: unknown): v is OverviewConfig {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return false;
+  const o = v as Record<string, unknown>;
+  const featured = o.featured as Record<string, unknown> | undefined;
+  return (
+    oneOf<OverviewLanding>(["overview", "library", "page"])(o.landing) &&
+    isString(o.intro) &&
+    oneOf<OverviewHeroVisual>(["auto", "map", "timeline", "network", "none"])(o.heroVisual) &&
+    Array.isArray(o.sections) &&
+    o.sections.every((s) => !!s && typeof s === "object" && oneOf(OVERVIEW_SECTIONS)((s as { id: unknown }).id) && typeof (s as { on: unknown }).on === "boolean") &&
+    isStringList(o.valueFacets) &&
+    !!featured && typeof featured === "object" &&
+    oneOf<OverviewFeaturedMode>(["connected", "recent", "cited", "manual"])(featured.mode) &&
+    isStringList(featured.ids) && featured.ids.length <= OVERVIEW_MAX_FEATURED &&
+    Array.isArray(o.actions) && o.actions.length <= OVERVIEW_MAX_ACTIONS && o.actions.every(oneOf(OVERVIEW_ACTIONS)) &&
+    isString(o.savedViewId)
+  );
+}
+
+/** The sections in display order, every known one present: a stored list
+ *  from before a section existed gets it at its default place, switched on. */
+export function overviewSections(config: OverviewConfig): { id: OverviewSectionId; on: boolean }[] {
+  const seen = new Set<OverviewSectionId>();
+  const out: { id: OverviewSectionId; on: boolean }[] = [];
+  for (const s of config.sections) if (!seen.has(s.id)) (seen.add(s.id), out.push(s));
+  OVERVIEW_SECTIONS.forEach((id, i) => {
+    if (seen.has(id)) return;
+    const after = OVERVIEW_SECTIONS.slice(0, i).reverse().find((p) => seen.has(p));
+    out.splice(after ? out.findIndex((s) => s.id === after) + 1 : 0, 0, { id, on: true });
+    seen.add(id);
+  });
+  return out;
+}
+
+const OVERVIEW_LABEL: Record<keyof OverviewConfig, string> = {
+  landing: "Overview landing",
+  intro: "Overview introduction",
+  heroVisual: "Overview hero visual",
+  sections: "Overview sections",
+  valueFacets: "Overview values",
+  featured: "Overview featured records",
+  actions: "Overview actions",
+  savedViewId: "Overview saved view",
+};
+
+const showOverview = (k: keyof OverviewConfig, v: OverviewConfig[keyof OverviewConfig]): string => {
+  if (k === "sections") return (v as OverviewConfig["sections"]).filter((s) => s.on).map((s) => s.id).join(", ") || "(none)";
+  if (k === "featured") {
+    const f = v as OverviewConfig["featured"];
+    return f.mode === "manual" ? `manual: ${f.ids.join(", ") || "(none)"}` : f.mode;
+  }
+  if (Array.isArray(v)) return v.join(", ") || "(empty)";
+  return v === "" ? "(empty)" : String(v);
+};
+
+/** One Activity log change per Overview field that differs. */
+export function overviewChanges(before: OverviewConfig, after: OverviewConfig): { field: string; before: string; after: string }[] {
+  return (Object.keys(OVERVIEW_LABEL) as (keyof OverviewConfig)[])
+    .filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]))
+    .map((k) => ({ field: OVERVIEW_LABEL[k], before: showOverview(k, before[k]), after: showOverview(k, after[k]) }));
 }
 
 /** Each corpus's own description, for the Library's Overview. */
@@ -122,6 +238,7 @@ export const collectionSettings = createSettingsSingleton<CollectionSettings>({
     // What a fresh Uwazi install stores.
     mapLayers: ["Streets", "Hybrid", "Satellite"],
     mapStartingPoint: null,
+    overview: defaultOverviewConfig(corpus),
   }),
   isField: {
     defaultView: (v) => DEFAULT_VIEWS.includes(v as DefaultLibraryView),
@@ -132,6 +249,7 @@ export const collectionSettings = createSettingsSingleton<CollectionSettings>({
     mapStartingPoint: (v) =>
       v === null ||
       (!!v && typeof v === "object" && Number.isFinite((v as MapPoint).lat) && Number.isFinite((v as MapPoint).lon)),
+    overview: isOverviewConfig,
   },
 });
 

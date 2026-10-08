@@ -14,6 +14,7 @@ import {
   collectionSettings,
   DEFAULT_VIEWS,
   MAP_LAYERS,
+  overviewChanges,
   type CollectionSettings,
   type CollectionFields,
   type DefaultLibraryView,
@@ -319,10 +320,10 @@ export function CollectionPage() {
       mapApiKey: trimmed(rest.mapApiKey),
       mapStartingPoint: lat.trim() !== "" && lon.trim() !== "" ? { lat: Number(lat), lon: Number(lon) } : null,
     };
-    const changes = changesBetween(stored, value);
+    const changes = [...changesBetween(stored, value), ...overviewChanges(stored.overview, value.overview)];
     saveCollection({ value });
     markSaved(toForm(value));
-    if (value.defaultView !== stored.defaultView) resetLibraryView();
+    if (value.defaultView !== stored.defaultView || value.overview.landing !== stored.overview.landing) resetLibraryView();
     record({
       method: "UPDATE",
       domain: "collection",

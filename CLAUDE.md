@@ -428,6 +428,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   full span in its tooltip. Sections the
   collection has nothing for are left out; the header and the first two rows keep fixed
   heights while a corpus loads. The description is Settings › Collection's `description`.
+  What it shows is Settings › Collection's `overview` (`OverviewConfig`, `atoms/settingsSingletons.ts`):
+  landing, intro, hero visual, section order and on/off, value facets, featured mode, actions;
+  `defaultOverviewConfig(corpus)` draws it as it was before it could be configured.
 - Sync view (`libraryViewModeAtom = "sync"`, `components/library/LibrarySyncView.tsx`): every
   recording as a lane on one wall clock, offered only where `libraryHasSyncAtom` holds (Las Vegas).
   Model in `data/vegas/syncLanes.ts`, built once from the corpus. A lane runs from `clock_start`

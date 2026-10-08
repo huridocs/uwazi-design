@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { dataSourceAtom, libraryEntitiesAtom } from "./dataSource";
 import { referencesAtom } from "./references";
-import { buildNetworkGraph, NETWORK_TYPES_OFF } from "../data/network/graph";
+import { buildNetworkGraph, citedCounts, NETWORK_TYPES_OFF } from "../data/network/graph";
 import type { Reference } from "../data/references";
 import type { Entity } from "../data/entities";
 import type { DataSource } from "./dataSource";
@@ -26,6 +26,13 @@ export const networkGraphAtom = atom((get) => {
     lastGraph = { source, entities, refs, graph: buildNetworkGraph(source, entities, refs) };
   }
   return lastGraph.graph;
+});
+/** References per target record, for the Overview's "Most cited" records.
+ *  Recomputed with the graph's inputs. */
+export const networkCitedAtom = atom((get) => {
+  const source = get(dataSourceAtom);
+  get(libraryEntitiesAtom);
+  return citedCounts(source, source === "mock" ? get(referencesAtom) : NO_REFS);
 });
 let lastGraph: {
   source: DataSource;
