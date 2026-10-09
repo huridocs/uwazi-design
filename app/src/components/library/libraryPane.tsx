@@ -111,20 +111,28 @@ export function useSplitFooter(): SplitFooterValue | null {
 
 /* Synced Split's shared chrome. While Sync filters is on, the two panes hold
    one filter set, so Split draws one time strip under both panes and one rail
-   centred over the divider instead of one of each per pane. The panes still
-   own what they portal there (the left pane the rail and its panels, either
-   pane its own preview, selection list or map cluster), so each body reads its
-   own pane's store. One panel shows at a time: the pane that opens one claims
-   the centred spot, and the other pane closes its own. */
+   centred over the divider instead of one of each per pane. The left pane
+   portals the rail and its panels there, so their bodies read its store. A
+   pane's preview, selection list or map cluster stays in that pane, at its end.
+   One panel shows at a time across the three slots: the one that opens claims
+   it, and the others close theirs. */
+export type SplitPanelSlot = "rail" | LibraryPaneSide;
+
 export interface SplitSharedValue {
-  /** The positioned layer over both panes the rail and panels portal into. */
+  /** The positioned layer over both panes the rail and its panels portal into. */
   railLayer: HTMLElement | null;
   /** The strip's slot under both panes. */
   brushSlot: HTMLElement | null;
-  /** The pane whose panel holds the centred spot, if any. */
-  panelOwner: LibraryPaneSide | null;
-  claimPanel: (side: LibraryPaneSide) => void;
-  releasePanel: (side: LibraryPaneSide) => void;
+  /** The slot whose panel is open, if any. */
+  panelOwner: SplitPanelSlot | null;
+  claimPanel: (slot: SplitPanelSlot) => void;
+  releasePanel: (slot: SplitPanelSlot) => void;
+  /** Each slot's close, through its dirty guard, for the next one to call
+   *  before it opens. */
+  registerPanelClose: (slot: SplitPanelSlot, close: ((next: () => void) => void) | null) => void;
+  /** Close whichever other slot holds a panel, then run `next`. A dirty edit
+   *  may stop the close, and then `next` does not run. */
+  handOverPanel: (slot: SplitPanelSlot, next: () => void) => void;
   /** Which panes would draw a time strip; the left pane's draws the shared one,
    *  else the right pane's. */
   brushWanted: Record<LibraryPaneSide, boolean>;

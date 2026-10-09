@@ -474,12 +474,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     view, as on phones. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input, so
     both panes share one array and one graph.
   - Sync filters on: one time strip under both panes and one rail centred on the divider
-    (`SplitSharedValue` in `libraryPane.tsx`). The panes portal into Split's layer and strip
-    slot, so each body keeps its own store: the left pane draws the rail and its items, either
-    pane's preview, selection or cluster opens in the same centred spot, under the rail. The
-    pane that opens a panel claims the spot and the other closes its own. The strip is the left
-    pane's when it wants one, else the right's. The layer is its own `data-trap-scope`;
-    portalled parts carry `data-library-pane-owner` for `paneHoldsEvent`. The panes clear their
+    (`SplitSharedValue` in `libraryPane.tsx`). The left pane portals the rail and its panels
+    (Filters, Results, Notebook, Views and history) into Split's layer, centred under the rail,
+    so their bodies read its store. A pane's preview, selection list or map cluster opens in
+    that pane, at its end, as in unsynced Split. One panel at a time across the three slots
+    (`rail`, `left`, `right`): the slot that opens claims it and the others close theirs; a rail
+    item first asks the open slot to close (`handOverPanel`), so a dirty edit is guarded before
+    it opens. The strip is the left pane's when it wants one, else the right's. The layer is its
+    own `data-trap-scope`; the portalled rail carries `data-library-pane-owner` for
+    `paneHoldsEvent`. The panes clear their
     facing edges by `SPLIT_RAIL_RESERVE` (`--rail-reserve-start` for the right pane's
     canvases). An open panel covers the divider's middle; it stays draggable above and below
     the panel and by keyboard.

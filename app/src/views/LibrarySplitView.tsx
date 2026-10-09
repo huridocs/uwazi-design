@@ -16,6 +16,7 @@ import {
   type LibraryPaneSide,
   type MastheadFoldValue,
   type SplitFooterValue,
+  type SplitPanelSlot,
   type SplitSharedValue,
 } from "../components/library/libraryPane";
 import { SelectionOrderHost, type SelectionOrderHolder } from "../components/library/EntitySelectBox";
@@ -150,15 +151,29 @@ export function LibrarySplitView() {
 
   /* Synced: one time strip under both panes and one rail over the divider
      (`SplitSharedValue`). The panes portal into the layer and the slot below;
-     this view owns where they are and which pane's panel shows. */
+     this view owns where they are and which slot's panel shows: the rail's,
+     or one pane's preview, selection list or cluster. */
   const [railLayer, setRailLayer] = useState<HTMLDivElement | null>(null);
   const [brushSlot, setBrushSlot] = useState<HTMLDivElement | null>(null);
-  const [panelOwner, setPanelOwner] = useState<LibraryPaneSide | null>(null);
-  const claimPanel = useCallback((side: LibraryPaneSide) => setPanelOwner(side), []);
+  const [panelOwner, setPanelOwner] = useState<SplitPanelSlot | null>(null);
+  const ownerRef = useRef<SplitPanelSlot | null>(null);
+  ownerRef.current = panelOwner;
+  const claimPanel = useCallback((slot: SplitPanelSlot) => setPanelOwner(slot), []);
   const releasePanel = useCallback(
-    (side: LibraryPaneSide) => setPanelOwner((o) => (o === side ? null : o)),
+    (slot: SplitPanelSlot) => setPanelOwner((o) => (o === slot ? null : o)),
     [],
   );
+  const panelClosers = useRef(new Map<SplitPanelSlot, (next: () => void) => void>());
+  const registerPanelClose = useCallback((slot: SplitPanelSlot, close: ((next: () => void) => void) | null) => {
+    if (close) panelClosers.current.set(slot, close);
+    else panelClosers.current.delete(slot);
+  }, []);
+  const handOverPanel = useCallback((slot: SplitPanelSlot, next: () => void) => {
+    const owner = ownerRef.current;
+    const close = owner && owner !== slot ? panelClosers.current.get(owner) : undefined;
+    if (close) close(next);
+    else next();
+  }, []);
   const [brushWanted, setBrushWanted] = useState<Record<LibraryPaneSide, boolean>>({ left: false, right: false });
   const reportBrush = useCallback(
     (side: LibraryPaneSide, wanted: boolean) =>
@@ -168,9 +183,9 @@ export function LibrarySplitView() {
   const shared = useMemo<SplitSharedValue | null>(
     () =>
       sync
-        ? { railLayer, brushSlot, panelOwner, claimPanel, releasePanel, brushWanted, reportBrush }
+        ? { railLayer, brushSlot, panelOwner, claimPanel, releasePanel, registerPanelClose, handOverPanel, brushWanted, reportBrush }
         : null,
-    [sync, railLayer, brushSlot, panelOwner, claimPanel, releasePanel, brushWanted, reportBrush],
+    [sync, railLayer, brushSlot, panelOwner, claimPanel, releasePanel, registerPanelClose, handOverPanel, brushWanted, reportBrush],
   );
   /* The layer starts where the panes' lanes start, under the mastheads (the
      fold gives both the same height), so the rail sits where each pane's did. */

@@ -5,7 +5,7 @@ import { libraryRailInsetAtom, libraryRailPanelAtom, NO_RAIL_INSET, type Library
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { DrawerWidthProvider } from "../../hooks/useDrawerWidth";
-import type { LibraryPaneSide } from "./libraryPane";
+import type { LibraryPaneSide, SplitPanelSlot } from "./libraryPane";
 
 /* Full width layout (`libraryLayoutAtom = "full"`): the Library's main pane
    takes the whole width, and what the drawer held moves to two places over the
@@ -63,13 +63,20 @@ export interface RailPane {
   close: (next: () => void) => void;
 }
 
-/** Synced Split: what a pane's rail needs to share the one centred spot. */
+/** Synced Split: what an instance needs to keep one panel open across both
+ *  panes. `slot` "rail" is the shared rail over the divider (the left pane's
+ *  items, centred); a pane's slot is its own preview, selection list or
+ *  cluster, at that pane's end as in unsynced Split. */
 export interface RailShare {
+  slot: SplitPanelSlot;
+  /** The pane that renders this instance. */
   side: LibraryPaneSide;
-  /** The pane whose panel holds the spot. */
-  owner: LibraryPaneSide | null;
-  claim: (side: LibraryPaneSide) => void;
-  release: (side: LibraryPaneSide) => void;
+  /** The slot whose panel is open. */
+  owner: SplitPanelSlot | null;
+  claim: (slot: SplitPanelSlot) => void;
+  release: (slot: SplitPanelSlot) => void;
+  register: (slot: SplitPanelSlot, close: ((next: () => void) => void) | null) => void;
+  handOver: (slot: SplitPanelSlot, next: () => void) => void;
 }
 
 /** Synced Split's rail sits over the divider, so the panes keep this much of
@@ -98,10 +105,11 @@ export function LibraryFullWidthLayer({ children }: { children: ReactNode }) {
  *  width it covers is published (`libraryRailInsetAtom`) for Map and Network
  *  to fit and centre beside it.
  *
- *  `share` (synced Split): the rail and panel portal into Split's layer over
- *  both panes and centre on the divider (`--split-at`), the panel under the
- *  rail. Only the left pane passes items; the right pane draws its panel only.
- *  The pane that opens a panel claims the spot and the other closes its own. */
+ *  `share` (synced Split): the "rail" slot portals into Split's layer over
+ *  both panes and centres on the divider (`--split-at`), the panel under the
+ *  rail; it takes items and no pane. A pane's slot takes no items and draws
+ *  its pane's panel in place. The slot that opens a panel claims it and the
+ *  others close theirs. */
 export function LibraryRail({
   items,
   pane,
@@ -115,6 +123,7 @@ export function LibraryRail({
 }) {
   const [open, setOpen] = useAtom(libraryRailPanelAtom);
   const ids = useId();
+  const hasToolbar = items.length > 0;
   const railItem = items.find((i) => i.id === open && !i.disabledReason) ?? null;
   // The Library's own panel wins; the host closes a rail panel when one opens.
   // Memoised: a fresh object on each of this component's renders re-ran the
@@ -148,38 +157,49 @@ export function LibraryRail({
     return () => window.clearTimeout(t);
   }, [current]);
   // A panel whose item went disabled (Adv. Search took the main pane) closes.
+  // A synced pane's slot has no items and leaves the rail's panel alone.
   useEffect(() => {
-    if (open && !railItem) setOpen(null);
-  }, [open, railItem, setOpen]);
+    if (hasToolbar && open && !railItem) setOpen(null);
+  }, [hasToolbar, open, railItem, setOpen]);
 
   const opened = current !== null;
-  /* Synced Split: claim the centred spot on opening a panel (or another in its
-     place), give it up on closing. When the other pane claims it, close this
-     pane's panel the way its own controls would; a dirty edit may keep it,
-     and then it stays open but hidden until it closes. */
-  const side = share?.side;
+  /* Synced Split: claim the slot on opening a panel (or another in its place),
+     give it up on closing. When another slot claims, close this one's panel
+     the way its own controls would; a dirty edit may keep it, and then it
+     stays open but hidden until it closes. A rail item asks the open slot to
+     close first (`handOver`), so its dirty guard runs before the item opens. */
+  const slot = share?.slot;
   const claim = share?.claim;
   const release = share?.release;
+  const register = share?.register;
   const owner = share?.owner ?? null;
   const currentId = current?.id;
   useEffect(() => {
-    if (!side || !claim || !release) return;
-    if (currentId) claim(side);
-    else release(side);
-  }, [currentId, side, claim, release]);
+    if (!slot || !claim || !release) return;
+    if (currentId) claim(slot);
+    else release(slot);
+  }, [currentId, slot, claim, release]);
   useEffect(() => () => {
-    if (side && release) release(side);
-  }, [side, release]);
-  const yieldRef = useRef<() => void>(() => {});
-  yieldRef.current = () => {
-    if (!opened) return;
-    if (pane) pane.close(() => {});
-    else setOpen(null);
+    if (slot && release) release(slot);
+  }, [slot, release]);
+  const closeRef = useRef<(next: () => void) => void>((next) => next());
+  closeRef.current = (next) => {
+    if (!opened) next();
+    else if (pane) pane.close(next);
+    else {
+      setOpen(null);
+      next();
+    }
   };
   useEffect(() => {
-    if (side && owner && owner !== side) yieldRef.current();
-  }, [owner, side]);
-  const isOpen = opened && (!share || owner === null || owner === share.side);
+    if (!slot || !register) return;
+    register(slot, (next) => closeRef.current(next));
+    return () => register(slot, null);
+  }, [slot, register]);
+  useEffect(() => {
+    if (slot && owner && owner !== slot) closeRef.current(() => {});
+  }, [owner, slot]);
+  const isOpen = opened && (!share || owner === null || owner === share.slot);
   const panelRef = useFocusTrap<HTMLDivElement>(isOpen, shown?.id);
   useEffect(() => {
     panelRef.current?.toggleAttribute("inert", !isOpen);
@@ -189,18 +209,17 @@ export function LibraryRail({
   // Synced Split: the panel opens under the rail, so the rail's foot is
   // published on the shared layer for both panes' panels.
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const hasToolbar = items.length > 0;
-  const sharing = !!share;
+  const centred = share?.slot === "rail";
   useLayoutEffect(() => {
     const bar = toolbarRef.current;
     const host = bar?.offsetParent as HTMLElement | null;
-    if (!sharing || !bar || !host) return;
+    if (!centred || !bar || !host) return;
     const measure = () => host.style.setProperty("--rail-bottom", `${bar.offsetTop + bar.offsetHeight}px`);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(bar);
     return () => ro.disconnect();
-  }, [sharing, hasToolbar]);
+  }, [centred, hasToolbar]);
 
   // The covered width, from the lane's edge to the panel's far side. Layout
   // offsets, not the box on screen: the slide-in's translate is not counted.
@@ -258,8 +277,8 @@ export function LibraryRail({
   const panelId = `${ids}-panel`;
   const titleId = `${ids}-title`;
 
-  const centred = !!share;
-  const owned = share ? { "data-library-pane-owner": share.side } : {};
+  // The centred rail sits outside both panes; `paneHoldsEvent` reads its owner.
+  const owned = centred && share ? { "data-library-pane-owner": share.side } : {};
 
   return (
     <>
@@ -299,7 +318,8 @@ export function LibraryRail({
               aria-disabled={disabled || undefined}
               onClick={() => {
                 if (disabled) return;
-                if (pane) pane.close(() => setOpen(item.id));
+                if (share && !active) share.handOver(share.slot, () => setOpen(item.id));
+                else if (pane) pane.close(() => setOpen(item.id));
                 else setOpen(active ? null : item.id);
               }}
               className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 ${

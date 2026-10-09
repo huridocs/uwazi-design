@@ -2199,33 +2199,28 @@ export function LibraryView() {
   const panelOwner = shared?.panelOwner ?? null;
   const claimPanel = shared?.claimPanel;
   const releasePanel = shared?.releasePanel;
-  const railShare = useMemo<RailShare | undefined>(
-    () =>
-      paneSide && claimPanel && releasePanel
-        ? { side: paneSide, owner: panelOwner, claim: claimPanel, release: releasePanel }
+  const registerPanelClose = shared?.registerPanelClose;
+  const handOverPanel = shared?.handOverPanel;
+  const shareFor = useCallback(
+    (slot: RailShare["slot"]): RailShare | undefined =>
+      paneSide && claimPanel && releasePanel && registerPanelClose && handOverPanel
+        ? {
+            slot,
+            side: paneSide,
+            owner: panelOwner,
+            claim: claimPanel,
+            release: releasePanel,
+            register: registerPanelClose,
+            handOver: handOverPanel,
+          }
         : undefined,
-    [paneSide, panelOwner, claimPanel, releasePanel],
+    [paneSide, panelOwner, claimPanel, releasePanel, registerPanelClose, handOverPanel],
   );
+  const paneShare = useMemo(() => (paneSide ? shareFor(paneSide) : undefined), [paneSide, shareFor]);
+  const railShare = useMemo(() => (paneSide === "left" ? shareFor("rail") : undefined), [paneSide, shareFor]);
   function wrapLane(node: ReactNode) {
     if (!fullWidth || overview) return node;
-    if (shared?.railLayer && railShare) {
-      // Synced Split: the rail and its panels portal to Split's layer over
-      // both panes. Only the left pane draws the rail; either pane's preview,
-      // selection or cluster opens in the shared spot.
-      return (
-        <div data-part="lane-host" className="relative isolate flex-1 min-h-0 flex flex-col">
-          {node}
-          {createPortal(
-            <LibraryRail
-              items={paneSide === "left" ? railItems : []}
-              pane={pane && { ...pane, key: pane.focusKey }}
-              share={railShare}
-            />,
-            shared.railLayer,
-          )}
-        </div>
-      );
-    }
+    const synced = !!shared?.railLayer && !!paneShare;
     return (
       // `isolate`: the rail's layer stacks inside the lane, so the masthead's
       // popovers (Sort, Language, Display, Views) open over it.
@@ -2233,9 +2228,20 @@ export function LibraryView() {
         {node}
         <LibraryFullWidthLayer>
           {/* Split's panes keep panels at the lane's height and the views
-              unaware of them. */}
-          <LibraryRail items={railItems} pane={pane && { ...pane, key: pane.focusKey }} fitContent={!splitPane} />
+              unaware of them. Synced Split: the rail moves over the divider,
+              and the pane's preview, selection or cluster stays here. */}
+          <LibraryRail
+            items={synced ? [] : railItems}
+            pane={pane && { ...pane, key: pane.focusKey }}
+            fitContent={!splitPane}
+            share={synced ? paneShare : undefined}
+          />
         </LibraryFullWidthLayer>
+        {/* Synced Split: the left pane draws the one rail, centred on the
+            divider in Split's layer; its panels read this pane's store. */}
+        {synced &&
+          railShare &&
+          createPortal(<LibraryRail items={railItems} pane={null} share={railShare} />, shared!.railLayer!)}
       </div>
     );
   }
