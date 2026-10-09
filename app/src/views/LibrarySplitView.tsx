@@ -9,6 +9,7 @@ import { BAR_GHOST } from "../components/shared/warmButton";
 import {
   LibraryPaneProvider,
   MastheadFoldProvider,
+  SPLIT_PANE_MIN_REM,
   SplitFooterProvider,
   SplitSharedProvider,
   createPaneResults,
@@ -18,12 +19,14 @@ import {
   type SplitFooterValue,
   type SplitPanelSlot,
   type SplitSharedValue,
+  useSplitShared,
 } from "../components/library/libraryPane";
 import { SelectionOrderHost, type SelectionOrderHolder } from "../components/library/EntitySelectBox";
 import { LibraryView } from "./LibraryView";
+import { SPLIT_RAIL_RESERVE } from "../components/library/LibraryRail";
+import { EntityView } from "./EntityView";
+import { libraryPaneEntityOpenAtom } from "../atoms/library";
 
-/** Each pane's narrowest width. */
-const PANE_MIN_REM = 28;
 /** The divider's own width; it paints the left pane's edge. */
 const DIVIDER_PX = 5;
 
@@ -62,7 +65,7 @@ export function LibrarySplitView() {
   const span = Math.max(1, width - DIVIDER_PX);
   const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   // Unmeasured, no clamp; narrower than two minimums, an even split.
-  const minShare = width === 0 ? 0 : Math.min(0.5, (PANE_MIN_REM * remPx) / span);
+  const minShare = width === 0 ? 0 : Math.min(0.5, (SPLIT_PANE_MIN_REM * remPx) / span);
   const clamp = useCallback((r: number) => Math.min(1 - minShare, Math.max(minShare, r)), [minShare]);
   const share = clamp(drag ?? stored);
 
@@ -332,7 +335,9 @@ export function LibrarySplitView() {
 }
 
 /** One pane: a landmark with its own name, the pane context its keys and
- *  touches check, and its own Shift-range order. */
+ *  touches check, and its own Shift-range order. A record opened from the pane
+ *  shows its entity view here, over the pane's Library, which stays mounted
+ *  and hidden so Back finds its scroll, view and preview as they were. */
 function LibraryPane({
   side,
   id,
@@ -347,6 +352,15 @@ function LibraryPane({
   const root = useRef<HTMLElement | null>(null);
   const pane = useMemo(() => ({ side, root }), [side]);
   const order = useMemo<SelectionOrderHolder>(() => ({ current: [] }), []);
+  const entityOpen = useAtomValue(libraryPaneEntityOpenAtom);
+  // Synced, the shared rail sits over the divider: the entity view keeps its
+  // facing edge clear, as the pane's Library does.
+  const synced = useSplitShared() !== null;
+  const railReserve: CSSProperties = synced
+    ? side === "left"
+      ? { paddingInlineEnd: SPLIT_RAIL_RESERVE }
+      : { paddingInlineStart: SPLIT_RAIL_RESERVE }
+    : {};
   return (
     <section
       ref={root}
@@ -359,12 +373,27 @@ function LibraryPane({
       // active one. The footer's portalled actions bubble here too.
       onFocusCapture={() => onActive(side)}
       onPointerDownCapture={() => onActive(side)}
-      className="min-w-0 flex flex-col overflow-hidden"
+      data-entity-open={entityOpen || undefined}
+      className="relative min-w-0 flex flex-col overflow-hidden"
       style={style}
     >
       <LibraryPaneProvider value={pane}>
         <SelectionOrderHost value={order}>
-          <LibraryView />
+          {/* `invisible` rather than unmounted or `hidden`: the Library keeps
+              its size, so its canvases do not refit and its scroll holds. */}
+          <div
+            data-part="pane-library"
+            ref={(el) => el?.toggleAttribute("inert", entityOpen)}
+            aria-hidden={entityOpen || undefined}
+            className={`flex-1 min-h-0 flex flex-col ${entityOpen ? "invisible" : ""}`}
+          >
+            <LibraryView />
+          </div>
+          {entityOpen && (
+            <div data-part="pane-entity" className="absolute inset-0 flex flex-col bg-paper" style={railReserve}>
+              <EntityView />
+            </div>
+          )}
         </SelectionOrderHost>
       </LibraryPaneProvider>
     </section>

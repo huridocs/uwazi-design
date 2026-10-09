@@ -1234,9 +1234,9 @@ export function LibraryView() {
       collapse: boolean,
       id: string,
       e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean },
-      /** Phones and Split: go to the entity view rather than a sheet or the
-       *  pane's preview (a passage jump needs the document, which neither
-       *  carries). */
+      /** Phones and Split: go to the entity view (in Split, the pane's own)
+       *  rather than a sheet or the pane's preview (a passage jump needs the
+       *  document, which neither carries). */
       navigate = false,
     ) => {
       const intent = e ? selectionIntent(e) : null;
@@ -1256,8 +1256,8 @@ export function LibraryView() {
           // its footer's "Open entity" is the route to the full view.
           setOverlayEntity(id);
         } else {
-          // A Split pane's preview leaves the global focus alone: two previews
-          // would fight over it, and it is what the entity view opens on.
+          // A Split pane's preview leaves the pane's focus alone: it is what
+          // the pane's entity view opens on.
           if (!splitPane) focusForPreview(id);
           setSelectedId(id);
         }

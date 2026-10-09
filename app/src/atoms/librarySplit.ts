@@ -14,6 +14,58 @@ import {
 } from "./library";
 import { networkFindStepAtom } from "./network";
 import { filtersDrawerBase, overlayEntityBase, overlayStackBase } from "./rightPane";
+import { focalHistoryAtom, focusedEntityIdAtom } from "./focusedEntity";
+import {
+  activePrimaryGroupIdAtom,
+  addFileTargetAtom,
+  documentGroupsAtom,
+  drawerEditFocusAtom,
+  filesAtom,
+  passageFileIdAtom,
+  viewerFileIdAtom,
+} from "./files";
+import {
+  activeClusterRefIdsAtom,
+  relAnchoringFiltersAtom,
+  relAsOfAtom,
+  relConnectPathAtom,
+  relDirectionFiltersAtom,
+  relEditModeAtom,
+  relEntityTypeFiltersAtom,
+  relExpansionCommandAtom,
+  relFiltersDockCountAtom,
+  relFiltersTabRequestAtom,
+  relGroupByAtom,
+  relGroupStatesAtom,
+  relInheritedFiltersAtom,
+  relSearchQueryAtom,
+  relSortOrderAtom,
+  relSubGroupByAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relTargetDescriptorModeAtom,
+  relTypeFiltersAtom,
+  relVerificationFiltersAtom,
+  relViewAtom,
+  relWhenYearsAtom,
+  relZoomAtom,
+  scopedFiltersOpenAtom,
+  scopedRelStateAtom,
+  selectedRefIdsAtom,
+} from "./filters";
+import {
+  activeAggregateIdAtom,
+  activeRefIdAtom,
+  expandGroupForRefAtom,
+  manageRelationTypesOpenAtom,
+  scrollToHighlightAtom,
+  scrollToRefAtom,
+} from "./references";
+import { currentPageAtom, documentFormatAtom, entityPickerOpenAtom, pageJumpStateAtom, textSelectionAtom } from "./selection";
+import { docSearchQueryAtom } from "./docSearch";
+import { activeDrawerTabAtom } from "./entityDrawer";
+import { fillRequestStateAtom, fillTargetAtom } from "./fillTarget";
+import { entityTabRequestAtom } from "./publishedView";
 import { registerSettingsReset } from "./settingsReset";
 
 type Store = ReturnType<typeof useStore>;
@@ -24,13 +76,78 @@ type ScopeStore = ReturnType<typeof createScope>;
    saved view opened from elsewhere) lands in it. The right pane is a jotai-scope
    scope over the atoms one pane owns: the Library's (`libraryPaneScopedAtoms`),
    the Network find cursor, and the preview's slide-over stack, so a record
-   opened inside one pane's preview stacks only there. */
+   opened inside one pane's preview stacks only there. A record opened from a
+   pane shows its entity view in that pane, so the entity view's own state is
+   the pane's too (`ENTITY_VIEW_ATOMS`). */
+
+/** What the entity view reads about the record it shows: the focus and its
+ *  history, the files seeded from it, the Relationships panel, the viewer's
+ *  page, rendition, passage and jumps, the drawer's tab and search, and
+ *  click-to-fill. Shared data (references, relationship types, highlights,
+ *  entity edits, drafts) and the dirty guard stay global. A new atom the
+ *  entity view keeps per record goes here. */
+const ENTITY_VIEW_ATOMS = [
+  focusedEntityIdAtom,
+  focalHistoryAtom,
+  filesAtom,
+  documentGroupsAtom,
+  activePrimaryGroupIdAtom,
+  drawerEditFocusAtom,
+  viewerFileIdAtom,
+  passageFileIdAtom,
+  addFileTargetAtom,
+  relViewAtom,
+  relGroupByAtom,
+  relSubGroupByAtom,
+  relSearchQueryAtom,
+  relExpansionCommandAtom,
+  relSortOrderAtom,
+  relGroupStatesAtom,
+  activeClusterRefIdsAtom,
+  relWhenYearsAtom,
+  relTypeFiltersAtom,
+  relEntityTypeFiltersAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relTargetDescriptorModeAtom,
+  relInheritedFiltersAtom,
+  relAnchoringFiltersAtom,
+  relDirectionFiltersAtom,
+  relVerificationFiltersAtom,
+  relAsOfAtom,
+  relConnectPathAtom,
+  scopedRelStateAtom,
+  scopedFiltersOpenAtom,
+  selectedRefIdsAtom,
+  relEditModeAtom,
+  relZoomAtom,
+  relFiltersDockCountAtom,
+  relFiltersTabRequestAtom,
+  manageRelationTypesOpenAtom,
+  activeRefIdAtom,
+  scrollToHighlightAtom,
+  scrollToRefAtom,
+  expandGroupForRefAtom,
+  activeAggregateIdAtom,
+  textSelectionAtom,
+  entityPickerOpenAtom,
+  currentPageAtom,
+  documentFormatAtom,
+  pageJumpStateAtom,
+  docSearchQueryAtom,
+  activeDrawerTabAtom,
+  fillTargetAtom,
+  fillRequestStateAtom,
+  entityTabRequestAtom,
+];
+
 const PANE_ATOMS = [
   ...libraryPaneScopedAtoms,
   networkFindStepAtom,
   overlayEntityBase,
   overlayStackBase,
   filtersDrawerBase,
+  ...ENTITY_VIEW_ATOMS,
 ];
 
 /** The right pane's scope, built once per session and kept while the Library

@@ -74,6 +74,7 @@ import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
 import { ModalHostProvider } from "../components/shared/Modal";
+import { paneOwnsEvent, useLibraryPane } from "../components/library/libraryPane";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DateInput } from "../components/shared/DateInput";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
@@ -578,6 +579,7 @@ function EntityEditBody({
     [setFillTarget, sessionId],
   );
 
+  const splitPane = useLibraryPane();
   // Escape disarms, on the window since focus is usually in another pane. Skipped
   // inside a dialog, so closing the source preview doesn't also disarm. Bound only
   // while armed.
@@ -586,11 +588,13 @@ function EntityEditBody({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (document.activeElement?.closest('[role="dialog"]')) return;
+      // In Split, only the pane the key is in disarms its own field.
+      if (!paneOwnsEvent(splitPane, e)) return;
       setFillTarget(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [fillTarget, setFillTarget]);
+  }, [fillTarget, setFillTarget, splitPane]);
 
   // Apply a request, then clear it. The field is usually out of view, so it
   // scrolls into view and flashes to show where the value landed.

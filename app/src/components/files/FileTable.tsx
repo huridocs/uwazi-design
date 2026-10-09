@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { languageName } from "../../atoms/language";
 import { createPortal } from "react-dom";
 import {
@@ -30,6 +30,12 @@ import {
 import { Checkbox } from "../shared/Checkbox";
 import { DataTable, type Column } from "../shared/DataTable";
 import { formatFileDate } from "../../utils/dates";
+import { useLibraryPane } from "../library/libraryPane";
+import { useResizeWidth } from "../../hooks/useResizeWidth";
+
+/** Below this width (rem) the table's fixed columns leave the file name no
+ *  room, so a Split pane's entity view lists the files as stacked rows. */
+const STACK_BELOW_REM = 36;
 
 interface FileTableProps {
   files: FileEntry[];
@@ -79,7 +85,15 @@ export function FileTable({
 }: FileTableProps) {
   const allSelected = files.length > 0 && files.every((f) => selectedIds.has(f.id));
   const [breakpoint] = useAtom(breakpointAtom);
-  const isMobile = breakpoint === "mobile";
+  /* In a Split pane the table can be narrower than any desktop window gives it:
+     measured there, it stacks like a phone's when its columns would not fit.
+     Outside Split, the breakpoint alone, as before. */
+  const pane = useLibraryPane();
+  const [width, setWidth] = useState(Infinity);
+  const measure = useResizeWidth(setWidth);
+  const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const isMobile = breakpoint === "mobile" || (!!pane && width < STACK_BELOW_REM * remPx);
+  const host = (node: ReactNode) => (pane ? <div ref={measure} data-part="file-table-host">{node}</div> : node);
   const groups = useAtomValue(documentGroupsAtom);
   const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
   const setActivePrimary = useSetAtom(setActivePrimaryAtom);
@@ -184,7 +198,7 @@ export function FileTable({
   const renderBadge = (_file: FileEntry) => null;
 
   if (isMobile) {
-    return (
+    return host(
       <div
         data-component="FileTable"
         data-variant="mobile"
@@ -332,7 +346,7 @@ export function FileTable({
     },
   ];
 
-  return (
+  return host(
     <DataTable
       columns={columns}
       data={files}
@@ -341,7 +355,7 @@ export function FileTable({
       rowAriaLabel={(f) => `Focus ${f.name}`}
       isRowSelected={(f) => focusedId === f.id}
       footer={embedded ? undefined : <span>{files.length} files</span>}
-    />
+    />,
   );
 }
 

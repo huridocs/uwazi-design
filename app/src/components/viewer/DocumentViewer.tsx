@@ -15,6 +15,7 @@ import { resultsCurrentPageAtom } from "../../atoms/library";
 import { highlightRanges, highlightTerms } from "../../utils/queryTokens";
 import { markSearchHits } from "../../utils/pdfTextHighlight";
 import { breakpointAtom } from "../../atoms/viewport";
+import { paneOwnsEvent, useLibraryPane } from "../library/libraryPane";
 import { languageAtom } from "../../atoms/language";
 import {
   filesAtom,
@@ -629,18 +630,21 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   // signal. `hitCount` narrows it further — an instance showing a document
   // without matches has nothing to step.
   const ownsChrome = !fileOverride && !hideActionBar && !renditionMode;
+  // Two Split panes can each show a document: the keys step the one in the
+  // pane that holds the focus, or the pointer.
+  const splitPane = useLibraryPane();
   useEffect(() => {
     if (!ownsChrome || hitCount === 0) return;
     const onKeyDown = (e: KeyboardEvent) => {
       const findKey =
         ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "g") || e.key === "F3";
-      if (!findKey) return;
+      if (!findKey || !paneOwnsEvent(splitPane, e)) return;
       e.preventDefault();
       stepMatch(e.shiftKey ? -1 : 1);
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [ownsChrome, hitCount, stepMatch]);
+  }, [ownsChrome, hitCount, stepMatch, splitPane]);
 
   // Scroll to highlight centered in viewport
   const [scrollTarget] = useAtom(scrollToHighlightAtom);

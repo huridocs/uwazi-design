@@ -5,6 +5,7 @@ import {
   SplitWidthProvider,
   useDrawerWidth,
 } from "../../hooks/useDrawerWidth";
+import { SPLIT_PANE_MIN_REM, useLibraryPane } from "../library/libraryPane";
 
 interface SplitViewProps {
   left: ReactNode;
@@ -23,9 +24,17 @@ export function SplitView({
   // it holds across views; `useDrawerWidth` clamps it into this host's minimum
   // and half this container.
   const containerRef = useRef<HTMLDivElement>(null);
-  const { width, clamp, maxWidth, setStoredWidth, measured } = useDrawerWidth(containerRef, {
+  /* In a Split pane (an entity opened there) the drawer may take all but the
+     view a pane's minimum width, not only half, and a pane too narrow for both drops the
+     drawer: its sections are the view's own tabs, and Filters falls back to
+     the slide-over. Outside Split, half the container as everywhere. */
+  const inPane = useLibraryPane() !== null;
+  const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const { width, clamp, maxWidth, setStoredWidth, measured, fits } = useDrawerWidth(containerRef, {
     defaultWidth: defaultRightWidth,
     minWidth: minRightWidth,
+    // The divider's 5px is the view's.
+    mainMin: inPane ? SPLIT_PANE_MIN_REM * remPx + 5 : undefined,
   });
   // The live width while a drag is in progress — kept local so a drag doesn't
   // write to storage on every mousemove. `null` when not dragging.
@@ -117,6 +126,7 @@ export function SplitView({
     <div ref={containerRef} data-component="SplitView" className="flex flex-1 overflow-hidden">
       {/* Both panes wait for the container's first measure — see `measured`. */}
       <div data-part="content" className="flex-1 overflow-hidden">{measured && left}</div>
+      {fits && (<>
       {/* One edge: the divider paints the pane's border at its inline end, so
           the visible line and the drag target are the same element. The
           drawer carries no `border-l`; 4px + 1px border becomes a 5px divider. */}
@@ -175,6 +185,7 @@ export function SplitView({
             this resolved width rather than the box they happen to be mounted in. */}
         <DrawerWidthProvider value={rightWidth}>{measured && right}</DrawerWidthProvider>
       </aside>
+      </>)}
     </div>
     </SplitDraggingProvider>
     </SplitWidthProvider>

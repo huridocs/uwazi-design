@@ -7,6 +7,10 @@ import type { Entity } from "../../data/entities";
    every check below answers yes. */
 export type LibraryPaneSide = "left" | "right";
 
+/** Each Split pane's narrowest width (rem). An entity view opened in a pane
+ *  keeps its main view at least this wide beside its drawer (`SplitView`). */
+export const SPLIT_PANE_MIN_REM = 28;
+
 export interface LibraryPaneValue {
   side: LibraryPaneSide;
   root: RefObject<HTMLElement | null>;
@@ -26,18 +30,33 @@ export function notePointerPane(side: LibraryPaneSide) {
   pointerPane = side;
 }
 
-/** Whether a key event is this pane's: the focus is inside it, or the focus is
- *  in neither pane (on the page, the navbar, a portalled popover) and the
- *  pointer is over it. Always true outside Split. */
+/** Whether a key event is this pane's Library's: the focus is inside it, or
+ *  the focus is in neither pane (on the page, the navbar, a portalled popover)
+ *  and the pointer is over it. A pane showing a record's entity view
+ *  (`data-entity-open`) holds none: its Library is hidden under it. Always
+ *  true outside Split. */
 export function paneHoldsEvent(pane: LibraryPaneValue | null, e: Event): boolean {
   if (!pane) return true;
   const root = pane.root.current;
   if (!root) return false;
+  const entityOpen = root.hasAttribute("data-entity-open");
   const t = e.target instanceof Element ? e.target : null;
   const inPane = t?.closest("[data-library-pane], [data-library-pane-owner]");
   // Synced Split's shared rail and panel sit outside both panes; what one
   // pane portalled there is marked with its side.
-  if (inPane) return inPane === root || inPane.getAttribute("data-library-pane-owner") === pane.side;
+  if (inPane) return inPane === root ? !entityOpen : inPane.getAttribute("data-library-pane-owner") === pane.side;
+  return pointerPane === pane.side && !entityOpen;
+}
+
+/** Whether a key event belongs to this Split pane at all, its Library or the
+ *  entity view opened in it: the event's target is inside the pane, or it is
+ *  in neither pane and the pointer is over this one. For document-level keys
+ *  in the entity view, which two panes can show at once. True outside Split. */
+export function paneOwnsEvent(pane: LibraryPaneValue | null, e: Event): boolean {
+  if (!pane) return true;
+  const t = e.target instanceof Element ? e.target : null;
+  const inPane = t?.closest("[data-library-pane], [data-library-pane-owner]");
+  if (inPane) return inPane === pane.root.current || inPane.getAttribute("data-library-pane-owner") === pane.side;
   return pointerPane === pane.side;
 }
 

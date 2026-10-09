@@ -43,7 +43,7 @@ export interface PageJump {
   nonce: number;
 }
 
-const pageJumpStateAtom = atom<PageJump | null>(null);
+export const pageJumpStateAtom = atom<PageJump | null>(null);
 let pageJumpNonce = 0;
 
 /** Signal: scroll the document viewer to this page, then clear. Set by ToC

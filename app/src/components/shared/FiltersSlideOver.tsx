@@ -7,6 +7,7 @@ import { languageAtom } from "../../atoms/language";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { breakpointAtom } from "../../atoms/viewport";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
+import { paneOwnsEvent, useLibraryPane } from "../library/libraryPane";
 
 /** The element a `FiltersSlideOver` should render INTO, when it must escape the
  *  box it is called from.
@@ -89,6 +90,7 @@ function PaneFiltersDrawer({
   // Slide from the inline end — flips to the left edge under RTL (Arabic).
   const rtl = useAtomValue(languageAtom) === "AR";
   const trapRef = useFocusTrap<HTMLElement>(open);
+  const splitPane = useLibraryPane();
   const bodyRef = useRef<HTMLDivElement>(null);
   useKeepClickedInPlace(bodyRef);
 
@@ -102,11 +104,12 @@ function PaneFiltersDrawer({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      // In Split, only the pane the key is in closes its own.
+      if (e.key === "Escape" && paneOwnsEvent(splitPane, e)) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, splitPane]);
 
   const host = useContext(FiltersHostContext);
 

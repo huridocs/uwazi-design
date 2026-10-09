@@ -21,7 +21,17 @@ export const DRAWER_MIN_WIDTH = 360;
  *  stored width and growing it again restores the dragged width. */
 export function useDrawerWidth(
   containerRef: RefObject<HTMLElement | null>,
-  { defaultWidth, minWidth }: { defaultWidth: number; minWidth: number },
+  {
+    defaultWidth,
+    minWidth,
+    mainMin,
+  }: {
+    defaultWidth: number;
+    minWidth: number;
+    /** The narrowest the view beside the drawer may get, in px. Given, the
+     *  drawer may take everything past it instead of half the container. */
+    mainMin?: number;
+  },
 ) {
   const [storedWidth, setStoredWidth] = useAtom(drawerWidthAtom);
   const [containerWidth, setContainerWidth] = useState(Infinity);
@@ -43,18 +53,22 @@ export function useDrawerWidth(
     return () => ro.disconnect();
   }, [containerRef]);
 
+  const maxWidth = mainMin === undefined ? containerWidth / 2 : containerWidth - mainMin;
   const clamp = useCallback(
-    (w: number) => Math.max(minWidth, Math.min(containerWidth / 2, w)),
-    [minWidth, containerWidth],
+    (w: number) => Math.max(minWidth, Math.min(maxWidth, w)),
+    [minWidth, maxWidth],
   );
 
   return {
-    /** The width this host shows when nothing is being dragged. */
-    width: clamp(storedWidth ?? defaultWidth),
+    /** The width this host shows when nothing is being dragged. Undragged, a
+     *  host with `mainMin` still opens at no more than half. */
+    width: clamp(storedWidth ?? (mainMin === undefined ? defaultWidth : Math.min(defaultWidth, containerWidth / 2))),
     clamp,
-    /** Half the container. The divider is a `role="separator"` and needs it for
-     *  `aria-valuemax`. */
-    maxWidth: containerWidth / 2,
+    /** Half the container, or what `mainMin` leaves. The divider is a
+     *  `role="separator"` and needs it for `aria-valuemax`. */
+    maxWidth,
+    /** Whether the drawer at its minimum leaves the view its `mainMin`. */
+    fits: mainMin === undefined || containerWidth >= minWidth + mainMin,
     setStoredWidth,
     /** False on the render before the container is measured, when `width` is
      *  unclamped. Hosts render no content on that pass: components that measure on

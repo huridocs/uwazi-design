@@ -8,6 +8,9 @@ import {
 } from "./files";
 import { relViewAtom, resetRelFacetsAtom } from "./filters";
 import { guardNavigationAtom } from "./dirtyGuard";
+import { libraryPaneEntityOpenAtom } from "./library";
+import { libraryLayoutAtom } from "./session";
+import { breakpointAtom } from "./viewport";
 
 /** The entity currently open in EntityView. Defaults to the canonical main
  *  entity so the existing single-entity experience is the initial focal entity. */
@@ -69,24 +72,38 @@ export const focusEntityForPreviewAtom = atom(null, (get, set, entityId: string)
   focusEntity(entityId, get, set);
 });
 
+/** Split is the Library on screen. A record opened then opens in the pane it
+ *  was opened from: the left pane is the root store, the right pane a scope
+ *  that carries its own focus, files, history and panel state
+ *  (`atoms/librarySplit.ts`), so the other pane stays as it is. Anything that
+ *  opens a record from outside both panes lands in the left one. */
+const splitOnScreenAtom = atom(
+  (get) => get(appViewAtom) === "library" && get(libraryLayoutAtom) === "split" && get(breakpointAtom) === "desktop",
+);
+
 /** Write-only: focus an entity AND switch to the entity view ("navigate into").
  *  Pushes the current entity onto the history when hopping entity→entity.
  *  Routed through the dirty-form guard — a focal hop swaps every entity-scoped
- *  surface, so an open edit session gets to object first. */
+ *  surface, so an open edit session gets to object first. In Split the entity
+ *  view opens inside the pane (`libraryPaneEntityOpenAtom`). */
 export const openEntityAtom = atom(null, (get, set, entityId: string) => {
   set(guardNavigationAtom, () => {
-    if (get(appViewAtom) === "entity") {
+    const inPane = get(splitOnScreenAtom);
+    const fromEntity = inPane ? get(libraryPaneEntityOpenAtom) : get(appViewAtom) === "entity";
+    if (fromEntity) {
       set(focalHistoryAtom, [...get(focalHistoryAtom), get(focusedEntityIdAtom)]);
     } else {
       set(focalHistoryAtom, []);
     }
     focusEntity(entityId, get, set);
-    set(appViewAtom, "entity");
+    if (inPane) set(libraryPaneEntityOpenAtom, true);
+    else set(appViewAtom, "entity");
   });
 });
 
 /** Write-only: go back to the precedent screen — the previous focal entity if
- *  any, else the Library. Guarded like {@link openEntityAtom}. */
+ *  any, else the Library (in Split, that pane's Library as it was). Guarded
+ *  like {@link openEntityAtom}. */
 export const goBackAtom = atom(null, (get, set) => {
   set(guardNavigationAtom, () => {
     const history = get(focalHistoryAtom);
@@ -94,6 +111,8 @@ export const goBackAtom = atom(null, (get, set) => {
       const prev = history[history.length - 1];
       focusEntity(prev, get, set);
       set(focalHistoryAtom, history.slice(0, -1));
+    } else if (get(splitOnScreenAtom)) {
+      set(libraryPaneEntityOpenAtom, false);
     } else {
       set(appViewAtom, "library");
     }

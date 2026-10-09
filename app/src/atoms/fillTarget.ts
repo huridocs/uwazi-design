@@ -35,7 +35,7 @@ export interface FillRequest {
   nonce: number;
 }
 
-const fillRequestStateAtom = atom<FillRequest | null>(null);
+export const fillRequestStateAtom = atom<FillRequest | null>(null);
 let fillNonce = 0;
 
 /** Write a string to fill the armed field, or `null` to clear a spent request.

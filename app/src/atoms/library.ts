@@ -528,6 +528,11 @@ export type { MapBounds };
  *  pane's scope (`atoms/librarySplit.ts` sets it). Outside Split, "left". */
 export const libraryPaneSideAtom = atom<"left" | "right">("left");
 
+/** Split: this pane shows the entity view in place of its Library. Set by
+ *  `openEntityAtom` when a record is opened from a pane, cleared by Back.
+ *  Per pane, so one pane can show a record while the other keeps its own. */
+export const libraryPaneEntityOpenAtom = atom(false);
+
 /** Split with Sync filters on: both panes use one filter set
  *  (`atoms/librarySplit.ts` mirrors the filter atoms between the two stores). */
 export const librarySyncActiveAtom = atom(
@@ -1244,6 +1249,8 @@ function switchDataSource(get: Getter, set: Setter, source: DataSource) {
 /** What a collection switch resets in one Library pane, after the switch.
  *  Split's right pane runs it through its own scope (`atoms/librarySplit.ts`). */
 function resetLibraryForSource(get: Getter, set: Setter) {
+  // A record a Split pane shows belongs to the collection being left.
+  set(libraryPaneEntityOpenAtom, false);
   // The query carries over to the new collection; a scope it cannot offer does not.
   set(dropUnofferedScopeAtom);
   // Likewise the Evidence view: the default view where the new collection has
@@ -1450,6 +1457,7 @@ export const libraryFilterSetAtoms = [
 
 export const libraryPaneScopedAtoms = [
   libraryPaneSideAtom,
+  libraryPaneEntityOpenAtom,
   // Search
   libraryQueryAtom,
   searchDraftStateAtom,

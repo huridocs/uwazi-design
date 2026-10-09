@@ -461,18 +461,32 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   the row.
   - The left pane is the root store, so `#view=` links, Reset demo data and anything else
     written from outside a pane land there. The right pane is a jotai-scope scope over
-    `libraryPaneScopedAtoms` plus the Network find cursor and `atoms/rightPane.ts`'s bases,
-    built once per session (`atoms/librarySplit.ts`) so the entity view and Back find it as it
-    was. It runs the collection-switch and Reset resets through its scope. A new per-pane atom
-    goes in `libraryPaneScopedAtoms`. Language, collection and Notebook are shared.
+    `libraryPaneScopedAtoms`, the Network find cursor, `atoms/rightPane.ts`'s bases and the
+    entity view's own state (`ENTITY_VIEW_ATOMS` in `atoms/librarySplit.ts`: focus and history,
+    files, Relationships panel, viewer page, rendition, passage and jumps, drawer tab, fill),
+    built once per session so leaving the Library and coming back finds it as it was. It runs
+    the collection-switch and Reset resets through its scope. A new per-pane atom goes in
+    `libraryPaneScopedAtoms`, a new per-record entity-view atom in `ENTITY_VIEW_ATOMS`.
+    Language, collection, Notebook, entity data and the dirty guard are shared.
   - A pane's keys and long presses act only where the focus is, or the pointer when the focus
     is in neither pane (`paneHoldsEvent`, `components/library/libraryPane.tsx`). Each pane has
     its own Shift-range order (`SelectionOrderHost`). A rail panel's focus trap holds Tab only
     while the focus is in its pane (`data-trap-scope`).
-  - A pane's preview never moves `focusedEntityIdAtom`: it shows Metadata and Relationships,
-    and "View entity" for the rest; a draft is the exception. A passage hit goes to the entity
-    view, as on phones. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input, so
-    both panes share one array and one graph.
+  - Every open-entity path (card or row, the preview's "View entity", a passage hit, Network,
+    Map, Adv. Search) goes through `openEntityAtom`, which in Split opens the entity view in
+    the pane it was called from (`libraryPaneEntityOpenAtom`, per pane) instead of the
+    full-window view. The other pane, the rail, the strip and the divider stay as they are;
+    both panes may show records. The pane's Library stays mounted under it, `invisible` and
+    `inert`, so Back (the tab strip's arrow; history first, then the Library) finds its
+    scroll, view and preview. A collection switch closes it. The pane's entity view has no
+    published view, and its keys are gated with `paneOwnsEvent`; `paneHoldsEvent` is false
+    for a pane showing a record. In a pane the entity view's drawer may take all but 28rem
+    (`SPLIT_PANE_MIN_REM`) and opens at no more than half; a pane narrower than 28rem plus
+    the drawer's minimum has no drawer. Synced, it clears the rail by `SPLIT_RAIL_RESERVE`.
+  - A pane's preview never moves the pane's focus: it shows Metadata and Relationships, and
+    "View entity" for the rest; a draft is the exception. A passage hit opens the pane's
+    entity view at its page. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input,
+    so both panes share one array and one graph.
   - Sync filters on: one time strip under both panes and one rail centred on the divider
     (`SplitSharedValue` in `libraryPane.tsx`). The left pane portals the rail and its panels
     (Filters, Results, Notebook, Views and history) into Split's layer, centred under the rail,

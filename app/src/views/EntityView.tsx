@@ -25,6 +25,7 @@ import { useDirtyGuard } from "../hooks/useDirtyGuard";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { PublishedEntityView } from "../components/entity/PublishedEntityView";
 import { entityTabRequestAtom, showPublishedViewAtom } from "../atoms/publishedView";
+import { useLibraryPane } from "../components/library/libraryPane";
 
 export function EntityView() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -51,7 +52,10 @@ export function EntityView() {
 
   // The published view's document link asks for a tab on its way here.
   const [tabRequest, setTabRequest] = useAtom(entityTabRequestAtom);
-  const published = useAtomValue(showPublishedViewAtom);
+  // A Split pane has no published-view toggle (it floats over the navbar's
+  // edge for the full-window view), so a pane shows the entity view.
+  const inPane = useLibraryPane() !== null;
+  const published = useAtomValue(showPublishedViewAtom) && !inPane;
   useEffect(() => {
     if (!tabRequest || published) return;
     setActiveTab(tabRequest);

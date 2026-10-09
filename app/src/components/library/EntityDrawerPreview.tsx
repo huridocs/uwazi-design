@@ -15,7 +15,8 @@ import { useLibraryPane } from "./libraryPane";
  *  — the same main-tab navigation (Document / Metadata / Relationships / Files)
  *  as the full entity view, with the drawer-flavoured body for each tab, which
  *  the connection overlay renders too. "View entity" navigates into the
- *  full-screen entity; Close returns the drawer to Filters. */
+ *  full-screen entity (in Split, into the pane's); Close returns the drawer to
+ *  Filters. */
 export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   const setSelected = useSetAtom(libraryOpenEntityIdAtom);
   const openEntity = useSetAtom(openEntityAtom);
@@ -23,8 +24,8 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   const stackDepth = useAtomValue(overlayStackBase).length;
   const closeAll = useSetAtom(closeAllOverlaysAtom);
   /* In a Split pane the preview takes the slide-over's flavour: Metadata and
-     Relationships, and "View entity" for the rest. Two panes would fight over
-     the global focus, which the Document, Files and edit surfaces read. A new
+     Relationships, and "View entity" for the rest, which opens the entity view
+     in this pane. The preview leaves the pane's focus to that view. A new
      record (Create entity) is the exception: it is only a form, and the form
      waits for the focus. */
   const inPane = !!useLibraryPane();

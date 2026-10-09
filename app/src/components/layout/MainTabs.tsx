@@ -6,6 +6,7 @@ import { TabCount } from "../shared/TabCount";
 import { TAB_BUTTON, TAB_STRIP_FRAME } from "./tabStrip";
 import { useAtomValue } from "jotai";
 import { reserveToggleSlotAtom } from "../../atoms/publishedView";
+import { useLibraryPane } from "../library/libraryPane";
 
 
 
@@ -49,6 +50,9 @@ interface MainTabsProps {
 
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
   const reserveToggle = useAtomValue(reserveToggleSlotAtom);
+  // On desktop Back is the navbar's breadcrumb; a Split pane's entity view
+  // has none, so it shows the strip's own.
+  const inPane = useLibraryPane() !== null;
   /* THE FOLD IS DECIDED BY THE CONTAINER, not the viewport.
      `dec4220` folded on `breakpointAtom`, which reads the WINDOW — so a strip
      in a 400px pane at a 1440px window stayed expanded and clipped mid-tab.
@@ -107,7 +111,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           type="button"
           onClick={onBack}
           data-part="back"
-          className="hit-area md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
+          className={`hit-area ${inPane ? "" : "md:hidden"} text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer`}
           aria-label="Go back"
         >
           <ArrowLeft size={20} />
