@@ -795,7 +795,8 @@ export function LibraryOverview({ loading }: { loading: boolean }) {
             <ul className="grid grid-cols-1 @2xl:grid-cols-2 gap-3">
               {featured.records.map((e) => (
                 // Each card its own grid: standalone cards differ in rows (a
-                // preview or none), so they do not share one grid's tracks.
+                // preview or none), so they do not share one grid's tracks. The
+                // card draws its own rows (`standalone`); `grid` stretches it.
                 <li key={e.id} className="grid">
                   <EntityCard
                     entity={e}

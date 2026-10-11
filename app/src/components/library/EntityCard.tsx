@@ -140,6 +140,17 @@ const ROW_SPAN: Record<number, string> = {
   4: "row-span-4",
 };
 
+/** A standalone card has no grid to share tracks with, so it draws its own:
+ *  content rows at their height, the footer row taking what the card is
+ *  stretched by, so a card beside a taller one keeps its rhythm and only the
+ *  footer moves down. A subgrid here would take its wrapper's auto tracks, and
+ *  the stretch would be split between them. */
+const OWN_ROWS: Record<number, string> = {
+  2: "grid-rows-[auto_1fr]",
+  3: "grid-rows-[auto_auto_1fr]",
+  4: "grid-rows-[auto_auto_auto_1fr]",
+};
+
 /** Whether a field's value only repeats the card's title (as a whole word or
  *  phrase in it) or its template's name: "Volley 9" on "Volley 9 · 22:12:34". */
 function repeatsCard(value: string, title: string, templateName?: string): boolean {
@@ -206,7 +217,8 @@ export const EntityCard = memo(function EntityCard({
    *  cards would stop sharing them. */
   as?: "article" | "li";
   /** A card shown outside the Library's grid (the Overview's featured
-   *  records): no field that only repeats the title or the template's name. */
+   *  records): no field that only repeats the title or the template's name,
+   *  and its own row tracks (`OWN_ROWS`) instead of a subgrid. */
   standalone?: boolean;
   /** Thumbnails for this card, decided by its host for the whole set it
    *  belongs to; absent, the Library's Display setting decides. */
@@ -441,7 +453,7 @@ export const EntityCard = memo(function EntityCard({
       onFocus={peekDoc ? (e) => measurePeekRoom(e.currentTarget) : undefined}
       onClick={(e) => onSelect(entity.id, e)}
       onMouseDown={holdTextSelection}
-      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3 ${
+      className={`${base} ${surface} ${minHeight} grid ${standalone ? OWN_ROWS[rowCount] : `grid-rows-subgrid ${ROW_SPAN[rowCount]}`} gap-y-2.5 p-3 ${
         side ? "grid-cols-[auto_minmax(0,1fr)] gap-x-3" : ""
       }`}
     >
