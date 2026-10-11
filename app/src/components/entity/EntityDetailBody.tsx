@@ -29,7 +29,7 @@ import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { EntityBarActions } from "./EntityBarActions";
 import { BAR_GHOST } from "../shared/warmButton";
-import { editSessionOpenAtom, guardNavigationAtom } from "../../atoms/dirtyGuard";
+import { editSessionOpenAtom, guardPaneNavigationAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
   entityId: string;
@@ -275,7 +275,7 @@ export function EntityDetailBody({
         profile.metadata[l].filter((f): f is MetadataField => f.type !== "relationship"),
       ]),
     ) as Partial<Record<Language, MetadataField[]>>;
-    store.set(guardNavigationAtom, () =>
+    store.set(guardPaneNavigationAtom, () =>
       store.set(libraryOpenEntityIdAtom, startDraft({ typeId, corpus: entityCorpusOf(entityId), carry })),
     );
   };

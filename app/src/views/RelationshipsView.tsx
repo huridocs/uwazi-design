@@ -6,7 +6,7 @@ import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { activeFilterCountAtom, relViewAtom } from "../atoms/filters";
 import { t } from "../utils/i18n";
-import { RelationshipsFiltersTab, useRelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
+import { RelationshipsFiltersTab, RelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -44,7 +44,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [view] = useRelAtom(relViewAtom);
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
   const [chosenDrawerTab, setDrawerTab] = useState<"document" | "filters">("document");
-  useRelFiltersDock(() => setDrawerTab("filters"));
   const relFilterCount = useAtomValue(activeFilterCountAtom);
 
   const hideMinimap = view === "graph";
@@ -122,6 +121,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       right={
         <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
           <EntityPreviewSlideOver />
+          {/* Filters dock here only while the drawer is drawn; a Split pane too
+              narrow for it opens the slide-over instead. */}
+          <RelFiltersDock show={() => setDrawerTab("filters")} />
           {/* The record's document (or its source's link, or the note that it
               has none), then the filters as a tab of their own. */}
           <DrawerTabs
@@ -142,12 +144,13 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           )}
           </div>
           {drawerTab === "filters" && <RelationshipsFiltersTab />}
-          {deleteDialog}
         </div>
       }
+      paneOverlay={<EntityPreviewSlideOver />}
       defaultRightWidth={560}
       minRightWidth={DRAWER_MIN_WIDTH}
     />
+    {deleteDialog}
     </>
   );
 }

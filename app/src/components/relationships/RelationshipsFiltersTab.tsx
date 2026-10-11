@@ -32,6 +32,13 @@ export function useRelFiltersDock(show: () => void) {
   }, [request, mobile]);
 }
 
+/** {@link useRelFiltersDock} as an element, for a view whose drawer may not be
+ *  drawn: mounted inside the drawer, it docks only while the drawer is there. */
+export function RelFiltersDock({ show }: { show: () => void }) {
+  useRelFiltersDock(show);
+  return null;
+}
+
 /** The drawer's Filters tab: the same facets as the slide-over, for the open
  *  entity, drawn like the Library's Filters (cards on the warm rail, Clear in
  *  a footer that is always there, disabled with nothing set). No count: the tab's dot

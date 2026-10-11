@@ -12,6 +12,9 @@ interface SplitViewProps {
   right: ReactNode;
   defaultRightWidth?: number;
   minRightWidth?: number;
+  /** Drawn over the view while a Split pane is too narrow for the drawer: the
+   *  connected-entity slide-over the drawer would otherwise host. */
+  paneOverlay?: ReactNode;
 }
 
 export function SplitView({
@@ -19,6 +22,7 @@ export function SplitView({
   right,
   defaultRightWidth = 400,
   minRightWidth = 320,
+  paneOverlay,
 }: SplitViewProps) {
   // The drawer's width is remembered ONCE for every host (`drawerWidthAtom`), so
   // it holds across views; `useDrawerWidth` clamps it into this host's minimum
@@ -125,7 +129,12 @@ export function SplitView({
     <SplitDraggingProvider value={dragging}>
     <div ref={containerRef} data-component="SplitView" className="flex flex-1 overflow-hidden">
       {/* Both panes wait for the container's first measure — see `measured`. */}
-      <div data-part="content" className="flex-1 overflow-hidden">{measured && left}</div>
+      {/* Without the drawer, the view hosts what the drawer hosted that has no
+          tab of its own (the connected-entity slide-over). */}
+      <div data-part="content" className={`flex-1 overflow-hidden${fits ? "" : " relative"}`}>
+        {measured && left}
+        {measured && !fits && paneOverlay}
+      </div>
       {fits && (<>
       {/* One edge: the divider paints the pane's border at its inline end, so
           the visible line and the drag target are the same element. The

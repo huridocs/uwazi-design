@@ -1,4 +1,5 @@
-import { atom } from "jotai";
+import { atom, type Getter, type Setter } from "jotai";
+import { libraryPaneSideAtom } from "./paneSide";
 
 /** A form with an open edit session. Registered while the session is mounted;
  *  `isDirty` flips live as the user edits. The label is what the confirm
@@ -9,28 +10,43 @@ export interface DirtyForm {
   isDirty: boolean;
 }
 
+type Side = "left" | "right";
+/** A registered form and the Split pane whose store registered it. Two panes
+ *  can hold the same form (each its own "metadata-edit"), so the pane is part
+ *  of the key. Outside Split every form is "left". */
+type PaneForm = DirtyForm & { pane: Side };
+
 /** Every mounted edit session, dirty or not. There's no router, so nothing
  *  else knows a form is open — this registry is how the navigation choke
  *  points find out. */
-const dirtyFormsAtom = atom<DirtyForm[]>([]);
+const dirtyFormsAtom = atom<PaneForm[]>([]);
+
+/** The forms of the pane this store is (the right pane's scope reads "right"). */
+const paneForms = (get: Getter) => {
+  const side = get(libraryPaneSideAtom);
+  return get(dirtyFormsAtom).filter((f) => f.pane === side);
+};
 
 export const registerDirtyFormAtom = atom(null, (get, set, form: DirtyForm) => {
+  const pane = get(libraryPaneSideAtom);
+  const entry: PaneForm = { ...form, pane };
   const forms = get(dirtyFormsAtom);
-  const existing = forms.find((f) => f.id === form.id);
+  const existing = forms.find((f) => f.id === form.id && f.pane === pane);
   if (!existing) {
-    set(dirtyFormsAtom, [...forms, form]);
+    set(dirtyFormsAtom, [...forms, entry]);
   } else if (existing.isDirty !== form.isDirty || existing.label !== form.label) {
     set(
       dirtyFormsAtom,
-      forms.map((f) => (f.id === form.id ? form : f)),
+      forms.map((f) => (f === existing ? entry : f)),
     );
   }
 });
 
 export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
+  const pane = get(libraryPaneSideAtom);
   set(
     dirtyFormsAtom,
-    get(dirtyFormsAtom).filter((f) => f.id !== id),
+    get(dirtyFormsAtom).filter((f) => !(f.id === id && f.pane === pane)),
   );
 });
 
@@ -38,17 +54,18 @@ export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
  *  drives the beforeunload listener in `UnsavedChangesGuard`. */
 export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
 
-/** Whether ANY edit session is mounted, dirty or not. Surfaces that can
- *  navigate away (the entity panel's "Open entity") hide that route while one
- *  is: leaving discards the form. */
-export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0);
+/** Whether an edit session is mounted in this pane, dirty or not. Surfaces
+ *  that can navigate away (the entity panel's "Open entity") hide that route
+ *  while one is: leaving discards the form. In Split, the other pane's form is
+ *  not left by it. */
+export const editSessionOpenAtom = atom((get) => paneForms(get).length > 0);
 
 /** The bulk edit form is open AND holds changes. A selection change then has
  *  to ask first: the form's set was frozen when it opened, and changing the
  *  selection under it would make Apply write to entities the reader no longer
  *  sees selected (or not write to ones they do). */
 export const bulkEditDirtyAtom = atom((get) =>
-  get(dirtyFormsAtom).some((f) => f.id === "bulk-edit" && f.isDirty),
+  paneForms(get).some((f) => f.id === "bulk-edit" && f.isDirty),
 );
 
 /** A navigation held back by the guard, waiting on the user's verdict.
@@ -68,10 +85,22 @@ const guardBypassAtom = atom(false);
  *  switch surfaces (app view, entity tabs, focal entity, settings section) —
  *  not every button. */
 export const guardNavigationAtom = atom(null, (get, set, run: () => void) => {
-  const dirty = get(dirtyFormsAtom).filter((f) => f.isDirty);
+  guard(get, set, get(dirtyFormsAtom), run);
+});
+
+/** {@link guardNavigationAtom} for a navigation inside one Split pane (open a
+ *  record, Back, a tab of the entity view, the pane's preview): it asks only
+ *  about that pane's forms, the only ones it unmounts. Outside Split every
+ *  form is the left pane's, so it asks about all of them. */
+export const guardPaneNavigationAtom = atom(null, (get, set, run: () => void) => {
+  guard(get, set, paneForms(get), run);
+});
+
+function guard(get: Getter, set: Setter, forms: PaneForm[], run: () => void) {
+  const dirty = forms.filter((f) => f.isDirty);
   if (!dirty.length || get(guardBypassAtom)) run();
   else set(pendingNavigationAtom, { label: joinLabels(dirty.map((f) => f.label)), run });
-});
+}
 
 /** Every dirty form, named: a page with two drafts (Account's profile and
  *  password) must not have the dialog mention only one. "A", "A and B",

@@ -9,6 +9,7 @@ import { focusedEntityIdAtom, goBackAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { tabsForType } from "../utils/entityTabs";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
+import { EntityPreviewSlideOver } from "../components/relationships/EntityPreviewSlideOver";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
@@ -136,6 +137,7 @@ export function EntityView() {
         left={renderLeft()}
         mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
         right={<EntityDrawer />}
+        paneOverlay={<EntityPreviewSlideOver />}
         defaultRightWidth={560}
         minRightWidth={DRAWER_MIN_WIDTH}
         mobileSections={[

@@ -467,7 +467,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     built once per session so leaving the Library and coming back finds it as it was. It runs
     the collection-switch and Reset resets through its scope. A new per-pane atom goes in
     `libraryPaneScopedAtoms`, a new per-record entity-view atom in `ENTITY_VIEW_ATOMS`.
-    Language, collection, Notebook, entity data and the dirty guard are shared.
+    Language, collection, Notebook and entity data are shared. Dirty forms register with their
+    pane (`libraryPaneSideAtom`, now in `atoms/paneSide.ts`); a navigation inside a pane
+    (`guardPaneNavigationAtom`, and `useDirtyGuard` under a pane) asks only about that pane's
+    forms, a navigation outside the panes about all of them.
   - A pane's keys and long presses act only where the focus is, or the pointer when the focus
     is in neither pane (`paneHoldsEvent`, `components/library/libraryPane.tsx`). Each pane has
     its own Shift-range order (`SelectionOrderHost`). A rail panel's focus trap holds Tab only
@@ -478,11 +481,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     full-window view. The other pane, the rail, the strip and the divider stay as they are;
     both panes may show records. The pane's Library stays mounted under it, `invisible` and
     `inert`, so Back (the tab strip's arrow; history first, then the Library) finds its
-    scroll, view and preview. A collection switch closes it. The pane's entity view has no
+    scroll, view and preview. A collection switch and Reset demo data close it. The pane's entity view has no
     published view, and its keys are gated with `paneOwnsEvent`; `paneHoldsEvent` is false
     for a pane showing a record. In a pane the entity view's drawer may take all but 28rem
     (`SPLIT_PANE_MIN_REM`) and opens at no more than half; a pane narrower than 28rem plus
-    the drawer's minimum has no drawer. Synced, it clears the rail by `SPLIT_RAIL_RESERVE`.
+    the drawer's minimum has no drawer: the view then mounts the connected-entity slide-over
+    itself (`paneOverlay` on `SplitView`), and Relationships Filters open the slide-over
+    because the dock (`RelFiltersDock`) lives inside the drawer. Escape in a rail panel
+    belongs to the panel that holds the focus, even when the other pane's is the top layer.
+    Synced, it clears the rail by `SPLIT_RAIL_RESERVE`.
   - A pane's preview never moves the pane's focus: it shows Metadata and Relationships, and
     "View entity" for the rest; a draft is the exception. A passage hit opens the pane's
     entity view at its page. `libraryEntitiesAtom` and `networkGraphAtom` are cached by input,

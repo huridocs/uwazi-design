@@ -143,6 +143,7 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={<MetadataDrawer />}
+      paneOverlay={<EntityPreviewSlideOver />}
       defaultRightWidth={560}
       minRightWidth={DRAWER_MIN_WIDTH}
       mobileSections={[

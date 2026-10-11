@@ -18,6 +18,8 @@ interface AdaptiveSplitViewProps {
   right: ReactNode;
   defaultRightWidth?: number;
   minRightWidth?: number;
+  /** See `SplitView`: drawn in the view when a Split pane drops the drawer. */
+  paneOverlay?: ReactNode;
   /** Mobile-only: each section opens in its own bottom sheet via the action menu */
   mobileSections?: MobileSection[];
   /** Render-prop: receives a node containing the action menu trigger to embed inside `left` */
@@ -33,6 +35,7 @@ export function AdaptiveSplitView({
   right,
   defaultRightWidth,
   minRightWidth,
+  paneOverlay,
   mobileSections,
   mobileLeft,
   openSectionId: openSectionProp,
@@ -99,6 +102,7 @@ export function AdaptiveSplitView({
       right={right}
       defaultRightWidth={defaultRightWidth}
       minRightWidth={minRightWidth}
+      paneOverlay={paneOverlay}
     />
   );
 }

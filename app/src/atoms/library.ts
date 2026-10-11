@@ -1,6 +1,7 @@
 import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
-import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
+import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom, guardPaneNavigationAtom } from "./dirtyGuard";
+import { libraryPaneSideAtom } from "./paneSide";
 import { atomFamily } from "jotai/utils";
 import {
   cejilReadyAtom,
@@ -365,7 +366,7 @@ export const openBulkEditAtom = atom(null, (get, set) => {
  *  change. With a clean one, the form's set follows the new selection. */
 function selectionWrite(get: Getter, set: Setter, run: () => void) {
   if (get(bulkEditDirtyAtom)) {
-    set(guardNavigationAtom, () => {
+    set(guardPaneNavigationAtom, () => {
       set(libraryBulkEditOpenAtom, false);
       run();
     });
@@ -524,9 +525,7 @@ export const libraryDateToAtom = atom<string>("");
 const mapBoundsStateAtom = atom<MapBounds | null>(null);
 export type { MapBounds };
 
-/** Which Split pane a store is: "left" in the root store, "right" in the right
- *  pane's scope (`atoms/librarySplit.ts` sets it). Outside Split, "left". */
-export const libraryPaneSideAtom = atom<"left" | "right">("left");
+export { libraryPaneSideAtom };
 
 /** Split: this pane shows the entity view in place of its Library. Set by
  *  `openEntityAtom` when a record is opened from a pane, cleared by Back.
@@ -592,6 +591,9 @@ export const resetLibraryPaneAtom = atom(null, (_get, set) => {
   set(syncPlayheadAtom, null);
   set(syncFoldedAtom, {});
   set(syncedMapAreaAtom, null);
+  // A record open in the pane may be one the reset removes; close it, as a
+  // collection switch does.
+  set(libraryPaneEntityOpenAtom, false);
 });
 registerSettingsReset((set) => set(resetLibraryPaneAtom));
 
@@ -1232,7 +1234,7 @@ export const selectDataSourceAtom = atom(null, (get, set, source: DataSource) =>
  *  confirm, closing the form first on Discard. */
 export function whenBulkClean(get: Getter, set: Setter, run: () => void) {
   if (!get(bulkEditDirtyAtom)) return run();
-  set(guardNavigationAtom, () => {
+  set(guardPaneNavigationAtom, () => {
     set(libraryBulkEditOpenAtom, false);
     run();
   });

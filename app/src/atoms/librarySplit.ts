@@ -84,7 +84,8 @@ type ScopeStore = ReturnType<typeof createScope>;
  *  history, the files seeded from it, the Relationships panel, the viewer's
  *  page, rendition, passage and jumps, the drawer's tab and search, and
  *  click-to-fill. Shared data (references, relationship types, highlights,
- *  entity edits, drafts) and the dirty guard stay global. A new atom the
+ *  entity edits, drafts) stay global; the dirty guard keys forms by pane
+ *  (`atoms/dirtyGuard.ts`). A new atom the
  *  entity view keeps per record goes here. */
 const ENTITY_VIEW_ATOMS = [
   focusedEntityIdAtom,

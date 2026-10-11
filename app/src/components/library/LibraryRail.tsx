@@ -5,7 +5,7 @@ import { libraryRailInsetAtom, libraryRailPanelAtom, NO_RAIL_INSET, type Library
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { DrawerWidthProvider } from "../../hooks/useDrawerWidth";
-import type { LibraryPaneSide, SplitPanelSlot } from "./libraryPane";
+import { useLibraryPane, type LibraryPaneSide, type SplitPanelSlot } from "./libraryPane";
 
 /* Full width layout (`libraryLayoutAtom = "full"`): the Library's main pane
    takes the whole width, and what the drawer held moves to two places over the
@@ -254,13 +254,34 @@ export function LibraryRail({
   useEffect(() => () => setInset(NO_RAIL_INSET), [setInset]);
   const fit = fitContent || !!shown?.fit;
   const paneEscape = pane ? pane.onEscape : undefined;
+  const libraryPane = useLibraryPane();
   useEffect(() => {
     if (!isOpen || paneEscape === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || !layer.isTopNow()) return;
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const t = e.target instanceof Element ? e.target : null;
+      /* Split has a panel in each pane, and only one is the app's top layer.
+         Escape is the panel's that holds the focus: this one when the focus is
+         in it and nothing nested there (a dialog, a menu) is open, never this
+         one when the focus is in the other pane. */
+      if (layer.isTopNow()) {
+        const otherPane = t?.closest("[data-library-pane], [data-library-pane-owner]");
+        if (
+          libraryPane &&
+          otherPane &&
+          otherPane !== libraryPane.root.current &&
+          otherPane.getAttribute("data-library-pane-owner") !== libraryPane.side
+        )
+          return;
+      } else {
+        const panel = panelRef.current;
+        if (!libraryPane || !panel || !t || t.closest("[role=dialog]") !== panel) return;
+        if (t.closest("[role=menu], [role=listbox]")) return;
+        // An open menu or listbox anywhere; rail items open dialogs and do not count.
+        if (document.querySelector('[aria-haspopup]:not([aria-haspopup="dialog"])[aria-expanded="true"]')) return;
+      }
       if (paneEscape) {
         // In a record, Escape in a field or a menu is that control's.
-        const t = e.target as HTMLElement | null;
         if (t?.closest("input, textarea, select, [role=menu], [role=listbox]")) return;
         if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
         e.preventDefault();
@@ -272,7 +293,7 @@ export function LibraryRail({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, layer, setOpen, paneEscape]);
+  }, [isOpen, layer, setOpen, paneEscape, libraryPane, panelRef]);
 
   const panelId = `${ids}-panel`;
   const titleId = `${ids}-title`;

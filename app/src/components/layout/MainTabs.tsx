@@ -114,7 +114,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           className={`hit-area ${inPane ? "" : "md:hidden"} text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer`}
           aria-label="Go back"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={20} aria-hidden className="rtl:-scale-x-100" />
         </button>
       )}
       <div

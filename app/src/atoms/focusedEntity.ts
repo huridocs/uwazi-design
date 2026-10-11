@@ -7,7 +7,7 @@ import {
   activePrimaryGroupIdAtom,
 } from "./files";
 import { relViewAtom, resetRelFacetsAtom } from "./filters";
-import { guardNavigationAtom } from "./dirtyGuard";
+import { guardPaneNavigationAtom } from "./dirtyGuard";
 import { libraryPaneEntityOpenAtom } from "./library";
 import { libraryLayoutAtom } from "./session";
 import { breakpointAtom } from "./viewport";
@@ -87,7 +87,7 @@ const splitOnScreenAtom = atom(
  *  surface, so an open edit session gets to object first. In Split the entity
  *  view opens inside the pane (`libraryPaneEntityOpenAtom`). */
 export const openEntityAtom = atom(null, (get, set, entityId: string) => {
-  set(guardNavigationAtom, () => {
+  set(guardPaneNavigationAtom, () => {
     const inPane = get(splitOnScreenAtom);
     const fromEntity = inPane ? get(libraryPaneEntityOpenAtom) : get(appViewAtom) === "entity";
     if (fromEntity) {
@@ -105,7 +105,7 @@ export const openEntityAtom = atom(null, (get, set, entityId: string) => {
  *  any, else the Library (in Split, that pane's Library as it was). Guarded
  *  like {@link openEntityAtom}. */
 export const goBackAtom = atom(null, (get, set) => {
-  set(guardNavigationAtom, () => {
+  set(guardPaneNavigationAtom, () => {
     const history = get(focalHistoryAtom);
     if (history.length > 0) {
       const prev = history[history.length - 1];
