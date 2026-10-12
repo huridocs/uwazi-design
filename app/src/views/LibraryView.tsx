@@ -115,6 +115,8 @@ import {
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibraryPagination } from "../components/library/LibraryPagination";
+import { Hint } from "../components/shared/Hint";
+import { FooterFoldProvider, useFooterFold, useFooterFoldMeasure } from "../components/library/footerFold";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
@@ -1460,6 +1462,18 @@ export function LibraryView() {
         </span>
       ));
 
+  // The bottom bar folds on its own width (`footerFold.tsx`): first the
+  // actions' words, then the page group in steps. Phones have their own bar.
+  const footerFold = useFooterFoldMeasure(
+    [
+      selectionActive ? "sel" : "idle",
+      activeFilterCount > 0 ? "f" : "",
+      canImport ? "imp" : "",
+      paged && !cejilLoading ? `p${filtered.length}` : "",
+      splitFooter && !splitFooter.synced ? "split" : "",
+    ].join("|"),
+    isMobile,
+  );
   const renderLeft = (menuTrigger?: ReactNode) => {
   // Cards and List page their results; the other views draw the whole set.
   const pagination =
@@ -1475,7 +1489,8 @@ export function LibraryView() {
       />
     ) : null;
   const footerActions = (
-    <>
+    <FooterFoldProvider value={footerFold.fold}>
+    <div ref={footerFold.ref} data-part="footer-row" data-fold={footerFold.fold} className="flex-1 min-w-0 self-stretch flex items-center gap-1">
         {/* The bar swaps in place between the baseline actions and the
             selection's, at the same height. The selection's readout, Clear and
             select-all sit at the bar's end in `LibrarySelectionBar`. */}
@@ -1561,14 +1576,14 @@ export function LibraryView() {
               {pagination}
             </>
           ) : (
-            <div className="ms-auto shrink-0 flex">{pagination}</div>
+            <div data-fold-push className="ms-auto shrink-0 flex">{pagination}</div>
           ))}
         {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
             the bar's END, where the entity view's bar keeps it: in thumb reach,
             and a menu at the bottom opens upward. Only the drawer nav moved;
             search, view mode, Display and the readout stay on top. */}
         {menuTrigger && (
-          <div data-part="sheets" className="ms-auto shrink-0 flex items-center gap-1">
+          <div data-part="sheets" data-fold-push className="ms-auto shrink-0 flex items-center gap-1">
             {pagination && <div className="me-1 flex">{pagination}</div>}
             {/* Filters one tap away, not behind the menu. */}
             <button
@@ -1588,7 +1603,8 @@ export function LibraryView() {
             {menuTrigger}
           </div>
         )}
-    </>
+    </div>
+    </FooterFoldProvider>
   );
   return (
     // The narrow-tier gutter host (12px). The toolbar, the view lane, the time
@@ -2414,16 +2430,19 @@ function SplitExportButton({
   const left = usePaneResultCount(results, "left");
   const right = usePaneResultCount(results, "right");
   const records = (n: number) => `${n.toLocaleString()} ${n === 1 ? "record" : "records"}`;
+  const iconOnly = useFooterFold() >= 1;
   return (
-    <div className="hidden sm:flex shrink-0">
+    <Hint text="Export CSV" describe={false} muted={!iconOnly}>
+    {(hint) => (
+    <div {...hint} className="hidden sm:flex shrink-0">
       <MobileActionMenu
         label="Export CSV"
         trigger={{
-          className: `flex items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`,
+          className: `flex items-center gap-1.5 ${iconOnly ? "px-2.5" : "px-3"} py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`,
           content: (
             <>
               <FileDown size={13} className="text-ink-tertiary" aria-hidden />
-              <span className="hidden @[44rem]:inline">Export CSV</span>
+              {!iconOnly && <span>Export CSV</span>}
               <ChevronDown size={12} className="text-ink-tertiary" aria-hidden />
             </>
           ),
@@ -2435,6 +2454,8 @@ function SplitExportButton({
         ]}
       />
     </div>
+    )}
+    </Hint>
   );
 }
 
@@ -2450,17 +2471,23 @@ function FooterButton({
   /** The bar's one filled button; the rest are ghosts (`warmButton.ts`). */
   lead?: boolean;
 }) {
-  // The label hides below a 44rem bar (the bar is the container), and the
+  // From the bar's first fold the label goes and a tooltip says it; the
   // button keeps its name through `aria-label`.
+  const iconOnly = useFooterFold() >= 1;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${lead ? BAR_LEAD : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-    >
-      {icon}
-      <span className="hidden @[44rem]:inline">{label}</span>
-    </button>
+    <Hint text={label} describe={false} muted={!iconOnly}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          onClick={onClick}
+          aria-label={label}
+          className={`hidden sm:flex shrink-0 items-center gap-1.5 ${iconOnly ? "px-2.5" : "px-3"} py-1.5 text-xs font-medium ${lead ? BAR_LEAD : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+        >
+          {icon}
+          {!iconOnly && <span>{label}</span>}
+        </button>
+      )}
+    </Hint>
   );
 }

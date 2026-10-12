@@ -17,6 +17,7 @@ import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./s
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
+import { useFooterFold } from "./footerFold";
 import { SelectAllBox } from "./SelectAllBox";
 
 /** The Library footer's SELECTED state — swapped in place of the four
@@ -105,7 +106,7 @@ export function LibrarySelectionBar({
           bar's midline; the offer ("Select all 1,084", else "3 not shown")
           hangs under it, out of flow, so it comes and goes without moving
           anything. */}
-      <span data-part="selection-end" className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
+      <span data-part="selection-end" data-fold-push className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
         <span className={`inline-flex shrink-0 me-2 ${n >= 2 ? "" : "invisible"}`}>
           <SelectAllBox loadedIds={loadedIds} />
         </span>
@@ -195,8 +196,10 @@ function BarButton({
   tone?: "lead" | "ghost" | "danger";
 }) {
   const disabled = !!disabledReason;
+  // From the bar's first fold the label goes; the hint then names the action.
+  const iconOnly = useFooterFold() >= 1;
   return (
-    <Hint text={disabledReason ?? label} describe={disabled}>
+    <Hint text={disabledReason ?? label} describe={disabled} muted={!disabled && !iconOnly}>
       {(hint) => (
         <button
           {...hint}
@@ -204,12 +207,12 @@ function BarButton({
           aria-label={label}
           aria-disabled={disabled || undefined}
           onClick={disabled ? undefined : onClick}
-          className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${
+          className={`hidden sm:flex shrink-0 items-center gap-1.5 ${iconOnly ? "px-2.5" : "px-3"} py-1.5 text-xs font-medium ${
             tone === "lead" ? BAR_LEAD : tone === "danger" ? BAR_DANGER : BAR_GHOST
           } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
           <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>
-          <span className="hidden @[56rem]:inline">{label}</span>
+          {!iconOnly && <span>{label}</span>}
         </button>
       )}
     </Hint>

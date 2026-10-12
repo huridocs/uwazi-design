@@ -67,9 +67,26 @@ export function Pager({
   );
 }
 
+const PAGE_FIELD =
+  "h-6 px-1 rounded-md bg-transparent text-end text-tab font-semibold text-ink tabular-nums hover:bg-warm focus:bg-warm focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 transition-colors";
+
 /** The current page as a field, sized to the widest page number so the
- *  stepper does not move as the digits change. */
-function PageField({ page, pageCount, onCommit }: { page: number; pageCount: number; onCommit: (n: number) => void }) {
+ *  stepper does not move as the digits change. `Folio` draws it too, with its
+ *  own type (`className`) and Home / End for the first and last page. */
+export function PageField({
+  page,
+  pageCount,
+  onCommit,
+  className = PAGE_FIELD,
+  edges = false,
+}: {
+  page: number;
+  pageCount: number;
+  onCommit: (n: number) => void;
+  className?: string;
+  /** Home and End go to the first and last page instead of moving the caret. */
+  edges?: boolean;
+}) {
   const [draft, setDraft] = useState(String(page));
   useEffect(() => setDraft(String(page)), [page]);
   // Escape blurs the field; the blur that follows must not commit the draft.
@@ -96,6 +113,10 @@ function PageField({ page, pageCount, onCommit }: { page: number; pageCount: num
     } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
       onCommit(page + (e.key === "ArrowUp" ? 1 : -1));
+    } else if (edges && (e.key === "Home" || e.key === "End")) {
+      e.preventDefault();
+      e.stopPropagation();
+      onCommit(e.key === "Home" ? 1 : pageCount);
     }
   };
   const digits = String(pageCount).length;
@@ -113,8 +134,7 @@ function PageField({ page, pageCount, onCommit }: { page: number; pageCount: num
       // Reads as the numeral at rest; the warm box shows only on hover and
       // focus. `ch` + the padding: tabular digits are one `ch` each.
       style={{ width: `calc(${digits}ch + 0.5rem)` }}
-      className="h-6 px-1 rounded-md bg-transparent text-end text-tab font-semibold text-ink tabular-nums
-        hover:bg-warm focus:bg-warm focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 transition-colors"
+      className={className}
     />
   );
 }

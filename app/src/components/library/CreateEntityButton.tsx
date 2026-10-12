@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import type { EntityType } from "../../data/entities";
 import { BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
+import { Hint } from "../shared/Hint";
+import { useFooterFold } from "./footerFold";
 
 /** The Library footer's Create entity, as a split button.
  *
@@ -42,6 +44,9 @@ export function CreateEntityButton({
   const presetName = typeOf(preset)?.name ?? "entity";
   const label = named ? `Create ${presetName}` : "Create entity";
   const listed = recent.filter((id) => typeOf(id));
+  // Folded bar (`footerFold.tsx`): the plus alone, named, with its label as
+  // the tooltip.
+  const iconOnly = useFooterFold() >= 1;
 
   useEffect(() => {
     if (!open) return;
@@ -64,16 +69,20 @@ export function CreateEntityButton({
 
   return (
     <div ref={wrapRef} data-component="CreateEntityButton" className="relative hidden sm:flex shrink-0 items-center">
+      <Hint text={iconOnly ? label : `New ${presetName}`} describe={false} muted={named && !iconOnly}>
+      {(hint) => (
       <button
+        {...hint}
         type="button"
         onClick={() => onCreate(preset)}
         aria-label={label}
-        title={named ? undefined : `New ${presetName}`}
-        className={`flex items-center gap-1.5 ps-2.5 @[44rem]:ps-3 pe-1.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-s-md transition-colors cursor-pointer`}
+        className={`flex items-center gap-1.5 ${iconOnly ? "ps-2.5" : "ps-3"} pe-1.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-s-md transition-colors cursor-pointer`}
       >
         <Plus size={13} className="text-ink-tertiary" aria-hidden />
-        <span className="hidden @[44rem]:inline">{label}</span>
+        {!iconOnly && <span>{label}</span>}
       </button>
+      )}
+      </Hint>
       <button
         ref={triggerRef}
         type="button"

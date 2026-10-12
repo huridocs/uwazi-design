@@ -1,13 +1,11 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Pager } from "../components/shared/Pager";
-import { LibraryPagination } from "../components/library/LibraryPagination";
-import type { LibraryPageSize } from "../atoms/library";
 
-/** The page stepper at the end of a pane's bottom bar: Previous · "N / M" ·
- *  Next. The PDF viewer's bar draws it read-only; the Library's Cards and List
- *  draw it with the page as a field (Enter or blur goes, Escape reverts,
- *  ArrowUp / ArrowDown step). `compact` swaps the words for chevrons. */
+/** The page stepper at the end of the PDF viewer's bottom bar: Previous ·
+ *  "N / M" · Next. `editable` makes the page a field (Enter or blur goes,
+ *  Escape reverts, ArrowUp / ArrowDown step); `compact` swaps the words for
+ *  chevrons. The Library's Cards and List draw `Folio` instead. */
 const meta = {
   title: "Shared/Pager",
   component: Pager,
@@ -31,25 +29,6 @@ function Live({ editable, compact, pageCount = 147 }: { editable?: boolean; comp
   );
 }
 
-function LibraryDemo({ total }: { total: number }) {
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState<LibraryPageSize>(30);
-  return (
-    <Bar>
-      <LibraryPagination
-        total={total}
-        page={page}
-        pageSize={size}
-        onPage={setPage}
-        onPageSize={(n) => {
-          setPage(Math.floor(((page - 1) * size) / n) + 1);
-          setSize(n);
-        }}
-      />
-    </Bar>
-  );
-}
-
 export const Default: Story = { render: () => <Live /> };
 
 export const Editable: Story = { render: () => <Live editable /> };
@@ -68,10 +47,8 @@ export const AllStates: Story = {
       <Bar>
         <Pager page={1} pageCount={0} onPage={() => {}} />
       </Bar>
-      <LibraryDemo total={4398} />
-      <LibraryDemo total={18} />
     </div>
   ),
 };
 
-export const Empty: Story = { render: () => <LibraryDemo total={0} /> };
+export const Empty: Story = { render: () => <Live pageCount={0} /> };

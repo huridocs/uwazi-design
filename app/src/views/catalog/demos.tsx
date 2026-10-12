@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pager } from "../../components/shared/Pager";
+import { Folio } from "../../components/shared/Folio";
 import { LibraryPagination } from "../../components/library/LibraryPagination";
 import type { LibraryPageSize } from "../../atoms/library";
 import { YearStrip } from "../../components/relationships/when/YearStrip";
@@ -1170,18 +1171,31 @@ export function FilterCardDemo() {
   );
 }
 
-/** The page stepper, read-only (the PDF viewer) and with its page field and
- *  page size (the Library's Cards and List). */
+/** The PDF viewer's page stepper, read-only and compact. */
 export function PagerDemo() {
   const [page, setPage] = useState(2);
-  const [libPage, setLibPage] = useState(1);
-  const [size, setSize] = useState<LibraryPageSize>(30);
   const bar = "bleed flex items-center justify-end h-12 bg-paper";
   return (
     <div data-gutter-host className="gutter-host flex flex-col gap-3">
       <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
         <Pager page={page} pageCount={12} onPage={setPage} />
       </div>
+      <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
+        <Pager page={page} pageCount={12} onPage={setPage} compact />
+      </div>
+    </div>
+  );
+}
+
+/** The quiet stepper: the Library's page group (range, page size, Folio)
+ *  and the stepper alone, as phones and a narrow bar draw it. */
+export function FolioDemo() {
+  const [page, setPage] = useState(3);
+  const [libPage, setLibPage] = useState(1);
+  const [size, setSize] = useState<LibraryPageSize>(30);
+  const bar = "bleed flex items-center justify-end h-12 bg-paper";
+  return (
+    <div data-gutter-host className="gutter-host flex flex-col gap-3">
       <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
         <LibraryPagination
           total={4398}
@@ -1195,7 +1209,10 @@ export function PagerDemo() {
         />
       </div>
       <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
-        <Pager page={page} pageCount={12} onPage={setPage} compact />
+        <Folio page={page} pageCount={147} onPage={setPage} editable />
+      </div>
+      <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
+        <Folio page={page} pageCount={147} onPage={setPage} compact />
       </div>
     </div>
   );

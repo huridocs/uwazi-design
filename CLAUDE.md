@@ -512,10 +512,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   appears is the pagination range, which says which part of that same filtered total is shown.
 - Pagination (Cards and List only; Overview, Map, Timeline, Network, Sync, Evidence and Adv.
   Search draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
-  `ActionBar` keeps the PDF pager, and both draw the shared `Pager` (Previous · N / M · Next;
-  the Library's page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step). The
-  group is the range ("31–60 of 4,398"), the page size (`LIBRARY_PAGE_SIZES` 30/60/120, default
-  30) and the pager; on phones only the chevron pager, and the size moves to Display › Per page.
+  `ActionBar` keeps the PDF's `Pager`. The Library draws `Folio` ("‹ 3 / 147 ›", caption type,
+  ghost chevrons; the page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step;
+  Home/End or Shift-click reach the first and last page), with the range ("31–60 of 4,398")
+  and the page size (`LIBRARY_PAGE_SIZES` 30/60/120, default 30) as its lead. `Folio` takes
+  `Pager`'s props. On phones only the chevron stepper, and the size moves to Display › Per page.
+  - The footer folds on its own width (`components/library/footerFold.tsx`, measured on the
+    `footer-row`, not the viewport): actions to icons with a `Hint`, then the size to its
+    number, the range to the total, then the stepper alone. A part pushed with `ms-auto` marks
+    `data-fold-push`. A new footer part reads `useFooterFold()`, never an `@[…]` query.
   - `libraryPageSizeAtom` is per collection; `libraryPageStateAtom` holds `{key, page, scroll}`.
     Both are in `libraryPaneScopedAtoms`, so Split pages each pane on its own, and the shared
     footer shows the active pane's pager ("Pages, left pane").

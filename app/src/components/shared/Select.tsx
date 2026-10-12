@@ -44,6 +44,7 @@ export function Select({
   sheetTitle,
   variant = "default",
   placement = "bottom",
+  triggerText,
 }: {
   value: string;
   options: SelectOption[];
@@ -83,8 +84,13 @@ export function Select({
    *  rows, Done) instead of a popover. Opt-in per use. */
   sheetTitle?: string;
   /** `bar`: the trigger of a pane's bottom bar, on the bar ladder's ghost
-   *  rung (no fill, no edge at rest; warm on hover). */
-  variant?: "default" | "bar";
+   *  rung (no fill, no edge at rest; warm on hover). `quiet`: the same, in
+   *  caption colour and a 1.75rem box, for a choice set inside a line of
+   *  caption text (the Library's page size). */
+  variant?: "default" | "bar" | "quiet";
+  /** What the trigger shows for an option, when shorter than its label in
+   *  the list ("30" for "30 per page"). The accessible name keeps the label. */
+  triggerText?: (label: string) => string;
   /** `top` opens the list above the trigger, for a control at the foot of
    *  the window. */
   placement?: "bottom" | "top";
@@ -168,13 +174,15 @@ export function Select({
         // own parchment on hover and keeps its border, so it settles INTO the bar
         // rather than rising off it, which is the direction that was wanted.
         // `transition-colors`, not `transition-all`: colour is all that changes now.
-        className={`inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium
+        className={`inline-flex items-center gap-1 ${variant === "quiet" ? "h-7 ps-1.5 pe-1" : "h-8 ps-3 pe-2"} text-xs font-medium
           rounded-md transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${
             tone === "carbon"
               ? "text-carbon-label bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
               : variant === "bar"
                 ? "text-ink-secondary border border-transparent hover:bg-warm hover:text-ink"
+                : variant === "quiet"
+                ? "text-ink-tertiary border border-transparent hover:bg-warm hover:text-ink"
                 : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
           }`}
       >
@@ -212,15 +220,15 @@ export function Select({
                     o.value === current?.value ? "" : "invisible"
                   }`}
                 >
-                  {o.label}
+                  {triggerText ? triggerText(o.label) : o.label}
                 </span>
               ))}
             </span>
           ) : (
-            <span className="truncate">{current?.label}</span>
+            <span className="truncate">{current && (triggerText ? triggerText(current.label) : current.label)}</span>
           )}
         </bdi>
-        <ChevronDown size={14} data-part="chevron" aria-hidden className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} data-part="chevron" aria-hidden className={`${variant === "quiet" ? "text-ink-tertiary" : "text-ink-secondary"} shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {asSheet ? (
         <MobileBottomSheet open={open} onClose={() => setOpen(false)} title={sheetTitle} footer={<SheetDone onClick={() => setOpen(false)} />}>
