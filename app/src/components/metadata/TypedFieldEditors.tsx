@@ -1,4 +1,5 @@
 import { useState, type HTMLAttributes, type ReactNode } from "react";
+import { NativeSelect } from "../shared/NativeSelect";
 import { Plus, X } from "lucide-react";
 import type { MetadataField } from "../../data/metadata";
 import { toDateInputValue } from "../../utils/dateValue";
@@ -277,7 +278,7 @@ function ImageEditor({ field, inputId, onPatch, inputClass, images = [] }: Typed
   // A value saved as the file's URL reads as that file.
   const current = images.find((i) => i.id === field.value || i.url === field.value)?.id ?? field.value;
   return (
-    <select id={inputId} value={current} onChange={(e) => onPatch({ value: e.target.value })} className={inputClass}>
+    <NativeSelect id={inputId} size="lg" value={current} onChange={(e) => onPatch({ value: e.target.value })} className={inputClass}>
       <option value="">No image</option>
       {current && !images.some((i) => i.id === current) && <option value={current}>Current image</option>}
       {images.map((i) => (
@@ -285,6 +286,6 @@ function ImageEditor({ field, inputId, onPatch, inputClass, images = [] }: Typed
           {i.name}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }

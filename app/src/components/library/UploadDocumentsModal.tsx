@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { NativeSelect } from "../shared/NativeSelect";
 import { FileText } from "lucide-react";
 import type { EntityType } from "../../data/entities";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
@@ -74,18 +75,20 @@ export function UploadDocumentsModal({
         <label htmlFor={selectId} className="text-xs font-medium text-ink-secondary">
           Template
         </label>
-        <select
+        <NativeSelect
           id={selectId}
+          size="md"
           value={typeId}
           onChange={(e) => setTypeId(e.target.value)}
-          className={`flex-1 min-w-0 ${MODAL_INPUT} cursor-pointer`}
+          className={MODAL_INPUT}
+          wrapClassName="relative flex flex-1 min-w-0"
         >
           {types.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <ul className="flex-1 overflow-auto py-2 space-y-2">

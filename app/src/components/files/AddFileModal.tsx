@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus, ChevronDown } from "lucide-react";
+import { NativeSelect } from "../shared/NativeSelect";
+import { CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   addFileTargetAtom,
@@ -339,13 +340,13 @@ export function AddFileModal() {
                 <div data-part="fields" className="grid grid-cols-2 gap-3">
                   <label data-part="language" className="space-y-1">
                     <span className={MODAL_LABEL}>Language</span>
-                    <div className="relative">
-                      <select
+                    <NativeSelect
+                        size="md"
                         value={entry.language}
                         onChange={(e) =>
                           updateEntry(entry.id, { language: e.target.value })
                         }
-                        className={`${MODAL_INPUT} appearance-none pe-7 cursor-pointer`}
+                        className={MODAL_INPUT}
                         aria-label="Language"
                       >
                         {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
@@ -353,19 +354,13 @@ export function AddFileModal() {
                             {languageName(l)}
                           </option>
                         ))}
-                      </select>
-                      <ChevronDown
-                        size={12}
-                        aria-hidden
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
-                      />
-                    </div>
+                      </NativeSelect>
                   </label>
 
                   <label data-part="add-as" className="space-y-1">
                     <span className={MODAL_LABEL}>Add as</span>
-                    <div className="relative">
-                      <select
+                    <NativeSelect
+                        size="md"
                         value={
                           entry.addAs.type === "translation"
                             ? `t:${entry.addAs.groupId}`
@@ -384,7 +379,7 @@ export function AddFileModal() {
                             });
                           }
                         }}
-                        className={`${MODAL_INPUT} appearance-none pe-7 cursor-pointer truncate`}
+                        className={MODAL_INPUT}
                         aria-label="Add as"
                       >
                         <option value="primary">New primary doc</option>
@@ -394,13 +389,7 @@ export function AddFileModal() {
                             Translation of {g.title}
                           </option>
                         ))}
-                      </select>
-                      <ChevronDown
-                        size={12}
-                        aria-hidden
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
-                      />
-                    </div>
+                      </NativeSelect>
                   </label>
                 </div>
 

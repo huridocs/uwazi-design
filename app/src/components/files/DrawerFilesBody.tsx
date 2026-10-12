@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, Check, Download, Pencil, X } from "lucide-react";
+import { NativeSelect } from "../shared/NativeSelect";
+import { ArrowLeft, Check, Download, Pencil, X } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import {
@@ -339,11 +340,12 @@ function DrawerFileRow({
             aria-label="File name"
           />
           <div className="flex items-center gap-2">
-            <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-              <select
+            <NativeSelect
+                size="xs"
+                wrapClassName="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30"
                 value={draftLang}
                 onChange={(e) => setDraftLang(e.target.value)}
-                className="appearance-none bg-transparent pl-2 pr-5 py-0.5 text-meta font-semibold text-ink-secondary focus:outline-none cursor-pointer"
+                className="bg-transparent py-0.5 text-meta font-semibold text-ink-secondary focus:outline-none"
                 aria-label="File language"
               >
                 {languageOptions.map((lang) => (
@@ -351,13 +353,7 @@ function DrawerFileRow({
                     {lang}
                   </option>
                 ))}
-              </select>
-              <ChevronDown
-                size={10}
-                aria-hidden
-                className="absolute right-1 text-ink-tertiary pointer-events-none"
-              />
-            </div>
+            </NativeSelect>
             <span className="text-meta text-ink-tertiary">{file.type.toUpperCase()}</span>
             <span className="text-meta text-ink-tertiary">{file.size}</span>
           </div>

@@ -108,6 +108,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "fl-active-filter-chip", label: "ActiveFilterChip" },
       { id: "fl-toggle-chip", label: "ToggleChip" },
       { id: "fl-folio", label: "Folio" },
+      { id: "fl-native-select", label: "NativeSelect" },
       { id: "fl-collapse-controls", label: "CollapseControls" },
       { id: "fl-list-info-row", label: "ListInfoRow" },
       { id: "fl-list-card-row", label: "ListCardRow" },

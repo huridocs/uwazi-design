@@ -97,6 +97,7 @@ import {
   ToggleChipDemo,
   CollapseControlsDemo,
   FolioDemo,
+  NativeSelectDemo,
   ListInfoRowDemo,
   ZoomControlDemo,
   CheckboxesDemo,
@@ -1344,6 +1345,18 @@ sendFill(selection.text);                                    // commits, then di
   onPage={goToPage} onPageSize={changePageSize} />`}
                 >
                   <FolioDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-native-select" ref={reg("fl-native-select")}>
+                <CatalogEntry
+                  name="NativeSelect"
+                  description="A native select with the app's caret instead of the browser's. The caret sits as far in from the end as the text sits from the start, as DateInput places its calendar icon, on logical sides so RTL mirrors. size sets the padding (xs grid cell, sm filter panel h-8, md MODAL_INPUT, lg record form); className sets height, type, ground and border, without inline padding. Every native select in the app uses it; Select remains the popover for menu-like triggers."
+                  code={`<NativeSelect size="md" value={typeId} onChange={(e) => setTypeId(e.target.value)} className={MODAL_INPUT}>
+  {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+</NativeSelect>`}
+                >
+                  <NativeSelectDemo />
                 </CatalogEntry>
               </div>
 

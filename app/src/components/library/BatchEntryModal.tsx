@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { NativeSelect } from "../shared/NativeSelect";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { ArrowLeft, CopyPlus, Plus, Undo2, X } from "lucide-react";
 import type { Corpus } from "../../data/entityChanges";
@@ -591,7 +592,9 @@ export function BatchEntryModal({
                       <span className="block text-meta text-ink-tertiary truncate">
                         {paste.header ? `“${h}”` : `Column ${j + 1}`}
                       </span>
-                      <select
+                      <NativeSelect
+                        size="xs"
+                        wrapClassName="relative flex w-full mt-1"
                         aria-label={`Property for pasted column ${j + 1}`}
                         value={paste.mapping[j] ?? ""}
                         onChange={(e) => {
@@ -599,7 +602,7 @@ export function BatchEntryModal({
                           mapping[j] = e.target.value || null;
                           setPaste({ ...paste, mapping });
                         }}
-                        className="mt-1 w-full h-7 px-1.5 text-xs text-ink bg-paper border border-border rounded-md cursor-pointer"
+                        className="h-7 text-xs text-ink bg-paper border border-border rounded-md"
                       >
                         <option value="">Skip this column</option>
                         {colIds.map((id) => (
@@ -607,7 +610,7 @@ export function BatchEntryModal({
                             {colLabel(id)}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </th>
                   ))}
                 </tr>

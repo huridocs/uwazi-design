@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FULL_TEXT_MIN } from "../../utils/searchScope";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
 import { VEGAS_UTC_OFFSET } from "../../data/vegas/schema";
@@ -86,6 +86,7 @@ import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { FacetTally } from "../../utils/facetTally";
 import { BAR_GHOST } from "../shared/warmButton";
 import { DateInput } from "../shared/DateInput";
+import { NativeSelect } from "../shared/NativeSelect";
 import {
   FILTER_CARD,
   FILTER_FOOTER_BUTTON,
@@ -1271,6 +1272,11 @@ const FIXED_FACET_NAMES: Record<string, string> = {
   content: "Content",
 };
 
+/** A field in a filter card (date bounds, a group's facets): the panel's
+ *  `h-8 text-xs` on warm. No inline padding; the field sets its own. */
+const FILTER_FIELD =
+  "h-8 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all";
+
 /* ── Group card — two facets joined by OR, or one negated. The facets keep
    their own cards and selections; the group only changes how they combine. ── */
 
@@ -1333,16 +1339,22 @@ function FilterGroupCard({
         onChange={(op) => onChange({ op, keys: group.keys.slice(0, op === "or" ? 2 : 1) })}
         note=""
       />
-      <div data-part="members" className="px-1 pb-0.5 flex flex-col gap-1">
+      {/* The boxes sit on the Date card's input edge; "or" is a caption on
+          the title's text edge, the card's 6px stack above and below it. */}
+      <div data-part="members" className="px-1 pb-0.5 flex flex-col gap-1.5">
         {Array.from({ length: slots }, (_, i) => (
-          <div key={i} className="flex flex-col gap-1">
-            {i > 0 && <span className="px-1 text-meta text-ink-tertiary">or</span>}
-            <select
+          <Fragment key={i}>
+            {i > 0 && (
+              <span data-part="or" aria-hidden className="px-1 text-meta text-ink-tertiary">
+                or
+              </span>
+            )}
+            <NativeSelect
+              size="sm"
               value={group.keys[i] ?? ""}
               onChange={(e) => setSlot(i, e.target.value)}
               aria-label={group.op === "or" ? (i === 0 ? "First facet" : "Second facet") : "Facet to exclude"}
-              className="w-full min-w-0 h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary truncate
-                focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all cursor-pointer"
+              className={FILTER_FIELD}
             >
               <option value="">{choices(i).length ? "Choose a filter" : "Set a filter above first"}</option>
               {choices(i).map((o) => (
@@ -1350,8 +1362,8 @@ function FilterGroupCard({
                   {o.label}
                 </option>
               ))}
-            </select>
-          </div>
+            </NativeSelect>
+          </Fragment>
         ))}
       </div>
     </section>
@@ -1646,7 +1658,7 @@ function DateBox({
       value={value}
       onChange={onChange}
       aria-label={ariaLabel}
-      className="flex-1 min-w-0 w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
+      className={`flex-1 min-w-0 w-full px-2 ${FILTER_FIELD}`}
     />
   );
 }

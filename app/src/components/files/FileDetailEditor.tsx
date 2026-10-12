@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { NativeSelect } from "../shared/NativeSelect";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
   FileText,
@@ -8,7 +9,6 @@ import {
   Link2,
   ArrowUpCircle,
   ArrowDownCircle,
-  ChevronDown,
   Eye,
   Pencil,
   Check,
@@ -200,13 +200,14 @@ export function FileDetailEditor({
         <dl data-part="properties" className="grid grid-cols-2 gap-3">
           <Field label="Language" htmlFor={editing ? langId : undefined}>
             {editing ? (
-              <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-                <select
+              <NativeSelect
+                  size="xs"
+                  wrapClassName="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30"
                   ref={langRef}
                   id={langId}
                   value={file.language}
                   onChange={(e) => updateField("language", e.target.value)}
-                  className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
+                  className="bg-transparent py-0.5 text-xs font-medium text-ink focus:outline-none"
                   aria-label="File language"
                 >
                   {/* Named, not coded: this is a chooser, and a reader picking
@@ -218,13 +219,7 @@ export function FileDetailEditor({
                       {languageName(lang)}
                     </option>
                   ))}
-                </select>
-                <ChevronDown
-                  size={11}
-                  aria-hidden
-                  className="absolute right-1.5 text-ink-tertiary pointer-events-none"
-                />
-              </div>
+                </NativeSelect>
             ) : (
               <span className="inline-block px-2 py-0.5 text-xs font-medium text-ink-secondary bg-vellum rounded">
                 {languageName(file.language)}

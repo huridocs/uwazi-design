@@ -62,6 +62,8 @@ import { NetworkCanvas } from "../../components/library/NetworkCanvas";
 import { demoColorOf, demoNetwork, demoEdgeInfo, demoTypeNameOf } from "../../data/network/demo";
 import { CopyFromPicker } from "../../components/metadata/CopyFromPicker";
 import { copyUnitsOneToOne } from "../../utils/copyFrom";
+import { NativeSelect } from "../../components/shared/NativeSelect";
+import { MODAL_INPUT } from "../../components/shared/ModalParts";
 import { entities } from "../../data/entities";
 
 // Re-export so the catalog can use it directly without re-importing.
@@ -1166,6 +1168,29 @@ export function FilterCardDemo() {
           }
         />
       </div>
+    </div>
+  );
+}
+
+/** Native selects at each size, with the field classes their callers use. */
+export function NativeSelectDemo() {
+  const [v, setV] = useState("Mecanismo");
+  const opts = ["Mecanismo", "País", "Descriptores"];
+  const rows: [Parameters<typeof NativeSelect>[0]["size"], string, string][] = [
+    ["xs", "Grid cell (xs)", "h-7 text-xs text-ink bg-paper border border-border rounded-md"],
+    ["sm", "Filter panel (sm)", "h-8 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary"],
+    ["md", "Modal (md)", MODAL_INPUT],
+    ["lg", "Record form (lg)", "w-full py-2 text-sm text-ink bg-paper rounded-md border border-border"],
+  ];
+  return (
+    <div className="flex flex-col gap-2 max-w-xs">
+      {rows.map(([size, label, cls]) => (
+        <NativeSelect key={label} size={size} aria-label={label} value={v} onChange={(e) => setV(e.target.value)} className={cls}>
+          {opts.map((o) => (
+            <option key={o}>{o}</option>
+          ))}
+        </NativeSelect>
+      ))}
     </div>
   );
 }
