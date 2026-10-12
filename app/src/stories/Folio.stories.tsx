@@ -7,8 +7,8 @@ import type { LibraryPageSize } from "../atoms/library";
 /** The quiet page stepper, "‹ 3 / 147 ›", in caption type. Ghost chevrons
  *  (Shift-click, Home or End for the first and last page), the page as a field
  *  when `editable` (Enter or blur goes, Escape restores, ArrowUp / ArrowDown
- *  step). The Library's Cards and List draw it with the range and page size as
- *  its `lead` (`LibraryPagination`). */
+ *  step). The PDF viewer draws it alone; the Library's Cards and List draw it
+ *  with the range and page size as its `lead` (`LibraryPagination`). */
 const meta = {
   title: "Shared/Folio",
   component: Folio,

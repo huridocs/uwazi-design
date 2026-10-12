@@ -1,12 +1,11 @@
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BAR_GHOST } from "./warmButton";
-import { PageField } from "./Pager";
 
-/** The quiet page stepper: "‹ 3 / 147 ›", set in the bar's caption type so it
- *  reads as one line with whatever sits before it (`lead`: the Library's range
- *  and page size). Takes `Pager`'s props, so the PDF viewer's bar could draw
- *  it in place of `Pager`.
+/** The page stepper at the end of a pane's bottom bar: "‹ 3 / 147 ›", set in
+ *  the bar's caption type so it reads as one line with whatever sits before it
+ *  (`lead`: the Library's range and page size). The Library's Cards and List
+ *  and the PDF viewer's `ActionBar` draw it.
  *
  *  - The chevrons are ghost buttons: no fill or edge at rest, warm on hover.
  *    They are named "Previous page" / "Next page" and flip under RTL. At
@@ -92,14 +91,7 @@ export function Folio({
         </button>
         <span data-part="page-count" dir="ltr" className="flex items-center gap-0.5 tabular-nums whitespace-nowrap">
           {editable && pageCount > 0 ? (
-            <PageField
-              page={page}
-              pageCount={pageCount}
-              onCommit={go}
-              edges
-              className="h-6 px-1 rounded-md bg-transparent text-end text-xs font-semibold text-ink tabular-nums
-                hover:bg-warm focus:bg-warm focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 transition-colors"
-            />
+            <PageField page={page} pageCount={pageCount} onCommit={go} />
           ) : (
             <span className="font-semibold text-ink">{page}</span>
           )}
@@ -121,5 +113,62 @@ export function Folio({
         </button>
       </div>
     </div>
+  );
+}
+
+/** The current page as a field, sized to the widest page number so the
+ *  stepper does not move as the digits change. Home and End go to the first
+ *  and last page instead of moving the caret. */
+function PageField({ page, pageCount, onCommit }: { page: number; pageCount: number; onCommit: (n: number) => void }) {
+  const [draft, setDraft] = useState(String(page));
+  useEffect(() => setDraft(String(page)), [page]);
+  // Escape blurs the field; the blur that follows must not commit the draft.
+  const cancelled = useRef(false);
+  const commit = () => {
+    if (cancelled.current) {
+      cancelled.current = false;
+      return;
+    }
+    const n = Number.parseInt(draft, 10);
+    if (Number.isFinite(n)) onCommit(n);
+    setDraft(String(page));
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      setDraft(String(page));
+      cancelled.current = true;
+      e.currentTarget.blur();
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      onCommit(page + (e.key === "ArrowUp" ? 1 : -1));
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCommit(e.key === "Home" ? 1 : pageCount);
+    }
+  };
+  const digits = String(pageCount).length;
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      data-part="page-input"
+      aria-label={`Page, of ${pageCount.toLocaleString()}`}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value.replace(/\D/g, ""))}
+      onKeyDown={onKeyDown}
+      onBlur={commit}
+      onFocus={(e) => e.currentTarget.select()}
+      // Reads as the numeral at rest; the warm box shows only on hover and
+      // focus. `ch` + the padding: tabular digits are one `ch` each.
+      style={{ width: `calc(${digits}ch + 0.5rem)` }}
+      className="h-6 px-1 rounded-md bg-transparent text-end text-xs font-semibold text-ink tabular-nums
+        hover:bg-warm focus:bg-warm focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 transition-colors"
+    />
   );
 }

@@ -4,7 +4,7 @@ import { ChevronUp, ChevronDown, Minus, Plus } from "lucide-react";
 import { currentPageAtom } from "../../atoms/selection";
 import { useNotify } from "../../hooks/useNotify";
 import { BAR_GHOST } from "../shared/warmButton";
-import { Pager } from "../shared/Pager";
+import { Folio } from "../shared/Folio";
 
 /** Prev/next stepping through the search matches marked in the document. */
 export interface MatchNav {
@@ -27,8 +27,7 @@ interface ActionBarProps {
    *  aren't paginated). The trailing slot still renders. */
   showPager?: boolean;
   /** Search-match stepper, left of the page pager. Omit when nothing is being
-   *  searched — the pager steps PAGES, this steps HITS, so they're deliberately
-   *  different shapes (icons vs words) sitting side by side. */
+   *  searched — the pager steps PAGES, this steps HITS. */
   matchNav?: MatchNav;
   /** Phones: zoom controls in place of the OCR button (M21). */
   zoom?: { percent: number; onOut: () => void; onIn: () => void; onFit: () => void; canOut: boolean; canIn: boolean };
@@ -119,8 +118,8 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
           </div>
         )}
         {showPager && (
-          // With the zoom group beside it (phones) the words don't fit.
-          <Pager page={currentPage} pageCount={numPages} onPage={goTo} compact={!!zoom} />
+          // Phones (the zoom group beside it): the larger chevron targets.
+          <Folio page={currentPage} pageCount={numPages} onPage={goTo} compact={!!zoom} editable />
         )}
         {rightSlot}
       </div>

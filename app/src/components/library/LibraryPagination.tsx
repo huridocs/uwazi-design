@@ -9,7 +9,7 @@ const SIZE_OPTIONS = LIBRARY_PAGE_SIZES.map((n) => ({ value: String(n), label: `
  *  as one line of caption type: the range of the filtered total this page
  *  shows ("31–60 of 4,398"), the page size, and the `Folio` stepper
  *  ("‹ 3 / 147 ›"). The total is the masthead readout's; this says which part
- *  of it is on screen. The PDF viewer's bar keeps `Pager`.
+ *  of it is on screen.
  *
  *  As the bar folds (`footerFold.tsx`, after the actions lose their words)
  *  the page size shows its number only, then the range the total only, then
