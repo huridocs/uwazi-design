@@ -512,11 +512,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   appears is the pagination range, which says which part of that same filtered total is shown.
 - Pagination (Cards and List only; Overview, Map, Timeline, Network, Sync, Evidence and Adv.
   Search draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
-  `ActionBar` keeps the PDF's `Pager`. The Library draws `Folio` ("‹ 3 / 147 ›", caption type,
+  `ActionBar` keeps the PDF's page stepper; both draw `Folio` ("‹ 3 / 147 ›", caption type,
   ghost chevrons; the page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step;
-  Home/End or Shift-click reach the first and last page), with the range ("31–60 of 4,398")
-  and the page size (`LIBRARY_PAGE_SIZES` 30/60/120, default 30) as its lead. `Folio` takes
-  `Pager`'s props. On phones only the chevron stepper, and the size moves to Display › Per page.
+  Home/End or Shift-click reach the first and last page). The Library's range ("31–60 of
+  4,398") and page size (`LIBRARY_PAGE_SIZES` 30/60/120, default 30) are its lead.
+  `LibraryPageEnd` repeats the Folio and range, centred, under the last card or row (sticky
+  start, so a List wider than the pane does not carry it sideways), on the same page state; it
+  is left out with one page. On phones only the chevron stepper, and the size moves to
+  Display › Per page.
   - The footer folds on its own width (`components/library/footerFold.tsx`, measured on the
     `footer-row`, not the viewport): actions to icons with a `Hint`, then the size to its
     number, the range to the total, then the stepper alone. A part pushed with `ms-auto` marks
