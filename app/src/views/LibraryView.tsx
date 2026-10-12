@@ -56,6 +56,9 @@ import {
   libraryRangeFiltersAtom,
   libraryFilterGroupsAtom,
   libraryDrawnIdsAtom,
+  libraryPageSizeAtom,
+  libraryPageStateAtom,
+  type LibraryPageSize,
   libraryFieldColumnsAtom,
   libraryPropertySortsAtom,
   libraryHasDocAtom,
@@ -111,6 +114,7 @@ import {
   lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
+import { LibraryPagination } from "../components/library/LibraryPagination";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
@@ -191,9 +195,6 @@ function compareValues(a: string, b: string): number {
 }
 
 export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
-
-/** How many cards to reveal per page in the Library grid/list. */
-const DISPLAY_STEP = 120;
 
 /** Stable identities for the fields a row already marks: a fresh literal per
  *  row would re-run every `MatchOrigin` match scan on every render. */
@@ -872,7 +873,8 @@ export function LibraryView() {
 
   // Everything `filterState` reads, as a string: the key under which the two
   // Split panes share their full-corpus passes (`sharedPass`).
-  const passKey = [
+  const chainIdentity = identityOf(chainTemplates);
+  const passKeyParts = [
     dataSource,
     language,
     activeTypeIds.join(","),
@@ -889,7 +891,6 @@ export function LibraryView() {
     rangesKey,
     JSON.stringify(groups),
     chainKey,
-    identityOf(chainTemplates),
     cejilReady,
     nepalReady,
     vegasReady,
@@ -898,7 +899,8 @@ export function LibraryView() {
     searchScope,
     JSON.stringify(matchTypes),
     contentKey,
-  ].join("\u0001");
+  ];
+  const passKey = [...passKeyParts, chainIdentity].join("\u0001");
 
   // Where each entity matched, computed at most once per entity per query and
   // shared by the relevance ranking, the match-type chip gate and the chip
@@ -1109,11 +1111,69 @@ export function LibraryView() {
     return () => setPreviewCount(null);
   }, [withPreview, total, setPreviewCount]);
 
-  // The full CEJIL corpus is thousands of entities — cap the rendered cards and
-  // let the user reveal more, so the card/list grid never paints them all at once.
-  const [visibleCount, setVisibleCount] = useState(DISPLAY_STEP);
-  useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
-  const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  // Cards and List show one page of the results (`LibraryPagination` in the
+  // footer). The page belongs to the results it was chosen for: a new key
+  // (collection, filters, query, sort) reads as page 1, and coming Back from a
+  // record rebuilds the same key, so the page and its scroll hold.
+  const paged = viewMode === "cards" || viewMode === "list";
+  // `passKey` without the chain templates' identity, which is new on every
+  // mount and would turn Back into a new key.
+  const pageKey = [...passKeyParts, JSON.stringify(mapBounds), sort, sortDir].join("\u0001");
+  const pageSize = useAtomValue(libraryPageSizeAtom);
+  const [pageState, setPageState] = useAtom(libraryPageStateAtom);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const ownPage = pageState.key === pageKey;
+  const page = ownPage ? Math.min(pageState.page, pageCount) : 1;
+  const shown = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
+  const laneRef = useRef<HTMLDivElement | null>(null);
+  const goToPage = useCallback(
+    (n: number) => {
+      setPageState({ key: pageKey, page: n, scroll: 0 });
+    },
+    [pageKey, setPageState],
+  );
+  // A new size keeps the first result of the page in view.
+  const setPageSize = useSetAtom(libraryPageSizeAtom);
+  const changePageSize = useCallback(
+    (size: LibraryPageSize) => {
+      setPageSize(size);
+      goToPage(Math.floor(((page - 1) * pageSize) / size) + 1);
+    },
+    [setPageSize, goToPage, page, pageSize],
+  );
+  // The lane's scroll, kept with the page so Back restores it: saved when the
+  // Library unmounts (a record opened over it), put back when the lane mounts
+  // again. The lane can mount after this component does (the drawer's split
+  // lays it out first), so the restore is in its ref, not in a mount effect.
+  const pageScroll = useRef({ key: pageKey, page, top: ownPage ? pageState.scroll : 0 });
+  pageScroll.current.key = pageKey;
+  pageScroll.current.page = page;
+  // Another page, or the same page of other results, starts at the top.
+  const shownFirst = shown[0]?.id;
+  const lastShown = useRef(shownFirst);
+  useEffect(() => {
+    if (lastShown.current === shownFirst) return;
+    lastShown.current = shownFirst;
+    if (paged) laneRef.current?.scrollTo({ top: 0 });
+  }, [shownFirst, paged]);
+  const pendingScroll = useRef(pageScroll.current.top);
+  const setLane = useCallback((el: HTMLDivElement | null) => {
+    laneRef.current = el;
+    if (el && pendingScroll.current > 0) {
+      el.scrollTop = pendingScroll.current;
+      pendingScroll.current = 0;
+    }
+  }, []);
+  useEffect(
+    () => () => {
+      const { key, page: p, top } = pageScroll.current;
+      setPageState({ key, page: p, scroll: top });
+    },
+    [setPageState],
+  );
 
   /* One answer for the whole grid: does any entity on screen resolve a property?
      Every card gets it so all claim the same subgrid row tracks; a per-card test
@@ -1173,8 +1233,10 @@ export function LibraryView() {
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
   // The grid's and the table's order — Timeline and Results register their own,
   // so this one stands down while they draw (see `useSelectionOrder`).
-  useSelectionOrder(viewMode === "timeline" || viewMode === "results" ? null : shownIds);
-  // What the visible view draws, for "select all loaded". The grid, the table
+  // The whole result order, not the page: a Shift+click on another page of
+  // Cards or List spans every result between.
+  useSelectionOrder(viewMode === "timeline" || viewMode === "results" ? null : filteredIds);
+  // What the visible view draws, for the select-all box. The grid's page, the table
   // and the map are drawn here; Timeline and Results publish their own.
   const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
   const drawnIds = useAtomValue(libraryDrawnIdsAtom);
@@ -1399,6 +1461,19 @@ export function LibraryView() {
       ));
 
   const renderLeft = (menuTrigger?: ReactNode) => {
+  // Cards and List page their results; the other views draw the whole set.
+  const pagination =
+    paged && !cejilLoading ? (
+      <LibraryPagination
+        total={filtered.length}
+        page={page}
+        pageSize={pageSize}
+        onPage={goToPage}
+        onPageSize={changePageSize}
+        compact={isMobile}
+        label={paneSide ? `Pages, ${paneSide} pane` : "Pages"}
+      />
+    ) : null;
   const footerActions = (
     <>
         {/* The bar swaps in place between the baseline actions and the
@@ -1456,7 +1531,8 @@ export function LibraryView() {
             )}
           </>
         )}
-        {/* No result count here: the masthead readout is the only one. The
+        {/* No result count here: the masthead readout holds it, and the page
+            group at the bar's end says which part of it is shown. The
             active-filters button below is not a duplicate; it is the only way to
             reach the filters while the drawer shows an entity. `ms-2` separates
             it from the footer actions. */}
@@ -1476,12 +1552,24 @@ export function LibraryView() {
         {/* With a selection the bar places it, before its end group. */}
         {/* Phones carry Filters as a button of their own (below), with the count. */}
         {!selectionActive && !menuTrigger && <ActiveFiltersButton className="ms-2 shrink-0" />}
+        {/* The page group at the bar's end, where the PDF viewer keeps its
+            pager. With a selection it follows the selection's end group. */}
+        {pagination && !menuTrigger &&
+          (selectionActive ? (
+            <>
+              <BarDivider className="hidden sm:block" />
+              {pagination}
+            </>
+          ) : (
+            <div className="ms-auto shrink-0 flex">{pagination}</div>
+          ))}
         {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
             the bar's END, where the entity view's bar keeps it: in thumb reach,
             and a menu at the bottom opens upward. Only the drawer nav moved;
             search, view mode, Display and the readout stay on top. */}
         {menuTrigger && (
           <div data-part="sheets" className="ms-auto shrink-0 flex items-center gap-1">
+            {pagination && <div className="me-1 flex">{pagination}</div>}
             {/* Filters one tap away, not behind the menu. */}
             <button
               type="button"
@@ -1591,7 +1679,7 @@ export function LibraryView() {
             onClose={() => setSearchFocused(false)}
           />
         </div>
-        {/* The only count on this surface: "N entities" / "N of M entities", or
+        {/* The result count: "N entities" / "N of M entities", or
             "N results for [chip]" where the chip is `ActiveSearchChip`, the one
             dismiss for a committed search.
             Fixed 15rem slot, left-aligned under the search box, so a changing
@@ -1715,6 +1803,8 @@ export function LibraryView() {
           groundDown.current = { x: e.clientX, y: e.clientY };
         }}
         onClick={clearOnGround}
+        ref={setLane}
+        onScroll={paged ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
         // Only a real tap opens an item here, never the end of a scroll.
         data-tap-guard
         // A canvas lane spans the pane on purpose: `__gutter()` lists it and
@@ -1884,19 +1974,6 @@ export function LibraryView() {
             stickyTop="-0.75rem"
             density={listDensity}
           />
-        )}
-
-        {/* Hidden while the table has no columns: there is nothing to show more of. */}
-        {!cejilLoading && viewMode !== "overview" && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && viewMode !== "evidence" && viewMode !== "network" && viewMode !== "sync" &&
-          !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
-          <div className="flex justify-center pt-4">
-            <button
-              onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}
-              className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-            >
-              Show more — {(filtered.length - shown.length).toLocaleString()} remaining
-            </button>
-          </div>
         )}
       </div>
 

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Pager } from "../../components/shared/Pager";
+import { LibraryPagination } from "../../components/library/LibraryPagination";
+import type { LibraryPageSize } from "../../atoms/library";
 import { YearStrip } from "../../components/relationships/when/YearStrip";
 import { EventRow } from "../../components/relationships/when/EventRow";
 import { createStore, Provider, useSetAtom } from "jotai";
@@ -1162,6 +1165,37 @@ export function FilterCardDemo() {
             />
           }
         />
+      </div>
+    </div>
+  );
+}
+
+/** The page stepper, read-only (the PDF viewer) and with its page field and
+ *  page size (the Library's Cards and List). */
+export function PagerDemo() {
+  const [page, setPage] = useState(2);
+  const [libPage, setLibPage] = useState(1);
+  const [size, setSize] = useState<LibraryPageSize>(30);
+  const bar = "bleed flex items-center justify-end h-12 bg-paper";
+  return (
+    <div data-gutter-host className="gutter-host flex flex-col gap-3">
+      <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
+        <Pager page={page} pageCount={12} onPage={setPage} />
+      </div>
+      <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
+        <LibraryPagination
+          total={4398}
+          page={libPage}
+          pageSize={size}
+          onPage={setLibPage}
+          onPageSize={(n) => {
+            setLibPage(Math.floor(((libPage - 1) * size) / n) + 1);
+            setSize(n);
+          }}
+        />
+      </div>
+      <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
+        <Pager page={page} pageCount={12} onPage={setPage} compact />
       </div>
     </div>
   );

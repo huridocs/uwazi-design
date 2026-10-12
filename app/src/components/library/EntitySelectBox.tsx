@@ -9,7 +9,8 @@ import {
 
 /* ── The order a Shift range runs over ────────────────────────────────────
    "From the anchor to here" means in the order the reader sees: the grid's
-   loaded page, the timeline's dates, the Results ranking. Each view
+   and the table's results across their pages, the timeline's dates, the
+   Results ranking. Each view
    registers its drawn order when it commits (`useSelectionOrder`); a list
    drawn somewhere else at the same time (the selection or cluster drawer)
    scopes its own rows with `SelectionOrderScope`. Read at click time, so no
@@ -36,7 +37,7 @@ export function useSelectionOrder(ids: readonly string[] | null): void {
   }, [ids, holder]);
 }
 
-/** Publish the ids the visible view draws, for "select all loaded" (see
+/** Publish the ids the visible view draws, for the select-all box (see
  *  `libraryDrawnIdsAtom`). An effect, so only a committed render counts. */
 export function useDrawnIds(ids: readonly string[]): void {
   const set = useSetAtom(libraryDrawnIdsAtom);
@@ -104,12 +105,15 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
     const forward = e.key === "ArrowDown" || e.key === (rtl ? "ArrowLeft" : "ArrowRight");
     const next = list[i + (forward ? 1 : -1)];
     if (i < 0 || !next) return;
-    e.preventDefault();
-    range({ order: list, id: next });
     // The next box in this list: the same id is drawn in the grid and in the
     // selection drawer, and the first match in the document may be the other.
+    // Not drawn (the next page of Cards or List): the keys stop at the edge.
     const root = e.currentTarget.closest("[data-select-scope]") ?? document;
-    root.querySelector<HTMLInputElement>(`[data-select-id="${CSS.escape(next)}"] input`)?.focus();
+    const box = root.querySelector<HTMLInputElement>(`[data-select-id="${CSS.escape(next)}"] input`);
+    if (!box) return;
+    e.preventDefault();
+    range({ order: list, id: next });
+    box.focus();
   };
 
   return (

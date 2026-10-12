@@ -7,10 +7,11 @@ import { Hint } from "../shared/Hint";
  *  MULTIPLE selection is on (the bar's end group), so it is never seen
  *  unchecked in practice.
  *
- *  Its state is over the LOADED entities (what "Show more" has mounted): none
+ *  Its state is over the SHOWN entities (the page of Cards or List, or what
+ *  the view in front draws): none
  *  of them selected = unchecked, some = mixed, all = checked. Unchecked or
- *  mixed, a click selects every loaded entity; checked, it deselects the
- *  loaded ones — and only those (see the click). Mixed used to deselect, which
+ *  mixed, a click selects every shown entity; checked, it deselects the
+ *  shown ones — and only those (see the click). Mixed used to deselect, which
  *  made sense while the box sat in the idle bar; shown only with a selection,
  *  it left the box no way to select at all. Selecting
  *  the rest of a larger result set is the footer readout's own offer, so this
@@ -33,15 +34,15 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   const all = loadedIds.length > 0 && picked === loadedIds.length;
   const mixed = picked > 0 && !all;
   const off = disabled || loadedIds.length === 0;
-  // Selected beyond what is loaded: the box won't touch those, and says so
+  // Selected beyond what is shown: the box won't touch those, and says so
   // before the click (the bar's "N not shown" says so after).
   const beyond = selection.size - picked;
   const text =
     all && beyond > 0
-      ? `Deselect the ${picked.toLocaleString()} loaded; ${beyond.toLocaleString()} more stay selected (Clear ends the selection).`
+      ? `Deselect the ${picked.toLocaleString()} shown; ${beyond.toLocaleString()} more stay selected (Clear ends the selection).`
       : all
-        ? "Deselect the loaded entities."
-        : `Select all ${loadedIds.length.toLocaleString()} loaded. ${MOD} or Shift + click selects several; on touch, long-press.`;
+        ? "Deselect the shown entities."
+        : `Select all ${loadedIds.length.toLocaleString()} shown. ${MOD} or Shift + click selects several; on touch, long-press.`;
 
   // `indeterminate` is a DOM property with no attribute.
   useEffect(() => {
@@ -63,9 +64,9 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
             aria-label={
               all
                 ? beyond > 0
-                  ? `Deselect the ${picked.toLocaleString()} loaded entities; ${beyond.toLocaleString()} more stay selected`
-                  : "Deselect the loaded entities"
-                : "Select all loaded entities"
+                  ? `Deselect the ${picked.toLocaleString()} shown entities; ${beyond.toLocaleString()} more stay selected`
+                  : "Deselect the shown entities"
+                : "Select all shown entities"
             }
             onChange={() => {}}
             onClick={(e) => {
@@ -74,7 +75,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
                 e.preventDefault();
                 return;
               }
-              // Clears only what it can see: the loaded ids. Entities picked
+              // Clears only what it can see: the shown ids. Entities picked
               // under another filter (counted "not in view") stay — Clear, in
               // the bar, is the one that ends a whole selection.
               if (all) deselect(loadedIds);

@@ -383,6 +383,25 @@ const thumbSections = (): DisplaySection[] => {
   ];
 };
 
+/** Results per page in Cards and List. The footer's select sets it; on a phone
+ *  the footer keeps only the stepper and the size is here. `external`: the
+ *  per-pane, per-collection `libraryPageSizeAtom` holds it. */
+export const LIBRARY_PAGE_SIZES = [30, 60, 120] as const;
+const PAGE_SIZE: DisplaySection = {
+  id: "pageSize",
+  label: "Per page",
+  kind: "choice",
+  visible: (ctx) => ctx.isMobile,
+  separator: true,
+  option: {
+    id: "pageSize",
+    scope: "external",
+    default: String(LIBRARY_PAGE_SIZES[0]),
+    layout: "segmented",
+    choices: LIBRARY_PAGE_SIZES.map((n) => ({ id: String(n), label: String(n) })),
+  },
+};
+
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
@@ -410,6 +429,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
     },
     CARD_COLUMNS,
     ...thumbSections(),
+    PAGE_SIZE,
   ],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
@@ -443,6 +463,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
         ],
       },
     },
+    PAGE_SIZE,
   ],
 
   timeline: [

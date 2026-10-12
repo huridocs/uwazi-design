@@ -96,6 +96,7 @@ import {
   FacetSectionDemo,
   ToggleChipDemo,
   CollapseControlsDemo,
+  PagerDemo,
   ListInfoRowDemo,
   ZoomControlDemo,
   CheckboxesDemo,
@@ -1330,6 +1331,18 @@ sendFill(selection.text);                                    // commits, then di
                       </button>
                     </div>
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-pager" ref={reg("fl-pager")}>
+                <CatalogEntry
+                  name="Pager"
+                  description="The page stepper at the end of a pane's bottom bar: Previous, N / M, Next. The PDF viewer draws it read-only; the Library's Cards and List draw it with the page as a field (Enter or blur goes, Escape reverts, ArrowUp and ArrowDown step), the range of the filtered total, and the page size (LibraryPagination). compact swaps the words for chevrons on phones."
+                  code={`<Pager page={page} pageCount={numPages} onPage={goTo} />
+<LibraryPagination total={filtered.length} page={page} pageSize={30}
+  onPage={goToPage} onPageSize={changePageSize} />`}
+                >
+                  <PagerDemo />
                 </CatalogEntry>
               </div>
 

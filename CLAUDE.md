@@ -508,7 +508,26 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     canvases). An open panel covers the divider's middle; it stays draggable above and below
     the panel and by keyboard.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
-  search box holds the only count and `ActiveSearchChip`.
+  search box holds the result count and `ActiveSearchChip`. The only other place the total
+  appears is the pagination range, which says which part of that same filtered total is shown.
+- Pagination (Cards and List only; Overview, Map, Timeline, Network, Sync, Evidence and Adv.
+  Search draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
+  `ActionBar` keeps the PDF pager, and both draw the shared `Pager` (Previous · N / M · Next;
+  the Library's page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step). The
+  group is the range ("31–60 of 4,398"), the page size (`LIBRARY_PAGE_SIZES` 30/60/120, default
+  30) and the pager; on phones only the chevron pager, and the size moves to Display › Per page.
+  - `libraryPageSizeAtom` is per collection; `libraryPageStateAtom` holds `{key, page, scroll}`.
+    Both are in `libraryPaneScopedAtoms`, so Split pages each pane on its own, and the shared
+    footer shows the active pane's pager ("Pages, left pane").
+  - The key is `passKey` (without the chain templates' identity, new on every mount) plus the
+    map area and the sort. A different key reads as page 1: a new query, filter, sort, language
+    or collection starts over. Back from a record rebuilds the same key, so the page holds; the
+    lane's scroll is saved on unmount and restored in the lane's ref callback. A new page size
+    keeps the page's first result in view.
+  - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
+    can span pages; Shift+Arrow stops at the page edge. The select-all box selects the page
+    shown; the bar's "Select all N" offer selects every result across pages.
+  - Snapshots carry `pageSize` as an optional key; a view saved without it opens at 30.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with
   `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all

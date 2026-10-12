@@ -31,6 +31,10 @@ import {
   libraryHasSyncAtom,
   libraryDisplayAtom,
   libraryTimelineScopeAtom,
+  libraryPageSizeAtom,
+  isLibraryPageSize,
+  DEFAULT_LIBRARY_PAGE_SIZE,
+  type LibraryPageSize,
   libraryResultsSheetOpenAtom,
   librarySelectedClusterAtom,
   libraryMapBoundsAtom,
@@ -113,6 +117,9 @@ export interface LibrarySnapshot {
     searchDir: LibrarySortDir | null;
   };
   timelineScope: TimelineScope;
+  /** Cards and List's results per page. Missing in older snapshots and in ones
+   *  that kept the default; they open with the default. */
+  pageSize?: LibraryPageSize;
 }
 
 /** Only the ticked keys: a snapshot (and the link that carries one) lists
@@ -160,6 +167,7 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
       searchDir: get(L.searchSortDirOverrideAtom),
     },
     timelineScope: get(libraryTimelineScopeAtom),
+    ...(get(libraryPageSizeAtom) !== DEFAULT_LIBRARY_PAGE_SIZE ? { pageSize: get(libraryPageSizeAtom) } : {}),
   };
 }
 
@@ -217,6 +225,8 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   set(L.searchSortOverrideAtom, s.query ? s.sort.searchKey : null);
   set(L.searchSortDirOverrideAtom, s.query ? s.sort.searchDir : null);
   set(libraryTimelineScopeAtom, s.timelineScope);
+  // After the collection switch, so the size lands on the snapshot's collection.
+  set(libraryPageSizeAtom, isLibraryPageSize(s.pageSize) ? s.pageSize : DEFAULT_LIBRARY_PAGE_SIZE);
   set(librarySelectedClusterAtom, null);
   // After the view: the bound is read only while the Map view is in front.
   // Synced, it is the shared area, set from this pane.

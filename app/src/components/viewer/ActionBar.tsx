@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { useAtom } from "jotai";
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { ChevronUp, ChevronDown, Minus, Plus } from "lucide-react";
 import { currentPageAtom } from "../../atoms/selection";
 import { useNotify } from "../../hooks/useNotify";
 import { BAR_GHOST } from "../shared/warmButton";
+import { Pager } from "../shared/Pager";
 
 /** Prev/next stepping through the search matches marked in the document. */
 export interface MatchNav {
@@ -118,32 +119,8 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
           </div>
         )}
         {showPager && (
-          <>
-            <button
-              type="button"
-              data-part="page-prev"
-              onClick={() => goTo(Math.max(1, currentPage - 1))}
-              disabled={currentPage <= 1}
-              aria-label={zoom ? "Previous page" : undefined}
-              className="hit-area text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
-            >
-              {/* With the zoom group beside it (phones) the words don't fit. */}
-              {zoom ? <ChevronLeft size={16} aria-hidden className="rtl:rotate-180" /> : "Previous"}
-            </button>
-            <span data-part="page-count" dir="ltr" className="text-tab font-semibold text-ink tabular-nums whitespace-nowrap">
-              {currentPage} / {numPages || "…"}
-            </span>
-            <button
-              type="button"
-              data-part="page-next"
-              onClick={() => goTo(Math.min(numPages, currentPage + 1))}
-              disabled={currentPage >= numPages}
-              aria-label={zoom ? "Next page" : undefined}
-              className="hit-area text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
-            >
-              {zoom ? <ChevronRight size={16} aria-hidden className="rtl:rotate-180" /> : "Next"}
-            </button>
-          </>
+          // With the zoom group beside it (phones) the words don't fit.
+          <Pager page={currentPage} pageCount={numPages} onPage={goTo} compact={!!zoom} />
         )}
         {rightSlot}
       </div>

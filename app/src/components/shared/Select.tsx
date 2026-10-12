@@ -42,6 +42,8 @@ export function Select({
   steady = false,
   id,
   sheetTitle,
+  variant = "default",
+  placement = "bottom",
 }: {
   value: string;
   options: SelectOption[];
@@ -80,6 +82,12 @@ export function Select({
   /** On phones, open the options as a bottom sheet with this title (44px
    *  rows, Done) instead of a popover. Opt-in per use. */
   sheetTitle?: string;
+  /** `bar`: the trigger of a pane's bottom bar, on the bar ladder's ghost
+   *  rung (no fill, no edge at rest; warm on hover). */
+  variant?: "default" | "bar";
+  /** `top` opens the list above the trigger, for a control at the foot of
+   *  the window. */
+  placement?: "bottom" | "top";
 }) {
   const [open, setOpen] = useState(false);
   const asSheet = useAtomValue(breakpointAtom) === "mobile" && !!sheetTitle;
@@ -165,7 +173,9 @@ export function Select({
           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${
             tone === "carbon"
               ? "text-carbon-label bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
-              : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
+              : variant === "bar"
+                ? "text-ink-secondary border border-transparent hover:bg-warm hover:text-ink"
+                : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
           }`}
       >
         {triggerIcon && (
@@ -251,7 +261,7 @@ export function Select({
           // that panel hung far past its control and stranded EN/ES/FR/AR at the
           // start of a box nothing lined up with. The options size it now, which
           // is the same text the trigger is sized from.
-          className={`absolute z-30 top-full mt-1 w-max min-w-full rounded-md bg-paper border border-border
+          className={`absolute z-30 ${placement === "top" ? "bottom-full mb-1" : "top-full mt-1"} w-max min-w-full rounded-md bg-paper border border-border
             py-1 animate-fade-in-up ${align === "end" ? "end-0" : "start-0"}`}
           style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.12)" }}
         >

@@ -17,7 +17,7 @@ import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { libraryLayoutAtom, librarySyncFiltersAtom } from "./session";
 import { propertyColumns } from "../utils/entityFields";
-import { LIBRARY_SORTS, LIBRARY_VIEWS, OVERVIEW_VIEW, cardColumnsDefault, type Choice } from "../data/libraryDisplay";
+import { LIBRARY_PAGE_SIZES, LIBRARY_SORTS, LIBRARY_VIEWS, OVERVIEW_VIEW, cardColumnsDefault, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { legacyMetaColumnId, listColumnOptions } from "../components/library/listColumns";
 import { networkTypeOptionsAtom } from "./network";
@@ -386,8 +386,39 @@ export const librarySelectionDialogAtom = atom<SelectionDialog | null>(null);
 export const libraryEditRequestAtom = atom<string | null>(null);
 
 /** The ids the visible view draws (grid page, timeline rows, Results page, map
- *  entities). "Select all loaded" means these; each view writes its own. */
+ *  entities). The select-all box selects these; each view writes its own. */
 export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
+
+/* ── Pages ────────────────────────────────────────────────────────────────
+   Cards and List show the results a page at a time; the other views draw the
+   whole set. Both atoms are per pane (`libraryPaneScopedAtoms`). */
+
+export { LIBRARY_PAGE_SIZES };
+export type LibraryPageSize = (typeof LIBRARY_PAGE_SIZES)[number];
+export const DEFAULT_LIBRARY_PAGE_SIZE: LibraryPageSize = 30;
+export const isLibraryPageSize = (n: unknown): n is LibraryPageSize =>
+  LIBRARY_PAGE_SIZES.includes(n as LibraryPageSize);
+
+/** Results per page, per collection. In memory, like the Display store. */
+const libraryPageSizeStoreAtom = atom<Partial<Record<DataSource, LibraryPageSize>>>({});
+export const libraryPageSizeAtom = atom(
+  (get): LibraryPageSize => get(libraryPageSizeStoreAtom)[get(dataSourceAtom)] ?? DEFAULT_LIBRARY_PAGE_SIZE,
+  (get, set, size: LibraryPageSize) =>
+    set(libraryPageSizeStoreAtom, { ...get(libraryPageSizeStoreAtom), [get(dataSourceAtom)]: size }),
+);
+
+/** The page Cards and List show and the lane's scroll on it, under the key of
+ *  the results it was chosen for (collection, filters, query, sort; see
+ *  `LibraryView`). A different key reads as page 1 at the top, so a new query,
+ *  filter, sort or collection starts over, while leaving the Library for a
+ *  record and coming Back, which rebuilds the same key, finds the same page
+ *  and scroll. */
+export interface LibraryPageState {
+  key: string;
+  page: number;
+  scroll: number;
+}
+export const libraryPageStateAtom = atom<LibraryPageState>({ key: "", page: 1, scroll: 0 });
 
 /** Show the selection list in the drawer by dropping the preview, unless the
  *  preview holds an open form: ticking a box must not unmount it and lose input. */
@@ -1506,6 +1537,8 @@ export const libraryPaneScopedAtoms = [
   librarySelectionDrawerOpenAtom,
   librarySelectionListAskedAtom,
   libraryDrawnIdsAtom,
+  libraryPageSizeStoreAtom,
+  libraryPageStateAtom,
   libraryOpenEntityIdAtom,
   librarySelectedClusterAtom,
   resultsCurrentPageAtom,

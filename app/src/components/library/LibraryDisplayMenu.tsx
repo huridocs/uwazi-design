@@ -24,6 +24,9 @@ import {
   defaultSortDir,
   type LibraryDisplayState,
   type PreviewCount,
+  libraryPageSizeAtom,
+  libraryPageStateAtom,
+  type LibraryPageSize,
 } from "../../atoms/library";
 import {
   sectionsFor,
@@ -68,6 +71,14 @@ export function LibraryDisplayMenu() {
   const colsInEffect = useAtomValue(libraryCardColumnsInEffectAtom);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
   const cardInfo = useAtomValue(libraryCardInfoAtom);
+  const [pageSize, setPageSize] = useAtom(libraryPageSizeAtom);
+  const [pageState, setPageState] = useAtom(libraryPageStateAtom);
+  // As the footer's select does: the first result of the page stays in view.
+  const changePageSize = (size: LibraryPageSize) => {
+    const first = (pageState.page - 1) * pageSize;
+    setPageSize(size);
+    setPageState({ ...pageState, page: Math.floor(first / size) + 1, scroll: 0 });
+  };
 
   // Escape closes it, like every other overlay in the app. The scrim was the
   // only way out, which is a mouse-only exit from a keyboard-operable menu.
@@ -127,6 +138,8 @@ export function LibraryDisplayMenu() {
     },
     // The toolbar's Language select folds into this menu on a narrow pane.
     language: { value: language, set: (v) => setLanguage(v as Language) },
+    // On a phone the footer keeps only the page stepper; the size is here.
+    pageSize: { value: String(pageSize), set: (v) => changePageSize(Number(v) as LibraryPageSize) },
   };
 
   const renderSection = (section: DisplaySection, i: number) => {
@@ -260,7 +273,7 @@ export function LibraryDisplayMenu() {
               ariaLabel={section.label}
               value={current}
               options={option.choices.map((c) => ({ id: c.id, label: c.label }))}
-              onChange={(id) => write(key, scope, id)}
+              onChange={(id) => (bound ? bound.set(id) : write(key, scope, id))}
             />
           </div>
           <p data-part="in-effect" aria-live="polite" className="min-h-4 text-meta leading-4 text-ink-tertiary">

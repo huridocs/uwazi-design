@@ -37,7 +37,7 @@ export function LibrarySelectionBar({
 }: {
   /** Every id the current results hold (filters, query, match types). */
   filteredIds: readonly string[];
-  /** The ids "Show more" has loaded. */
+  /** The ids the view in front draws (a page of Cards or List). */
   loadedIds: readonly string[];
   corpus: Corpus;
   /** The active-filters readout, placed after the actions and before the
@@ -60,8 +60,7 @@ export function LibrarySelectionBar({
   const inView = new Set(filteredIds);
   let notInView = 0;
   for (const id of selection) if (!inView.has(id)) notInView++;
-  // Selected but not DRAWN — filtered out, or past what "Show more" has
-  // loaded. After "Select all 4,398" and the box unticked, 4,278 stay
+  // Selected but not DRAWN — filtered out, or on another page. After "Select all 4,398" and the box unticked, 4,278 stay
   // selected; this is where that is said, not left silent.
   const drawn = new Set(loadedIds);
   let notShown = 0;
