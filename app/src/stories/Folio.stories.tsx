@@ -8,7 +8,8 @@ import type { LibraryPageSize } from "../atoms/library";
  *  (Shift-click, Home or End for the first and last page), the page as a field
  *  when `editable` (Enter or blur goes, Escape restores, ArrowUp / ArrowDown
  *  step). The PDF viewer draws it alone; the Library's Cards and List draw it
- *  with the range and page size as its `lead` (`LibraryPagination`). */
+ *  with the range and page size as its `lead` (`LibraryPagination`), and the
+ *  viewer's search matches as a cycle (`onStep`, `noun="match"`). */
 const meta = {
   title: "Shared/Folio",
   component: Folio,
@@ -22,6 +23,20 @@ type Story = StoryObj<typeof meta>;
 const Bar = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-center justify-end h-12 px-3 bg-paper border-t border-border">{children}</div>
 );
+
+/** The PDF's search matches: a cycle that starts before the first match. */
+function MatchesDemo({ count }: { count: number }) {
+  const [index, setIndex] = useState(0);
+  return (
+    <Folio
+      page={index}
+      pageCount={count}
+      onStep={(dir) => setIndex(index === 0 ? (dir > 0 ? 1 : count) : ((index - 1 + dir + count) % count) + 1)}
+      noun="match"
+      label="Search matches"
+    />
+  );
+}
 
 function LibraryDemo({ total, compact }: { total: number; compact?: boolean }) {
   const [page, setPage] = useState(1);
@@ -70,6 +85,12 @@ export const AllStates: Story = {
       </Bar>
       <Bar>
         <Folio page={1} pageCount={0} onPage={() => {}} label="Pages, unknown count" />
+      </Bar>
+      <Bar>
+        <MatchesDemo count={101} />
+      </Bar>
+      <Bar>
+        <MatchesDemo count={0} />
       </Bar>
       <LibraryDemo total={18} />
       <LibraryDemo total={4398} compact />

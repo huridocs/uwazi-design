@@ -1337,8 +1337,9 @@ sendFill(selection.text);                                    // commits, then di
               <div id="fl-folio" ref={reg("fl-folio")}>
                 <CatalogEntry
                   name="Folio"
-                  description="The quiet page stepper, ‹ 3 / 147 ›, in caption type. Ghost chevrons named Previous page and Next page, mirrored under RTL; Home and End, or Shift-click on a chevron, reach the first and last page. editable makes the page a field (Enter or blur goes, Escape restores, ArrowUp and ArrowDown step). lead draws what reads before it in the same line: the Library's range and page size (LibraryPagination), which fold in steps with the bar's width. The PDF viewer's ActionBar draws it with no lead."
+                  description="The quiet page stepper, ‹ 3 / 147 ›, in caption type. Ghost chevrons named Previous page and Next page, mirrored under RTL; Home and End, or Shift-click on a chevron, reach the first and last page. editable makes the page a field (Enter or blur goes, Escape restores, ArrowUp and ArrowDown step). lead draws what reads before it in the same line: the Library's range and page size (LibraryPagination), which fold in steps with the bar's width. The PDF viewer's ActionBar draws it with no lead, and once more for its search matches: onStep makes it a cycle (it wraps, 0 before the first step, no first or last, no field, the readout a status) and noun names the chevrons (Previous match, Next match)."
                   code={`<Folio page={currentPage} pageCount={numPages} onPage={goTo} editable />
+<Folio page={hitIndex + 1} pageCount={hitCount} onStep={stepMatch} noun="match" label="Search matches" />
 <LibraryPagination total={filtered.length} page={page} pageSize={30}
   onPage={goToPage} onPageSize={changePageSize} />`}
                 >

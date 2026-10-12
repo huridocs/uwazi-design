@@ -5,7 +5,8 @@ import { BAR_GHOST } from "./warmButton";
 /** The page stepper at the end of a pane's bottom bar: "‹ 3 / 147 ›", set in
  *  the bar's caption type so it reads as one line with whatever sits before it
  *  (`lead`: the Library's range and page size). The Library's Cards and List
- *  and the PDF viewer's `ActionBar` draw it.
+ *  and the PDF viewer's `ActionBar` draw it; the viewer draws a second one for
+ *  its search matches (`onStep`).
  *
  *  - The chevrons are ghost buttons: no fill or edge at rest, warm on hover.
  *    They are named "Previous page" / "Next page" and flip under RTL. At
@@ -18,7 +19,12 @@ import { BAR_GHOST } from "./warmButton";
  *    step). Escape is consumed, so it does not reach a window-level Escape.
  *  - The readout is LTR in any direction: "3 / 147" is a numeral pair.
  *  - `compact` (phones): the chevrons take a larger hit area and the lead is
- *    not drawn. */
+ *    not drawn.
+ *  - `onStep` makes it a cycle instead of a range (the PDF's search matches,
+ *    `noun="match"`): `page` may be 0 before the first step, the chevrons stay
+ *    on while there is anything to step and hand only the direction to
+ *    `onStep`, which wraps. No first / last, no field; the readout is a
+ *    status, so each step is announced. */
 export function Folio({
   page,
   pageCount,
@@ -26,13 +32,20 @@ export function Folio({
   compact = false,
   editable = false,
   label = "Pages",
+  noun = "page",
   lead,
+  onStep,
 }: {
-  /** 1-based. */
+  /** 1-based; 0 only with `onStep`, before the first step. */
   page: number;
-  /** 0 while unknown: the readout shows "…" and Next is off. */
+  /** 0 while unknown: the readout shows "…" (a cycle shows 0) and Next is off. */
   pageCount: number;
-  onPage: (page: number) => void;
+  onPage?: (page: number) => void;
+  /** Cycle mode: the chevrons call this with the direction instead of `onPage`. */
+  onStep?: (dir: -1 | 1) => void;
+  /** What a chevron steps to: "Previous page", "Next match". Also prefixes
+   *  the parts (`page-prev`, `match-count`). */
+  noun?: string;
   compact?: boolean;
   editable?: boolean;
   /** The group's accessible name. */
@@ -43,14 +56,15 @@ export function Folio({
   const last = Math.max(1, pageCount);
   const go = (n: number) => {
     const next = Math.min(Math.max(1, n), last);
-    if (next !== page) onPage(next);
+    if (next !== page) onPage?.(next);
   };
-  const atFirst = page <= 1;
-  const atLast = pageCount === 0 || page >= pageCount;
+  const cycle = !!onStep;
+  const atFirst = cycle ? pageCount === 0 : page <= 1;
+  const atLast = pageCount === 0 || (!cycle && page >= pageCount);
   // Home / End from a chevron. The field handles its own (`edges`), so a
   // Home typed there is not read twice.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).tagName === "INPUT") return;
+    if (cycle || (e.target as HTMLElement).tagName === "INPUT") return;
     if (e.key !== "Home" && e.key !== "End") return;
     e.preventDefault();
     e.stopPropagation();
@@ -61,7 +75,8 @@ export function Folio({
   // last page keeps the focus instead of dropping it to the body.
   const step = (dir: -1 | 1) => (e: MouseEvent) => {
     if (dir < 0 ? atFirst : atLast) return;
-    if (e.shiftKey) go(dir < 0 ? 1 : last);
+    if (onStep) onStep(dir);
+    else if (e.shiftKey) go(dir < 0 ? 1 : last);
     else go(page + dir);
   };
   const chevron = `${compact ? "hit-area size-8" : "size-7"} inline-flex items-center justify-center rounded-md transition-colors
@@ -79,34 +94,47 @@ export function Folio({
       <div className="flex items-center gap-0.5">
         <button
           type="button"
-          data-part="page-prev"
+          data-part={`${noun}-prev`}
           onClick={step(-1)}
           aria-disabled={atFirst || undefined}
-          aria-label="Previous page"
-          aria-keyshortcuts="Home"
-          title={atFirst ? undefined : "Previous page · Shift-click or Home for the first"}
+          aria-label={`Previous ${noun}`}
+          aria-keyshortcuts={cycle ? undefined : "Home"}
+          title={atFirst || cycle ? undefined : `Previous ${noun} · Shift-click or Home for the first`}
           className={chevron}
         >
           <ChevronLeft size={15} aria-hidden className="rtl:rotate-180" />
         </button>
-        <span data-part="page-count" dir="ltr" className="flex items-center gap-0.5 tabular-nums whitespace-nowrap">
-          {editable && pageCount > 0 ? (
+        <span
+          data-part={`${noun}-count`}
+          dir="ltr"
+          role={cycle ? "status" : undefined}
+          className="flex items-center gap-0.5 tabular-nums whitespace-nowrap"
+        >
+          {editable && !cycle && pageCount > 0 ? (
             <PageField page={page} pageCount={pageCount} onCommit={go} />
           ) : (
-            <span className="font-semibold text-ink">{page}</span>
+            // Sized and padded as the field is, so a read-only readout sits
+            // like an editable one and the chevrons hold still as the digits
+            // grow.
+            <span
+              className="px-1 font-semibold text-ink text-end"
+              style={{ minWidth: `calc(${String(Math.max(page, pageCount)).length}ch + 0.5rem)` }}
+            >
+              {page}
+            </span>
           )}
           <span aria-hidden={editable || undefined} className="text-ink-tertiary">
-            / {pageCount ? pageCount.toLocaleString() : "…"}
+            / {pageCount || cycle ? pageCount.toLocaleString() : "…"}
           </span>
         </span>
         <button
           type="button"
-          data-part="page-next"
+          data-part={`${noun}-next`}
           onClick={step(1)}
           aria-disabled={atLast || undefined}
-          aria-label="Next page"
-          aria-keyshortcuts="End"
-          title={atLast ? undefined : "Next page · Shift-click or End for the last"}
+          aria-label={`Next ${noun}`}
+          aria-keyshortcuts={cycle ? undefined : "End"}
+          title={atLast || cycle ? undefined : `Next ${noun} · Shift-click or End for the last`}
           className={chevron}
         >
           <ChevronRight size={15} aria-hidden className="rtl:rotate-180" />

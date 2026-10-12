@@ -1174,6 +1174,8 @@ export function FilterCardDemo() {
  *  and the stepper alone, as phones and a narrow bar draw it. */
 export function FolioDemo() {
   const [page, setPage] = useState(3);
+  const [match, setMatch] = useState(0);
+  const matches = 101;
   const [libPage, setLibPage] = useState(1);
   const [size, setSize] = useState<LibraryPageSize>(30);
   const bar = "bleed flex items-center justify-end h-12 bg-paper";
@@ -1192,7 +1194,16 @@ export function FolioDemo() {
         />
       </div>
       <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
-        <Folio page={page} pageCount={147} onPage={setPage} editable />
+        <div className="flex items-center gap-4">
+          <Folio
+            page={match}
+            pageCount={matches}
+            onStep={(dir) => setMatch(match === 0 ? (dir > 0 ? 1 : matches) : ((match - 1 + dir + matches) % matches) + 1)}
+            noun="match"
+            label="Search matches"
+          />
+          <Folio page={page} pageCount={147} onPage={setPage} editable />
+        </div>
       </div>
       <div className={bar} style={{ borderTop: "1px solid var(--border-primary)" }}>
         <Folio page={page} pageCount={147} onPage={setPage} compact />

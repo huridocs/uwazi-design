@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useAtom } from "jotai";
-import { ChevronUp, ChevronDown, Minus, Plus } from "lucide-react";
+import { Minus, Plus, Search } from "lucide-react";
 import { currentPageAtom } from "../../atoms/selection";
 import { useNotify } from "../../hooks/useNotify";
 import { BAR_GHOST } from "../shared/warmButton";
@@ -40,6 +40,10 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
   const goTo = (page: number) => {
     onScrollToPage(page);
   };
+  // A phone bar with a search running holds two steppers: the zoom group
+  // keeps − and + (pinch still zooms) and drops the percent and Fit, so the
+  // trailing menu stays on screen.
+  const tight = !!zoom && !!matchNav;
 
   return (
     <div
@@ -51,19 +55,23 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
     >
       {/* Left: optional slot or default OCR button (PDF only) */}
       {zoom ? (
-        <div data-part="zoom" role="group" aria-label="Zoom" className="flex items-center gap-0.5" data-gutter-align="box">
+        <div data-part="zoom" role="group" aria-label={tight ? `Zoom, ${zoom.percent}%` : "Zoom"} className="flex items-center gap-0.5" data-gutter-align="box">
           <button type="button" data-part="zoom-out" onClick={zoom.onOut} disabled={!zoom.canOut} aria-label="Zoom out" className={`hit-area w-8 h-8 grid place-items-center rounded-md ${BAR_GHOST} disabled:opacity-30 transition-colors cursor-pointer`}>
             <Minus size={15} aria-hidden />
           </button>
-          <span data-part="zoom-level" aria-live="polite" className="min-w-[3rem] text-center text-xs font-medium tabular-nums text-ink-secondary">
-            {zoom.percent}%
-          </span>
+          {!tight && (
+            <span data-part="zoom-level" aria-live="polite" className="min-w-[3rem] text-center text-xs font-medium tabular-nums text-ink-secondary">
+              {zoom.percent}%
+            </span>
+          )}
           <button type="button" data-part="zoom-in" onClick={zoom.onIn} disabled={!zoom.canIn} aria-label="Zoom in" className={`hit-area w-8 h-8 grid place-items-center rounded-md ${BAR_GHOST} disabled:opacity-30 transition-colors cursor-pointer`}>
             <Plus size={15} aria-hidden />
           </button>
-          <button type="button" data-part="zoom-fit" onClick={zoom.onFit} disabled={zoom.percent === 100} className={`ms-1 h-8 px-2 rounded-md text-xs font-medium ${BAR_GHOST} disabled:opacity-30 transition-colors cursor-pointer`}>
-            Fit
-          </button>
+          {!tight && (
+            <button type="button" data-part="zoom-fit" onClick={zoom.onFit} disabled={zoom.percent === 100} className={`ms-1 h-8 px-2 rounded-md text-xs font-medium ${BAR_GHOST} disabled:opacity-30 transition-colors cursor-pointer`}>
+              Fit
+            </button>
+          )}
         </div>
       ) : leftSlot ?? (showPager ? (
         <button
@@ -80,42 +88,19 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
       {/* Right: match stepper + pager (PDF only) + optional trailing menu slot */}
       <div data-part="actions" className={`flex items-center ${zoom ? "gap-2.5" : "gap-4"}`}>
         {matchNav && (
-          <div data-part="match-nav" className="flex items-center gap-1" role="group" aria-label="Search matches">
-            <button
-              type="button"
-              data-part="match-prev"
-              onClick={matchNav.onPrev}
-              disabled={matchNav.count === 0}
-              aria-label="Previous match"
-              className="hit-area p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
-                disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent
-                transition-colors cursor-pointer"
-            >
-              <ChevronUp size={14} aria-hidden="true" />
-            </button>
-            {/* Announced on each step, so keyboard stepping isn't silent. The
-                min-width keeps the pager still as the digits grow. */}
-            <span
-              role="status"
-              data-part="match-count"
-              dir="ltr"
-              className="min-w-[3.25rem] text-center text-tab font-semibold text-ink tabular-nums"
-            >
-              {matchNav.index} / {matchNav.count}
-            </span>
-            <button
-              type="button"
-              data-part="match-next"
-              onClick={matchNav.onNext}
-              disabled={matchNav.count === 0}
-              aria-label="Next match"
-              className="hit-area p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
-                disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent
-                transition-colors cursor-pointer"
-            >
-              <ChevronDown size={14} aria-hidden="true" />
-            </button>
-          </div>
+          // The same stepper as the pages, as a cycle: it wraps, and each step
+          // is announced (`match-prev`, `match-count`, `match-next`). Its keys (⌘G, F3, Enter in the search) live with the
+          // viewer, scoped to its pane.
+          <Folio
+            page={matchNav.index}
+            pageCount={matchNav.count}
+            onStep={(dir) => (dir < 0 ? matchNav.onPrev() : matchNav.onNext())}
+            noun="match"
+            label="Search matches"
+            // Tells it apart from the page stepper beside it.
+            lead={<Search size={13} aria-hidden className="text-ink-muted -me-1.5" />}
+            compact={!!zoom}
+          />
         )}
         {showPager && (
           // Phones (the zoom group beside it): the larger chevron targets.
