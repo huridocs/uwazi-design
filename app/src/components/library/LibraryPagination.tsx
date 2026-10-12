@@ -89,3 +89,41 @@ export function LibraryPagination({
     </div>
   );
 }
+
+/** The same pager at the end of the Cards and List lane, under the last card
+ *  or row: the `Folio` centred, the range under it in caption type. It drives
+ *  the footer's page state, so both move together, and a new page starts the
+ *  lane at the top as it does from the footer. The host leaves it out when
+ *  there is only one page.
+ *
+ *  `sticky start-0`: in a List wider than the pane the lane scrolls sideways,
+ *  and this stays on the gutter instead of travelling with the table. */
+export function LibraryPageEnd({
+  total,
+  page,
+  pageSize,
+  onPage,
+  compact = false,
+  label = "Pages",
+}: {
+  total: number;
+  page: number;
+  pageSize: LibraryPageSize;
+  onPage: (page: number) => void;
+  compact?: boolean;
+  /** The footer group's name; this one adds "end of results". */
+  label?: string;
+}) {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(total, page * pageSize);
+  const fmt = (n: number) => n.toLocaleString();
+  return (
+    <div data-component="LibraryPageEnd" className="sticky start-0 flex flex-col items-center gap-1 pt-6 pb-2">
+      <Folio page={page} pageCount={pageCount} onPage={onPage} compact={compact} editable={!compact} label={`${label}, end of results`} />
+      <bdi data-part="range" className="text-xs text-ink-tertiary tabular-nums whitespace-nowrap">
+        {fmt(from)}–{fmt(to)} of {fmt(total)}
+      </bdi>
+    </div>
+  );
+}

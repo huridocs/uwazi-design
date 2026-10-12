@@ -114,7 +114,7 @@ import {
   lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
-import { LibraryPagination } from "../components/library/LibraryPagination";
+import { LibraryPageEnd, LibraryPagination } from "../components/library/LibraryPagination";
 import { Hint } from "../components/shared/Hint";
 import { FooterFoldProvider, useFooterFold, useFooterFoldMeasure } from "../components/library/footerFold";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
@@ -1989,6 +1989,17 @@ export function LibraryView() {
             // The lane's `py-3`.
             stickyTop="-0.75rem"
             density={listDensity}
+          />
+        )}
+        {/* The pager again under the last card or row (`LibraryPageEnd`). */}
+        {paged && !overview && !cejilLoading && filtered.length > 0 && pageCount > 1 && (
+          <LibraryPageEnd
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPage={goToPage}
+            compact={isMobile}
+            label={paneSide ? `Pages, ${paneSide} pane` : "Pages"}
           />
         )}
       </div>
