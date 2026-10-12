@@ -520,8 +520,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     Both are in `libraryPaneScopedAtoms`, so Split pages each pane on its own, and the shared
     footer shows the active pane's pager ("Pages, left pane").
   - The key is `passKey` (without the chain templates' identity, new on every mount) plus the
-    map area and the sort. A different key reads as page 1: a new query, filter, sort, language
-    or collection starts over. Back from a record rebuilds the same key, so the page holds; the
+    map area and the sort, minus the language. A different key reads as page 1: a new query,
+    filter, sort, map area or collection starts over; a language switch keeps the page and its
+    scroll. Back from a record rebuilds the same key, so the page holds; the
     lane's scroll is saved on unmount and restored in the lane's ref callback. A new page size
     keeps the page's first result in view.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range

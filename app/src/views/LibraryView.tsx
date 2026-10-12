@@ -876,7 +876,6 @@ export function LibraryView() {
   const chainIdentity = identityOf(chainTemplates);
   const passKeyParts = [
     dataSource,
-    language,
     activeTypeIds.join(","),
     hasDocOnly,
     wantPublished,
@@ -900,7 +899,7 @@ export function LibraryView() {
     JSON.stringify(matchTypes),
     contentKey,
   ];
-  const passKey = [...passKeyParts, chainIdentity].join("\u0001");
+  const passKey = [...passKeyParts, language, chainIdentity].join("\u0001");
 
   // Where each entity matched, computed at most once per entity per query and
   // shared by the relevance ranking, the match-type chip gate and the chip
@@ -1113,11 +1112,12 @@ export function LibraryView() {
 
   // Cards and List show one page of the results (`LibraryPagination` in the
   // footer). The page belongs to the results it was chosen for: a new key
-  // (collection, filters, query, sort) reads as page 1, and coming Back from a
-  // record rebuilds the same key, so the page and its scroll hold.
+  // (collection, filters, query, sort, map area) reads as page 1, and coming
+  // Back from a record rebuilds the same key, so the page and its scroll hold.
   const paged = viewMode === "cards" || viewMode === "list";
   // `passKey` without the chain templates' identity, which is new on every
-  // mount and would turn Back into a new key.
+  // mount and would turn Back into a new key, and without the language, so a
+  // language switch keeps the page.
   const pageKey = [...passKeyParts, JSON.stringify(mapBounds), sort, sortDir].join("\u0001");
   const pageSize = useAtomValue(libraryPageSizeAtom);
   const [pageState, setPageState] = useAtom(libraryPageStateAtom);
