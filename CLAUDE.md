@@ -514,7 +514,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Search draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
   `ActionBar` keeps the PDF's page stepper; both draw `Folio` ("‹ 3 / 147 ›", caption type,
   ghost chevrons; the page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step;
-  Home/End or Shift-click reach the first and last page). The Library's range ("31–60 of
+  Home/End or Shift-click reach the first and last page). The viewer's search-match stepper is a
+  second Folio in cycle mode (`onStep`, `noun="match"`): it wraps and announces each step. On
+  phones, while it shows, the zoom group drops its percent and Fit. The Library's range ("31–60 of
   4,398") and page size (`LIBRARY_PAGE_SIZES` 30/60/120, default 30) are its lead.
   `LibraryPageEnd` repeats the Folio and range, centred, under the last card or row (sticky
   start, so a List wider than the pane does not carry it sideways), on the same page state; it
