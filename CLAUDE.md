@@ -324,6 +324,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   as one. A quote found in a bundled PDF carries `doc` (title, page) whatever record is focused:
   the card names the document and page as a static tag, and the tag jumps only where the focused
   record shows that PDF. Rows keep their rule. In a Split pane the card is `scope="pane"`.
+  A disputed link's rule says its sources conflict only where its contest has an other side; a
+  recording's clock offset is stated once, in the contest section.
 - Group headers (list view, any group-by) carry the group's shape (`GroupSummary.tsx`): members as
   type dot and name, the span (period, else reported) on one axis shared by the panel's groups,
   the first page or a recording mark, the evidence mix as a bar and the direction glyph. Each part
