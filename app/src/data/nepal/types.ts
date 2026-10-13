@@ -80,6 +80,19 @@ export interface NepalReference {
   sources?: string[];
   /** Research's note on how the sources were read. */
   note?: string;
+  /** Research's review of a disputed link (`disputed-notes.json`, README
+   *  §12): why it is disputed, the sources on the other side, the links it
+   *  pairs with and the claims it conflicts with (stored ids), the basis
+   *  ("source-stance", "claim-inherited"…), and for one the seed does not
+   *  explain, what is missing. */
+  dispute?: {
+    basis?: string;
+    note?: string;
+    missing?: string;
+    opposing?: string[];
+    paired?: string[];
+    conflicting?: string[];
+  };
 }
 
 export interface NepalThesaurus {

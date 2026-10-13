@@ -6,6 +6,7 @@
 import { asset } from "../../utils/asset";
 import type { VegasEntity, VegasReference, VegasThesaurus } from "./types";
 import type { FieldEvidence } from "../fieldEvidence";
+import { analyseSync, type SyncAnalysis } from "../../utils/syncAnalysis";
 
 export interface VegasCorpus {
   entities: VegasEntity[];
@@ -78,6 +79,13 @@ export const vegasCorpus = () => corpus;
 export const vegasEntity = (id: string) => byId.get(id);
 export const vegasRefsByEntity = () => refsByEntity;
 export const isVegasEntity = (id: string) => byId.has(id);
+
+let sync: SyncAnalysis | null = null;
+/** The sync analysis (`utils/syncAnalysis.ts`) over the corpus as built,
+ *  computed once: null until the corpus has loaded. `vegasSyncAtom` and the
+ *  Relationships rows' contested anchors read the same one. */
+export const vegasSyncAnalysis = (): SyncAnalysis | null =>
+  corpus ? (sync ??= analyseSync(corpus.entities, corpus.references)) : null;
 
 /** The loaded thesauri in the Settings / thesauri-store shapes (empty until
  *  the corpus has loaded). Built once per load. */

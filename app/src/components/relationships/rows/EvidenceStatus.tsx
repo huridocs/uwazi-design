@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { RefPeriod, Reference, Verification } from "../../../data/references";
 import { VERIFICATION_LABEL } from "../../../utils/relationships";
-import { evidenceSummary, hasEvidence } from "../../../utils/refEvidence";
+import { evidenceSummary, hasEvidence, isContested } from "../../../utils/refEvidence";
 import { RefEvidenceCard } from "../RefEvidenceCard";
 import { RefStatus } from "./RefStatus";
 
@@ -26,6 +26,8 @@ export function EvidenceStatus({
   if (!verification || !refs.some(hasEvidence)) return chip;
   const n = evidenceSummary(refs).sources.length;
   const label = verification === "mixed" ? "Mixed" : VERIFICATION_LABEL[verification];
+  // A link that is not disputed but has something against it says so.
+  const contested = verification !== "disputed" && refs.some(isContested) ? ", contested" : "";
   return (
     <>
       <button
@@ -34,7 +36,7 @@ export function EvidenceStatus({
         data-component="EvidenceStatus"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`Evidence: ${label}${n ? `, ${n} ${n === 1 ? "source" : "sources"}` : ""}`}
+        aria-label={`Evidence: ${label}${contested}${n ? `, ${n} ${n === 1 ? "source" : "sources"}` : ""}`}
         title="Show the evidence"
         onClick={(e) => {
           e.stopPropagation();

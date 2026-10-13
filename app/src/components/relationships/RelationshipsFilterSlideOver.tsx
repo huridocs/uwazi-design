@@ -13,10 +13,11 @@ import {
   relVerificationFiltersAtom,
   relAsOfAtom,
   relReportedByAtom,
+  relContestedAtom,
   relPublisherFiltersAtom,
   relPublisherTypeFiltersAtom,
 } from "../../atoms/filters";
-import { refReportedBy, reportedAt, sourcePublisher } from "../../utils/refEvidence";
+import { isContested, refReportedBy, reportedAt, sourcePublisher } from "../../utils/refEvidence";
 import {
   ANCHORING_LABEL,
   DIRECTION_LABEL,
@@ -146,6 +147,7 @@ export function RelationshipsFilterSlideOver() {
   const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
   const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
   const [reportedBy, setReportedBy] = useRelAtom(relReportedByAtom);
+  const [contested, setContested] = useRelAtom(relContestedAtom);
   const [publisherFilters, setPublisherFilters] = useRelAtom(relPublisherFiltersAtom);
   const [publisherTypeFilters, setPublisherTypeFilters] = useRelAtom(relPublisherTypeFiltersAtom);
   // Against the unfiltered set, like the pipeline: see `directionClassifier`.
@@ -192,6 +194,7 @@ export function RelationshipsFilterSlideOver() {
     byVerification,
     byPublisher,
     byPublisherType,
+    contestedCount,
   } =
     useMemo(() => {
       const ids = (rec: Record<string, boolean>) =>
@@ -208,8 +211,13 @@ export function RelationshipsFilterSlideOver() {
         selAnc.size === 0 || selAnc.has(anchoringOf(r));
       const dirOk = (r: (typeof references)[number]) =>
         selDir.size === 0 || selDir.has(directionOf(r));
+      // Contested narrows like a facet, and counts its one value against the
+      // others.
       const verOk = (r: (typeof references)[number]) =>
+        (selVer.size === 0 || (!!r.verification && selVer.has(r.verification))) && (!contested || isContested(r));
+      const verOnly = (r: (typeof references)[number]) =>
         selVer.size === 0 || (!!r.verification && selVer.has(r.verification));
+      const conOnly = (r: (typeof references)[number]) => !contested || isContested(r);
       const selPub = ids(publisherFilters);
       const selPty = ids(publisherTypeFilters);
       const pubOk = (r: (typeof references)[number]) =>
@@ -255,6 +263,7 @@ export function RelationshipsFilterSlideOver() {
       const verification = new Map<string, number>();
       const publisher = new Map<string, number>();
       const publisherType = new Map<string, number>();
+      let contestedN = 0;
       for (const ref of references) {
         if (!asOk(ref)) continue;
         const entity = getEntity(ref.targetEntityId);
@@ -268,7 +277,8 @@ export function RelationshipsFilterSlideOver() {
           const d = directionOf(ref);
           direction.set(d, (direction.get(d) ?? 0) + 1);
         }
-        if (rest && srcOk && ancOk(ref) && dirOk(ref) && ref.verification) {
+        if (rest && srcOk && ancOk(ref) && dirOk(ref) && verOnly(ref) && isContested(ref)) contestedN++;
+        if (rest && srcOk && ancOk(ref) && dirOk(ref) && conOnly(ref) && ref.verification) {
           verification.set(ref.verification, (verification.get(ref.verification) ?? 0) + 1);
         }
         if (rest && ptyOk(ref) && ancOk(ref) && dirOk(ref) && verOk(ref))
@@ -312,6 +322,7 @@ export function RelationshipsFilterSlideOver() {
       for (const id of selPub) if (!publisher.has(id)) publisher.set(id, 0);
       for (const id of selPty) if (!publisherType.has(id)) publisherType.set(id, 0);
       return {
+        contestedCount: contestedN,
         byPublisher: publisher,
         byPublisherType: publisherType,
         byAnchoring: anchoring,
@@ -335,6 +346,7 @@ export function RelationshipsFilterSlideOver() {
       verificationFilters,
       asOf,
       reportedBy,
+      contested,
       publisherFilters,
       publisherTypeFilters,
       directionOf,
@@ -353,6 +365,8 @@ export function RelationshipsFilterSlideOver() {
   const showVerification =
     useMemo(() => references.some((r) => r.verification), [references]) ||
     Object.values(verificationFilters).some(Boolean);
+  // Only where a link is disputed or something contests one (Nepal, Vegas).
+  const showContested = useMemo(() => references.some(isContested), [references]) || contested;
   const datedCount = useMemo(() => references.filter((r) => r.period).length, [references]);
   const showAsOf = datedCount > 0 || !!asOf;
   // The second clock and the source facets: only where links carry sources
@@ -397,6 +411,17 @@ export function RelationshipsFilterSlideOver() {
           onClear={() => setVerificationFilters({})}
           label={(id) => VERIFICATION_LABEL[id as keyof typeof VERIFICATION_LABEL] ?? id}
           renderMarker={(id) => <VerificationDot status={id as keyof typeof VERIFICATION_LABEL} />}
+        />
+      )}
+      {showContested && (
+        <FilterListCard
+          title={t("System", "Contested")}
+          entries={[["contested", contestedCount]]}
+          selected={{ contested }}
+          onToggle={() => setContested((v) => !v)}
+          onClear={() => setContested(false)}
+          label={() => "Disputed, and the links they contest"}
+          renderMarker={() => <VerificationDot status="disputed" />}
         />
       )}
       {showAsOf && <AsOfCard value={asOf} onChange={setAsOf} dated={datedCount} />}

@@ -1,5 +1,6 @@
 import { documentsByLanguage } from "./document";
 import { V4_RELATION_TYPES, v4References } from "./sampleSeedV4";
+import type { ClaimFigure } from "./nepal/claimEvidence";
 
 /** Free-form relation-type id. The seed set ships with mentions / relates_to /
  *  cites / refers_to / no_label, but `relationTypesAtom` is writable at runtime
@@ -85,6 +86,68 @@ export interface SourceQuote {
   page?: number;
 }
 
+/** A claim named on the evidence card: a claim at one of the link's ends, one
+ *  whose figure conflicts with it, or one that replaces it. */
+export interface ContestClaim {
+  claimId: string;
+  title: string;
+  /** Its count, where the claim records one. */
+  figure?: ClaimFigure;
+}
+
+/** A link on the other side of a contested one, or on its side, as the
+ *  evidence card lists it: who takes the position (a source or a claim), the
+ *  record it takes it about, and the link's own type, status and quote. */
+export interface ContestLink {
+  /** The app's reference id. */
+  refId: string;
+  /** The record that takes the position: a source, or a claim. */
+  recordId: string;
+  /** The record it is about: the claim, or the shared end. */
+  aboutId: string;
+  /** The dump name, as `Reference.relationType`. */
+  relationType: string;
+  verification?: Verification;
+  quote?: string;
+  /** Set when `recordId` is a Source record. */
+  source?: RefSource;
+}
+
+/** What contests a link (`data/refContest.ts`), where the collection records
+ *  it (Nepal, Vegas). A link carries it when the other side has something to
+ *  show: opposite-stance sources on its claim, a figure another claim
+ *  contradicts, Research's pairing, or a clock off its moment. */
+export interface RefContest {
+  /** The links that take the opposite position: the sources that dispute a
+   *  claim this link supports, or support one it disputes; links Research
+   *  paired against it. */
+  opposing: ContestLink[];
+  /** The links on the same side: the claim's other supporting (or disputing)
+   *  links, links on the same ends, disputed claims about either end. */
+  paired: ContestLink[];
+  /** Each claim at the link's ends whose figure another claim contradicts,
+   *  with those claims. */
+  figures: { claim: ContestClaim; conflicts: ContestClaim[] }[];
+  /** Research's reading of the dispute (`disputed-notes.json`). */
+  note?: string;
+  /** Research found no reason in the seed: what is missing. */
+  missing?: string;
+  /** The dispute is the claim's at one of the link's ends, not the link's
+   *  ("claim-inherited" in Research's review). */
+  claimInherited?: boolean;
+  /** Claims Research named as conflicting with this link's, not already
+   *  under `figures`. */
+  competing: ContestClaim[];
+  /** A recording's clock more than 2 s off its moment's median (the Vegas
+   *  sync check, `utils/syncAnalysis.ts`): this anchor's clock minus the
+   *  median, seconds, and the median in ms. */
+  clock?: { deviation: number; median: number; momentId: string };
+}
+
+/** The `supersedes` links of the claims at a link's ends (Vegas): a later
+ *  count that replaces an earlier one, which is not a dispute. */
+export type RefSuccession = { newer: ContestClaim; older: ContestClaim }[];
+
 /** The page a selection sits on, or undefined when its source has none. */
 export const selectionPage = (s: TextSelection | undefined): number | undefined =>
   s && s.page >= 1 ? s.page : undefined;
@@ -127,6 +190,10 @@ export interface Reference {
   sourceQuotes?: SourceQuote[];
   /** How the sources were read, as the researcher wrote it. */
   note?: string;
+  /** What contests the link; see `RefContest`. */
+  contest?: RefContest;
+  /** What a claim at its ends replaces, or is replaced by. */
+  succession?: RefSuccession;
   createdAt: string;
 }
 

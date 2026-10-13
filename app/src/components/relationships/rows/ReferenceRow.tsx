@@ -12,6 +12,7 @@ import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { PageTag } from "../../shared/PageTag";
 import { TimeTag } from "../../shared/TimeTag";
+import { ContestedClock } from "./ContestedClock";
 import { formatTime } from "../../../utils/dateFormat";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
@@ -73,8 +74,13 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   // A time in a recording (the Vegas collection): the tag opens the recording
   // there; the row says what happens at that time.
   const anchor = reference.mediaAnchor;
+  // A clock off its moment's median is marked beside the tag.
+  const clock = reference.contest?.clock;
   const timeTag = anchor ? (
-    <TimeTag anchor={anchor} recordingTitle={getEntity(anchor.recordingId)?.title} />
+    <>
+      {clock && <ContestedClock deviation={clock.deviation} />}
+      <TimeTag anchor={anchor} recordingTitle={getEntity(anchor.recordingId)?.title} />
+    </>
   ) : null;
   const anchorLine =
     anchor?.label || anchor?.clock !== undefined

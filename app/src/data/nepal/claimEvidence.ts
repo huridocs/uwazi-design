@@ -51,7 +51,8 @@ export interface ClaimFigure {
   unit: string;
   /** What "other" counts ("inmates escaped"). */
   unitDetail?: string;
-  qualifier: "exact" | "at-least" | "about";
+  /** "more-than" is the Las Vegas collection's ("more than 1,100 rounds"). */
+  qualifier: "exact" | "at-least" | "about" | "more-than";
   scope?: string;
   /** Epoch seconds, the day the count was stated for. */
   asOf?: number;
@@ -126,15 +127,20 @@ export function wireOrigin(note: string | undefined): string | undefined {
   return WIRES[bare] ?? publishers().get(bare)?.name;
 }
 
-const QUALIFIERS = new Set(["exact", "at-least", "about"]);
+const QUALIFIERS = new Set(["exact", "at-least", "about", "more-than"]);
 
-/** The claim's figure, or undefined for a claim without one. */
-export function nepalClaimFigure(claimId: string): ClaimFigure | undefined {
-  const md = nepalEntity(claimId)?.metadata;
+/** A claim record's figure from its metadata, in the shape Nepal and Las
+ *  Vegas share (`figure`, `unit`, `qualifier`, `scope`, `as_of`…). Las Vegas
+ *  names its date bases differently: a publication date reads as Nepal's
+ *  `published`, an official count's or a report's date as `stated`. */
+export function claimFigureFrom(md: Record<string, { value: unknown }[]> | undefined): ClaimFigure | undefined {
   const figure = num(md?.figure?.[0]?.value);
   const unit = str(md?.unit?.[0]?.value);
   if (!md || figure === undefined || !unit) return undefined;
   const q = str(md.qualifier?.[0]?.value);
+  const rawBasis = str(md.as_of_basis?.[0]?.value);
+  const basis =
+    rawBasis === "publication-date" ? "published" : rawBasis === "official-count" || rawBasis === "report-date" ? "stated" : rawBasis;
   const opt = <K extends string, V>(k: K, v: V | undefined) => (v === undefined ? {} : ({ [k]: v } as Record<K, V>));
   return {
     figure,
@@ -144,9 +150,14 @@ export function nepalClaimFigure(claimId: string): ClaimFigure | undefined {
     ...opt("scope", str(md.scope?.[0]?.value)),
     ...opt("asOf", num(md.as_of?.[0]?.value)),
     ...opt("asOfTime", str(md.as_of_time?.[0]?.value)),
-    ...opt("asOfBasis", str(md.as_of_basis?.[0]?.value)),
+    ...opt("asOfBasis", basis),
     ...opt("more", str(md.figure_more?.[0]?.value)),
   };
+}
+
+/** The claim's figure, or undefined for a claim without one. */
+export function nepalClaimFigure(claimId: string): ClaimFigure | undefined {
+  return claimFigureFrom(nepalEntity(claimId)?.metadata);
 }
 
 /** Same count, same place, same day: comparable only when the day is the
@@ -285,3 +296,9 @@ export function nepalClaimEvidence(claimId: string): ClaimEvidence | undefined {
   cache.set(claimId, out);
   return out;
 }
+
+/** The claims a claim's figure cannot stand beside, and those Research
+ *  linked to it with `conflicts_with`: the matrix's conflicts, for a claim no
+ *  source takes a stance on as well. */
+export const nepalFigureConflicts = (claimId: string): FigureConflict[] =>
+  conflictsOf(claimId, nepalClaimFigure(claimId));

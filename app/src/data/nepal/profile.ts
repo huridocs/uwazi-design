@@ -11,9 +11,20 @@ import { registerEvidenceProvider } from "../fieldEvidence";
 import { recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
 import { templateMirror } from "../templates/mirror";
 import { nepalRelTypeName, nepalTemplateById } from "./schema";
-import { loadNepalEvidence, nepalEvidence, nepalEntity, nepalPrimaryDoc, nepalProfileParts, nepalRefsByEntity } from "./load";
+import {
+  loadNepalEvidence,
+  nepalCorpus,
+  nepalEvidence,
+  nepalEntity,
+  nepalPrimaryDoc,
+  nepalProfileParts,
+  nepalRefsByEntity,
+} from "./load";
 import { displayValues } from "./adapt";
-import { refEvidenceFrom } from "../refSources";
+import { refEvidenceFrom, refSourceFrom } from "../refSources";
+import { refContestFrom, type ContestLookups } from "../refContest";
+import { nepalClaimFigure, nepalFigureConflicts } from "./claimEvidence";
+import type { NepalReference } from "./types";
 
 export { isNepalEntity } from "./load";
 
@@ -77,12 +88,38 @@ registerEvidenceProvider({
 
 const refCache = new Map<string, Reference[]>();
 
+let refIndex: Map<string, NepalReference> | null = null;
+const isClaim = (id: string) => nepalEntity(id)?.template === "nepal_claim";
+const claimOf = (id: string) => {
+  const figure = nepalClaimFigure(id);
+  return { claimId: id, title: nepalEntity(id)?.title ?? id, ...(figure ? { figure } : {}) };
+};
+/** What the contest module reads, over the loaded corpus. */
+const contestLookups: ContestLookups<NepalReference> = {
+  appId: (r) => `np-${r.id}`,
+  refsOf: (id) => nepalRefsByEntity().get(id),
+  refById: (id) => (refIndex ??= new Map((nepalCorpus()?.references ?? []).map((r) => [r.id, r]))).get(id),
+  isClaim,
+  titleOf: (id) => nepalEntity(id)?.title ?? id,
+  sourceOf: (id) => {
+    const e = nepalEntity(id);
+    return e?.template === "nepal_source" ? refSourceFrom(e) : undefined;
+  },
+  claim: claimOf,
+  conflictsOf: (id) => nepalFigureConflicts(id).map((c) => claimOf(c.claimId)),
+  claimStatus: (id) => {
+    const v = nepalEntity(id)?.metadata.verification_status?.[0]?.value;
+    return typeof v === "string" ? v : undefined;
+  },
+};
+
 /** This record's references — both directions — as the Relationships tab's
  *  rows. A source's quote is the text anchor. A web article has no pages, so
  *  its quote sits on page 0 and the row shows no page tag. A quote located in
  *  a bundled PDF keeps its page, when that PDF is the one this record shows,
  *  so the page tag jumps to it. The sources that back the link, what they
- *  quote about its ends and Research's note feed the evidence card. Read-only. */
+ *  quote about its ends and Research's note feed the evidence card, with what
+ *  contests the link (`refContestFrom`). Read-only. */
 export function nepalReferencesFor(id: string): Reference[] {
   const hit = refCache.get(id);
   if (hit) return hit;
@@ -103,6 +140,7 @@ export function nepalReferencesFor(id: string): Reference[] {
       ...(r.date ? { period: r.date } : {}),
       ...refEvidenceFrom(r, nepalEntity, (s) => nepalRefsByEntity().get(s), (q) => pageOf(q) || undefined),
       ...(r.note ? { note: r.note } : {}),
+      ...refContestFrom(r, contestLookups),
       createdAt: "",
     };
   });

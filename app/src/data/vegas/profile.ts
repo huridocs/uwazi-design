@@ -11,11 +11,13 @@ import { registerEvidenceProvider } from "../fieldEvidence";
 import { recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
 import { templateMirror } from "../templates/mirror";
 import { vegasRelTypeName, vegasTemplateById } from "./schema";
-import { loadVegasEvidence, vegasEntity, vegasEvidence, vegasRefsByEntity } from "./load";
+import { loadVegasEvidence, vegasCorpus, vegasEntity, vegasEvidence, vegasRefsByEntity, vegasSyncAnalysis } from "./load";
 import { displayValues, vegasTimedProp } from "./adapt";
 import { vegasLinkAt } from "./links";
-import { refEvidenceFrom } from "../refSources";
-import type { VegasEntity } from "./types";
+import { refEvidenceFrom, refSourceFrom } from "../refSources";
+import { refContestFrom, type ContestLookups } from "../refContest";
+import { claimFigureFrom } from "../nepal/claimEvidence";
+import type { VegasEntity, VegasReference } from "./types";
 
 export { isVegasEntity } from "./load";
 
@@ -109,10 +111,52 @@ registerEvidenceProvider({
 
 const refCache = new Map<string, Reference[]>();
 
+let refIndex: Map<string, VegasReference> | null = null;
+const isClaim = (id: string) => vegasEntity(id)?.template === "vegas_claim";
+const claimOf = (id: string) => {
+  const figure = claimFigureFrom(vegasEntity(id)?.metadata);
+  return { claimId: id, title: vegasEntity(id)?.title ?? id, ...(figure ? { figure } : {}) };
+};
+/** What the contest module reads, over the loaded corpus. A claim's
+ *  conflicts are its `contradicts` links, either way. */
+const contestLookups: ContestLookups<VegasReference> = {
+  appId: (r) => `vg-${r.id}`,
+  refsOf: (id) => vegasRefsByEntity().get(id),
+  refById: (id) => (refIndex ??= new Map((vegasCorpus()?.references ?? []).map((r) => [r.id, r]))).get(id),
+  isClaim,
+  titleOf: (id) => vegasEntity(id)?.title ?? id,
+  sourceOf: (id) => {
+    const e = vegasEntity(id);
+    return e?.template === "vegas_source" ? refSourceFrom(e) : undefined;
+  },
+  claim: claimOf,
+  conflictsOf: (id) =>
+    (vegasRefsByEntity().get(id) ?? [])
+      .filter((r) => r.type === "contradicts")
+      .map((r) => claimOf(r.from === id ? r.to : r.from)),
+  claimStatus: (id) => {
+    const v = vegasEntity(id)?.metadata.verification_status?.[0]?.value;
+    return typeof v === "string" ? v : undefined;
+  },
+};
+
+/** What contests a Vegas link: `refContestFrom`, and for an annotation whose
+ *  clock is more than 2 s off its moment's median (the sync check), that
+ *  deviation. */
+function vegasContest(r: VegasReference): Pick<Reference, "contest" | "succession"> {
+  const out = refContestFrom(r, contestLookups);
+  if (r.type !== "captures") return out;
+  const moment = vegasSyncAnalysis()?.momentById.get(r.to);
+  const off = moment?.outliers.find((a) => a.refId === r.id);
+  if (!moment || moment.median === null || !off || off.deviation === undefined) return out;
+  const clock = { deviation: off.deviation, median: moment.median * 1000, momentId: r.to };
+  return { ...out, contest: { ...(out.contest ?? { opposing: [], paired: [], figures: [], competing: [] }), clock } };
+}
+
 /** This record's references — both directions — as the Relationships tab's
  *  rows. A reference that rests on a time in a recording carries it as a
- *  media anchor, with the recording's link at that time. Its sources and
- *  Research's note feed the evidence card. Read-only. */
+ *  media anchor, with the recording's link at that time. Its sources,
+ *  Research's note and what contests it feed the evidence card. Read-only. */
 export function vegasReferencesFor(id: string): Reference[] {
   const hit = refCache.get(id);
   if (hit) return hit;
@@ -132,6 +176,7 @@ export function vegasReferencesFor(id: string): Reference[] {
       ...(r.date ? { period: r.date } : {}),
       ...refEvidenceFrom(r, vegasEntity, (s) => vegasRefsByEntity().get(s), () => undefined),
       ...(r.note ? { note: r.note } : {}),
+      ...vegasContest(r),
       ...(m
         ? {
             mediaAnchor: {

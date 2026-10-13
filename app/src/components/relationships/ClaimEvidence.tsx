@@ -68,7 +68,13 @@ export function figureValue(f: ClaimFigure): string {
         f.figure.toLocaleString("en", { notation: "compact", compactDisplay: "long", maximumSignificantDigits: 4 }).replace(" ", "\u00a0")
       : f.figure.toLocaleString("en");
   const value = f.unit === "damage-NPR" ? `NPR ${n}` : n;
-  return f.qualifier === "at-least" ? `At least ${value}` : f.qualifier === "about" ? `About ${value}` : value;
+  return f.qualifier === "at-least"
+    ? `At least ${value}`
+    : f.qualifier === "about"
+      ? `About ${value}`
+      : f.qualifier === "more-than"
+        ? `More than ${value}`
+        : value;
 }
 
 /** What the figure counts: "killed", "inmates escaped", "damage or loss". */

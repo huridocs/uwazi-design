@@ -111,6 +111,10 @@ export const relAsOfAtom = atom<string>("");
  *  second clock, beside As of's when-it-held. */
 export const relReportedByAtom = atom<string>("");
 
+/** "Contested": keep only disputed links and the links something contests
+ *  (`isContested`). Shown only where a reference is either. */
+export const relContestedAtom = atom<boolean>(false);
+
 /** Publisher facet: the publisher printed on a link's sources. A link matches
  *  when any of its sources has a ticked publisher. Shown only where links
  *  carry sources. */
@@ -178,6 +182,7 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relVerificationFiltersAtom, scope), {});
   set(relAtomFor(relAsOfAtom, scope), "");
   set(relAtomFor(relReportedByAtom, scope), "");
+  set(relAtomFor(relContestedAtom, scope), false);
   set(relAtomFor(relPublisherFiltersAtom, scope), {});
   set(relAtomFor(relPublisherTypeFiltersAtom, scope), {});
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
@@ -254,6 +259,7 @@ function countFilters(get: <T>(base: Scopable<T>) => T): number {
   n += Object.values(get(relVerificationFiltersAtom)).filter(Boolean).length;
   if (get(relAsOfAtom)) n++;
   if (get(relReportedByAtom)) n++;
+  if (get(relContestedAtom)) n++;
   n += Object.values(get(relPublisherFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relPublisherTypeFiltersAtom)).filter(Boolean).length;
   for (const vals of Object.values(get(relInheritedFiltersAtom)))

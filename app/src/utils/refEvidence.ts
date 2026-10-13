@@ -77,7 +77,12 @@ export function evidenceSummary(refs: Reference[]): EvidenceSummary {
 }
 
 /** Whether a reference has anything for the evidence card to show. */
-export const hasEvidence = (r: Reference) => !!(r.sources?.length || r.note);
+export const hasEvidence = (r: Reference) => !!(r.sources?.length || r.note || r.contest || r.succession);
+
+/** The Contested filter's test: a disputed link, or one something contests
+ *  (`Reference.contest`: the other side of its claim, a conflicting figure,
+ *  Research's pairing, a clock off its moment). */
+export const isContested = (r: Reference) => r.verification === "disputed" || !!r.contest;
 
 /** The sentence that says why a link has its status.
  *

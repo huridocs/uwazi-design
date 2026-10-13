@@ -13,6 +13,7 @@ import {
   relVerificationFiltersAtom,
   relAsOfAtom,
   relReportedByAtom,
+  relContestedAtom,
   relPublisherFiltersAtom,
   relPublisherTypeFiltersAtom,
   relDirectionFiltersAtom,
@@ -45,6 +46,7 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
   const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
   const [reportedBy, setReportedBy] = useRelAtom(relReportedByAtom);
+  const [contested, setContested] = useRelAtom(relContestedAtom);
   const [publisherFilters, setPublisherFilters] = useRelAtom(relPublisherFiltersAtom);
   const [publisherTypeFilters, setPublisherTypeFilters] = useRelAtom(relPublisherTypeFiltersAtom);
 
@@ -90,6 +92,7 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
     activeVerification.length > 0 ||
     asOfAt !== null ||
     reportedAt !== null ||
+    contested ||
     activePublishers.length > 0 ||
     activePublisherTypes.length > 0 ||
     !!cluster;
@@ -117,6 +120,7 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
           onRemove={() => setVerificationFilters(dropKey(id))}
         />
       ))}
+      {contested && <ActiveFilterChip label="Contested" onRemove={() => setContested(false)} />}
       {asOfAt !== null && (
         <ActiveFilterChip
           label={`As of ${formatAtPrecision(new Date(asOfAt * 1000), "day")}`}

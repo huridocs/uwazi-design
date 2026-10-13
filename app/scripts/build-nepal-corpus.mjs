@@ -39,7 +39,9 @@
 //   id: the properties a set of sources backs, those sources, a verification
 //   status and Research's note. It is fetched when a record first shows it,
 //   not with the collection. A reference ships its status, its date range,
-//   the sources that back it and Research's note.
+//   the sources that back it and Research's note; a disputed one also ships
+//   Research's review of the dispute (`dispute`, from disputed-notes.json
+//   beside the seed's data/, when it is there).
 //
 // - Media items: the `file` image property holds the bundled copy's public
 //   path; its pixel size goes on the record (`image`) so the record reserves
@@ -69,6 +71,11 @@ const seedRelTypes = read("schema/relationTypes.json");
 const seedThesauri = read("schema/thesauri.json");
 const seedEntities = read("entities.json");
 const seedRefs = read("references.json");
+// Research's review of the disputed references (README §12), read beside
+// references.json when it is there. The build runs without it.
+const disputedNotes = existsSync(join(seedDir, "../disputed-notes.json"))
+  ? JSON.parse(readFileSync(join(seedDir, "../disputed-notes.json"), "utf8"))
+  : [];
 
 const tplId = (t) => `nepal_${t}`;
 
@@ -193,6 +200,18 @@ const EMAIL = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
 /* ── References ─────────────────────────────────────────────────────── */
 const titleOf = new Map(seedEntities.map((e) => [e.id, e.title]));
+const seedRefIds = new Set(seedRefs.map((r) => r.id));
+const disputeOf = new Map();
+for (const d of disputedNotes) {
+  if (!seedRefIds.has(d.refId)) throw new Error(`disputed-notes: ${d.refId} is not a reference`);
+  for (const s of d.opposingSourceIds ?? []) if (!titleOf.has(s)) throw new Error(`disputed-notes ${d.refId}: source ${s} is not a record`);
+  for (const id of d.pairedRefIds ?? []) if (!seedRefIds.has(id)) throw new Error(`disputed-notes ${d.refId}: ${id} is not a reference`);
+  for (const id of d.conflictingClaimIds ?? []) if (!titleOf.has(id)) throw new Error(`disputed-notes ${d.refId}: claim ${id} is not a record`);
+  for (const text of [d.note, d.missing])
+    if (text && (PHONE.test(text) || EMAIL.test(text)))
+      throw new Error(`disputed-notes ${d.refId}: a phone number or an e-mail address`);
+  disputeOf.set(d.refId, d);
+}
 const VERIFICATION = new Set(["confirmed", "single-source", "disputed"]);
 let anchored = 0;
 let anchorElsewhere = 0;
@@ -226,6 +245,21 @@ const relationships = seedRefs.map((r) => {
   if (note) {
     if (PHONE.test(note) || EMAIL.test(note)) throw new Error(`Reference ${r.id}: the note holds a phone number or an e-mail address`);
     out.note = note;
+  }
+  // Why a disputed link is disputed: Research's note (a seed note is the
+  // link's own and is not repeated), the sources on the other side, the
+  // links it pairs with, the claims it conflicts with, and on what basis.
+  // The link's status is left as the seed has it.
+  const d = disputeOf.get(r.id);
+  if (d) {
+    const dispute = { basis: d.basis };
+    const dnote = d.note?.trim();
+    if (dnote && dnote !== note) dispute.note = dnote;
+    if (d.status === "unexplained" && d.missing?.trim()) dispute.missing = d.missing.trim();
+    if (d.opposingSourceIds?.length) dispute.opposing = d.opposingSourceIds;
+    if (d.pairedRefIds?.length) dispute.paired = d.pairedRefIds;
+    if (d.conflictingClaimIds?.length) dispute.conflicting = d.conflictingClaimIds;
+    out.dispute = dispute;
   }
   return out;
 });

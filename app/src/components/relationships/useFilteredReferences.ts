@@ -18,10 +18,11 @@ import {
   relVerificationFiltersAtom,
   relAsOfAtom,
   relReportedByAtom,
+  relContestedAtom,
   relPublisherFiltersAtom,
   relPublisherTypeFiltersAtom,
 } from "../../atoms/filters";
-import { refReportedBy, sourcePublisher } from "../../utils/refEvidence";
+import { isContested, refReportedBy, sourcePublisher } from "../../utils/refEvidence";
 import { anchoringOf, asOfSeconds, directionClassifier, refHoldsAt } from "../../utils/relationships";
 import { languageAtom } from "../../atoms/language";
 import { getEntity } from "../../data/entities";
@@ -32,7 +33,7 @@ import type { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 
 /** THE filter pipeline for the merged Relationships panel — cluster, relation
- *  type, anchoring, verification, As of, Reported by, publisher and publisher
+ *  type, anchoring, verification, contested, As of, Reported by, publisher and publisher
  *  type, direction, target entity type, target country, target descriptors, inherited
  *  props, search, then sort. List, Tree, and Graph all consume this one hook so
  *  a facet ticked in one mode can never silently un-apply in another (the
@@ -54,6 +55,7 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
   const verificationFilters = useRelAtomValue(relVerificationFiltersAtom);
   const asOf = useRelAtomValue(relAsOfAtom);
   const reportedBy = useRelAtomValue(relReportedByAtom);
+  const contested = useRelAtomValue(relContestedAtom);
   const publisherFilters = useRelAtomValue(relPublisherFiltersAtom);
   const publisherTypeFilters = useRelAtomValue(relPublisherTypeFiltersAtom);
   const language = useAtomValue(languageAtom);
@@ -85,6 +87,7 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
       const set = new Set(activeVerification);
       result = result.filter((r) => !!r.verification && set.has(r.verification));
     }
+    if (contested) result = result.filter(isContested);
     const asOfAt = asOfSeconds(asOf);
     if (asOfAt !== null) result = result.filter((r) => refHoldsAt(r, asOfAt));
     const reportedAt = asOfSeconds(reportedBy);
@@ -230,6 +233,7 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     verificationFilters,
     asOf,
     reportedBy,
+    contested,
     publisherFilters,
     publisherTypeFilters,
     language,

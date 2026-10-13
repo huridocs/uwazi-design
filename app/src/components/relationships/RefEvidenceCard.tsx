@@ -1,6 +1,14 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
-import { selectionPage, type RefSource, type Reference, type SourceQuote } from "../../data/references";
+import {
+  selectionPage,
+  type ContestClaim,
+  type ContestLink,
+  type RefContest,
+  type RefSource,
+  type Reference,
+  type SourceQuote,
+} from "../../data/references";
 import { getEntity, getEntityType } from "../../data/entities";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -13,6 +21,8 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { PageTag } from "../shared/PageTag";
 import { TimeTag } from "../shared/TimeTag";
 import { RefStatus } from "./rows/RefStatus";
+import { figureContext, figureUnit, figureValue } from "./ClaimEvidence";
+import { signedSeconds } from "../metadata/VegasSyncCard";
 
 const day = (s: number, precision: "day" | "month" | "year" = "day") => formatAtPrecision(new Date(s * 1000), precision);
 
@@ -28,6 +38,10 @@ const quotedFrom = (r: Reference) => ((r.direction ?? "outgoing") === "outgoing"
  *  then every source with its publisher, type, date and address and the
  *  passages it gives about the link's ends. A quote from a record that is not
  *  among the sources, and a time in a recording, come last.
+ *
+ *  What contests the link follows (`ContestSection`): the links on the other
+ *  side and on its own, the figures other claims contradict, a clock off its
+ *  moment; then what a claim at its ends replaces.
  *
  *  This card may print counts: the Relationships surface otherwise shows only
  *  the tab count, but the number of independent publishers is the evidence. */
@@ -121,6 +135,9 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
         </section>
       )}
 
+      <ContestSection refs={refs} onOpen={open} />
+      <SuccessionSection refs={refs} onOpen={open} />
+
       {n > 0 && (
         <section data-part="sources" className="space-y-1.5">
           <SectionLabel>Sources</SectionLabel>
@@ -164,13 +181,213 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
   );
 }
 
+/** Every contest of `refs`, merged: one list per side, each link once. */
+function mergeContests(refs: Reference[]) {
+  const own = new Set(refs.map((r) => r.id));
+  const opposing = new Map<string, ContestLink>();
+  const paired = new Map<string, ContestLink>();
+  const figures = new Map<string, RefContest["figures"][number]>();
+  const competing = new Map<string, ContestClaim>();
+  const notes = new Set<string>();
+  const missing = new Set<string>();
+  const clocks: (NonNullable<RefContest["clock"]> & { refId: string })[] = [];
+  const contested = refs.filter((r) => r.contest);
+  for (const r of contested) {
+    const c = r.contest!;
+    for (const l of c.opposing) if (!own.has(l.refId)) opposing.set(l.refId, l);
+    for (const l of c.paired) if (!own.has(l.refId) && !opposing.has(l.refId)) paired.set(l.refId, l);
+    for (const f of c.figures) if (!figures.has(f.claim.claimId)) figures.set(f.claim.claimId, f);
+    for (const x of c.competing) competing.set(x.claimId, x);
+    if (c.note) notes.add(c.note);
+    if (c.missing) missing.add(c.missing);
+    if (c.clock) clocks.push({ ...c.clock, refId: r.id });
+  }
+  return {
+    any: contested.length > 0,
+    // The dispute is the claim's when every contested link inherits it.
+    claimInherited: contested.length > 0 && contested.every((r) => r.contest!.claimInherited),
+    disputed: refs.some((r) => r.verification === "disputed"),
+    opposing: [...opposing.values()],
+    paired: [...paired.values()],
+    figures: [...figures.values()],
+    competing: [...competing.values()],
+    notes: [...notes],
+    missing: [...missing],
+    clocks,
+  };
+}
+
+/** What contests the row's links. The heading says how: "Contested by" on a
+ *  disputed link, "Disputed by" on a link that is not disputed itself but
+ *  has something against it, "Claim contested" where the dispute is the
+ *  claim's at its end and not the link's. */
+function ContestSection({ refs, onOpen }: { refs: Reference[]; onOpen: (id: string) => void }) {
+  const c = mergeContests(refs);
+  if (!c.any) return null;
+  const heading = c.claimInherited ? "Claim contested" : c.disputed ? "Contested by" : "Disputed by";
+  const ends = new Set(refs.flatMap((r) => [r.sourceEntityId, r.targetEntityId]));
+  return (
+    <section data-part="contest" aria-label={heading} className="space-y-2">
+      <SectionLabel>{heading}</SectionLabel>
+      {c.notes.map((note) => (
+        <p key={note} className="text-xs text-ink-secondary leading-relaxed">
+          {note}
+        </p>
+      ))}
+      {c.missing.map((m) => (
+        <p key={m} data-part="contest-missing" className="text-xs text-ink-tertiary leading-relaxed">
+          No reason recorded. {m.replace(" ", "\u00a0")}
+        </p>
+      ))}
+      {c.clocks.map((k) => (
+        <p key={k.refId} data-part="contest-clock" className="text-xs text-ink-secondary">
+          <span aria-hidden className="inline-block w-1.5 h-1.5 mr-1.5 mb-px rounded-full" style={{ backgroundColor: "var(--warning)" }} />
+          This recording's clock is <span className="tabular-nums">{signedSeconds(k.deviation)}</span> from the
+          moment's median across recordings, <span className="tabular-nums">{formatTime(k.median)}</span>. The&nbsp;sync
+          check allows 2&nbsp;s.
+        </p>
+      ))}
+      {c.figures.map((f) => (
+        <div key={f.claim.claimId} data-part="contest-figures" className="space-y-1">
+          <ClaimLine claim={f.claim} onOpen={onOpen} />
+          <p className="text-meta text-ink-tertiary">Conflicts with</p>
+          <ul className="space-y-1">
+            {f.conflicts.map((x) => (
+              <li key={x.claimId}>
+                <ClaimLine claim={x} onOpen={onOpen} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {c.competing.length > 0 && (
+        <div data-part="contest-competing" className="space-y-1">
+          <p className="text-meta text-ink-tertiary">Conflicting claims</p>
+          <ul className="space-y-1">
+            {c.competing.map((x) => (
+              <li key={x.claimId}>
+                <ClaimLine claim={x} onOpen={onOpen} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <ContestList caption="Other side" links={c.opposing} ends={ends} onOpen={onOpen} />
+      <ContestList caption="Same side" links={c.paired} ends={ends} onOpen={onOpen} />
+    </section>
+  );
+}
+
+/** A side of the contest, grouped by what each link says and about which
+ *  record: "Disputes · <claim>". */
+function ContestList({
+  caption,
+  links,
+  ends,
+  onOpen,
+}: {
+  caption: string;
+  links: ContestLink[];
+  ends: Set<string>;
+  onOpen: (id: string) => void;
+}) {
+  if (!links.length) return null;
+  const groups = new Map<string, ContestLink[]>();
+  for (const l of links) {
+    const key = `${l.relationType}\u0000${l.aboutId}`;
+    groups.set(key, [...(groups.get(key) ?? []), l]);
+  }
+  return (
+    <div data-part="contest-side" className="space-y-1.5">
+      <p className="text-meta font-medium text-ink-secondary">{caption}</p>
+      {[...groups.values()].map((group) => {
+        const { relationType, aboutId } = group[0];
+        const about = ends.has(aboutId) ? "" : (getEntity(aboutId)?.title ?? aboutId);
+        const label = relationDisplayLabel(relationType);
+        return (
+          <div key={`${relationType}-${aboutId}`} className="space-y-2">
+            <p className="text-meta text-ink-tertiary">
+              <span className="capitalize">{label}</span>
+              {about ? ` · ${about}` : ""}
+            </p>
+            <ul className="space-y-3">
+              {group.map((l) =>
+                l.source ? (
+                  <SourceItem
+                    key={l.refId}
+                    source={l.source}
+                    quotes={l.quote ? [{ text: l.quote }] : []}
+                    status={l.verification}
+                    onOpen={onOpen}
+                  />
+                ) : (
+                  <li key={l.refId} className="space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <RecordLink id={l.recordId} onOpen={onOpen} />
+                      {l.verification && <RefStatus verification={l.verification} />}
+                    </div>
+                    {l.quote && <Quote text={l.quote} />}
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A claim, its figure where it has one, and where and when it counts. */
+function ClaimLine({ claim, onOpen }: { claim: ContestClaim; onOpen: (id: string) => void }) {
+  const f = claim.figure;
+  return (
+    <div className="space-y-0.5">
+      <RecordLink id={claim.claimId} label={claim.title} onOpen={onOpen} />
+      {f && (
+        <p className="ps-3.5 text-xs">
+          <span className="font-medium text-ink tabular-nums">
+            {figureValue(f)} {figureUnit(f)}
+          </span>
+          <span className="text-ink-tertiary"> · {figureContext(f)}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** What a claim at the link's ends replaces (Vegas `supersedes`): a later
+ *  count, not a dispute. */
+function SuccessionSection({ refs, onOpen }: { refs: Reference[]; onOpen: (id: string) => void }) {
+  const pairs = new Map<string, NonNullable<Reference["succession"]>[number]>();
+  for (const r of refs) for (const p of r.succession ?? []) pairs.set(`${p.newer.claimId}>${p.older.claimId}`, p);
+  if (!pairs.size) return null;
+  return (
+    <section data-part="succession" className="space-y-1.5">
+      <SectionLabel>Replaces</SectionLabel>
+      <ul className="space-y-2">
+        {[...pairs.values()].map((p) => (
+          <li key={`${p.newer.claimId}>${p.older.claimId}`} className="space-y-1">
+            <ClaimLine claim={p.newer} onOpen={onOpen} />
+            <p className="text-meta text-ink-tertiary">replaces</p>
+            <ClaimLine claim={p.older} onOpen={onOpen} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function SourceItem({
   source: s,
   quotes,
+  status,
   onOpen,
 }: {
   source: RefSource;
   quotes: Pick<SourceQuote, "text" | "page">[];
+  /** The status of the source's link, where the item stands for one. */
+  status?: Reference["verification"];
   onOpen: (id: string) => void;
 }) {
   const copyOf = s.syndicatedFrom && s.syndicatedFrom.toLowerCase() !== (s.publisher ?? "").toLowerCase() ? s.syndicatedFrom : "";
@@ -187,7 +404,10 @@ function SourceItem({
           <span className="font-medium text-ink">{sourcePublisher(s)}</span>
           {s.publisherType && <span className="text-ink-tertiary"> · {s.publisherType}</span>}
         </p>
-        {date && <span className="shrink-0 text-meta text-ink-tertiary tabular-nums">{date}</span>}
+        <span className="shrink-0 flex items-center gap-1.5">
+          {status && <RefStatus verification={status} />}
+          {date && <span className="text-meta text-ink-tertiary tabular-nums">{date}</span>}
+        </span>
       </div>
       <div className="flex items-start gap-1.5">
         <RecordLink id={s.id} label={s.title} onOpen={onOpen} />
