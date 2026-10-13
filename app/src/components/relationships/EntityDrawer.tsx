@@ -8,7 +8,7 @@ import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { ToCPanel } from "./ToCPanel";
 import { EntityPreviewSlideOver } from "./EntityPreviewSlideOver";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
-import { RelationshipsFiltersTab, useRelFiltersDock } from "./RelationshipsFiltersTab";
+import { RelationshipsFiltersTab, filtersGround, useRelFiltersDock } from "./RelationshipsFiltersTab";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
@@ -62,7 +62,7 @@ export function EntityDrawer() {
     <div
       data-component="EntityDrawer"
       data-gutter-host
-      className="gutter-host flex flex-col h-full relative overflow-clip"
+      className={`gutter-host flex flex-col h-full relative overflow-clip ${filtersGround(activeDrawerTab)}`}
     >
       <EntityPreviewSlideOver />
 

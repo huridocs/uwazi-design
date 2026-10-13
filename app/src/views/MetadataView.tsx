@@ -69,7 +69,7 @@ import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
-import { RelationshipsFiltersTab, useRelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
+import { RelationshipsFiltersTab, filtersGround, useRelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
@@ -1582,7 +1582,7 @@ function MetadataDrawer() {
 
   return (
     // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
-    <div data-gutter-host className="gutter-host relative flex flex-col h-full overflow-clip">
+    <div data-gutter-host className={`gutter-host relative flex flex-col h-full overflow-clip ${filtersGround(activeDrawerTab)}`}>
       {/* A connected entity in a relationship field opens its preview in this drawer. */}
       <EntityPreviewSlideOver />
       <DrawerTabs

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { relFiltersDockCountAtom, relFiltersTabRequestAtom } from "../../atoms/filters";
+import { relFiltersDockCountAtom } from "../../atoms/filters";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useRelScopeKey, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
@@ -36,7 +36,6 @@ export function RelationshipsToolbar() {
   const dockCount = useAtomValue(relFiltersDockCountAtom);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
   const docked = dockCount > 0 && !scoped && !mobile;
-  const requestTab = useSetAtom(relFiltersTabRequestAtom);
 
   return (
     <SearchBar
@@ -49,10 +48,10 @@ export function RelationshipsToolbar() {
           <ViewControls />
           <RelationshipsDisplayMenu />
           <ConnectButton />
-          <FiltersButton
-            activeCount={activeFilterCount}
-            onClick={() => (docked ? requestTab((n) => n + 1) : setFiltersOpen(true))}
-          />
+          {/* Only where no drawer holds the filters: a drawn drawer's Filters
+              tab is the one way in, and carries the dot. The dock comes and
+              goes with the drawer, which changes the pane's width anyway. */}
+          {!docked && <FiltersButton activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />}
         </div>
       }
     />

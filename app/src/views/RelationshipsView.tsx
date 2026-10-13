@@ -6,7 +6,7 @@ import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { activeFilterCountAtom, relViewAtom } from "../atoms/filters";
 import { t } from "../utils/i18n";
-import { RelationshipsFiltersTab, RelFiltersDock } from "../components/relationships/RelationshipsFiltersTab";
+import { RelationshipsFiltersTab, RelFiltersDock, filtersGround } from "../components/relationships/RelationshipsFiltersTab";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -119,7 +119,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
-        <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
+        <div data-gutter-host className={`gutter-host flex flex-col h-full min-h-0 relative overflow-clip ${filtersGround(drawerTab)}`}>
           <EntityPreviewSlideOver />
           {/* Filters dock here only while the drawer is drawn; a Split pane too
               narrow for it opens the slide-over instead. */}

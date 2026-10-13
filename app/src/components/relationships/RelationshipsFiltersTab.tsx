@@ -39,6 +39,12 @@ export function RelFiltersDock({ show }: { show: () => void }) {
   return null;
 }
 
+/** The ground of an entity-view drawer whose active tab is `tab`. Filters is
+ *  drawn on the warm rail, like the Library's Filters drawer: the whole drawer
+ *  takes that ground, strip included, so the strip does not sit on a paper
+ *  band above the cards. Every other tab is on the drawer's paper. */
+export const filtersGround = (tab: string) => (tab === "filters" ? "bg-warm" : "");
+
 /** The drawer's Filters tab: the same facets as the slide-over, for the open
  *  entity, drawn like the Library's Filters (cards on the warm rail, Clear in
  *  a footer that is always there, disabled with nothing set). No count: the tab's dot
@@ -52,7 +58,7 @@ export function RelationshipsFiltersTab() {
   useKeepClickedInPlace(bodyRef);
   return (
     <>
-      <div ref={bodyRef} data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto bg-warm">
+      <div ref={bodyRef} data-component="RelationshipsFiltersTab" data-part="body" className="bleed flex-1 min-h-0 overflow-auto pt-stack">
         <RelationshipsFilterSlideOver />
       </div>
       {/* The Library Filters footer: Clear at the end, always mounted. No
