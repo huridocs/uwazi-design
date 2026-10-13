@@ -19,9 +19,12 @@ import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
 import { WhenBody } from "./when/WhenBody";
 import { RelationshipRow } from "./RelationshipRow";
-import { countOf } from "../../utils/relationships";
+import { countOf, deriveHubs, type Hub } from "../../utils/relationships";
+import type { GroupBy } from "../../atoms/filters";
+import type { Reference } from "../../data/references";
+import { HubNode } from "./HubNode";
+import { MemberCard, type MemberCardHide } from "./rows/MemberCard";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
-import { RowStack } from "./rows/RowShell";
 import { GroupShapeEnd, GroupShapeLine, groupShape, groupShapeLabel, spanDomain } from "./GroupSummary";
 
 interface Props {
@@ -35,6 +38,104 @@ interface Props {
 
 /** How many flat reference rows to render before "Show more". */
 const LIST_CAP = 100;
+
+/** What a list draws, in the order of its references: a hub (2+ members)
+ *  once, where its first member falls, and the rest either one row per
+ *  reference (plain List) or one row per record (inside a group, so a record
+ *  linked five times reads once). Built from the filtered set, so a hub shows
+ *  only the members that survive the filters. */
+type ListItem =
+  | { kind: "hub"; key: string; hub: Hub; refs: Reference[] }
+  | { kind: "reference"; key: string; ref: Reference }
+  | { kind: "record"; key: string; entityId: string; refs: Reference[] };
+
+function listItems(refs: Reference[], unit: "reference" | "record"): ListItem[] {
+  const hubs = deriveHubs(refs);
+  const hubOf = new Map<string, Hub>();
+  for (const hub of hubs) for (const id of hub.refIds) hubOf.set(id, hub);
+  const byId = new Map(refs.map((r) => [r.id, r]));
+  const items: ListItem[] = [];
+  const seenHubs = new Set<string>();
+  const records = new Map<string, Extract<ListItem, { kind: "record" }>>();
+  for (const ref of refs) {
+    const hub = hubOf.get(ref.id);
+    if (hub) {
+      if (seenHubs.has(hub.id)) continue;
+      seenHubs.add(hub.id);
+      items.push({ kind: "hub", key: `hub:${hub.id}`, hub, refs: hub.refIds.map((id) => byId.get(id)!) });
+    } else if (unit === "reference") {
+      items.push({ kind: "reference", key: ref.id, ref });
+    } else {
+      let item = records.get(ref.targetEntityId);
+      if (!item) {
+        item = { kind: "record", key: `rec:${ref.targetEntityId}`, entityId: ref.targetEntityId, refs: [] };
+        records.set(ref.targetEntityId, item);
+        items.push(item);
+      }
+      item.refs.push(ref);
+    }
+  }
+  return items;
+}
+
+/** What a row leaves out because its group (and sub-group) already says it. */
+function hideFor(...keys: GroupBy[]): MemberCardHide {
+  return {
+    template: keys.includes("target-template"),
+    // An entity's group header lists its link types and their direction.
+    relation: keys.includes("relation-type") || keys.includes("target-entity"),
+    direction: keys.includes("direction") || keys.includes("target-entity"),
+    title: keys.includes("target-entity"),
+  };
+}
+
+/** A group's rows, one per record, hubs opening to their members. */
+function RecordList({
+  items,
+  hide,
+  exclude,
+  onDelete,
+}: {
+  items: ListItem[];
+  hide: MemberCardHide;
+  exclude: Set<string>;
+  onDelete?: (id: string) => void;
+}) {
+  return (
+    <ul data-part="rows" className="divide-y divide-border/50">
+      {items.map((item) => (
+        <li key={item.key}>
+          {item.kind === "hub" ? (
+            <HubNode hub={item.hub} refs={item.refs} hideRelLabel={!!hide.relation} host="list" hide={hide} exclude={exclude} />
+          ) : item.kind === "record" ? (
+            <MemberCard
+              variant="row"
+              entityId={item.entityId}
+              refs={item.refs}
+              exclude={exclude}
+              hide={hide}
+              onDelete={onDelete}
+            />
+          ) : (
+            <RelationshipRow kind="reference" reference={item.ref} onDelete={onDelete} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The records an "Also linked to" line leaves out: every record the panel
+ *  already shows, and the record it is about. The line names only what the
+ *  panel does not. */
+function excludeFor(refs: Reference[]): Set<string> {
+  const ids = new Set<string>();
+  for (const r of refs) {
+    ids.add(r.targetEntityId);
+    ids.add(r.sourceEntityId);
+  }
+  return ids;
+}
 
 /** Body of the merged Relationships panel — toolbar lives above. */
 export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props) {
@@ -59,9 +160,29 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
   const compact = useAtomValue(breakpointAtom) === "mobile";
   const grouped = useMemo(() => {
     if (view !== "list" || groupBy === "none") return null;
-    const groups = groupRefs(filtered, groupBy).map(([key, refs]) => ({ key, refs, shape: groupShape(refs, groupBy) }));
+    const groups = groupRefs(filtered, groupBy).map(([key, refs]) => ({
+      key,
+      refs,
+      shape: groupShape(refs, groupBy),
+      items: subGroupBy === "none" ? listItems(refs, "record") : null,
+      subGroups:
+        subGroupBy === "none"
+          ? null
+          : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => ({
+              subKey,
+              subRefs,
+              shape: groupShape(subRefs, subGroupBy),
+              items: listItems(subRefs, "record"),
+            })),
+    }));
     return { groups, domain: spanDomain(groups.map((g) => g.shape)) };
-  }, [view, filtered, groupBy]);
+  }, [view, filtered, groupBy, subGroupBy]);
+  // Plain List: one row per reference, a hub once.
+  const flatItems = useMemo(
+    () => (view === "list" && groupBy === "none" ? listItems(filtered, "reference") : []),
+    [view, filtered, groupBy],
+  );
+  const panelExclude = useMemo(() => excludeFor(filtered), [filtered]);
 
   if (view === "tree") {
     return <RelationshipsTreeView lead={lead} />;
@@ -105,19 +226,15 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
       </div>
     );
   } else if (groupBy === "none") {
+    // The cap counts rows; "Show more" counts the references not yet drawn.
+    const shown = flatItems.slice(0, listLimit);
+    const drawn = shown.reduce((n, item) => n + (item.kind === "reference" ? 1 : item.refs.length), 0);
     body = (
       <div>
-        <RowStack className="border border-border/60 rounded-md overflow-hidden bg-paper">
-          {filtered.slice(0, listLimit).map((ref) => (
-            <RelationshipRow
-              key={ref.id}
-              kind="reference"
-              reference={ref}
-              onDelete={onDelete}
-            />
-          ))}
-        </RowStack>
-        {filtered.length > listLimit && (
+        <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+          <RecordList items={shown} hide={{}} exclude={panelExclude} onDelete={onDelete} />
+        </div>
+        {flatItems.length > listLimit && (
           <div className="flex justify-center pt-stack">
             <button
               type="button"
@@ -125,7 +242,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
               onClick={() => setListLimit((n) => n + LIST_CAP)}
               className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
             >
-              Show more — {(filtered.length - listLimit).toLocaleString()} more references
+              Show more — {(filtered.length - drawn).toLocaleString()} more references
             </button>
           </div>
         )}
@@ -135,7 +252,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
     const { groups, domain } = grouped!;
     body = (
       <ul data-part="groups" className="space-y-stack">
-        {groups.map(({ key, refs, shape }) => (
+        {groups.map(({ key, refs, shape, items, subGroups }) => (
           <li key={`p:${key}`}>
             <RelationshipGroupedCard
               title={getGroupLabel(key, groupBy)}
@@ -148,54 +265,29 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
               shapeEnd={<GroupShapeEnd shape={shape} />}
               shapeLine={<GroupShapeLine shape={shape} by={groupBy} domain={domain} compact={compact} />}
             >
-              {subGroupBy === "none"
-                ? (
-                  <RowStack>
-                    {refs.map((ref) => (
-                      <RelationshipRow
-                        key={ref.id}
-                        kind="reference"
-                        reference={ref}
-                        onDelete={onDelete}
-                        hideRelLabel={groupBy === "relation-type"}
-                      />
-                    ))}
-                  </RowStack>
-                )
-                : (
-                  <ul data-part="groups" className="px-2 py-2 space-y-1.5 bg-warm/30">
-                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => {
-                      const sub = groupShape(subRefs, subGroupBy);
-                      return (
-                      <li key={`s:${key}::${subKey}`}>
-                        <RelationshipGroupedCard
-                          title={getGroupLabel(subKey, subGroupBy)}
-                          highlight={query}
-                          color={getGroupColor(subKey, subGroupBy)}
-                          count={subRefs.length}
-                          countLabel={countOf(subRefs.length, "reference")}
-                          refIdsToWatch={subRefs.map((r) => r.id)}
-                          shapeLabel={groupShapeLabel(getGroupLabel(subKey, subGroupBy), sub, subGroupBy)}
-                          shapeEnd={<GroupShapeEnd shape={sub} />}
-                          shapeLine={<GroupShapeLine shape={sub} by={subGroupBy} domain={domain} compact={compact} />}
-                        >
-                          <RowStack>
-                            {subRefs.map((ref) => (
-                              <RelationshipRow
-                                key={ref.id}
-                                kind="reference"
-                                reference={ref}
-                                onDelete={onDelete}
-                                hideRelLabel={groupBy === "relation-type" || subGroupBy === "relation-type"}
-                              />
-                            ))}
-                          </RowStack>
-                        </RelationshipGroupedCard>
-                      </li>
-                      );
-                    })}
-                  </ul>
-                )}
+              {subGroups === null ? (
+                <RecordList items={items!} hide={hideFor(groupBy)} exclude={panelExclude} onDelete={onDelete} />
+              ) : (
+                <ul data-part="groups" className="px-2 py-2 space-y-1.5 bg-warm/30">
+                  {subGroups.map(({ subKey, subRefs, shape: sub, items: subItems }) => (
+                    <li key={`s:${key}::${subKey}`}>
+                      <RelationshipGroupedCard
+                        title={getGroupLabel(subKey, subGroupBy)}
+                        highlight={query}
+                        color={getGroupColor(subKey, subGroupBy)}
+                        count={subRefs.length}
+                        countLabel={countOf(subRefs.length, "reference")}
+                        refIdsToWatch={subRefs.map((r) => r.id)}
+                        shapeLabel={groupShapeLabel(getGroupLabel(subKey, subGroupBy), sub, subGroupBy)}
+                        shapeEnd={<GroupShapeEnd shape={sub} />}
+                        shapeLine={<GroupShapeLine shape={sub} by={subGroupBy} domain={domain} compact={compact} />}
+                      >
+                        <RecordList items={subItems} hide={hideFor(groupBy, subGroupBy)} exclude={panelExclude} onDelete={onDelete} />
+                      </RelationshipGroupedCard>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </RelationshipGroupedCard>
           </li>
         ))}

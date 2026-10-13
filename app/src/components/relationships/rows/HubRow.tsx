@@ -8,6 +8,11 @@ import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
 
+/** A hub with more members than this folds its pills to the first few and
+ *  "+N"; the open hub lists them all. */
+const FOLD_OVER = 6;
+const FOLDED = 5;
+
 export interface HubRowProps {
   hub: Hub;
   expanded?: boolean;
@@ -64,6 +69,8 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
     <RowChevron expanded={expanded} onToggle={onToggleExpand} subject="hub members" />
   ) : null;
 
+  const folded = hub.members.length > FOLD_OVER;
+
   const overview = (
     <div className="flex items-center gap-1">
       <div className="flex items-center gap-1 shrink-0">
@@ -103,8 +110,17 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           {/* items-start, so a clipped pill doesn't stretch its neighbours */}
-          <div data-part="members" className="flex flex-wrap items-start gap-1 min-w-0">
-            {memberPills}
+          <div data-part="members" className="flex flex-wrap items-center gap-1 min-w-0">
+            {folded ? memberPills.slice(0, FOLDED) : memberPills}
+            {folded && (
+              <span
+                data-part="more-members"
+                title={hub.members.slice(FOLDED).map((m) => getEntity(m.entityId)?.title ?? m.entityId).join("\n")}
+                className="text-meta text-ink-tertiary shrink-0"
+              >
+                +{hub.members.length - FOLDED}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span data-part="kind" className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">

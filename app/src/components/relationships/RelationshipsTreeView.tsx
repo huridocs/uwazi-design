@@ -12,7 +12,7 @@ import { useFilteredReferences } from "./useFilteredReferences";
 import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
-import { Hub, Relationship, countOf, deriveHubs, deriveRelationships, relationshipCount } from "../../utils/relationships";
+import { Relationship, countOf, deriveHubs, deriveRelationships, relationshipCount } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -20,7 +20,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { RelationshipRow } from "./RelationshipRow";
 import { TreeBranch, TreeNode } from "./TreeBranch";
-import { HubMemberCard } from "./rows/HubMemberCard";
+import { HubNode } from "./HubNode";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
@@ -178,7 +178,7 @@ function renderAggregates(
   const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((r): r is Reference => !!r);
   return [
     ...hubs.map((hub) => (
-      <HubNode key={`hub:${hub.id}`} hub={hub} refs={pick(hub.refIds)} hideRelLabel={opts.hideRelLabel} />
+      <HubNode key={`hub:${hub.id}`} hub={hub} refs={pick(hub.refIds)} hideRelLabel={opts.hideRelLabel} host="tree" />
     )),
     ...rels.map((rel) => (
       <AggregateNode
@@ -198,56 +198,6 @@ function renderAggregates(
         ]
       : []),
   ];
-}
-
-function HubNode({
-  hub,
-  refs,
-  hideRelLabel,
-}: {
-  hub: Hub;
-  refs: Reference[];
-  hideRelLabel?: boolean;
-}) {
-  // A hub always has something to open: its members, each as a card that says
-  // more than the pill above (template, card properties, its own link, what
-  // else it links to). Anchored or not.
-  const { expanded, toggle } = useGroupExpansion({
-    refIdsToWatch: hub.refIds,
-    clearJumpSignal: true,
-  });
-  const exclude = useMemo(
-    () => new Set([...hub.members.map((m) => m.entityId), ...refs.map((r) => r.sourceEntityId)]),
-    [hub, refs],
-  );
-
-  return (
-    <div data-part="hub-node">
-      <RelationshipRow
-        kind="hub"
-        hub={hub}
-        expanded={expanded}
-        onToggleExpand={toggle}
-        hideRelLabel={hideRelLabel}
-      />
-      {expanded && (
-        <ul data-part="hub-members" className="ms-[14px]">
-          {hub.members.map((m) => (
-            <TreeNode key={m.entityId}>
-              <div className="py-1">
-                <HubMemberCard
-                  entityId={m.entityId}
-                  refs={refs.filter((r) => r.targetEntityId === m.entityId)}
-                  hubType={hub.relationType}
-                  exclude={exclude}
-                />
-              </div>
-            </TreeNode>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 }
 
 function AggregateNode({
