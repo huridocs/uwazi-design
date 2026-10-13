@@ -1,9 +1,10 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import {
   selectionPage,
   type ContestClaim,
   type ContestLink,
+  type QuoteDoc,
   type RefContest,
   type RefSource,
   type Reference,
@@ -12,11 +13,13 @@ import {
 import { getEntity, getEntityType } from "../../data/entities";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { breakpointAtom } from "../../atoms/viewport";
+import { scrollToPageAtom } from "../../atoms/selection";
+import { useLibraryPane } from "../library/libraryPane";
 import { formatAtPrecision, formatTime } from "../../utils/dateFormat";
-import { periodLabel } from "../../utils/relationships";
+import { VERIFICATION_LABEL, periodLabel } from "../../utils/relationships";
 import { relationDisplayLabel } from "../../utils/inheritance";
 import { evidenceSummary, sourcePublisher, verificationBasis } from "../../utils/refEvidence";
-import { Modal } from "../shared/Modal";
+import { Modal, ModalHostProvider } from "../shared/Modal";
 import { SectionLabel } from "../shared/SectionLabel";
 import { PageTag } from "../shared/PageTag";
 import { TimeTag } from "../shared/TimeTag";
@@ -48,8 +51,97 @@ const quotedFrom = (r: Reference) => ((r.direction ?? "outgoing") === "outgoing"
 export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose: () => void }) {
   const phone = useAtomValue(breakpointAtom) === "mobile";
   const setPreview = useSetAtom(previewEntityIdAtom);
+  const jumpTo = useSetAtom(scrollToPageAtom);
+  // In Split the card covers its own pane, not both.
+  const pane = useLibraryPane();
   const first = refs[0];
   const target = first ? getEntity(first.targetEntityId) : undefined;
+
+  const open = (id: string) => {
+    onClose();
+    setPreview(id);
+  };
+  const jump = (page: number) => {
+    onClose();
+    jumpTo(page);
+  };
+
+  // An aggregate whose references disagree (status or note) reads one
+  // section per reference under a shared head, so each status keeps its own
+  // note and sources. References that agree read as one.
+  const differ =
+    refs.length > 1 &&
+    (new Set(refs.map((r) => r.verification ?? "")).size > 1 || new Set(refs.map((r) => r.note ?? "")).size > 1);
+
+  const sentencesDiffer = new Set(refs.map(referenceSentence)).size > 1;
+
+  const card = (
+    <Modal
+      component="RefEvidenceCard"
+      size={phone ? "sm" : "md"}
+      scope={pane ? "pane" : "viewport"}
+      portal={false}
+      onClose={onClose}
+      title="Evidence"
+      subtitle={[first ? relationDisplayLabel(first.relationType) : "", target?.title ?? ""].filter(Boolean).join(" · ")}
+      bodyClassName="py-4 space-y-4 overflow-y-auto"
+    >
+      {differ ? (
+        <>
+          <EvidenceBody refs={refs} part="head" onOpen={open} onJump={jump} />
+          {refs.map((r) => (
+            <section
+              key={r.id}
+              data-part="reference"
+              aria-label={`${referenceSentence(r)}, ${r.verification ? VERIFICATION_LABEL[r.verification].toLowerCase() : "no status"}`}
+              className="space-y-4 pt-4 border-t border-border-soft"
+            >
+              {/* Which way the reference runs, where the references differ in
+                  it; otherwise its status, first in its body, tells them apart. */}
+              {sentencesDiffer && (
+                <p data-part="reference-head" className="text-xs font-medium text-ink">
+                  {referenceSentence(r)}
+                </p>
+              )}
+              <EvidenceBody refs={[r]} part="all" nested onOpen={open} onJump={jump} />
+            </section>
+          ))}
+        </>
+      ) : (
+        <EvidenceBody refs={refs} part="all" onOpen={open} onJump={jump} />
+      )}
+    </Modal>
+  );
+  return pane ? <ModalHostProvider host={pane.root.current}>{card}</ModalHostProvider> : card;
+}
+
+/** One reference of an aggregate, as a sentence: "<record> <relation>
+ *  <record>", in the direction it was recorded. */
+function referenceSentence(r: Reference): string {
+  const self = getEntity(r.sourceEntityId)?.title ?? r.sourceEntityId;
+  const other = getEntity(r.targetEntityId)?.title ?? r.targetEntityId;
+  const [from, to] = (r.direction ?? "outgoing") === "outgoing" ? [self, other] : [other, self];
+  return `${from} ${relationDisplayLabel(r.relationType)} ${to}`;
+}
+
+/** The card's body for a set of references. `head` is an aggregate's shared
+ *  head when its references are shown one by one: the counts over all of
+ *  them, nothing per reference. */
+function EvidenceBody({
+  refs,
+  part,
+  nested = false,
+  onOpen: open,
+  onJump,
+}: {
+  refs: Reference[];
+  part: "all" | "head";
+  /** Inside a reference's own section, which names it: the parts below are
+   *  not regions of their own, or their names would repeat per reference. */
+  nested?: boolean;
+  onOpen: (id: string) => void;
+  onJump: (page: number) => void;
+}) {
   const summary = evidenceSummary(refs);
   const status = summary.statuses.length === 1 ? summary.statuses[0] : undefined;
   const notes = [...new Set(refs.map((r) => r.note).filter((n): n is string => !!n))];
@@ -58,28 +150,23 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
 
   // Quotes by the source that gives them: the link's own quote where its
   // `from` end is one of the sources, and the sources' other passages.
-  const quotesBySource = new Map<string, { text: string; page?: number }[]>();
-  const add = (id: string, q: { text: string; page?: number }) => {
+  const quotesBySource = new Map<string, QuoteRef[]>();
+  const add = (id: string, q: QuoteRef) => {
     const arr = quotesBySource.get(id) ?? [];
     if (!arr.some((x) => x.text === q.text)) arr.push(q);
     quotesBySource.set(id, arr);
   };
-  const looseQuotes: { from: string; text: string; page?: number }[] = [];
+  const looseQuotes: (QuoteRef & { from: string })[] = [];
   for (const r of refs) {
     if (r.sourceSelection) {
       const from = quotedFrom(r);
-      const q = { text: r.sourceSelection.text, page: selectionPage(r.sourceSelection) };
+      const q = { text: r.sourceSelection.text, page: selectionPage(r.sourceSelection), doc: r.sourceSelection.doc };
       if (sourceIds.has(from)) add(from, q);
       else if (!looseQuotes.some((x) => x.text === q.text)) looseQuotes.push({ from, ...q });
     }
     for (const q of r.sourceQuotes ?? []) add(q.sourceId, q);
   }
   const anchors = refs.flatMap((r) => (r.mediaAnchor ? [r.mediaAnchor] : []));
-
-  const open = (id: string) => {
-    onClose();
-    setPreview(id);
-  };
 
   const n = summary.sources.length;
   const facts = [
@@ -97,17 +184,16 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
         : `Reported ${day(summary.firstReported)} to ${day(summary.lastReported!)}`;
   const undated = summary.undated ? `${summary.undated} with no publication date` : "";
 
+  if (part === "head")
+    return (facts.length > 0 || reported) ? (
+      <p data-part="facts" className="text-xs text-ink-tertiary tabular-nums">
+        {[...facts, reported, undated].filter(Boolean).join(" · ")}
+      </p>
+    ) : null;
+
   return (
-    <Modal
-      component="RefEvidenceCard"
-      size={phone ? "sm" : "md"}
-      portal={false}
-      onClose={onClose}
-      title="Evidence"
-      subtitle={[first ? relationDisplayLabel(first.relationType) : "", target?.title ?? ""].filter(Boolean).join(" · ")}
-      bodyClassName="py-4 space-y-4 overflow-y-auto"
-    >
-      <section data-part="status" aria-label="Status" className="space-y-1.5">
+    <>
+      <section data-part="status" aria-label={nested ? undefined : "Status"} className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-1.5">
           {summary.statuses.map((s) => (
             <RefStatus key={s} verification={s} />
@@ -135,7 +221,7 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
         </section>
       )}
 
-      <ContestSection refs={refs} onOpen={open} />
+      <ContestSection refs={refs} nested={nested} onOpen={open} />
       <SuccessionSection refs={refs} onOpen={open} />
 
       {n > 0 && (
@@ -143,7 +229,7 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
           <SectionLabel>Sources</SectionLabel>
           <ul className="space-y-3">
             {summary.sources.map((s) => (
-              <SourceItem key={s.id} source={s} quotes={quotesBySource.get(s.id) ?? []} onOpen={open} />
+              <SourceItem key={s.id} source={s} quotes={quotesBySource.get(s.id) ?? []} onOpen={open} onJump={onJump} />
             ))}
           </ul>
         </section>
@@ -155,7 +241,7 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
           <ul className="space-y-2">
             {looseQuotes.map((q) => (
               <li key={q.text} className="space-y-1">
-                <Quote text={q.text} page={q.page} />
+                <Quote quote={q} onJump={onJump} />
                 <RecordLink id={q.from} onOpen={open} />
               </li>
             ))}
@@ -177,7 +263,7 @@ export function RefEvidenceCard({ refs, onClose }: { refs: Reference[]; onClose:
           </ul>
         </section>
       )}
-    </Modal>
+    </>
   );
 }
 
@@ -221,13 +307,13 @@ function mergeContests(refs: Reference[]) {
  *  disputed link, "Disputed by" on a link that is not disputed itself but
  *  has something against it, "Claim contested" where the dispute is the
  *  claim's at its end and not the link's. */
-function ContestSection({ refs, onOpen }: { refs: Reference[]; onOpen: (id: string) => void }) {
+function ContestSection({ refs, nested = false, onOpen }: { refs: Reference[]; nested?: boolean; onOpen: (id: string) => void }) {
   const c = mergeContests(refs);
   if (!c.any) return null;
   const heading = c.claimInherited ? "Claim contested" : c.disputed ? "Contested by" : "Disputed by";
   const ends = new Set(refs.flatMap((r) => [r.sourceEntityId, r.targetEntityId]));
   return (
-    <section data-part="contest" aria-label={heading} className="space-y-2">
+    <section data-part="contest" aria-label={nested ? undefined : heading} className="space-y-2">
       <SectionLabel>{heading}</SectionLabel>
       {c.notes.map((note) => (
         <p key={note} className="text-xs text-ink-secondary leading-relaxed">
@@ -326,7 +412,7 @@ function ContestList({
                       <RecordLink id={l.recordId} onOpen={onOpen} />
                       {l.verification && <RefStatus verification={l.verification} />}
                     </div>
-                    {l.quote && <Quote text={l.quote} />}
+                    {l.quote && <Quote quote={{ text: l.quote }} />}
                   </li>
                 ),
               )}
@@ -383,9 +469,12 @@ function SourceItem({
   quotes,
   status,
   onOpen,
+  onJump,
 }: {
   source: RefSource;
-  quotes: Pick<SourceQuote, "text" | "page">[];
+  quotes: QuoteRef[];
+  /** Goes to a quote's page where the focused record shows its PDF. */
+  onJump?: (page: number) => void;
   /** The status of the source's link, where the item stands for one. */
   status?: Reference["verification"];
   onOpen: (id: string) => void;
@@ -432,7 +521,7 @@ function SourceItem({
         </p>
       )}
       {quotes.map((q) => (
-        <Quote key={q.text} text={q.text} page={q.page} />
+        <Quote key={q.text} quote={q} onJump={onJump} />
       ))}
     </li>
   );
@@ -455,11 +544,36 @@ function RecordLink({ id, label, onOpen }: { id: string; label?: string; onOpen:
   );
 }
 
-function Quote({ text, page }: { text: string; page?: number }) {
+type QuoteRef = Pick<SourceQuote, "text" | "page" | "doc">;
+
+/** A passage, and where it sits. `page` is a page of the PDF the focused
+ *  record shows: the tag goes there. Otherwise `doc` names the bundled PDF
+ *  and page it was found in, as a tag that states it and goes nowhere. */
+function Quote({ quote: { text, page, doc }, onJump }: { quote: QuoteRef; onJump?: (page: number) => void }) {
   return (
-    <div data-part="quote" className="flex items-start justify-between gap-2 px-2 py-1.5 bg-warm/50 rounded">
-      <p className="min-w-0 text-xs text-ink-secondary leading-relaxed italic">{text}</p>
-      {page !== undefined && <PageTag page={page} />}
+    <div data-part="quote" className="px-2 py-1.5 bg-warm/50 rounded space-y-1">
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0 text-xs text-ink-secondary leading-relaxed italic">{text}</p>
+        {page !== undefined && <PageTag page={page} onClick={onJump ? () => onJump(page) : undefined} />}
+      </div>
+      {page === undefined && doc && <DocPlace doc={doc} />}
     </div>
+  );
+}
+
+/** The bundled PDF a quote was found in, and its page, where the focused
+ *  record shows another document. */
+function DocPlace({ doc }: { doc: QuoteDoc }) {
+  return (
+    <p data-part="quote-doc" className="flex items-center gap-1.5 min-w-0 text-meta text-ink-tertiary">
+      <FileText size={11} aria-hidden className="shrink-0" />
+      <span className="min-w-0 truncate" title={doc.title}>
+        {doc.title}
+      </span>
+      <span className="sr-only">, page {doc.page}</span>
+      <span aria-hidden className="shrink-0">
+        <PageTag page={doc.page} />
+      </span>
+    </p>
   );
 }

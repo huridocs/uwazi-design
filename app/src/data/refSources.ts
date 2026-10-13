@@ -1,7 +1,7 @@
 // A reference's sources as the evidence card shows them: the Source records of
 // a collection that stores them in Uwazi's metadata shape (Nepal, Vegas). Each
 // adapter passes its own record lookup; nothing here knows a corpus.
-import type { RefSource, SourceQuote } from "./references";
+import type { QuoteDoc, RefSource, SourceQuote } from "./references";
 
 interface SourceRecord {
   sharedId: string;
@@ -60,6 +60,8 @@ export function refEvidenceFrom(
   recordOf: (id: string) => SourceRecord | undefined,
   refsOf: (id: string) => StoredRef[] | undefined,
   pageOf: (r: StoredRef) => number | undefined,
+  /** The PDF and page a quote was found in, whichever record is focused. */
+  docOf?: (r: StoredRef) => QuoteDoc | undefined,
 ): { sources?: RefSource[]; sourceQuotes?: SourceQuote[] } {
   const ids = ref.sources ?? [];
   if (ids.length === 0) return {};
@@ -75,7 +77,8 @@ export function refEvidenceFrom(
       if (r.to !== ref.from && r.to !== ref.to) continue;
       seen.add(r.quote);
       const page = pageOf(r);
-      quotes.push({ sourceId: id, text: r.quote, ...(page ? { page } : {}) });
+      const doc = docOf?.(r);
+      quotes.push({ sourceId: id, text: r.quote, ...(page ? { page } : {}), ...(doc ? { doc } : {}) });
     }
   }
   return {

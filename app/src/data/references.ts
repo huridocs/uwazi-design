@@ -29,6 +29,9 @@ export interface TextSelection {
   /** 1-based. 0 for a passage of a source with no pages (a web article in the
    *  Nepal corpus): the quote is shown, with no page to go to. */
   page: number;
+  /** The bundled PDF and page the quote was found in, kept when `page` is 0
+   *  because the focused record shows another document (Nepal). */
+  doc?: QuoteDoc;
   /** Relative positions (0-1) within the page for highlight overlay */
   top: number;
   left: number;
@@ -79,11 +82,22 @@ export interface RefSource {
 
 /** A passage one of a link's sources gives about either end of the link: the
  *  quote on another reference from that source. */
+/** Where a quote sits in a bundled PDF, whichever record is focused: the
+ *  document's title and the 1-based page. The evidence card prints it as a
+ *  static tag where the focused record does not show that PDF (and `page`,
+ *  the jump, is therefore absent). */
+export interface QuoteDoc {
+  title: string;
+  page: number;
+}
+
 export interface SourceQuote {
   sourceId: string;
   text: string;
-  /** 1-based page in a bundled PDF; absent for a web article. */
+  /** 1-based page in the PDF the focused record shows; absent for a web
+   *  article or another record's PDF. */
   page?: number;
+  doc?: QuoteDoc;
 }
 
 /** A claim named on the evidence card: a claim at one of the link's ends, one

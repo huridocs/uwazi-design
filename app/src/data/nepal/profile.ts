@@ -14,6 +14,7 @@ import { nepalRelTypeName, nepalTemplateById } from "./schema";
 import {
   loadNepalEvidence,
   nepalCorpus,
+  nepalDoc,
   nepalEvidence,
   nepalEntity,
   nepalPrimaryDoc,
@@ -125,6 +126,9 @@ export function nepalReferencesFor(id: string): Reference[] {
   if (hit) return hit;
   const shown = nepalEntity(id)?.docs?.[0];
   const pageOf = (r: { file?: string; page?: number }) => (r.file && r.file === shown && r.page ? r.page : 0);
+  // The PDF and page whatever this record shows: the evidence card names it.
+  const docOf = (r: { file?: string; page?: number }) =>
+    r.file && r.page ? { title: nepalDoc(r.file)?.title ?? r.file, page: r.page } : undefined;
   const out = (nepalRefsByEntity().get(id) ?? []).map((r): Reference => {
     const outgoing = r.from === id;
     return {
@@ -135,10 +139,12 @@ export function nepalReferencesFor(id: string): Reference[] {
       // rename in Settings reaches it.
       relationType: nepalRelTypeName.get(r.type) ?? r.type,
       direction: outgoing ? "outgoing" : "incoming",
-      ...(r.quote ? { sourceSelection: { text: r.quote, page: pageOf(r), top: 0, left: 0, width: 0, height: 0 } } : {}),
+      ...(r.quote
+        ? { sourceSelection: { text: r.quote, page: pageOf(r), ...(docOf(r) ? { doc: docOf(r) } : {}), top: 0, left: 0, width: 0, height: 0 } }
+        : {}),
       verification: r.verification,
       ...(r.date ? { period: r.date } : {}),
-      ...refEvidenceFrom(r, nepalEntity, (s) => nepalRefsByEntity().get(s), (q) => pageOf(q) || undefined),
+      ...refEvidenceFrom(r, nepalEntity, (s) => nepalRefsByEntity().get(s), (q) => pageOf(q) || undefined, docOf),
       ...(r.note ? { note: r.note } : {}),
       ...refContestFrom(r, contestLookups),
       createdAt: "",
