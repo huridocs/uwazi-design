@@ -316,6 +316,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   show none. Group headers give their unit in a tooltip and sr-only text. Exception: the
   evidence card (`RefEvidenceCard`, opened from a row's status chip) prints source and
   independent-publisher counts, because they are the evidence.
+- The evidence card reads one section per reference when an aggregate's references differ in
+  status or note (a shared head with the counts over all of them); references that agree read
+  as one. A quote found in a bundled PDF carries `doc` (title, page) whatever record is focused:
+  the card names the document and page as a static tag, and the tag jumps only where the focused
+  record shows that PDF. Rows keep their rule. In a Split pane the card is `scope="pane"`.
 - Group headers (list view, any group-by) carry the group's shape (`GroupSummary.tsx`): members as
   type dot and name, the span (period, else reported) on one axis shared by the panel's groups,
   the first page or a recording mark, the evidence mix as a bar and the direction glyph. Each part
