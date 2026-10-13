@@ -30,12 +30,33 @@ export function reportedAt(ref: Reference): number | undefined {
   return at;
 }
 
+/** The precision a source's publication date is stated at. */
+export type DatePrecision = "day" | "month" | "year";
+const precisionOf = (s: RefSource): DatePrecision => s.datePrecision ?? "day";
+
+/** The start of the period `t` falls in, at `precision` (UTC), epoch seconds. */
+function periodStart(t: number, precision: DatePrecision): number {
+  const d = new Date(t * 1000);
+  if (precision === "day") return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 1000;
+  if (precision === "month") return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 1000;
+  return Date.UTC(d.getUTCFullYear(), 0, 1) / 1000;
+}
+
 /** Whether a link was reported by the end of `day` (epoch seconds at the
- *  day's UTC start, as `asOfSeconds` gives it). A link whose sources state no
- *  publication date is not ruled out and stays, as As of keeps undated links. */
+ *  day's UTC start, as `asOfSeconds` gives it). Each source is compared at
+ *  the precision its date is stated at: a source dated "2025/10" counts as
+ *  reported by any day in October, since the day is not known. A link whose
+ *  sources state no publication date is not ruled out and stays, as As of
+ *  keeps undated links. */
 export function refReportedBy(ref: Reference, day: number): boolean {
-  const at = reportedAt(ref);
-  return at === undefined || at < day + 86400;
+  let dated = false;
+  for (const s of ref.sources ?? []) {
+    if (s.published === undefined) continue;
+    dated = true;
+    const p = precisionOf(s);
+    if (periodStart(s.published, p) <= periodStart(day, p)) return true;
+  }
+  return !dated;
 }
 
 /** The publisher facet's value for a source: its own name, as printed on it. */
@@ -53,6 +74,12 @@ export interface EvidenceSummary {
   copies: number;
   firstReported?: number;
   lastReported?: number;
+  /** The precision the first and last dates are stated at ("2025/10"). */
+  firstPrecision?: DatePrecision;
+  lastPrecision?: DatePrecision;
+  /** What the copies are: wire stories folded into their origin, second
+   *  stories from a publisher already counted, or both. */
+  folds?: "wire" | "outlet" | "both";
   /** Sources with no publication date (read on `accessed`). */
   undated: number;
   statuses: Verification[];
@@ -64,13 +91,38 @@ export function evidenceSummary(refs: Reference[]): EvidenceSummary {
   const sources = [...byId.values()].sort(
     (a, b) => (a.published ?? Infinity) - (b.published ?? Infinity) || sourcePublisher(a).localeCompare(sourcePublisher(b)),
   );
-  const dated = sources.map((s) => s.published).filter((d): d is number => d !== undefined);
+  const dated = sources.filter((s) => s.published !== undefined);
+  const first = dated.reduce<RefSource | undefined>((a, s) => (!a || s.published! < a.published! ? s : a), undefined);
+  const last = dated.reduce<RefSource | undefined>((a, s) => (!a || s.published! > a.published! ? s : a), undefined);
   const statuses = [...new Set(refs.map((r) => r.verification).filter((v): v is Verification => !!v))];
+  // An origin held by more than one source is a fold: a wire fold when one
+  // of them is a copy (its syndication names another publisher), else a
+  // second story from the same outlet.
+  const byOrigin = new Map<string, RefSource[]>();
+  for (const s of sources) {
+    const o = sourceOrigin(s);
+    if (o) byOrigin.set(o, [...(byOrigin.get(o) ?? []), s]);
+  }
+  let wire = false;
+  let outlet = false;
+  for (const group of byOrigin.values()) {
+    if (group.length < 2) continue;
+    if (group.some((s) => norm(s.syndicatedFrom) && norm(s.syndicatedFrom) !== norm(s.publisher))) wire = true;
+    else outlet = true;
+  }
   return {
     sources,
     independent: independentPublishers(sources),
     copies: sources.filter((s) => sourceOrigin(s)).length - independentPublishers(sources),
-    ...(dated.length ? { firstReported: Math.min(...dated), lastReported: Math.max(...dated) } : {}),
+    ...(first && last
+      ? {
+          firstReported: first.published,
+          lastReported: last.published,
+          firstPrecision: precisionOf(first),
+          lastPrecision: precisionOf(last),
+        }
+      : {}),
+    ...(wire || outlet ? { folds: wire && outlet ? "both" : wire ? "wire" : "outlet" } : {}),
     undated: sources.length - dated.length,
     statuses,
   };
@@ -90,11 +142,29 @@ export const isContested = (r: Reference) => r.verification === "disputed" || !!
  *  single source below that; disputed is set by the researcher. Where the
  *  recorded status and the count agree with that rule, the sentence states
  *  the rule. Where they do not (a status set by hand, Vegas's timing checks),
- *  it states only what was recorded, and the note gives the reason. */
-export function verificationBasis(status: Verification, independent: number): string {
-  if (status === "disputed") return "Recorded as disputed: the sources, or other records, conflict.";
+ *  it states only what was recorded, and the note gives the reason.
+ *
+ *  `clock`: the link is a recording's anchor whose clock is off its moment's
+ *  median (Vegas): its dispute is that offset, not a conflict of sources.
+ *  `folds`: what the count folded (`EvidenceSummary.folds`), so the rule's
+ *  second sentence names the fold that happened. */
+export function verificationBasis(
+  status: Verification,
+  independent: number,
+  { clock = false, folds }: { clock?: boolean; folds?: EvidenceSummary["folds"] } = {},
+): string {
+  if (status === "disputed")
+    return clock
+      ? "Recorded as disputed: this recording's clock is more than 2\u00a0s off the moment's median."
+      : "Recorded as disputed: the sources, or other records, conflict.";
   if (status === "confirmed" && independent >= 2)
-    return `Confirmed: ${independent} independent publishers report it. A\u00a0wire copy counts once.`;
+    return `Confirmed: ${independent} independent publishers report it. ${
+      folds === "outlet"
+        ? "Each\u00a0publisher is counted once."
+        : folds === "both"
+          ? "A\u00a0wire copy counts once, and so does a second story from one publisher."
+          : "A\u00a0wire copy counts once."
+    }`;
   if (status === "single-source" && independent === 1) return "Single source: one independent publisher reports it.";
   return status === "confirmed" ? "Recorded as confirmed." : "Recorded as single source.";
 }

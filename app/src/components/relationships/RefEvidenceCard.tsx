@@ -175,13 +175,10 @@ function EvidenceBody({
     summary.copies ? `${summary.copies} from a publisher already counted` : "",
     refs.length > 1 ? `${refs.length} references` : "",
   ].filter(Boolean);
-  const reported =
-    summary.firstReported === undefined
-      ? ""
-      : summary.firstReported === summary.lastReported ||
-          day(summary.firstReported) === day(summary.lastReported!)
-        ? `Reported ${day(summary.firstReported)}`
-        : `Reported ${day(summary.firstReported)} to ${day(summary.lastReported!)}`;
+  // Each end at the precision its source states it ("2025/10", not the 1st).
+  const firstDay = summary.firstReported === undefined ? "" : day(summary.firstReported, summary.firstPrecision);
+  const lastDay = summary.lastReported === undefined ? "" : day(summary.lastReported, summary.lastPrecision);
+  const reported = !firstDay ? "" : firstDay === lastDay ? `Reported ${firstDay}` : `Reported ${firstDay} to ${lastDay}`;
   const undated = summary.undated ? `${summary.undated} with no publication date` : "";
 
   if (part === "head")
@@ -202,7 +199,11 @@ function EvidenceBody({
             <span className="text-meta text-ink-tertiary tabular-nums">Held {periods.join(", ")}</span>
           )}
         </div>
-        {status && <p className="text-xs text-ink-secondary">{verificationBasis(status, summary.independent)}</p>}
+        {status && (
+          <p className="text-xs text-ink-secondary">
+            {verificationBasis(status, summary.independent, { clock: refs.some((r) => !!r.contest?.clock), folds: summary.folds })}
+          </p>
+        )}
         {(facts.length > 0 || reported) && (
           <p data-part="facts" className="text-xs text-ink-tertiary tabular-nums">
             {[...facts, reported, undated].filter(Boolean).join(" · ")}
@@ -506,7 +507,9 @@ function SourceItem({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open ${s.title} at its source (opens in a new tab)`}
-            className="shrink-0 p-0.5 rounded text-ink-tertiary hover:text-ink cursor-pointer
+            // A 24px target (WCAG 2.5.8); the negative margin keeps the
+            // 16px footprint the line was laid out for.
+            className="shrink-0 -m-1 w-6 h-6 inline-flex items-center justify-center rounded text-ink-tertiary hover:text-ink cursor-pointer
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
           >
             <ExternalLink size={12} aria-hidden />

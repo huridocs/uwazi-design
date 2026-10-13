@@ -128,14 +128,16 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
 
   useEffect(() => {
     if (!active) return;
-    const container = ref.current;
-    if (!container) return;
+    if (!ref.current) return;
     trappingRef.current = true;
-
-    const focusables = () => focusablesIn(container);
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
+      // Read the panel at the key, not at activation: a dialog that becomes a
+      // stacked sheet remounts its panel in a portal while the trap stays up.
+      const container = ref.current;
+      if (!container) return;
+      const focusables = () => focusablesIn(container);
       // A trap under another layer stands down: on a phone, stacked sheets are
       // all "open" and the lower ones are inert. Wrapping Tab back into an
       // inert panel would cancel the key and focus nothing.
@@ -180,7 +182,8 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
         const current = document.activeElement;
         // Read now: new content may have retargeted it since the trap went up.
         const trigger = triggerRef.current;
-        const ours = !current || current === document.body || container.contains(current);
+        const container = ref.current;
+        const ours = !current || current === document.body || !!container?.contains(current);
         if (trigger?.isConnected && ours) trigger.focus({ preventScroll: true });
       });
     };

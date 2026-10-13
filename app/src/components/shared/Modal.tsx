@@ -1,4 +1,15 @@
-import { createContext, useContext, useId, useLayoutEffect, type HTMLAttributes, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
@@ -141,7 +152,6 @@ export function Modal({
 }) {
   const autoId = useId();
   const titleId = titleIdProp ?? `modal-${autoId}`;
-  const panelRef = useFocusTrap<HTMLDivElement>(true);
   const paneHost = useContext(ModalHostContext);
   /* On a phone a dialog is a layer on the sheet stack (atoms/sheetStack). As
      the first layer it keeps its own shape; opened from inside a sheet it is a
@@ -149,9 +159,33 @@ export function Modal({
      size — and viewport-scoped, since a pane is only a slice of the screen. */
   const layer = useSheetLayer(true, { onClose, label: typeof title === "string" ? title : undefined });
   const sheet = layer.stacked && layer.index >= 1;
+  /* The layer registers in a layout effect, so the first render is not yet a
+     sheet; when it becomes one the panel moves to a portal on <body> and
+     remounts, and the control the trap had focused goes with it. `sheet` as
+     the trap's content key places the first focus again in the new panel. */
+  const panelRef = useFocusTrap<HTMLDivElement>(true, sheet);
   // On the app's layer stack too, so an overlay under the dialog ignores
   // presses and Escape while it is open (see atoms/layerStack).
-  useOverlayLayer(true);
+  const overlay = useOverlayLayer(true);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const layerTopRef = useRef(layer.isTop);
+  layerTopRef.current = layer.isTop;
+  /* Escape is the panel's (below), so a control inside can claim it first.
+     A key that arrives with the focus on <body> (dropped there by a press
+     outside every control) never reaches the panel: the top dialog takes it
+     from the document instead. */
+  useEffect(() => {
+    const onDocKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || e.target !== document.body) return;
+      if (!overlay.isTopNow() || !layerTopRef.current) return;
+      e.stopPropagation();
+      e.preventDefault();
+      onCloseRef.current();
+    };
+    document.addEventListener("keydown", onDocKey, true);
+    return () => document.removeEventListener("keydown", onDocKey, true);
+  }, [overlay.isTopNow]);
   const fullOnPhone = size !== "sm" && !sheet;
   const depth = Math.min(layer.depth, SHEET_STACK.visible - 1);
   useLayoutEffect(() => {
@@ -191,7 +225,11 @@ export function Modal({
         // still takes the tap that closes it.
         style={layer.stacked ? { zIndex: sheetZ(layer.index) } : undefined}
         onMouseDown={(e) => {
-          if (dismissOnScrim && e.target === e.currentTarget) onClose();
+          if (!dismissOnScrim || e.target !== e.currentTarget) return;
+          // The press's default action would move focus to <body> after
+          // onClose has given it back to the trigger.
+          e.preventDefault();
+          onClose();
         }}
       >
         <div
@@ -236,7 +274,9 @@ export function Modal({
                 : undefined
           }
         >
-          <header
+          {/* A div, not <header>: a dialog stacked on a sheet would otherwise
+              add a second banner landmark. */}
+          <div
             data-part="header"
             className="bleed shrink-0 flex items-center gap-2 h-12 border-b border-border"
           >
@@ -291,7 +331,7 @@ export function Modal({
                 <X size={16} aria-hidden />
               </button>
             )}
-          </header>
+          </div>
           {flush ? (
             <div data-part="body" className="bleed flex-1 min-h-0 flex flex-col">
               {children}
