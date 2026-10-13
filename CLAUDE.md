@@ -299,10 +299,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   body filters on its own.
 - Toolbar: `SearchBar` with `ActiveFilterChips` inline, then `ViewControls`,
   `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
-  and tree views. The search field is on paper with its border, and Display, Connect and Filters
-  are ghosts (`BAR_GHOST`; `FiltersButton tone="ghost"`), so the row reads as part of the header
-  above the warm lane. In the Relationships tab the header's rule sits under the toolbar
-  (`DocMeta rule={false}`, `RelationshipsToolbar rule`), so the warm lane starts under the rule.
+  and tree views. In the Relationships tab the toolbar is the first block of the warm lane, under
+  DocMeta's rule, so the header has the same shape as on every other tab; it sits outside the
+  scroller and stays at the lane's top. The search field is on paper with its border; Display,
+  Connect and Filters are ghosts (`BAR_GHOST`; `FiltersButton tone="ghost"`), as buttons on warm
+  take no edge. The drawer section, slide-over and Library preview have no warm lane and draw it
+  on paper.
 - Filters are a drawer tab where the entity view has a drawer (Metadata, Relationships and
   Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`). While that
   drawer is drawn the tab is the only way in and carries the dot; the toolbar's Filters button is
