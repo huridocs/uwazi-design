@@ -222,6 +222,8 @@ repo; update them when tokens or style rules change.
 
 ### Visual rules
 - Selected state is `bg-parchment`. No other selected colour.
+- Selected, previewed and focus rings are drawn inside the box (`ring-inset`, the constants in
+  `EntitySelectBox.tsx`), so a scroll lane never clips them; never draw an item's ring outside it.
 - No thick left-border or inset accents. Use a dot, an icon colour or a tint.
 - Active sidebar item: `bg-warm text-ink`, icon colour unchanged.
 - Badges are `w-fit`.
