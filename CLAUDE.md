@@ -42,6 +42,7 @@ One term per concept, in code, comments, docs and UI copy.
 | Pinned records, notes and citations | notebook |
 | A link's sources, note and quotes, as the card shows them | evidence |
 | When a link's sources were published (beside the period it held) | reported |
+| A link with something on the other side (opposite stance, conflicting figure, clock off its moment) | contested |
 
 ## Data model
 
@@ -68,6 +69,12 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
 - `Reference.sources` (resolved Source records, `data/refSources.ts`), `sourceQuotes` and `note`
   are optional; Nepal and Vegas fill them. The evidence card, the "Reported by" filter and the
   Publisher / Publisher type facets self-hide where no reference carries them.
+- `Reference.contest` (`data/refContest.ts`): the links on the other side of a contested link
+  (opposite-stance sources on its claim, Research's pairing from the seed's `disputed-notes.json`),
+  its own side, conflicting figures, Research's note, and for Vegas a captures anchor more than
+  2 s off its moment's median (`contest.clock`, from `vegasSyncAnalysis()`).
+  `Reference.succession` is `supersedes`, which is not a dispute. The Nepal build reads
+  `disputed-notes.json` when present and runs without it.
 - The list view renders references; the tree and graph render relationships.
 - Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
 
@@ -314,6 +321,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   the first page or a recording mark, the evidence mix as a bar and the direction glyph. Each part
   self-hides without data. Counts stay in the tooltips and in the header button's accessible name,
   which states the summary in words. The header is two lines at a fixed height, open or closed.
+- The Contested filter (`relContestedAtom`) keeps disputed links and the links something contests
+  (`isContested`) and hides where neither exists. The evidence card heads the contest "Contested
+  by" (disputed link), "Disputed by" (link not disputed, something against it) or "Claim
+  contested" (the dispute is the claim's, not this link's). A contested Vegas anchor carries a
+  `ContestedClock` mark on its row.
 - Anchoring and Direction facets hide when every reference has the same value.
 - Graph (`RelationshipsGraphView.tsx`): wheel zoom needs a native `{ passive: false }` listener;
   tooltips are HTML positioned from `getBoundingClientRect`, never SVG inside the zoom transform.
