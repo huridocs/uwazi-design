@@ -13,10 +13,12 @@ import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { CreateEntityButton } from "../components/library/CreateEntityButton";
 import { BatchEntryModal } from "../components/library/BatchEntryModal";
-import { isPdf, runCsvExport, runPanesCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
+import { runCsvExport, runPanesCsvExport } from "../utils/libraryTasks";
+import { uploadFilesAtom } from "../atoms/fileUploads";
+import { pickFiles } from "../utils/pickFiles";
+import { useLibraryDrop } from "../components/library/LibraryDropTarget";
 import { MobileActionMenu } from "../components/layout/MobileActionMenu";
-import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
-import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
+import { defaultTemplateId } from "../utils/createEntity";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { cejilDefaultEntityId } from "../data/cejil/defaultEntity";
 import { isCejilEntity } from "../data/cejil/profile";
@@ -468,7 +470,6 @@ export function LibraryView() {
   const [createOpen, setCreateOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
-  const uploadInputRef = useRef<HTMLInputElement | null>(null);
   /** Create entity: the chosen template opens as a draft in the drawer, on its
    *  edit form. Guarded — the drawer may be holding another entity's edit. */
   const recentTemplates = useAtomValue(recentTemplatesAtom);
@@ -476,35 +477,14 @@ export function LibraryView() {
     setCreateOpen(false);
     guard(() => setSelectedId(startDraft({ typeId, corpus: dataSource })));
   };
-  /** Upload PDF: the picked PDFs open `UploadDocumentsModal` (a title each,
-   *  one template), and Upload runs the batch as one Beacon task. A single
-   *  document opens in the drawer when it lands; a batch doesn't pick one. */
-  const [pendingUploads, setPendingUploads] = useState<File[] | null>(null);
-  function handleUpload(files: FileList | null) {
-    const list = Array.from(files ?? []);
-    const pdfs = list.filter(isPdf);
-    const skipped = list.length - pdfs.length;
-    if (skipped > 0) {
-      notify(
-        `${skipped} ${skipped === 1 ? "file isn't a PDF and was" : "files aren't PDFs and were"} skipped`,
-        "error",
-      );
-    }
-    if (pdfs.length) setPendingUploads(pdfs);
-  }
-  function startUpload(batch: { typeId: string; uploads: { file: File; title: string }[] }) {
-    setPendingUploads(null);
-    const corpus = dataSource;
-    runPdfUploadBatch(store, { corpus, ...batch }, (ids) => {
-      // Only while the library still shows that corpus: an upload that lands
-      // after the user moved elsewhere shouldn't pull them back.
-      if (ids.length !== 1 || store.get(dataSourceAtom) !== corpus) return;
-      // Never take the drawer from an open form: the upload lands seconds later,
-      // and switching then would unmount the form and lose the user's input.
-      // The notification says where the document is instead.
-      if (store.get(editSessionOpenAtom)) return "Not opened while a form is open; it is in the library.";
-      guard(() => setSelectedId(ids[0]));
-    });
+  /** Upload: any files, as many as are picked, queued at once and sent in the
+   *  background (`atoms/fileUploads.ts`). Each becomes an entity in the
+   *  collection's upload template; the Beacon shows the queue. */
+  const uploadFiles = useSetAtom(uploadFilesAtom);
+  const drop = useLibraryDrop();
+  async function handleUpload() {
+    const picked = await pickFiles();
+    if (picked?.length) uploadFiles(picked);
   }
   const exportName = (part?: string) =>
     `uwazi-${dataSource}${part ? `-${part}` : ""}-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -1516,8 +1496,8 @@ export function LibraryView() {
         {!selectionActive && (
           <FooterButton
             icon={<Upload size={13} className="text-ink-tertiary" />}
-            label="Upload PDF"
-            onClick={() => uploadInputRef.current?.click()}
+            label="Upload"
+            onClick={() => void handleUpload()}
           />
         )}
         {!selectionActive && (
@@ -1611,7 +1591,8 @@ export function LibraryView() {
     // brush and the footer are `bleed` bands: their grounds and rules reach the
     // pane edge and their content sits on the gutter.
     <SearchMarkProvider value={searchMarks}>
-    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
+    <div data-gutter-host className="gutter-host relative flex flex-col h-full min-h-0 bg-paper" {...drop.handlers}>
+      {drop.overlay}
       {/* Toolbar — a row of controls, and under it (when the row can't hold
           it) the readout's own line. See "Masthead fold" above. */}
       <div
@@ -2017,15 +1998,6 @@ export function LibraryView() {
 
       {/* The footer's dialogs and file input, mounted whichever bar shows the
         actions (in Split the bar is shared and follows the active pane). */}
-      {pendingUploads && (
-        <UploadDocumentsModal
-          files={pendingUploads}
-          types={libraryTypes}
-          defaultTypeId={uploadTemplateId(dataSource)}
-          onUpload={startUpload}
-          onClose={() => setPendingUploads(null)}
-        />
-      )}
       <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
       {batchOpen && (
         <BatchEntryModal
@@ -2044,19 +2016,6 @@ export function LibraryView() {
           onClose={() => setCreateOpen(false)}
         />
       )}
-      {/* Not rendered: the file input the button above opens. */}
-      <input
-        ref={uploadInputRef}
-        type="file"
-        accept="application/pdf,.pdf"
-        multiple
-        hidden
-        onChange={(e) => {
-          handleUpload(e.target.files);
-          // Cleared so choosing the same file again still fires a change.
-          e.target.value = "";
-        }}
-      />
       {phoneActionsOpen && (
         <ActionsSheet
           heading="Library"
@@ -2067,7 +2026,7 @@ export function LibraryView() {
             // tap toggles, until Clear.
             { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
             { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
-            { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
+            { label: "Upload", icon: <Upload size={14} />, onClick: () => void handleUpload() },
             ...(canImport
               ? [
                   {
@@ -2356,7 +2315,7 @@ export function LibraryView() {
         `document.body`, so only state ownership depends on where it mounts. */}
     <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
     {/* Phones have no drawer, so what the Library opens into it (a new draft,
-        a single uploaded PDF) opens as a full-height sheet. Dismissing goes
+        a record opened from a card) opens as a full-height sheet. Dismissing goes
         through the dirty guard and discards an untouched draft, so no empty
         entity is left behind. */}
     {isMobile && (

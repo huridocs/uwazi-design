@@ -1,4 +1,5 @@
 import { PinToggle } from "../shared/PinToggle";
+import { UploadStateMark } from "./UploadStateMark";
 import { Fragment, memo } from "react";
 import {
   AudioLines,
@@ -677,6 +678,7 @@ export const EntityCard = memo(function EntityCard({
           <EntityTypeTag typeId={entity.typeId} />
         </span>
         <div className="shrink-0 flex items-center gap-2">
+          <UploadStateMark entityId={entity.id} />
           {/* Marks and the count sit on the always-mounted footer, so they
               never make a card taller.
 

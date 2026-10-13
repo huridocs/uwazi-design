@@ -673,21 +673,23 @@ export const discardDraftAtom = atom(null, (get, set, id: string) => {
   set(draftEntityIdAtom, null);
 });
 
-/* ── Upload PDF ─────────────────────────────────────────────────────────── */
+/* ── Upload ─────────────────────────────────────────────────────────────── */
 
-/** Uploaded documents: records the moment their files are in, with no form in
- *  between — each an entity of `typeId` carrying its file as the primary
- *  document. Returns the new ids, in the order given. */
+/** Uploaded files: one entity of `typeId` per file, created the moment the
+ *  upload is queued (`atoms/fileUploads.ts` marks it while its file is on its
+ *  way), with no form in between. A PDF is its primary document; any other
+ *  file is its first supporting file. `id` is given, so the upload can find
+ *  its entity again after a reload. */
 export const addUploadedDocumentsAtom = atom(
   null,
   (
     _get,
     set,
-    { corpus, typeId, uploads }: { corpus: Corpus; typeId: string; uploads: { title: string; file: AttachedFile }[] },
+    { corpus, typeId, uploads }: { corpus: Corpus; typeId: string; uploads: { id: string; title: string; file: AttachedFile }[] },
   ): string[] => {
-    const entries = uploads.map(({ title, file }) => {
-      const id = newEntityId();
-      const entity: Entity = { id, title, typeId, createdAt: today(), published: false, preview: "document" };
+    const entries = uploads.map(({ id, title, file }) => {
+      const document = (file.kind ?? "pdf") === "pdf" && file.primary !== false;
+      const entity: Entity = { id, title, typeId, createdAt: today(), published: false, ...(document ? { preview: "document" as const } : {}) };
       return { entity, record: buildRecord({ id, typeId, fieldsByLang: templateFields(typeId, corpus, { newEntity: true }), file }) };
     });
     // Newest first in the library, so the batch is reversed on the way in and

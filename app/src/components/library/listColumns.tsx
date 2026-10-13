@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
+import { UploadStateMark } from "./UploadStateMark";
 import { HighlightedText } from "../shared/HighlightedText";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { entityPropertyValue, type PropertyColumn } from "../../utils/entityFields";
@@ -112,6 +113,9 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
         <EntityTypeTag variant="swatch" typeId={e.typeId} />
         <span data-part="title" className="font-medium text-ink truncate" {...fullOnHover(e.title)}>
           <HighlightedText text={e.title} query={ctx.query} fieldKey="title" />
+        </span>
+        <span className="shrink-0">
+          <UploadStateMark entityId={e.id} />
         </span>
       </span>
     ),

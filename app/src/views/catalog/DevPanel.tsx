@@ -9,6 +9,7 @@ import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
 import { clearSavedViewsAndHistoryAtom } from "../../atoms/savedViews";
 import { clearAllNotebooksAtom } from "../../atoms/notebook";
+import { dropConnectionAtom, failUploadsAtom } from "../../atoms/fileUploads";
 import {
   FAIL_SCOPES,
   emptyDomainAtom,
@@ -47,6 +48,8 @@ export function DevPanel() {
   const clearViews = useSetAtom(clearSavedViewsAndHistoryAtom);
   const clearNotebooks = useSetAtom(clearAllNotebooksAtom);
   const [researchCleared, setResearchCleared] = useState(false);
+  const [dropped, setDropped] = useAtom(dropConnectionAtom);
+  const [failUploads, setFailUploads] = useAtom(failUploadsAtom);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -120,6 +123,18 @@ export function DevPanel() {
         <label className="flex items-center gap-2 text-xs text-ink cursor-pointer w-fit">
           <Checkbox checked={slow} onChange={() => setSlow((v) => !v)} ariaLabel="Slow load (2 s)" />
           Settings holds its lists as loading for two seconds each time it opens
+        </label>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Uploads</h3>
+        <label className="flex items-center gap-2 text-xs text-ink cursor-pointer w-fit">
+          <Checkbox checked={dropped} onChange={() => setDropped((v) => !v)} ariaLabel="Drop connection" />
+          Drop connection: the upload queue acts as if the browser were offline
+        </label>
+        <label className="flex items-center gap-2 text-xs text-ink cursor-pointer w-fit">
+          <Checkbox checked={failUploads} onChange={() => setFailUploads((v) => !v)} ariaLabel="Fail upload requests" />
+          Fail upload requests: each file is tried four times, then fails with Retry
         </label>
       </section>
 

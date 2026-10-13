@@ -37,8 +37,9 @@ export interface Notification {
 export interface NotificationAction {
   label: string;
   /** `undo`: the Library's change layer (`undoAtom`). `settings-undo`: a
-   *  child removed in an open Settings editor (`atoms/settingsUndo.ts`). */
-  kind: "undo" | "settings-undo";
+   *  child removed in an open Settings editor (`atoms/settingsUndo.ts`).
+   *  `uploads`: shows an upload's failed files (`ref` is its queue id). */
+  kind: "undo" | "settings-undo" | "uploads";
   ref: string;
 }
 
@@ -57,6 +58,14 @@ export interface Task {
   /** What the completion notification says, when the generic "<label>
    *  complete. N items processed." would be wrong or vague. */
   done?: { title: string; detail?: string; action?: NotificationAction };
+  /** A task that is not moving, and why: `waiting` (no connection), `paused`
+   *  (by the reader, or files to choose again after a reload) or `failed`
+   *  (only failed items left). The Beacon colours its mark by it: amber for
+   *  the first two, seal for failed; absent is running, carbon. */
+  tone?: "waiting" | "paused" | "failed";
+  /** The drawer draws this task with the upload queue's own card
+   *  (`UploadTaskCard`), which lists its files. */
+  uploads?: boolean;
 }
 
 /** Empty at load: a notification appears only when an action records one. */

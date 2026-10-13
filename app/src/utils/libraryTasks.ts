@@ -1,6 +1,6 @@
 import type { useStore } from "jotai";
 import { tasksAtom, type Task } from "../atoms/notifications";
-import { addUploadedDocumentsAtom, recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityChanges";
+import { recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityChanges";
 import { notificationsAtom } from "../atoms/notifications";
 import type { BulkPlan } from "./bulkEdit";
 import type { Corpus } from "../data/entityChanges";
@@ -10,7 +10,7 @@ import { downloadCsv, exportEntitiesCsv, exportGroupsCsv, type CsvExport } from 
 
 /** The Library footer's background tasks, run against the jotai STORE rather
  *  than from component state: a task outlives the view that started it (leave
- *  the Library mid-upload and it still finishes), which is the point of showing
+ *  the Library mid-export and it still finishes), which is the point of showing
  *  it in the Beacon. Each is a `driven` Beacon task — it reports its own
  *  progress, and its completion notification says what actually happened. */
 
@@ -26,81 +26,6 @@ const alive = (store: Store, id: string) => store.get(tasksAtom).some((a) => a.i
 
 function patch(store: Store, id: string, change: Partial<Task>) {
   store.set(tasksAtom, (prev) => prev.map((a) => (a.id === id ? { ...a, ...change } : a)));
-}
-
-export const isPdf = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
-
-/** Upload a batch of PDFs as ONE Beacon task: an "Uploading" phase paced by
- *  the batch's real size, then "Processing" (mocked — there is no server to
- *  extract text), then one new entity per file, each of template `typeId` with
- *  its file as the primary document, and one notification naming them. The
- *  files stay in the browser as blob URLs, which the viewer and the card
- *  thumbnail read like any other PDF url. */
-export function runPdfUploadBatch(
-  store: Store,
-  {
-    corpus,
-    typeId,
-    uploads,
-  }: { corpus: Corpus; typeId: string; uploads: { file: File; title: string }[] },
-  /** Called once the entities exist. May return a sentence for the
-   *  notification — why a finished upload was NOT opened, for instance. */
-  onCreated?: (entityIds: string[]) => string | void,
-): void {
-  const id = taskId("upload");
-  const n = uploads.length;
-  const noun = n === 1 ? "document" : "documents";
-  store.set(tasksAtom, (prev) => [
-    ...prev,
-    {
-      id,
-      label: `Uploading ${n} ${noun}`,
-      detail: n === 1 ? uploads[0].file.name : `${uploads[0].file.name} and ${n - 1} more`,
-      current: 0,
-      total: 100,
-      driven: true,
-    },
-  ]);
-  const bytes = uploads.reduce((sum, u) => sum + u.file.size, 0);
-  // ~1s per MB, 1.2s to 8s: slow enough to see, fast enough not to wait on.
-  const uploadMs = Math.max(1200, Math.min(8000, bytes / 1000));
-  const processMs = 1000 + 300 * n;
-  const started = performance.now();
-  const tick = () => {
-    // Cancelled from the Beacon: stop here, and create nothing.
-    if (!alive(store, id)) return;
-    const t = performance.now() - started;
-    if (t < uploadMs) {
-      patch(store, id, { current: Math.round((t / uploadMs) * 60) });
-      window.setTimeout(tick, 150);
-      return;
-    }
-    if (t < uploadMs + processMs) {
-      patch(store, id, {
-        label: `Processing ${n} ${noun}`,
-        current: 60 + Math.round(((t - uploadMs) / processMs) * 39),
-      });
-      window.setTimeout(tick, 150);
-      return;
-    }
-    const ids = store.set(addUploadedDocumentsAtom, {
-      corpus,
-      typeId,
-      uploads: uploads.map(({ file, title }) => ({
-        title,
-        file: { name: file.name, size: file.size, url: URL.createObjectURL(file) },
-      })),
-    });
-    const note = onCreated?.(ids);
-    patch(store, id, {
-      current: 100,
-      done: {
-        title: `${n} ${noun} uploaded.`,
-        detail: [uploads.map((u) => u.title).join(" · "), note].filter(Boolean).join(" — "),
-      },
-    });
-  };
-  window.setTimeout(tick, 150);
 }
 
 /** Export entities as a CSV download, with the progress in the Beacon and the

@@ -29,6 +29,8 @@ import { UwaziLoader } from "../shared/UwaziLoader";
 import { Hint } from "../shared/Hint";
 import { SectionLabel } from "../shared/SectionLabel";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { UploadTaskCard } from "./UploadTaskCard";
+import { uploadQueueAtom } from "../../atoms/fileUploads";
 
 /** The drawer's section headers stick to the top of the scroller as their group
  *  passes under it, so they carry a ground of their own — the box, not the type,
@@ -214,9 +216,13 @@ export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
             <section data-part="tasks">
               <SectionLabel className={STICKY}>Tasks · {tasks.length}</SectionLabel>
               <div className="pb-3 space-y-2">
-                {tasks.map((a) => (
-                  <TaskCard key={a.id} a={a} onCancel={() => setTasks((p) => p.filter((x) => x.id !== a.id))} />
-                ))}
+                {tasks.map((a) =>
+                  a.uploads ? (
+                    <UploadTaskCard key={a.id} task={a} />
+                  ) : (
+                    <TaskCard key={a.id} a={a} onCancel={() => setTasks((p) => p.filter((x) => x.id !== a.id))} />
+                  ),
+                )}
               </div>
             </section>
           )}
@@ -463,6 +469,42 @@ function NotifCard({
  *  undoes has been replaced — disabled, saying why — so the card doesn't
  *  change shape under the reader. */
 function NotifAction({ action }: { action: NotificationAction }) {
+  if (action.kind === "uploads") return <UploadsAction action={action} />;
+  return <UndoAction action={action} />;
+}
+
+/** "Show failed": the upload's task card, which lists its failed files first.
+ *  Stays mounted, disabled, once the upload has ended. */
+function UploadsAction({ action }: { action: NotificationAction }) {
+  const q = useAtomValue(uploadQueueAtom);
+  const live = q?.id === action.ref && q.items.some((i) => i.state === "failed");
+  return (
+    <Hint text={live ? action.label : "Those files were retried or dismissed"} describe={!live}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          data-part="action"
+          aria-disabled={!live || undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!live) return;
+            const card = document.querySelector<HTMLElement>(`[data-upload-task="${action.ref}"]`);
+            card?.scrollIntoView({ block: "start", behavior: "smooth" });
+            card?.querySelector<HTMLElement>('[data-part="upload-list"]')?.focus({ preventScroll: true });
+          }}
+          className={`flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md transition-colors ${
+            live ? "hover:bg-paper cursor-pointer" : "opacity-50 cursor-not-allowed"
+          }`}
+        >
+          {action.label}
+        </button>
+      )}
+    </Hint>
+  );
+}
+
+function UndoAction({ action }: { action: NotificationAction }) {
   const op = useAtomValue(undoOpAtom);
   const conflicts = useAtomValue(undoConflictsAtom);
   const undoEntities = useSetAtom(undoAtom);

@@ -72,7 +72,16 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
     info: "carbon",
     success: "default",
   };
-  const loaderColor = hasTask ? "carbon" : topUnread ? kindTone[topUnread.kind] : "default";
+  // A task that is not moving says why: seal when only failures are left,
+  // amber while it waits for the connection or is paused, carbon running.
+  // The mark animates only while some task runs.
+  const taskTone = tasks.some((a) => a.tone === "failed")
+    ? "seal"
+    : tasks.some((a) => a.tone === "waiting" || a.tone === "paused")
+      ? "warning"
+      : "carbon";
+  const taskRunning = tasks.some((a) => !a.tone);
+  const loaderColor = hasTask ? taskTone : topUnread ? kindTone[topUnread.kind] : "default";
 
   // Transient message the beacon "speaks" inline (consolidated toasts).
   const [flash, setFlash] = useState<Toast | null>(null);
@@ -236,7 +245,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                 // Processing — combined label + percentage.
                 <div key="live" className="flex items-center gap-2 w-full animate-beacon-rail">
                   <span className="shrink-0 flex items-center">
-                    <UwaziLoader size="xs" color="carbon" animate />
+                    <UwaziLoader size="xs" color={taskTone} animate={taskRunning} />
                   </span>
                   <span className="text-xs leading-normal font-medium text-ink truncate">{taskLabel}</span>
                   <span className="ml-auto text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">
@@ -257,7 +266,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
               ) : (
                 // Collapsed — just the loader mark, coloured by status.
                 <div key="idle" className="flex items-center justify-center w-full">
-                  <UwaziLoader size="xs" color={loaderColor} animate={hasTask} />
+                  <UwaziLoader size="xs" color={loaderColor} animate={taskRunning} />
                 </div>
               )}
             </button>

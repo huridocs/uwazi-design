@@ -1,7 +1,7 @@
 import type { Language } from "../atoms/language";
 import type { Entity } from "../data/entities";
 import type { MetadataField } from "../data/metadata";
-import type { DocumentGroup, FileEntry } from "../data/files";
+import type { DocumentGroup, FileEntry, FileKind } from "../data/files";
 import type { Corpus, EntityRecord } from "../data/entityChanges";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
 import { templateMirror, templatesMirror } from "../data/templates/mirror";
@@ -55,18 +55,40 @@ export function uploadTemplateId(corpus: Corpus): string {
   return defaultTemplateId(corpus) ?? templatesMirror(corpus)[0]?.id ?? "document";
 }
 
-/** The attached file, as the record and the viewer read it. */
+/** The attached file, as the record and the viewer read it. `url` is absent
+ *  while an upload interrupted by a reload waits for its file to be chosen
+ *  again. */
 export interface AttachedFile {
   name: string;
   size: number;
-  url: string;
+  url?: string;
+  /** Default `pdf`. */
+  kind?: FileKind;
+  /** Default true: the primary document. False lists it as the entity's
+   *  first supporting file (an attachment). */
+  primary?: boolean;
 }
+
+/** What an uploaded file is, by its extension or MIME type. Only a PDF is
+ *  a document; everything else is attached as a supporting file. */
+export function fileKindOf(name: string, type = ""): FileKind {
+  const ext = name.toLowerCase().split(".").pop() ?? "";
+  if (type === "application/pdf" || ext === "pdf") return "pdf";
+  if (type.startsWith("audio/") || ["mp3", "wav", "m4a", "ogg", "flac", "aac"].includes(ext)) return "audio";
+  if (type.startsWith("video/") || ["mp4", "mov", "webm", "avi", "mkv", "m4v"].includes(ext)) return "video";
+  if (type.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp", "svg", "tif", "tiff", "heic"].includes(ext)) return "image";
+  return "document";
+}
+
+/** A filename without its extension: an upload's title. */
+export const titleFromFilename = (name: string) => name.replace(/\.[^./]+$/, "") || name;
 
 const kb = (n: number) =>
   n >= 1024 * 1024 ? `${(n / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
 
 /** A new entity's record: its template's fields (empty, or the values given),
- *  and — for an upload — the file as its one primary document. */
+ *  and — for an upload — the file as its one primary document, or as its
+ *  first supporting file. */
 export function buildRecord({
   id,
   typeId,
@@ -81,7 +103,7 @@ export function buildRecord({
   if (!file) return { typeId, metadata: fieldsByLang };
   const groupId = `${id}-g`;
   const groups: DocumentGroup[] = [
-    { id: groupId, title: file.name.replace(/\.pdf$/i, ""), isPrimary: true, order: 0 },
+    { id: groupId, title: titleFromFilename(file.name), isPrimary: file.primary !== false, order: 0 },
   ];
   const files: FileEntry[] = [
     {
@@ -89,7 +111,7 @@ export function buildRecord({
       groupId,
       name: file.name,
       language: "EN",
-      type: "pdf",
+      type: file.kind ?? "pdf",
       size: kb(file.size),
       modified: today(),
       url: file.url,

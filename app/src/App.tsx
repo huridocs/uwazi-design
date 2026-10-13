@@ -11,6 +11,7 @@ import { LibraryView } from "./views/LibraryView";
 import { LibrarySplitView } from "./views/LibrarySplitView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { useCsvImportRunner } from "./atoms/csvImports";
+import { useFileUploadRunner } from "./atoms/fileUploads";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
 import { LoginView } from "./views/LoginView";
@@ -56,6 +57,7 @@ export function App() {
   // on it for another role lands on the Library.
   // Import CSV jobs run whatever view is open.
   useCsvImportRunner();
+  useFileUploadRunner();
 
   const canImport = useAtomValue(settingsAccessAtom)("import-csv");
   useEffect(() => {
