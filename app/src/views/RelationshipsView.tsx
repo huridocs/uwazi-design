@@ -71,19 +71,21 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
-          {/* The toolbar is part of the header: the header's rule sits under
-              it, where the warm lane starts. */}
-          <DocMeta showPdfSelector={false} rule={false} />
+          <DocMeta showPdfSelector={false} />
 
-          <RelationshipsToolbar rule />
-
-          <RelationshipsPanelBody
-            onDelete={handleDelete}
-            // The lane starts under the header's rule, so it takes the
-            // `stack` step the toolbar no longer gives it.
-            scrollBgClass="bg-warm pt-stack"
-            lead={evidence && <ClaimEvidenceBlock ev={evidence} />}
-          />
+          {/* The warm lane holds the toolbar as its first block, so the header
+              above keeps the shape it has on every other tab. The toolbar sits
+              outside the scroller and stays at the lane's top while the rows
+              scroll. `bleed` here, and the scroller's own `bleed`, both reach
+              the pane edge: this lane's padding is the gutter. */}
+          <div data-part="lane" className="bleed flex-1 flex flex-col min-h-0 bg-warm">
+            <RelationshipsToolbar />
+            <RelationshipsPanelBody
+              onDelete={handleDelete}
+              scrollBgClass="bg-warm"
+              lead={evidence && <ClaimEvidenceBlock ev={evidence} />}
+            />
+          </div>
           <RelationshipsActionBar menuSlot={menuTrigger} />
           {/* Phones only: there the drawer is not shown, and Filters opens
               the sheet. A desktop or tablet docks them in the drawer. */}
