@@ -297,7 +297,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   body filters on its own.
 - Toolbar: `SearchBar` with `ActiveFilterChips` inline, then `ViewControls`,
   `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
-  and tree views.
+  and tree views. The search field is on paper with its border, and Display, Connect and Filters
+  are ghosts (`BAR_GHOST`; `FiltersButton tone="ghost"`), so the row reads as part of the header
+  above the warm lane.
 - Filters are a drawer tab where the entity view has a drawer (Metadata, Relationships and
   Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`). While that
   drawer is drawn the tab is the only way in and carries the dot; the toolbar's Filters button is
