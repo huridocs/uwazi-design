@@ -299,9 +299,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
   and tree views.
 - Filters are a drawer tab where the entity view has a drawer (Metadata, Relationships and
-  Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`); the toolbar's
-  Filters button switches to it, and the tab carries the dot. The slide-over remains for scoped
-  surfaces (entity slide-over, Library preview); phones open the sheet.
+  Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`). While that
+  drawer is drawn the tab is the only way in and carries the dot; the toolbar's Filters button is
+  drawn only where no drawer holds them (a Split pane too narrow for a drawer, the slide-over,
+  the Library preview, phones), and opens the slide-over or, on phones, the sheet. With Filters
+  active the drawer takes the warm ground (`filtersGround`), strip included, as the Library's
+  Filters drawer does.
 - `RelationshipRow` is a union: `kind="reference"` (prop `reference`), `"aggregate"` (prop
   `rel`), `"hub"`. Highlight comes from `activeRefIdAtom` or `activeAggregateIdAtom`.
 - Row targets: the entity pill opens the slide-over (`previewEntityIdAtom`); the page tag jumps to
