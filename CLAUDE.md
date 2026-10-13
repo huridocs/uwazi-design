@@ -75,7 +75,9 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
   2 s off its moment's median (`contest.clock`, from `vegasSyncAnalysis()`).
   `Reference.succession` is `supersedes`, which is not a dispute. The Nepal build reads
   `disputed-notes.json` when present and runs without it.
-- The list view renders references; the tree and graph render relationships.
+- The plain List renders references, one row each; a grouped List renders one row per record in
+  each group (`MemberCard` variant `row`), holding every reference the group has for it. The tree
+  and graph render relationships.
 - Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
 
 Known gaps, kept on purpose:
@@ -321,11 +323,17 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Without an `EntityScopeProvider` these are the global atoms. The slide-over and the Library
   preview get their own, and the slide-over resets its state on open. Add new panel state through
   `relAtomFor`. Clear with `useClearRelFilters()`.
-- Hubs (refs sharing a `hubId`, 2+ members) draw as hubs only in the Tree. Every hub opens, to one
-  `HubMemberCard` per member: template, title and card properties, the member's own link (status
-  and evidence, page or time tag, direction; its type only where it is not the hub's), the quote at
-  Detail, and up to three records it links to outside the hub, with no count. The card opens the
-  preview by its stretched button; pin, status and tags keep their own targets.
+- A grouped row shows template, card properties, status and evidence, page or time tags (up to
+  three), direction and link types; at Detail its passages, each with its own tag, and "Also
+  linked to" naming up to three records the panel does not show. A row leaves out what its group
+  and sub-group key on (`hideFor` in `RelationshipsPanelBody.tsx`).
+- Hubs (refs sharing a `hubId`, 2+ members in the filtered set) draw as one `HubRow` in the Tree
+  and in both Lists (at the first member's position) and open, at every zoom, to one
+  `HubMemberCard` per member (`MemberCard` variant `card`): template, title and card properties,
+  the member's own link (its type only where it is not the hub's), the quote at Detail, and up to
+  three records it links to outside what is shown, with no count. Past six members the pills fold
+  to five and "+N". The card and the row open the preview by their stretched button; pin,
+  checkbox, status, tags and delete keep their own targets.
 - Default sort: list by appearance, tree and graph by most evidence.
 - The only number on this surface is the tab count (`references.length`). Toolbars and info rows
   show none. Group headers give their unit in a tooltip and sr-only text. Exception: the
