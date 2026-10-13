@@ -33,8 +33,8 @@ import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import {
   EntitySelectBox,
   FOCUS_RING_ON_SELECT,
-  SELECTED_LOOK_INSET,
-  PREVIEWED_RING_INSET,
+  SELECTED_LOOK,
+  PREVIEWED_RING,
   holdTextSelection,
   useDrawnIds,
   useSelectionOrder,
@@ -754,8 +754,8 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
               onClick={(ev) => onSelect(e.id, ev)}
               onMouseDown={holdTextSelection}
               className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
-                transition-colors ${sel ? `bg-parchment ${PREVIEWED_RING_INSET}` : "hover:bg-parchment"}
-                ${SELECTED_LOOK_INSET} ${FOCUS_RING_ON_SELECT}`}
+                transition-colors ${sel ? `bg-parchment ${PREVIEWED_RING}` : "hover:bg-parchment"}
+                ${SELECTED_LOOK} ${FOCUS_RING_ON_SELECT}`}
             >
               <button
                 type="button"

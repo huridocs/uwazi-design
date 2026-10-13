@@ -132,10 +132,16 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
   );
 }
 
+/* Every ring here is drawn INSIDE the box (`ring-inset`). Outside, it was cut
+   wherever a card's edge met a scroll lane's edge (the timeline cut 2px off
+   the start; any lane without padding on a side does the same), and a
+   lane-by-lane allowance is one more rule every new lane would have to know.
+   Inside, it fits in any container, and the card keeps its size. */
+
 /** The row's focus ring while its hidden selection checkbox has focus — the
  *  one visible sign of where a keyboard user is. Put on every host row. */
 export const FOCUS_RING_ON_SELECT = [
-  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]",
+  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]",
   // Forced colors (Windows High Contrast) drop box-shadows and backgrounds, so
   // the ring and the parchment vanish. Outlines survive: selected is a solid
   // system-colour outline, focus a dashed one outside it.
@@ -150,10 +156,8 @@ export const FOCUS_RING_ON_SELECT = [
  *  same ring without the fill; on a selected item focus adds nothing. */
 export const SELECTED_LOOK = [
   "has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border",
-  "has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none",
+  "has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-inset has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none",
 ].join(" ");
-/** The same, drawn inside the box — for rows, whose neighbours touch them. */
-export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_input:checked]:ring-inset`;
 
 /** The previewed item, the one open in the drawer. Callers pair this ring
  *  with `bg-parchment`, so a single previewed item looks exactly like a
@@ -161,9 +165,7 @@ export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_inp
  *  are picked. Forced colors drop rings, so there it
  *  is a thin system-colour outline — thinner than selected's. */
 export const PREVIEWED_RING =
-  "ring-2 ring-[var(--selected-ring)] forced-colors:outline forced-colors:outline-1 forced-colors:outline-[CanvasText]";
-/** The same, drawn inside the box — for rows. */
-export const PREVIEWED_RING_INSET = `${PREVIEWED_RING} ring-inset forced-colors:-outline-offset-1`;
+  "ring-2 ring-inset ring-[var(--selected-ring)] forced-colors:outline forced-colors:outline-1 forced-colors:-outline-offset-1 forced-colors:outline-[CanvasText]";
 
 /* ── Touch ──────────────────────────────────────────────────────────────
    Selection is modifier-click, and a touch screen has no modifiers, so on

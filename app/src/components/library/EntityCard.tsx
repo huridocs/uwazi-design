@@ -318,7 +318,7 @@ export const EntityCard = memo(function EntityCard({
         onSelect(entity.id, e);
       }}
       data-part="primary-action"
-      className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+      className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
     />
   );
 
