@@ -319,6 +319,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Without an `EntityScopeProvider` these are the global atoms. The slide-over and the Library
   preview get their own, and the slide-over resets its state on open. Add new panel state through
   `relAtomFor`. Clear with `useClearRelFilters()`.
+- Hubs (refs sharing a `hubId`, 2+ members) draw as hubs only in the Tree. Every hub opens, to one
+  `HubMemberCard` per member: template, title and card properties, the member's own link (status
+  and evidence, page or time tag, direction; its type only where it is not the hub's), the quote at
+  Detail, and up to three records it links to outside the hub, with no count. The card opens the
+  preview by its stretched button; pin, status and tags keep their own targets.
 - Default sort: list by appearance, tree and graph by most evidence.
 - The only number on this surface is the tab count (`references.length`). Toolbars and info rows
   show none. Group headers give their unit in a tooltip and sr-only text. Exception: the
