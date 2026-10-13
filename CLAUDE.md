@@ -341,8 +341,15 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   contested" (the dispute is the claim's, not this link's). A contested Vegas anchor carries a
   `ContestedClock` mark on its row.
 - Anchoring and Direction facets hide when every reference has the same value.
-- Graph (`RelationshipsGraphView.tsx`): wheel zoom needs a native `{ passive: false }` listener;
-  tooltips are HTML positioned from `getBoundingClientRect`, never SVG inside the zoom transform.
+- Graph (`RelationshipsGraphView.tsx`) draws on the Library's `NetworkCanvas`: the panel's entity
+  fixed at the centre, the records its filtered references reach (one edge per record, its types
+  and direction as arrowheads), and the links among them that the collection holds.
+  `data/network/neighbourhood.ts` builds it; Focus's worker lays it out with the centre fixed
+  (`fixed`), seeded from `network.json` or, with Group by, one sector per group with a caption.
+  Cached by entity and reference set. A "Connect to…" path draws in carbon (`path`). A dot opens
+  the preview slide-over; the open preview, active reference or aggregate is the selection; the
+  panel search drives the find stepper. A new neighbourhood remounts the canvas. No cap: CEJIL's
+  Corte IDH (2,739) pans at 60 fps headless.
 
 ### Entity preview
 - One body, `components/entity/EntityDetailBody.tsx`, in two hosts: `EntityDrawerPreview` (Library
