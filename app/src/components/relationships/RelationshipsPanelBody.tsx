@@ -1,5 +1,7 @@
 import { useRelAtom } from "../../hooks/useEntityScope";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAtomValue } from "jotai";
+import { breakpointAtom } from "../../atoms/viewport";
 import { Link2 } from "lucide-react";
 import {
   relViewAtom,
@@ -20,6 +22,7 @@ import { RelationshipRow } from "./RelationshipRow";
 import { countOf } from "../../utils/relationships";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
 import { RowStack } from "./rows/RowShell";
+import { GroupShapeEnd, GroupShapeLine, groupShape, groupShapeLabel, spanDomain } from "./GroupSummary";
 
 interface Props {
   onDelete?: (id: string) => void;
@@ -50,6 +53,15 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
   // cap the flat list render and reveal more on demand so it never paints them all.
   const [listLimit, setListLimit] = useState(LIST_CAP);
   useEffect(() => setListLimit(LIST_CAP), [filtered]);
+
+  // Each group's shape, and one time axis for all of them so their spans
+  // compare. Sub-groups draw on the same axis.
+  const compact = useAtomValue(breakpointAtom) === "mobile";
+  const grouped = useMemo(() => {
+    if (view !== "list" || groupBy === "none") return null;
+    const groups = groupRefs(filtered, groupBy).map(([key, refs]) => ({ key, refs, shape: groupShape(refs, groupBy) }));
+    return { groups, domain: spanDomain(groups.map((g) => g.shape)) };
+  }, [view, filtered, groupBy]);
 
   if (view === "tree") {
     return <RelationshipsTreeView lead={lead} />;
@@ -120,10 +132,10 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
       </div>
     );
   } else {
-    const primaryGroups = groupRefs(filtered, groupBy);
+    const { groups, domain } = grouped!;
     body = (
       <ul data-part="groups" className="space-y-stack">
-        {primaryGroups.map(([key, refs]) => (
+        {groups.map(({ key, refs, shape }) => (
           <li key={`p:${key}`}>
             <RelationshipGroupedCard
               title={getGroupLabel(key, groupBy)}
@@ -132,6 +144,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
               count={refs.length}
               countLabel={countOf(refs.length, "reference")}
               refIdsToWatch={refs.map((r) => r.id)}
+              shapeLabel={groupShapeLabel(getGroupLabel(key, groupBy), shape, groupBy)}
+              shapeEnd={<GroupShapeEnd shape={shape} />}
+              shapeLine={<GroupShapeLine shape={shape} by={groupBy} domain={domain} compact={compact} />}
             >
               {subGroupBy === "none"
                 ? (
@@ -149,7 +164,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
                 )
                 : (
                   <ul data-part="groups" className="px-2 py-2 space-y-1.5 bg-warm/30">
-                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => {
+                      const sub = groupShape(subRefs, subGroupBy);
+                      return (
                       <li key={`s:${key}::${subKey}`}>
                         <RelationshipGroupedCard
                           title={getGroupLabel(subKey, subGroupBy)}
@@ -158,6 +175,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
                           count={subRefs.length}
                           countLabel={countOf(subRefs.length, "reference")}
                           refIdsToWatch={subRefs.map((r) => r.id)}
+                          shapeLabel={groupShapeLabel(getGroupLabel(subKey, subGroupBy), sub, subGroupBy)}
+                          shapeEnd={<GroupShapeEnd shape={sub} />}
+                          shapeLine={<GroupShapeLine shape={sub} by={subGroupBy} domain={domain} compact={compact} />}
                         >
                           <RowStack>
                             {subRefs.map((ref) => (
@@ -172,7 +192,8 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass, lead }: Props)
                           </RowStack>
                         </RelationshipGroupedCard>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 )}
             </RelationshipGroupedCard>

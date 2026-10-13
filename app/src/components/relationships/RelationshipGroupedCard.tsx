@@ -32,6 +32,15 @@ interface Props {
   /** Controlled expansion (paired with `onToggle`). Omit for internal state. */
   expanded?: boolean;
   onToggle?: () => void;
+  /** A second header line that says what the group holds (the Relationships
+   *  panel's `GroupShapeLine`). With it the header is two lines at a fixed
+   *  height, whether or not the line has anything to show. */
+  shapeLine?: ReactNode;
+  /** Drawn at the end of the title line (`GroupShapeEnd`). */
+  shapeEnd?: ReactNode;
+  /** The header's accessible name and tooltip when it carries a shape: the
+   *  summary in words, since its marks are hidden from assistive tech. */
+  shapeLabel?: string;
   children: ReactNode;
 }
 
@@ -51,6 +60,9 @@ export function RelationshipGroupedCard({
   standalone = false,
   expanded: expandedProp,
   onToggle,
+  shapeLine,
+  shapeEnd,
+  shapeLabel,
   children,
 }: Props) {
   // The shared group state machine (see `useGroupExpansion`). This flavour is
@@ -67,6 +79,43 @@ export function RelationshipGroupedCard({
   const bodyId = useId();
   const stackCount = useAtomValue(breakpointAtom) === "mobile" && !!countUnit;
 
+  const titleParts = (
+    <>
+      <ChevronDown
+        size={14}
+        aria-hidden
+        className={`text-ink-muted shrink-0 transition-transform ${
+          expanded ? "" : "-rotate-90"
+        }`}
+      />
+      {color && (
+        <span
+          data-part="dot"
+          aria-hidden
+          className="w-2 h-2 rounded-[2px] shrink-0"
+          style={{ backgroundColor: color }}
+        />
+      )}
+      {/* A worded count ("1 title match") on a phone goes on its own line
+          under the title: beside a truncated title it wrapped to two. */}
+      {stackCount ? (
+        <span className="min-w-0 flex flex-col items-start gap-1 text-start">
+          <span data-part="title" className="max-w-full text-sm font-medium text-ink truncate">
+            <HighlightedText text={title} query={highlight} />
+          </span>
+          <CountBadge count={count} unit={countUnit} label={countLabel} />
+        </span>
+      ) : (
+        <>
+          <span data-part="title" className="text-sm font-medium text-ink truncate">
+            <HighlightedText text={title} query={highlight} />
+          </span>
+          <CountBadge count={count} unit={countUnit} label={countLabel} />
+        </>
+      )}
+    </>
+  );
+
   return (
     // A section headed by its title. The heading wraps the toggle (the
     // disclosure pattern), so the group is in the outline and its button still
@@ -81,40 +130,22 @@ export function RelationshipGroupedCard({
           onClick={toggle}
           aria-expanded={expanded}
           aria-controls={expanded ? bodyId : undefined}
+          aria-label={shapeLabel}
+          title={shapeLabel}
           data-part="toggle"
           className="w-full flex items-center gap-2 px-3 py-2 hover:bg-warm transition-colors"
         >
-          <ChevronDown
-            size={14}
-            aria-hidden
-            className={`text-ink-muted shrink-0 transition-transform ${
-              expanded ? "" : "-rotate-90"
-            }`}
-          />
-          {color && (
-            <span
-              data-part="dot"
-              aria-hidden
-              className="w-2 h-2 rounded-[2px] shrink-0"
-              style={{ backgroundColor: color }}
-            />
-          )}
-          {/* A worded count ("1 title match") on a phone goes on its own line
-              under the title: beside a truncated title it wrapped to two. */}
-          {stackCount ? (
-            <span className="min-w-0 flex flex-col items-start gap-1 text-start">
-              <span data-part="title" className="max-w-full text-sm font-medium text-ink truncate">
-                <HighlightedText text={title} query={highlight} />
-              </span>
-              <CountBadge count={count} unit={countUnit} label={countLabel} />
-            </span>
+          {shapeLine === undefined ? (
+            titleParts
           ) : (
-            <>
-              <span data-part="title" className="text-sm font-medium text-ink truncate">
-                <HighlightedText text={title} query={highlight} />
+            <span className="flex flex-col gap-1 min-w-0 flex-1 text-start">
+              <span data-part="title-line" className="flex items-center gap-2 h-5 min-w-0">
+                {titleParts}
+                {shapeEnd}
               </span>
-              <CountBadge count={count} unit={countUnit} label={countLabel} />
-            </>
+              {/* From the title's start edge: past the chevron and its gap. */}
+              <span className="ps-[calc(14px+0.5rem)] min-w-0">{shapeLine}</span>
+            </span>
           )}
         </button>
       </h3>
