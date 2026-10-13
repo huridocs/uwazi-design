@@ -144,19 +144,19 @@ export const isContested = (r: Reference) => r.verification === "disputed" || !!
  *  the rule. Where they do not (a status set by hand, Vegas's timing checks),
  *  it states only what was recorded, and the note gives the reason.
  *
- *  `clock`: the link is a recording's anchor whose clock is off its moment's
- *  median (Vegas): its dispute is that offset, not a conflict of sources.
+ *  A disputed link says its sources conflict only where its contest has
+ *  something on the other side (`conflict`: an opposing link or a conflicting
+ *  figure). Otherwise, a recording's clock off its moment (Vegas, stated once
+ *  by the card's contest section) or a reason only the note gives, it reads
+ *  "Recorded as disputed." and the card says why below.
  *  `folds`: what the count folded (`EvidenceSummary.folds`), so the rule's
  *  second sentence names the fold that happened. */
 export function verificationBasis(
   status: Verification,
   independent: number,
-  { clock = false, folds }: { clock?: boolean; folds?: EvidenceSummary["folds"] } = {},
+  { conflict = false, folds }: { conflict?: boolean; folds?: EvidenceSummary["folds"] } = {},
 ): string {
-  if (status === "disputed")
-    return clock
-      ? "Recorded as disputed: this recording's clock is more than 2\u00a0s off the moment's median."
-      : "Recorded as disputed: the sources, or other records, conflict.";
+  if (status === "disputed") return conflict ? "Recorded as disputed: the sources, or other records, conflict." : "Recorded as disputed.";
   if (status === "confirmed" && independent >= 2)
     return `Confirmed: ${independent} independent publishers report it. ${
       folds === "outlet"
@@ -167,6 +167,20 @@ export function verificationBasis(
     }`;
   if (status === "single-source" && independent === 1) return "Single source: one independent publisher reports it.";
   return status === "confirmed" ? "Recorded as confirmed." : "Recorded as single source.";
+}
+
+/** Whether a link's contest has something on the other side: an opposing
+ *  link or a figure another claim contradicts. */
+export const hasConflict = (r: Reference) => !!r.contest && (r.contest.opposing.length > 0 || r.contest.figures.length > 0);
+
+/** Whether a link's note only restates its clock offset (Vegas: "This
+ *  recording's clock differs from the volley's median by +3 s."), which the
+ *  card's contest section already states with the median and the rule. */
+export function noteRestatesClock(r: Reference): boolean {
+  const k = r.contest?.clock;
+  if (!k || !r.note) return false;
+  const secs = String(Math.abs(Math.round(k.deviation)));
+  return /\bclock\b/i.test(r.note) && new RegExp(`[+\u2212-]?${secs}\\s?s\\b`).test(r.note) && r.note.length < 120;
 }
 
 const byIdCache = new WeakMap<Reference[], Map<string, Reference>>();

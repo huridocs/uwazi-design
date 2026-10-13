@@ -5,7 +5,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   evidenceSummary,
+  hasConflict,
   independentPublishers,
+  noteRestatesClock,
   refReportedBy,
   verificationBasis,
 } from "../src/utils/refEvidence.ts";
@@ -53,8 +55,33 @@ test("a month-precision source is compared, and printed, at the month", () => {
 test("the status sentence states only what was recorded", () => {
   assert.equal(verificationBasis("confirmed", 1), "Recorded as confirmed.");
   assert.equal(verificationBasis("single-source", 1), "Single source: one independent publisher reports it.");
-  // Vegas: a disputed anchor is a clock offset, not a conflict of sources.
-  const vegas = verificationBasis("disputed", 1, { clock: true });
-  assert.doesNotMatch(vegas, /sources/);
-  assert.match(vegas, /clock/);
+  // A disputed link says its sources conflict only where its contest has an
+  // other side; otherwise (a clock offset, a reason only the note gives) it
+  // states the status and the card says why.
+  assert.equal(verificationBasis("disputed", 1), "Recorded as disputed.");
+  assert.equal(verificationBasis("disputed", 2, { conflict: true }), "Recorded as disputed: the sources, or other records, conflict.");
+});
+
+const contest = (extra: Partial<NonNullable<Reference["contest"]>>) =>
+  ({ opposing: [], paired: [], figures: [], competing: [], ...extra }) as NonNullable<Reference["contest"]>;
+
+test("a conflict is an opposing link or a contradicted figure, not a clock", () => {
+  // Vegas ref:vegas-01088: disputed, no contest at all.
+  assert.equal(hasConflict(ref([], { verification: "disputed" })), false);
+  // A Vegas anchor whose clock is off its moment.
+  assert.equal(hasConflict(ref([], { contest: contest({ clock: { deviation: 3, median: 0, momentId: "m" } }) })), false);
+  assert.equal(hasConflict(ref([], { contest: contest({ opposing: [{ refId: "o" } as never] }) })), true);
+  assert.equal(hasConflict(ref([], { contest: contest({ figures: [{} as never] }) })), true);
+});
+
+test("a note that only restates the clock offset is recognised", () => {
+  const clock = { deviation: 3, median: 0, momentId: "m" };
+  const anchor = (note: string, deviation = 3) => ref([], { note, contest: contest({ clock: { ...clock, deviation } }) });
+  assert.equal(noteRestatesClock(anchor("This recording's clock differs from the volley's median by +3 s.")), true);
+  assert.equal(noteRestatesClock(anchor("This recording's clock differs from the volley's median by −6 s.", -6)), true);
+  // Another offset, or a note with a reason of its own, stays.
+  assert.equal(noteRestatesClock(anchor("This recording's clock differs from the volley's median by +7 s.")), false);
+  assert.equal(noteRestatesClock(anchor("Two witnesses place the camera elsewhere.")), false);
+  // Without a clock contest the note is the only place the offset is said.
+  assert.equal(noteRestatesClock(ref([], { note: "This recording's clock differs from the volley's median by -6 s." })), false);
 });

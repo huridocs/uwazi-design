@@ -18,7 +18,7 @@ import { useLibraryPane } from "../library/libraryPane";
 import { formatAtPrecision, formatTime } from "../../utils/dateFormat";
 import { VERIFICATION_LABEL, periodLabel } from "../../utils/relationships";
 import { relationDisplayLabel } from "../../utils/inheritance";
-import { evidenceSummary, sourcePublisher, verificationBasis } from "../../utils/refEvidence";
+import { evidenceSummary, hasConflict, noteRestatesClock, sourcePublisher, verificationBasis } from "../../utils/refEvidence";
 import { Modal, ModalHostProvider } from "../shared/Modal";
 import { SectionLabel } from "../shared/SectionLabel";
 import { PageTag } from "../shared/PageTag";
@@ -144,7 +144,9 @@ function EvidenceBody({
 }) {
   const summary = evidenceSummary(refs);
   const status = summary.statuses.length === 1 ? summary.statuses[0] : undefined;
-  const notes = [...new Set(refs.map((r) => r.note).filter((n): n is string => !!n))];
+  // A note that only restates a clock offset is left out: the contest
+  // section says it once, with the median and the rule.
+  const notes = [...new Set(refs.filter((r) => !noteRestatesClock(r)).map((r) => r.note).filter((n): n is string => !!n))];
   const periods = [...new Set(refs.flatMap((r) => (r.period ? [periodLabel(r.period)] : [])))];
   const sourceIds = new Set(summary.sources.map((s) => s.id));
 
@@ -201,7 +203,7 @@ function EvidenceBody({
         </div>
         {status && (
           <p className="text-xs text-ink-secondary">
-            {verificationBasis(status, summary.independent, { clock: refs.some((r) => !!r.contest?.clock), folds: summary.folds })}
+            {verificationBasis(status, summary.independent, { conflict: refs.some(hasConflict), folds: summary.folds })}
           </p>
         )}
         {(facts.length > 0 || reported) && (
