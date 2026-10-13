@@ -26,7 +26,7 @@ import { toastsAtom } from "../../atoms/notifications";
  *  half-a-dozen "Group by: None" dropdowns is gone into the Display popover —
  *  same idiom as the Library, and the row no longer reflows when you change
  *  view. */
-export function RelationshipsToolbar() {
+export function RelationshipsToolbar({ rule = false }: { rule?: boolean } = {}) {
   const activeFilterCount = useActiveFilterCount();
   const [, setFiltersOpen] = useFiltersDrawerOpen();
   // The host scope's filters are a drawer tab wherever a drawer docks them;
@@ -39,6 +39,7 @@ export function RelationshipsToolbar() {
 
   return (
     <SearchBar
+      rule={rule}
       inlineSlot={<ActiveFilterChips omitSearch />}
       rightSlot={
         /* ONE flex child, so the controls wrap as a CLUSTER. As three siblings

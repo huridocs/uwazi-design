@@ -16,6 +16,10 @@ interface DocMetaProps {
   /** Show the format picker (PDF / Plain text / HTML). Only the Document tab
    *  wants it; the metadata/files headers pass false. */
   showPdfSelector?: boolean;
+  /** The bottom rule that closes the header. The Relationships tab passes
+   *  false and draws it under its toolbar instead, so the toolbar belongs to
+   *  the header and the warm lane starts under the rule. */
+  rule?: boolean;
 }
 
 const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = [
@@ -27,7 +31,7 @@ const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = 
 /** Entity header strip. Names the entity (type tag + its own title) and, on the
  *  Document tab, the document on screen plus a picker that switches between
  *  that document's renditions (PDF, plain text, HTML). */
-export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
+export function DocMeta({ showPdfSelector = true, rule = true }: DocMetaProps) {
   const groups = useAtomValue(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const [format, setFormat] = useAtom(documentFormatAtom);
@@ -76,7 +80,8 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
       className="@container bleed flex flex-col gap-1 pt-1 pb-2 shrink-0"
-      style={{ borderBottom: "1px solid var(--border-primary)" }}
+      // Transparent, not none, so the header keeps its height across tabs.
+      style={{ borderBottom: `1px solid ${rule ? "var(--border-primary)" : "transparent"}` }}
     >
       {/* min-h-8 + the header's padding is the strip's old min-h-11: a record
           without a provenance line keeps its height. */}

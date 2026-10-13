@@ -7,9 +7,12 @@ interface SearchBarProps {
   rightSlot?: ReactNode;
   /** Chips rendered GitHub-style inside the input box, before the typing cursor. */
   inlineSlot?: ReactNode;
+  /** Close the header with a rule under the row, spanning the pane (`bleed`).
+   *  Set where the row sits between the entity header and a warm lane. */
+  rule?: boolean;
 }
 
-export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
+export function SearchBar({ rightSlot, inlineSlot, rule = false }: SearchBarProps = {}) {
   const [query, setQuery] = useRelAtom(relSearchQueryAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -37,7 +40,13 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
     // No side padding: the host's gutter places it (see `gutter-host`). One
     // `stack` step above and below, and the same step between the lines it
     // wraps onto, so tabs → search → controls → first card read as one rhythm.
-    <div data-component="SearchBar" className="body-top pb-stack flex items-center gap-stack flex-wrap">
+    // With `rule`, the header's rule moves under this row: between the
+    // header's rule and the warm lane, the row read as a band of its own.
+    <div
+      data-component="SearchBar"
+      className={`body-top pb-stack flex items-center gap-stack flex-wrap ${rule ? "bleed shrink-0" : ""}`}
+      style={rule ? { borderBottom: "1px solid var(--border-primary)" } : undefined}
+    >
       {/* min-h-8, not h-8: the chips wrap onto extra rows. But py-1 around an h-6
           input plus borders came to 34px — 2px taller than every control beside
           it, so the row sat a pixel off at both edges. py-0.5 keeps the content

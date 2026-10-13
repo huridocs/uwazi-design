@@ -71,13 +71,17 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
-          <DocMeta showPdfSelector={false} />
+          {/* The toolbar is part of the header: the header's rule sits under
+              it, where the warm lane starts. */}
+          <DocMeta showPdfSelector={false} rule={false} />
 
-          <RelationshipsToolbar />
+          <RelationshipsToolbar rule />
 
           <RelationshipsPanelBody
             onDelete={handleDelete}
-            scrollBgClass="bg-warm"
+            // The lane starts under the header's rule, so it takes the
+            // `stack` step the toolbar no longer gives it.
+            scrollBgClass="bg-warm pt-stack"
             lead={evidence && <ClaimEvidenceBlock ev={evidence} />}
           />
           <RelationshipsActionBar menuSlot={menuTrigger} />
