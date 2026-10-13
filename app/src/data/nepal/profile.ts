@@ -13,6 +13,7 @@ import { templateMirror } from "../templates/mirror";
 import { nepalRelTypeName, nepalTemplateById } from "./schema";
 import { loadNepalEvidence, nepalEvidence, nepalEntity, nepalPrimaryDoc, nepalProfileParts, nepalRefsByEntity } from "./load";
 import { displayValues } from "./adapt";
+import { refEvidenceFrom } from "../refSources";
 
 export { isNepalEntity } from "./load";
 
@@ -80,7 +81,8 @@ const refCache = new Map<string, Reference[]>();
  *  rows. A source's quote is the text anchor. A web article has no pages, so
  *  its quote sits on page 0 and the row shows no page tag. A quote located in
  *  a bundled PDF keeps its page, when that PDF is the one this record shows,
- *  so the page tag jumps to it. Read-only. */
+ *  so the page tag jumps to it. The sources that back the link, what they
+ *  quote about its ends and Research's note feed the evidence card. Read-only. */
 export function nepalReferencesFor(id: string): Reference[] {
   const hit = refCache.get(id);
   if (hit) return hit;
@@ -99,6 +101,8 @@ export function nepalReferencesFor(id: string): Reference[] {
       ...(r.quote ? { sourceSelection: { text: r.quote, page: pageOf(r), top: 0, left: 0, width: 0, height: 0 } } : {}),
       verification: r.verification,
       ...(r.date ? { period: r.date } : {}),
+      ...refEvidenceFrom(r, nepalEntity, (s) => nepalRefsByEntity().get(s), (q) => pageOf(q) || undefined),
+      ...(r.note ? { note: r.note } : {}),
       createdAt: "",
     };
   });

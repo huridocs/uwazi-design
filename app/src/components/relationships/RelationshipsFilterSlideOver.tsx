@@ -12,7 +12,11 @@ import {
   relDirectionFiltersAtom,
   relVerificationFiltersAtom,
   relAsOfAtom,
+  relReportedByAtom,
+  relPublisherFiltersAtom,
+  relPublisherTypeFiltersAtom,
 } from "../../atoms/filters";
+import { refReportedBy, reportedAt, sourcePublisher } from "../../utils/refEvidence";
 import {
   ANCHORING_LABEL,
   DIRECTION_LABEL,
@@ -90,6 +94,8 @@ function facetUniverse(
     anchoring: new Map<string, number>(),
     direction: new Map<string, number>(),
     verification: new Map<string, number>(),
+    publisher: new Map<string, number>(),
+    publisherType: new Map<string, number>(),
   };
   const seen = new Set<string>();
   for (const ref of references) {
@@ -97,6 +103,8 @@ function facetUniverse(
     bump(out.anchoring, anchoringOf(ref));
     bump(out.direction, directionOf(ref));
     if (ref.verification) bump(out.verification, ref.verification);
+    for (const p of refPublishers(ref)) bump(out.publisher, p);
+    for (const p of refPublisherTypes(ref)) bump(out.publisherType, p);
     const entity = getEntity(ref.targetEntityId);
     bump(out.ent, entity?.typeId ?? "unknown");
     if (!entity || seen.has(entity.id)) continue;
@@ -106,6 +114,13 @@ function facetUniverse(
   }
   return out;
 }
+
+/** A link's publishers and publisher types, each once: a link backed by two
+ *  stories from one outlet counts once under it. */
+const refPublishers = (r: ReturnType<typeof useScopedReferences>[number]) =>
+  new Set((r.sources ?? []).map(sourcePublisher));
+const refPublisherTypes = (r: ReturnType<typeof useScopedReferences>[number]) =>
+  new Set((r.sources ?? []).flatMap((s) => (s.publisherType ? [s.publisherType] : [])));
 
 export function RelationshipsFilterSlideOver() {
   const references = useScopedReferences();
@@ -130,6 +145,9 @@ export function RelationshipsFilterSlideOver() {
   const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
   const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
   const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
+  const [reportedBy, setReportedBy] = useRelAtom(relReportedByAtom);
+  const [publisherFilters, setPublisherFilters] = useRelAtom(relPublisherFiltersAtom);
+  const [publisherTypeFilters, setPublisherTypeFilters] = useRelAtom(relPublisherTypeFiltersAtom);
   // Against the unfiltered set, like the pipeline: see `directionClassifier`.
   const directionOf = useMemo(() => directionClassifier(references), [references]);
   const universe = useMemo(
@@ -164,7 +182,17 @@ export function RelationshipsFilterSlideOver() {
   // Faceted counts: each facet's numbers reflect the OTHER active facets, so the
   // counts stay trustworthy as you narrow (a facet never counts against its own
   // selection, so its options don't vanish). Mirrors the Library's faceted counts.
-  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, byVerification } =
+  const {
+    byRelType,
+    byEntityType,
+    byCountry,
+    byDescriptor,
+    byAnchoring,
+    byDirection,
+    byVerification,
+    byPublisher,
+    byPublisherType,
+  } =
     useMemo(() => {
       const ids = (rec: Record<string, boolean>) =>
         new Set(Object.entries(rec).filter(([, v]) => v).map(([k]) => k));
@@ -182,8 +210,17 @@ export function RelationshipsFilterSlideOver() {
         selDir.size === 0 || selDir.has(directionOf(r));
       const verOk = (r: (typeof references)[number]) =>
         selVer.size === 0 || (!!r.verification && selVer.has(r.verification));
-      // "As of" is not a facet with counts of its own: it narrows every count.
-      const asOk = (r: (typeof references)[number]) => asOfAt === null || refHoldsAt(r, asOfAt);
+      const selPub = ids(publisherFilters);
+      const selPty = ids(publisherTypeFilters);
+      const pubOk = (r: (typeof references)[number]) =>
+        selPub.size === 0 || [...refPublishers(r)].some((p) => selPub.has(p));
+      const ptyOk = (r: (typeof references)[number]) =>
+        selPty.size === 0 || [...refPublisherTypes(r)].some((p) => selPty.has(p));
+      // "As of" and "Reported by" are not facets with counts of their own:
+      // they narrow every count.
+      const reportedDay = asOfSeconds(reportedBy);
+      const asOk = (r: (typeof references)[number]) =>
+        (asOfAt === null || refHoldsAt(r, asOfAt)) && (reportedDay === null || refReportedBy(r, reportedDay));
 
       const relOk = (r: (typeof references)[number]) =>
         selRel.size === 0 || selRel.has(r.relationType);
@@ -216,23 +253,30 @@ export function RelationshipsFilterSlideOver() {
       const anchoring = new Map<string, number>();
       const direction = new Map<string, number>();
       const verification = new Map<string, number>();
+      const publisher = new Map<string, number>();
+      const publisherType = new Map<string, number>();
       for (const ref of references) {
         if (!asOk(ref)) continue;
         const entity = getEntity(ref.targetEntityId);
         const rest = relOk(ref) && entOk(ref) && ctyOk(ref) && dscOk(ref);
-        if (rest && dirOk(ref) && verOk(ref)) {
+        const srcOk = pubOk(ref) && ptyOk(ref);
+        if (rest && srcOk && dirOk(ref) && verOk(ref)) {
           const a = anchoringOf(ref);
           anchoring.set(a, (anchoring.get(a) ?? 0) + 1);
         }
-        if (rest && ancOk(ref) && verOk(ref)) {
+        if (rest && srcOk && ancOk(ref) && verOk(ref)) {
           const d = directionOf(ref);
           direction.set(d, (direction.get(d) ?? 0) + 1);
         }
-        if (rest && ancOk(ref) && dirOk(ref) && ref.verification) {
+        if (rest && srcOk && ancOk(ref) && dirOk(ref) && ref.verification) {
           verification.set(ref.verification, (verification.get(ref.verification) ?? 0) + 1);
         }
+        if (rest && ptyOk(ref) && ancOk(ref) && dirOk(ref) && verOk(ref))
+          for (const p of refPublishers(ref)) publisher.set(p, (publisher.get(p) ?? 0) + 1);
+        if (rest && pubOk(ref) && ancOk(ref) && dirOk(ref) && verOk(ref))
+          for (const p of refPublisherTypes(ref)) publisherType.set(p, (publisherType.get(p) ?? 0) + 1);
         // The reference-shape facets narrow every count below.
-        if (!ancOk(ref) || !dirOk(ref) || !verOk(ref)) continue;
+        if (!ancOk(ref) || !dirOk(ref) || !verOk(ref) || !srcOk) continue;
         // Per-facet: count over refs passing every OTHER facet.
         if (entOk(ref) && ctyOk(ref) && dscOk(ref))
           rel.set(ref.relationType, (rel.get(ref.relationType) ?? 0) + 1);
@@ -265,7 +309,11 @@ export function RelationshipsFilterSlideOver() {
       for (const id of selAnc) if (!anchoring.has(id)) anchoring.set(id, 0);
       for (const id of selDir) if (!direction.has(id)) direction.set(id, 0);
       for (const id of selVer) if (!verification.has(id)) verification.set(id, 0);
+      for (const id of selPub) if (!publisher.has(id)) publisher.set(id, 0);
+      for (const id of selPty) if (!publisherType.has(id)) publisherType.set(id, 0);
       return {
+        byPublisher: publisher,
+        byPublisherType: publisherType,
         byAnchoring: anchoring,
         byDirection: direction,
         byVerification: verification,
@@ -286,6 +334,9 @@ export function RelationshipsFilterSlideOver() {
       directionFilters,
       verificationFilters,
       asOf,
+      reportedBy,
+      publisherFilters,
+      publisherTypeFilters,
       directionOf,
     ]);
 
@@ -304,6 +355,21 @@ export function RelationshipsFilterSlideOver() {
     Object.values(verificationFilters).some(Boolean);
   const datedCount = useMemo(() => references.filter((r) => r.period).length, [references]);
   const showAsOf = datedCount > 0 || !!asOf;
+  // The second clock and the source facets: only where links carry sources
+  // (Nepal, Vegas). A facet with one value cannot narrow, so it hides, as
+  // Anchoring and Direction do; each stays while something in it is set.
+  const reportedCount = useMemo(() => references.filter((r) => reportedAt(r) !== undefined).length, [references]);
+  const showReportedBy = reportedCount > 0 || !!reportedBy;
+  const showPublisher = universe.publisher.size > 1 || Object.values(publisherFilters).some(Boolean);
+  const showPublisherType = universe.publisherType.size > 1 || Object.values(publisherTypeFilters).some(Boolean);
+  const publisherEntries = useMemo(
+    () => stableEntries(universe.publisher, byPublisher, publisherFilters),
+    [universe, byPublisher, publisherFilters],
+  );
+  const publisherTypeEntries = useMemo(
+    () => stableEntries(universe.publisherType, byPublisherType, publisherTypeFilters),
+    [universe, byPublisherType, publisherTypeFilters],
+  );
   const showAnchoring = anchoringKinds > 1 || Object.values(anchoringFilters).some(Boolean);
   const showDirection = directionKinds > 1 || Object.values(directionFilters).some(Boolean);
 
@@ -317,8 +383,9 @@ export function RelationshipsFilterSlideOver() {
   );
 
   // Drawn with the Library's filter parts (`shared/FilterCard.tsx`): paper
-  // cards on a warm rail. Order: what a link is (verification, its day, its
-  // anchoring and direction), then what it points to.
+  // cards on a warm rail. Order: what a link is (verification, its day, when
+  // it was reported, who reported it, its anchoring and direction), then what
+  // it points to.
   return (
     <div data-component="RelationshipsFilters" className={`${FILTER_RAIL} min-h-full`}>
       {showVerification && (
@@ -333,6 +400,26 @@ export function RelationshipsFilterSlideOver() {
         />
       )}
       {showAsOf && <AsOfCard value={asOf} onChange={setAsOf} dated={datedCount} />}
+      {showReportedBy && <ReportedByCard value={reportedBy} onChange={setReportedBy} dated={reportedCount} />}
+      {showPublisher && (
+        <FilterListCard
+          title={t("System", "Publisher")}
+          entries={publisherEntries}
+          selected={publisherFilters}
+          onToggle={(id) => setPublisherFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => setPublisherFilters({})}
+          searchable
+        />
+      )}
+      {showPublisherType && (
+        <FilterListCard
+          title={t("System", "Publisher type")}
+          entries={publisherTypeEntries}
+          selected={publisherTypeFilters}
+          onToggle={(id) => setPublisherTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => setPublisherTypeFilters({})}
+        />
+      )}
       {showAnchoring && (
         <FilterListCard
           title={t("System", "Anchoring")}
@@ -473,6 +560,34 @@ function AsOfCard({ value, onChange, dated }: { value: string; onChange: (iso: s
         />
         <p className="px-1 text-meta text-ink-tertiary">
           {dated.toLocaleString()} dated {dated === 1 ? "link" : "links"} show only if they held that day. Undated links stay.
+        </p>
+      </div>
+    </FilterCard>
+  );
+}
+
+/** "Reported by": one day. A link shows only if one of its sources was
+ *  published by the end of that day; a link whose sources state no date stays.
+ *  The second clock: when the link was reported, not when it held. */
+function ReportedByCard({ value, onChange, dated }: { value: string; onChange: (iso: string) => void; dated: number }) {
+  return (
+    <FilterCard
+      component="ReportedByCard"
+      title={t("System", "Reported by")}
+      onClear={() => onChange("")}
+      narrowing={!!value}
+      stack
+    >
+      <div className="px-1 space-y-1.5">
+        <DateInput
+          value={value}
+          onChange={onChange}
+          aria-label="Show links reported by"
+          className="w-full h-8 px-2 bg-warm border border-border rounded-md text-xs font-medium text-ink-secondary focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-all"
+        />
+        <p className="px-1 text-meta text-ink-tertiary">
+          {dated.toLocaleString()} {dated === 1 ? "link has" : "links have"} a dated source and show only if one was published
+          by that day. Links whose sources carry no date stay.
         </p>
       </div>
     </FilterCard>

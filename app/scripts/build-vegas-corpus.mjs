@@ -29,7 +29,7 @@
 // - A `captures` or `derived_from` reference carries a media anchor: the
 //   recording, the offset into it in seconds, the end when known, the clock
 //   time it was annotated at, the map's label and its qualifier.
-// - Reference notes are not shipped; status and anchor are.
+// - A reference ships its status, its anchor, its sources and Research's note.
 //
 // Privacy and harm (README §4 and §10.5, the rules of the seed's validate.py;
 // the build stops if one fails):
@@ -379,6 +379,10 @@ const relationships = seedRefs.map((r) => {
   }
   if (typeof r.interval_seconds === "number") out.interval = r.interval_seconds;
   if (r.date && (r.date.from || r.date.to)) out.date = { from: secs(r.date.from), to: secs(r.date.to) };
+  // The sources behind the link and Research's note: the evidence card. Both
+  // passed the seed checks above (`checkStrings` reads the whole reference).
+  if (r.sources?.length) out.sources = r.sources;
+  if (r.note?.trim()) out.note = r.note.trim();
   return out;
 });
 

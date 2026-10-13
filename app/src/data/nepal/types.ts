@@ -76,6 +76,10 @@ export interface NepalReference {
   page?: number;
   /** Office tenure and membership: epoch seconds, either end open. */
   date?: { from: number | null; to: number | null };
+  /** The Source records that back the link. */
+  sources?: string[];
+  /** Research's note on how the sources were read. */
+  note?: string;
 }
 
 export interface NepalThesaurus {

@@ -12,6 +12,9 @@ import {
   relAnchoringFiltersAtom,
   relVerificationFiltersAtom,
   relAsOfAtom,
+  relReportedByAtom,
+  relPublisherFiltersAtom,
+  relPublisherTypeFiltersAtom,
   relDirectionFiltersAtom,
 } from "../../atoms/filters";
 import { ANCHORING_LABEL, DIRECTION_LABEL, VERIFICATION_LABEL, asOfSeconds, type Anchoring, type DirectionFacet } from "../../utils/relationships";
@@ -41,6 +44,9 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
   const [verificationFilters, setVerificationFilters] = useRelAtom(relVerificationFiltersAtom);
   const [asOf, setAsOf] = useRelAtom(relAsOfAtom);
+  const [reportedBy, setReportedBy] = useRelAtom(relReportedByAtom);
+  const [publisherFilters, setPublisherFilters] = useRelAtom(relPublisherFiltersAtom);
+  const [publisherTypeFilters, setPublisherTypeFilters] = useRelAtom(relPublisherTypeFiltersAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
@@ -50,6 +56,9 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const activeDirections = Object.entries(directionFilters).filter(([, v]) => v).map(([k]) => k);
   const activeVerification = Object.entries(verificationFilters).filter(([, v]) => v).map(([k]) => k);
   const asOfAt = asOfSeconds(asOf);
+  const reportedAt = asOfSeconds(reportedBy);
+  const activePublishers = Object.entries(publisherFilters).filter(([, v]) => v).map(([k]) => k);
+  const activePublisherTypes = Object.entries(publisherTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeInherited = Object.entries(inheritedFilters).flatMap(([propId, vals]) =>
     Object.entries(vals).filter(([, v]) => v).map(([value]) => ({ propId, value })),
   );
@@ -80,6 +89,9 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
     activeDirections.length > 0 ||
     activeVerification.length > 0 ||
     asOfAt !== null ||
+    reportedAt !== null ||
+    activePublishers.length > 0 ||
+    activePublisherTypes.length > 0 ||
     !!cluster;
 
   if (!hasAny) return null;
@@ -111,6 +123,18 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
           onRemove={() => setAsOf("")}
         />
       )}
+      {reportedAt !== null && (
+        <ActiveFilterChip
+          label={`Reported by ${formatAtPrecision(new Date(reportedAt * 1000), "day")}`}
+          onRemove={() => setReportedBy("")}
+        />
+      )}
+      {activePublishers.map((id) => (
+        <ActiveFilterChip key={`pub-${id}`} label={id} onRemove={() => setPublisherFilters(dropKey(id))} />
+      ))}
+      {activePublisherTypes.map((id) => (
+        <ActiveFilterChip key={`pubtype-${id}`} label={id} onRemove={() => setPublisherTypeFilters(dropKey(id))} />
+      ))}
       {activeAnchoring.map((id) => (
         <ActiveFilterChip
           key={`anc-${id}`}

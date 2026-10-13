@@ -38,8 +38,8 @@
 // - Per-property evidence ships in its own file, evidence.json, keyed by record
 //   id: the properties a set of sources backs, those sources, a verification
 //   status and Research's note. It is fetched when a record first shows it,
-//   not with the collection. Reference notes are not shipped; the reference's
-//   verification status and its date range are.
+//   not with the collection. A reference ships its status, its date range,
+//   the sources that back it and Research's note.
 //
 // - Media items: the `file` image property holds the bundled copy's public
 //   path; its pixel size goes on the record (`image`) so the record reserves
@@ -187,6 +187,10 @@ function precisionOf(raw, props) {
   return null;
 }
 
+// Nepali mobile and landline numbers, and e-mail addresses.
+const PHONE = /(\+977[\s-]?\d{7,10}|\b9[78]\d{8}\b|\b01-?\d{7}\b)/;
+const EMAIL = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
+
 /* ── References ─────────────────────────────────────────────────────── */
 const titleOf = new Map(seedEntities.map((e) => [e.id, e.title]));
 const VERIFICATION = new Set(["confirmed", "single-source", "disputed"]);
@@ -213,6 +217,16 @@ const relationships = seedRefs.map((r) => {
     }
   } else if (quote) anchorElsewhere++;
   if (r.date && (r.date.from || r.date.to)) out.date = { from: secs(r.date.from), to: secs(r.date.to) };
+  // The sources that back the link and Research's note on how they were
+  // read: the Relationships panel's evidence card. A source that is not a
+  // record is an error, as for per-property evidence.
+  for (const s of r.sources ?? []) if (!titleOf.has(s)) throw new Error(`Reference ${r.id}: source ${s} is not a record`);
+  if (r.sources?.length) out.sources = r.sources;
+  const note = r.note?.trim();
+  if (note) {
+    if (PHONE.test(note) || EMAIL.test(note)) throw new Error(`Reference ${r.id}: the note holds a phone number or an e-mail address`);
+    out.note = note;
+  }
   return out;
 });
 
@@ -225,9 +239,6 @@ for (const r of relationships) {
   else outgoing.set(k, [r.to]);
 }
 
-// Nepali mobile and landline numbers, and e-mail addresses.
-const PHONE = /(\+977[\s-]?\d{7,10}|\b9[78]\d{8}\b|\b01-?\d{7}\b)/;
-const EMAIL = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
 /* ── Documents ──────────────────────────────────────────────────────── */
 const INSTITUTIONAL_MAIL = /@(?:[\w-]+\.)*(?:gov\.np|nhrcnepal\.org|nhrenepal\.org)$/i;

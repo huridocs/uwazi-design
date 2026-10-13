@@ -55,6 +55,36 @@ export interface MediaAnchor {
   url?: string;
 }
 
+/** One source a link rests on (a Source record of the Nepal or Vegas
+ *  collection), read from the record when the reference is built. */
+export interface RefSource {
+  /** The Source record. */
+  id: string;
+  title: string;
+  publisher?: string;
+  /** The publisher type's label ("Nepali media", "Wire"). */
+  publisherType?: string;
+  /** The wire or outlet the story was taken from, as the source states it.
+   *  Such a copy counts once with its origin. */
+  syndicatedFrom?: string;
+  url?: string;
+  /** When the source was published, epoch seconds. Absent for a living page
+   *  that states no date. */
+  published?: number;
+  /** When it was read, epoch seconds. */
+  accessed?: number;
+  datePrecision?: "month" | "year";
+}
+
+/** A passage one of a link's sources gives about either end of the link: the
+ *  quote on another reference from that source. */
+export interface SourceQuote {
+  sourceId: string;
+  text: string;
+  /** 1-based page in a bundled PDF; absent for a web article. */
+  page?: number;
+}
+
 /** The page a selection sits on, or undefined when its source has none. */
 export const selectionPage = (s: TextSelection | undefined): number | undefined =>
   s && s.page >= 1 ? s.page : undefined;
@@ -89,6 +119,14 @@ export interface Reference {
   /** The time inside a recording the link rests on. Rows show it as a time
    *  tag beside (or instead of) the page tag. */
   mediaAnchor?: MediaAnchor;
+  /** The sources that back the link, where the collection records them
+   *  (Nepal, Vegas). Absent in the Sample and CEJIL. */
+  sources?: RefSource[];
+  /** What those sources say about the link's ends, besides the link's own
+   *  quote (`sourceSelection`). */
+  sourceQuotes?: SourceQuote[];
+  /** How the sources were read, as the researcher wrote it. */
+  note?: string;
   createdAt: string;
 }
 

@@ -64,6 +64,10 @@ export interface VegasReference {
   /** `followed_by`: seconds between the two moments' starts. */
   interval?: number;
   date?: { from: number | null; to: number | null };
+  /** The Source records that back the link. */
+  sources?: string[];
+  /** Research's note on how the sources were read. */
+  note?: string;
 }
 
 export interface VegasThesaurus {

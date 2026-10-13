@@ -17,7 +17,7 @@ import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { RowEntityPill } from "./RowParts";
-import { RefStatus } from "./RefStatus";
+import { EvidenceStatus } from "./EvidenceStatus";
 import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 export interface ReferenceRowProps {
@@ -66,7 +66,8 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   }, [scrollToRef, reference.id, setScrollToRef, setActiveRefId]);
 
   const selection = reference.sourceSelection;
-  const status = <RefStatus verification={reference.verification} period={reference.period} />;
+  // The chip opens the link's evidence where the collection records it.
+  const status = <EvidenceStatus verification={reference.verification} period={reference.period} refs={[reference]} />;
   // A web source's quote has no page: no tag, nothing to jump to.
   const page = selectionPage(selection);
   // A time in a recording (the Vegas collection): the tag opens the recording

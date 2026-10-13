@@ -17,7 +17,11 @@ import {
   relDirectionFiltersAtom,
   relVerificationFiltersAtom,
   relAsOfAtom,
+  relReportedByAtom,
+  relPublisherFiltersAtom,
+  relPublisherTypeFiltersAtom,
 } from "../../atoms/filters";
+import { refReportedBy, sourcePublisher } from "../../utils/refEvidence";
 import { anchoringOf, asOfSeconds, directionClassifier, refHoldsAt } from "../../utils/relationships";
 import { languageAtom } from "../../atoms/language";
 import { getEntity } from "../../data/entities";
@@ -28,7 +32,8 @@ import type { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 
 /** THE filter pipeline for the merged Relationships panel — cluster, relation
- *  type, target entity type, target country, target descriptors, inherited
+ *  type, anchoring, verification, As of, Reported by, publisher and publisher
+ *  type, direction, target entity type, target country, target descriptors, inherited
  *  props, search, then sort. List, Tree, and Graph all consume this one hook so
  *  a facet ticked in one mode can never silently un-apply in another (the
  *  Filters badge counts them all via `activeFilterCountAtom`). */
@@ -48,6 +53,9 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
   const directionFilters = useRelAtomValue(relDirectionFiltersAtom);
   const verificationFilters = useRelAtomValue(relVerificationFiltersAtom);
   const asOf = useRelAtomValue(relAsOfAtom);
+  const reportedBy = useRelAtomValue(relReportedByAtom);
+  const publisherFilters = useRelAtomValue(relPublisherFiltersAtom);
+  const publisherTypeFilters = useRelAtomValue(relPublisherTypeFiltersAtom);
   const language = useAtomValue(languageAtom);
 
   return useMemo<Reference[]>(() => {
@@ -79,6 +87,22 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     }
     const asOfAt = asOfSeconds(asOf);
     if (asOfAt !== null) result = result.filter((r) => refHoldsAt(r, asOfAt));
+    const reportedAt = asOfSeconds(reportedBy);
+    if (reportedAt !== null) result = result.filter((r) => refReportedBy(r, reportedAt));
+    const activePublishers = Object.entries(publisherFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activePublishers.length > 0) {
+      const set = new Set(activePublishers);
+      result = result.filter((r) => !!r.sources?.some((s) => set.has(sourcePublisher(s))));
+    }
+    const activePublisherTypes = Object.entries(publisherTypeFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activePublisherTypes.length > 0) {
+      const set = new Set(activePublisherTypes);
+      result = result.filter((r) => !!r.sources?.some((s) => !!s.publisherType && set.has(s.publisherType)));
+    }
     const activeDirections = Object.entries(directionFilters)
       .filter(([, v]) => v)
       .map(([k]) => k);
@@ -205,6 +229,9 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     directionFilters,
     verificationFilters,
     asOf,
+    reportedBy,
+    publisherFilters,
+    publisherTypeFilters,
     language,
   ]);
 }

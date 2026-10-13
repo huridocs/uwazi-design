@@ -105,6 +105,20 @@ export const relVerificationFiltersAtom = atom<Record<string, boolean>>({});
  *  link shows only if it held on that day (`refHoldsAt`); undated links stay. */
 export const relAsOfAtom = atom<string>("");
 
+/** "Reported by": an ISO day or "" for none. With a day set, a link whose
+ *  sources state a publication date shows only if one of them was published
+ *  by that day (`reportedAt`); links whose sources state none stay. The
+ *  second clock, beside As of's when-it-held. */
+export const relReportedByAtom = atom<string>("");
+
+/** Publisher facet: the publisher printed on a link's sources. A link matches
+ *  when any of its sources has a ticked publisher. Shown only where links
+ *  carry sources. */
+export const relPublisherFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Publisher type facet ("Nepali media", "Wire"), over the same sources. */
+export const relPublisherTypeFiltersAtom = atom<Record<string, boolean>>({});
+
 /** The path chosen in "Connect to…": node ids from the panel's entity to the
  *  other end, which the graph view draws. Scoped like the facets and cleared
  *  with them, so a path never outlives the entity it starts from. */
@@ -163,6 +177,9 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relDirectionFiltersAtom, scope), {});
   set(relAtomFor(relVerificationFiltersAtom, scope), {});
   set(relAtomFor(relAsOfAtom, scope), "");
+  set(relAtomFor(relReportedByAtom, scope), "");
+  set(relAtomFor(relPublisherFiltersAtom, scope), {});
+  set(relAtomFor(relPublisherTypeFiltersAtom, scope), {});
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
   set(relAtomFor(relWhenYearsAtom, scope), null);
   set(relAtomFor(relConnectPathAtom, scope), null);
@@ -236,6 +253,9 @@ function countFilters(get: <T>(base: Scopable<T>) => T): number {
   n += Object.values(get(relDirectionFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relVerificationFiltersAtom)).filter(Boolean).length;
   if (get(relAsOfAtom)) n++;
+  if (get(relReportedByAtom)) n++;
+  n += Object.values(get(relPublisherFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relPublisherTypeFiltersAtom)).filter(Boolean).length;
   for (const vals of Object.values(get(relInheritedFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   if (get(activeClusterRefIdsAtom)) n++;

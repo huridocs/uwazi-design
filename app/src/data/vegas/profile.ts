@@ -14,6 +14,7 @@ import { vegasRelTypeName, vegasTemplateById } from "./schema";
 import { loadVegasEvidence, vegasEntity, vegasEvidence, vegasRefsByEntity } from "./load";
 import { displayValues, vegasTimedProp } from "./adapt";
 import { vegasLinkAt } from "./links";
+import { refEvidenceFrom } from "../refSources";
 import type { VegasEntity } from "./types";
 
 export { isVegasEntity } from "./load";
@@ -110,7 +111,8 @@ const refCache = new Map<string, Reference[]>();
 
 /** This record's references — both directions — as the Relationships tab's
  *  rows. A reference that rests on a time in a recording carries it as a
- *  media anchor, with the recording's link at that time. Read-only. */
+ *  media anchor, with the recording's link at that time. Its sources and
+ *  Research's note feed the evidence card. Read-only. */
 export function vegasReferencesFor(id: string): Reference[] {
   const hit = refCache.get(id);
   if (hit) return hit;
@@ -128,6 +130,8 @@ export function vegasReferencesFor(id: string): Reference[] {
       direction: outgoing ? "outgoing" : "incoming",
       verification: r.verification,
       ...(r.date ? { period: r.date } : {}),
+      ...refEvidenceFrom(r, vegasEntity, (s) => vegasRefsByEntity().get(s), () => undefined),
+      ...(r.note ? { note: r.note } : {}),
       ...(m
         ? {
             mediaAnchor: {

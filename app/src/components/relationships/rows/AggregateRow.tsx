@@ -1,4 +1,4 @@
-import { useRelAtomValue, useSetRelAtom } from "../../../hooks/useEntityScope";
+import { useRelAtomValue, useScopedReferences, useSetRelAtom } from "../../../hooks/useEntityScope";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { activeAggregateIdAtom, activeRefIdAtom } from "../../../atoms/references";
 import { activeClusterRefIdsAtom, relSearchQueryAtom } from "../../../atoms/filters";
@@ -8,7 +8,8 @@ import { Relationship } from "../../../utils/relationships";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { DirectionGlyph } from "../DirectionGlyph";
-import { RefStatus } from "./RefStatus";
+import { EvidenceStatus } from "./EvidenceStatus";
+import { refsWithIds } from "../../../utils/refEvidence";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
@@ -60,6 +61,8 @@ export function AggregateRow({
 
   const relLabel =
     relationDisplayLabel(rel.relationType);
+  // The references behind the row, for its evidence card.
+  const backing = refsWithIds(useScopedReferences(), rel.refIds);
   // Highlight only the aggregate row the user actually clicked, not every
   // sibling pointing at the same entity. Multiple aggregates can share a
   // target entity (one per relation type), so keying selection by entity id
@@ -176,7 +179,7 @@ export function AggregateRow({
         )}
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        <RefStatus verification={rel.verification} />
+        <EvidenceStatus verification={rel.verification} refs={backing} />
         {countBadge}
       </div>
     </div>
@@ -230,7 +233,7 @@ export function AggregateRow({
             )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <RefStatus verification={rel.verification} />
+            <EvidenceStatus verification={rel.verification} refs={backing} />
             {countBadge}
           </div>
         </div>
