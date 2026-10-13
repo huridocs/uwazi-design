@@ -23,6 +23,9 @@ export interface FocusRequest {
   /** Layout units per member of spacing, so the result's scale matches the
    *  global drawing's. */
   unit: number;
+  /** Per member: 1 for a node that stays at its seed (the Relationships
+   *  graph's centre). Absent: none. */
+  fixed?: Uint8Array;
 }
 
 export interface FocusResponse {

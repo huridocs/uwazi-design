@@ -13,6 +13,9 @@ import type { FocusRequest, FocusResponse } from "./focus";
  *  3. A shorter run with the hubs fixed and their edges at a tenth of the
  *     weight, so records tied to a hub lean towards it without being pulled in.
  *
+ *  A member marked `fixed` (the Relationships graph's centre) stays at its
+ *  seed through both runs; the rest settle around it.
+ *
  *  Deterministic: the same request gives the same positions. */
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
@@ -45,7 +48,11 @@ function layout(req: FocusRequest): FocusResponse {
     if (req.hub[i]) continue;
     // Two seeds on one point would never separate: nudge by index.
     const a = i * 2.399963;
-    g.addNode(i, { x: (xy[i * 2] - cx) * s + Math.cos(a) * 0.01, y: (xy[i * 2 + 1] - cy) * s + Math.sin(a) * 0.01 });
+    g.addNode(i, {
+      x: (xy[i * 2] - cx) * s + Math.cos(a) * 0.01,
+      y: (xy[i * 2 + 1] - cy) * s + Math.sin(a) * 0.01,
+      ...(req.fixed?.[i] ? { fixed: true } : {}),
+    });
   }
   const hubEdges: [number, number][] = [];
   for (let e = 0; e < req.ea.length; e++) {

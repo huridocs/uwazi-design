@@ -92,6 +92,20 @@ export interface NetworkCanvasProps {
   /** Width covered by a panel at each side (the Full width rail's), in px.
    *  Fits and centring use the rest; opening or closing one eases there. */
   inset?: { left: number; right: number };
+  /** A path drawn over everything in carbon, its nodes always labelled (the
+   *  Relationships graph's "Connect to…"). */
+  path?: { nodes: number[]; edges: number[] } | null;
+  /** Per edge: 1 points a→b, -1 b→a, 2 both ways, 0 no arrow. Arrowheads
+   *  sit at the pointed-to end. */
+  arrows?: Int8Array | null;
+  /** Captions by community id, drawn at every detail level (the Relationships
+   *  graph's groups). Without, captions are the overview's, named by their
+   *  best-connected record. */
+  captions?: Map<number, string> | null;
+  /** Nodes always labelled (the Relationships graph's centre). */
+  always?: number[];
+  /** What the whole drawing is, for Fit's tooltip: "collection" by default. */
+  noun?: string;
 }
 
 export interface EdgeInfo {
@@ -266,6 +280,7 @@ function useThemeVersion() {
   return v;
 }
 
+const NO_NODES: number[] = [];
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const truncate = (s: string, n = 34) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
@@ -313,6 +328,11 @@ export function NetworkCanvas({
   centreOn: centreCommunityId = null,
   onCentred,
   inset,
+  path = null,
+  arrows = null,
+  captions = null,
+  always = NO_NODES,
+  noun = "collection",
 }: NetworkCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -480,13 +500,20 @@ export function NetworkCanvas({
   /* Communities that may get a caption, largest first: by matches while
      filtering (those with none get none), by records drawn otherwise. */
   const captionOrder = useMemo(() => {
+    // Named groups: every group with a record drawn, largest first.
+    if (captions)
+      return communities
+        .map((c, idx) => ({ idx, size: shownCount.get(c) ?? 0, named: captions.has(c.id) }))
+        .filter((x) => x.size > 0 && x.named)
+        .sort((p, q) => q.size - p.size)
+        .map((x) => x.idx);
     if (!lodOn) return [];
     return communities
       .map((c, idx) => ({ idx, size: shownCount.get(c) ?? 0, m: communityMatch ? communityMatch[idx] : 0 }))
       .filter((x) => x.size >= 8 && (!communityMatch || x.m > 0))
       .sort((p, q) => q.m - p.m || q.size - p.size)
       .map((x) => x.idx);
-  }, [lodOn, communities, shownCount, communityMatch]);
+  }, [lodOn, communities, shownCount, communityMatch, captions]);
 
   /* One-hop neighbourhood of a node over drawn edges: the node, then its
      neighbours by the weight of their link to it (references), then by their
@@ -753,6 +780,42 @@ export function NetworkCanvas({
       }
       strokeEdges(true);
 
+      /* Arrowheads at the pointed-to end of an edge long enough on screen to
+         carry one; full on the lifted and selected edges, quiet elsewhere. */
+      if (arrows) {
+        const head = (from: number, to: number) => {
+          const x1 = sx(from), y1 = sy(from), x2 = sx(to), y2 = sy(to);
+          const len = Math.hypot(x2 - x1, y2 - y1);
+          if (len < 18) return;
+          const ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+          const back = rad(to) + 1.5;
+          const tipX = x2 - ux * back, tipY = y2 - uy * back;
+          const s = 4.5;
+          ctx.moveTo(tipX, tipY);
+          ctx.lineTo(tipX - ux * s - uy * s * 0.6, tipY - uy * s + ux * s * 0.6);
+          ctx.lineTo(tipX - ux * s + uy * s * 0.6, tipY - uy * s - ux * s * 0.6);
+          ctx.closePath();
+        };
+        for (const strong of [false, true]) {
+          ctx.beginPath();
+          for (let e = 0; e < arrows.length; e++) {
+            const d = arrows[e];
+            if (!d || !edgeOn[e]) continue;
+            const i = graph.a[e];
+            const j = graph.b[e];
+            const incident = (selected >= 0 && (i === selected || j === selected)) || (!!hood && (i === liftI || j === liftI));
+            if (incident !== strong) continue;
+            const x1 = sx(i), y1 = sy(i), x2 = sx(j), y2 = sy(j);
+            if ((x1 < -pad && x2 < -pad) || (x1 > W + pad && x2 > W + pad) || (y1 < -pad && y2 < -pad) || (y1 > H + pad && y2 > H + pad)) continue;
+            if (d === 1 || d === 2) head(i, j);
+            if (d === -1 || d === 2) head(j, i);
+          }
+          ctx.globalAlpha = strong ? 0.9 : 0.4 * recede * hair;
+          ctx.fillStyle = strong ? t.inkSecondary : t.inkTertiary;
+          ctx.fill();
+        }
+      }
+
       /* The hovered or pinned edge: carbon, under the nodes it joins. An end
          that is not lifted is drawn again over it, so a line never crosses
          its own dots. */
@@ -769,6 +832,20 @@ export function NetworkCanvas({
         ctx.lineWidth = 1;
         ctx.stroke();
       };
+      /* A "Connect to…" path: carbon, over every other edge. */
+      if (path?.edges.length) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = t.carbon;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (const e of path.edges) {
+          ctx.moveTo(sx(graph.a[e]), sy(graph.a[e]));
+          ctx.lineTo(sx(graph.b[e]), sy(graph.b[e]));
+        }
+        ctx.stroke();
+        for (const i of path.nodes) if (nodeOn[i]) dot(i, 1);
+      }
+
       if (edgeHi >= 0) {
         const i = graph.a[edgeHi];
         const j = graph.b[edgeHi];
@@ -913,6 +990,8 @@ export function NetworkCanvas({
             ...(hood ? [liftI] : []),
             ...(find ? [find.node] : []),
             ...(edgeHi >= 0 ? [graph.a[edgeHi], graph.b[edgeHi]] : []),
+            ...always,
+            ...(path?.nodes ?? []),
           ].filter((i, k, all) => i >= 0 && nodeOn[i] && all.indexOf(i) === k);
           // Their dots are kept clear of other labels.
           for (const i of want) {
@@ -963,11 +1042,11 @@ export function NetworkCanvas({
             ctx.textAlign = "center";
             let shown = 0;
             // A phone's pane has room for two next to the records' labels.
-            const most = Math.round(clamp((W * H) / 160000, 2, CAPTIONS));
+            const most = captions ? captionOrder.length : Math.round(clamp((W * H) / 160000, 2, CAPTIONS));
             for (const idx of captionOrder) {
               if (shown >= most) break;
               const c = communities[idx];
-              const text = truncate(titleOf(c.top), 28);
+              const text = truncate(captions?.get(c.id) ?? titleOf(c.top), 28);
               const tw = widthOf(text);
               // On the centre, else just above or below it; never over the
               // dot of the record it names.
@@ -987,7 +1066,8 @@ export function NetworkCanvas({
                 break;
               }
               if (Number.isNaN(y)) continue;
-              captioned.add(c.top);
+              // A named group's caption is not its top record's name.
+              if (!captions) captioned.add(c.top);
               shown++;
               paint(text, x, y, capAlpha, t.inkTertiary);
               ops.push({ i: c.top, cap: idx, spot: 0, dy: at, text, tw, force: false });
@@ -1029,7 +1109,7 @@ export function NetworkCanvas({
     if (lifting && !driven()) frame.current = requestAnimationFrame(() => drawRef.current());
     // `lodAt` and `radiusAt` close over props and the memos listed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, arranging, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, captionOrder, lodOn, degreeRank, drawnCount, baseExtent]);
+  }, [size, colors, graph, n, edgeOn, nodeOn, strength, member, hubDegree, hubEdges, selected, find, arranging, focused, focusedCommunity, matchOrder, byDegree, titleOf, communities, captionOrder, lodOn, degreeRank, drawnCount, baseExtent, path, arrows, captions, always]);
 
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -2323,7 +2403,7 @@ export function NetworkCanvas({
           </button>
           <button
             type="button"
-            title={strength ? "Fit the matches" : "Fit the collection"}
+            title={strength ? "Fit the matches" : `Fit the ${noun}`}
             className={`${CANVAS_OVERLAY_BUTTON} text-meta`}
             onClick={() => setCamera(fitCamera(), true)}
           >

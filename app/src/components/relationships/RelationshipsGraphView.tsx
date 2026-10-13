@@ -1,1180 +1,320 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Link2, X } from "lucide-react";
-import { activeRefIdAtom } from "../../atoms/references";
+import { X } from "lucide-react";
+import { activeAggregateIdAtom, activeRefIdAtom } from "../../atoms/references";
 import { relConnectPathAtom, relGroupByAtom, relSearchQueryAtom } from "../../atoms/filters";
+import { dataSourceAtom } from "../../atoms/dataSource";
+import { networkGraphAtom } from "../../atoms/network";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { useEntityScopeId, useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
-import { HighlightedText } from "../shared/HighlightedText";
 import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { chainGraphFor } from "../../data/chainFacets";
 import { edgesBetween } from "../../utils/pathFinding";
-import { Direction } from "../../data/references";
-import { currentDocument } from "../../data/document";
-import { deriveRelationships, Relationship } from "../../utils/relationships";
-import {
-  getGroupColor,
-  getGroupLabel,
-  getRelGroupKey,
-} from "../../utils/connectionGrouping";
-import { previewEntityIdAtom } from "../../atoms/entityPreview";
-import { breakpointAtom } from "../../atoms/viewport";
+import { deriveRelationships } from "../../utils/relationships";
+import { relationDisplayLabel } from "../../utils/inheritance";
+import { getGroupLabel, getRelGroupKey } from "../../utils/connectionGrouping";
+import { loadNetworkLayout, placeNetwork, type NetworkPlacement, type StoredLayout } from "../../data/network/layout";
+import { runFocus } from "../../data/network/focus";
+import { graphId, type NetworkGraph } from "../../data/network/graph";
+import { buildNeighbourhood, hoodEvidence, type HoodGroup } from "../../data/network/neighbourhood";
+import { NetworkCanvas, type EdgeInfo } from "../library/NetworkCanvas";
+import { CANVAS_OVERLAY, CANVAS_OVERLAY_BUTTON } from "../shared/canvasOverlay";
+import type { Reference } from "../../data/references";
 
-interface GraphNode {
-  id: string;
-  title: string;
-  color: string;
-  typeName: string;
-  evidenceCount: number;
-  direction: Direction;
-  x: number;
-  y: number;
-  r: number;
-  selected: boolean;
+/** The smallest drawing the camera fits, in layout units, and in median
+ *  link lengths: a record with a few links would otherwise be framed edge to
+ *  edge, two dots a pane apart. */
+const MIN_EXTENT = 1200;
+const MIN_LINKS = 3.2;
+
+/** `pl` with its fit extent grown about its centre to at least `MIN_EXTENT`
+ *  and `MIN_LINKS` median links. */
+function withMinExtent(pl: NetworkPlacement, g: NetworkGraph): NetworkPlacement {
+  const d: number[] = [];
+  for (let e = 0; e < g.a.length; e++)
+    d.push(Math.hypot(pl.pos[g.a[e] * 2] - pl.pos[g.b[e] * 2], pl.pos[g.a[e] * 2 + 1] - pl.pos[g.b[e] * 2 + 1]));
+  d.sort((x, y) => x - y);
+  const min = Math.max(MIN_EXTENT, (d[d.length >> 1] ?? 0) * MIN_LINKS);
+  const { minX, maxX, minY, maxY } = pl.extent;
+  const grow = (lo: number, hi: number): [number, number] => {
+    if (hi - lo >= min) return [lo, hi];
+    const mid = (lo + hi) / 2;
+    return [mid - min / 2, mid + min / 2];
+  };
+  const [x0, x1] = grow(minX, maxX);
+  const [y0, y1] = grow(minY, maxY);
+  if (x0 === minX && x1 === maxX && y0 === minY && y1 === maxY) return pl;
+  return { ...pl, extent: { minX: x0, maxX: x1, minY: y0, maxY: y1 } };
 }
 
-interface Spoke {
-  key: string;
-  label: string;
-  /** Optional accent for the spoke label pill (e.g. entity-type colour). */
-  color?: string;
-  angle: number;
-  targets: Relationship[];
-  /** What the pill prints (the label, or "label (N)" while collapsed). */
-  text: string;
-  /** The pill's width in user units, before the label floor's counter-scale. */
-  width: number;
-  /** Distance of the pill's centre from the source. */
-  dist: number;
-  /** No clear spot within PILL_MAX_PUSH: the spoke draws without its pill. */
-  hidden: boolean;
-  labelX: number;
-  labelY: number;
-}
-
-const VIEW_W = 1200;
-const VIEW_H = 900;
-const CX = VIEW_W / 2;
-const CY = VIEW_H / 2;
-const SOURCE_R = 26;
-/** Node radius factor on phones. At the phone's viewBox fit nodes drew 6–7px
- *  across; doubled they read as targets, and the r=16 hit circles still apply. */
-const PHONE_NODE_SCALE = 2;
-const LABEL_DIST = 122;
-const FIRST_RING_R = 200;
-const RING_GAP = 40;
-const ARC_GAP = 30;
-/** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
-const GRAPH_CAP = 150;
-/** Spacing of a "Connect to…" path's further nodes, out along the first
- *  hop's ray. */
-const PATH_STEP = 120;
-/** The step when the path runs across the canvas: its names then sit above
- *  and below the line, centred on their nodes, and need the width. */
-const PATH_STEP_WIDE = 220;
-/** Label type size, in user units AND the rendered floor it must never fall under.
- *  The 11px floor is a CSS-px rule, and SVG text inside the zoom group is not
- *  measured in CSS px: it passes through TWO scales — the viewBox fit
- *  (pane ÷ 1200×900, ~0.6 on a normal pane) and `transform.scale` (0.4…2.5). At
- *  the bottom of both, an 11-unit glyph painted 2.6px. `labelScale` below undoes
- *  exactly as much of that as the floor needs. */
-const LABEL_PX = 11;
-/** A spoke pill's height, and its width: the label's own width at LABEL_PX /
- *  weight 500, plus padding. The fixed 110-unit pill it replaces held about 16
- *  characters; a longer label ran out of both sides and over its neighbours.
- *  SVG text can't be measured before it is laid out, but a canvas in the same
- *  font can — glyph widths vary too much (5.5 units a character in lower case,
- *  6.9 in capitals) for a per-character estimate to be both tight and safe. */
-const PILL_H = 22;
-let measureCtx: CanvasRenderingContext2D | null | undefined;
-function pillWidth(text: string): number {
-  if (measureCtx === undefined) {
-    measureCtx = typeof document !== "undefined" ? document.createElement("canvas").getContext("2d") : null;
-    if (measureCtx) measureCtx.font = `500 ${LABEL_PX}px ${getComputedStyle(document.body).fontFamily}`;
-  }
-  const w = measureCtx ? measureCtx.measureText(text).width : text.length * 7;
-  return Math.max(72, Math.ceil(w) + 24);
-}
-/** Longest label a pill prints; the rest is in the <title> and aria-label. */
-const PILL_MAX_CHARS = 40;
-/** Clearance kept between pills, the radial step a colliding pill moves out by,
- *  and how far it may go before it stays put. */
-const PILL_GAP = 6;
-const PILL_STEP = 6;
-const PILL_MAX_PUSH = 240;
-
-interface Box {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-}
-const overlaps = (a: Box, b: Box) =>
-  a.x0 < b.x1 + PILL_GAP && b.x0 < a.x1 + PILL_GAP && a.y0 < b.y1 + PILL_GAP && b.y0 < a.y1 + PILL_GAP;
-
-/** Where each spoke's pill goes: out along its own spoke from `start`, one step
- *  at a time, until it clears the source (circle and name pill) and every pill
- *  already placed. Every pill sits at the same distance while they fit; the
- *  ones that don't move OUT, never sideways, so a pill always stays on its
- *  spoke line. `scale` is the label floor's counter-scale — a pill drawn 1.6×
- *  larger needs 1.6× the room — so this runs again when that changes.
+/** The Relationships panel's Graph view: the panel's entity and the records
+ *  its references reach, on the Library's Network canvas.
  *
- *  A pill with no clear spot within PILL_MAX_PUSH gets `null`: it is not drawn.
- *  That is the dense case — grouped by target entity, every spoke is one entity
- *  and there are up to GRAPH_CAP of them — where no placement fits them all and
- *  a pile of pills hides every one of them. Its node still names itself. */
-function placePills(
-  spokes: { angle: number; width: number }[],
-  start: number[],
-  scale: number,
-  sourceLabelW: number,
-): (number | null)[] {
-  const halfH = (PILL_H / 2) * scale;
-  const placed: Box[] = [
-    { x0: CX - SOURCE_R, y0: CY - SOURCE_R, x1: CX + SOURCE_R, y1: CY + SOURCE_R },
-    {
-      x0: CX - (sourceLabelW / 2) * scale,
-      y0: CY + SOURCE_R,
-      x1: CX + (sourceLabelW / 2) * scale,
-      y1: CY + SOURCE_R + 36 * scale,
-    },
-  ];
-  return spokes.map((sp, i) => {
-    const halfW = (sp.width / 2) * scale;
-    const box = (d: number): Box => {
-      const x = CX + Math.cos(sp.angle) * d;
-      const y = CY + Math.sin(sp.angle) * d;
-      return { x0: x - halfW, y0: y - halfH, x1: x + halfW, y1: y + halfH };
-    };
-    for (let d = start[i]; d <= start[i] + PILL_MAX_PUSH; d += PILL_STEP) {
-      if (placed.some((b) => overlaps(b, box(d)))) continue;
-      placed.push(box(d));
-      return d;
-    }
-    return null;
-  });
-}
-
-/** Does `text` contain any query term? The graph's labels live in SVG `<text>`,
- *  which cannot host a `<mark>` — so where the list and tree mark the matched
- *  RUN, the graph can only say "this one matched" at the whole-label level. That
- *  is a deliberately weaker claim, made with a tint rather than a fake mark:
- *  drawing a rect behind a guessed glyph range would assert a precision the
- *  renderer can't actually measure (PATTERNS 4.2). Terms come from the shared
- *  tokenizer, so what tints here is what marks elsewhere. */
-function matchesQuery(text: string, terms: string[]): boolean {
-  if (terms.length === 0) return false;
-  const folded = fold(text); // same fold the marks match under — no second dialect
-  return terms.some((t) => termIn(folded, t));
-}
-
+ *  - What is drawn is `useFilteredReferences`: search, facets, Contested,
+ *    Reported by and the rest narrow it here as in the list.
+ *  - One edge per record, carrying the types of its references and their
+ *    direction (arrowheads; "cites →" / "← cited by" in the tooltip). The
+ *    links among the neighbours are the collection's (its default type
+ *    switches applied), so a hover shows the neighbourhood's own structure.
+ *  - Layout: seeded from the collection's stored positions (or, with Group
+ *    by, one sector per group, its name as a caption), then Focus's
+ *    ForceAtlas2 in the worker with the centre fixed. Cached by entity and
+ *    reference set, so a view opened again draws at once.
+ *  - A "Connect to…" path is drawn in carbon, its hops past the first added
+ *    as nodes. A record's dot opens it in the preview slide-over; the open
+ *    preview, the active reference or aggregate is the selection. */
 export function RelationshipsGraphView() {
+  const source = useAtomValue(dataSourceAtom);
+  const focusedId = useEntityScopeId();
+  const filteredRefs = useFilteredReferences();
   const [groupBy] = useRelAtom(relGroupByAtom);
   const query = useRelAtomValue(relSearchQueryAtom);
-  const terms = useMemo(() => highlightTerms(query), [query]);
-  const focusedId = useEntityScopeId();
   const [previewEntityId, setPreviewEntityId] = useAtom(previewEntityIdAtom);
-  const activeRefId = useAtomValue(activeRefIdAtom);
-
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState({ tx: 0, ty: 0, scale: 1 });
-  const nodeScale = useAtomValue(breakpointAtom) === "mobile" ? PHONE_NODE_SCALE : 1;
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
-  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
-  // WHICH node you clicked. Selection is stored per ENTITY (previewEntityIdAtom),
-  // but a node is a relationship AGGREGATE — target × type × direction — so one
-  // entity can own several nodes ("Cites", "Refers To", "Relates To"… all to the
-  // same case). Keying the highlight off the entity alone lit every one of them
-  // and there was no way to tell which you'd picked. They ARE all that entity, so
-  // dimming them would be a lie: the clicked node goes primary, its siblings keep
-  // a quiet ring that says "same entity, different relation".
-  const [clickedNodeId, setClickedNodeId] = useState<string | null>(null);
-  // A path chosen in "Connect to…" (ConnectToModal): drawn from the source
-  // through its first hop, which is one of this graph's nodes, then outward.
-  // Ignored when it starts from another entity.
+  const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
+  const activeAggregateId = useAtomValue(activeAggregateIdAtom);
+  const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const [connectPath, setConnectPath] = useRelAtom(relConnectPathAtom);
-  const path = connectPath && connectPath.length >= 2 && connectPath[0] === focusedId ? connectPath : null;
-  const firstHop = path?.[1] ?? null;
-  const dragRef = useRef<{
-    active: boolean;
-    startX: number;
-    startY: number;
-    initTx: number;
-    initTy: number;
-    moved: boolean;
-  }>({ active: false, startX: 0, startY: 0, initTx: 0, initTy: 0, moved: false });
+  const collection = useAtomValue(networkGraphAtom);
 
-  // Shared pipeline — applies every facet the list view applies (country,
-  // descriptor, inherited included). Its sort sets the order nodes take around
-  // each sector (by default the most-evidenced first).
-  const filteredRefs = useFilteredReferences();
+  // The collection's stored layout seeds the positions; without one (or if
+  // it fails to load) the seeds are a spiral, and nothing else changes.
+  const [stored, setStored] = useState<{ source: string; layout: StoredLayout | null } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadNetworkLayout(source).then(
+      (layout) => alive && setStored({ source, layout }),
+      () => alive && setStored({ source, layout: null }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [source]);
+  const layout = stored?.source === source ? stored.layout : undefined;
 
-  // The root is THIS entity — the one whose relationships these are. It was
-  // `currentDocument`, the hardcoded sample document, so every graph claimed a
-  // "Court Case" at its centre no matter whose page you were on: a Sentencia's
-  // own connections radiated from someone else's node.
-  const sourceEntity = getEntity(focusedId);
-  const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
-  const sourceTitle = sourceEntity?.title ?? currentDocument.title;
-  const sourceLabel = truncate(sourceTitle, 26);
-  // SVG text can't be measured before layout, so the pill is sized from the glyph
-  // count — 5.6 units per char at fontSize 10 is a safe average for this face.
-  const sourceLabelW = Math.max(
-    72,
-    Math.max(sourceLabel.length, (sourceType?.name ?? "").length) * 5.6 + 18,
+  const chain = useMemo(() => chainGraphFor(entityCorpusOf(focusedId)), [focusedId]);
+  const titleOfId = useCallback((id: string) => getEntity(id)?.title ?? chain?.titleOf(id) ?? id, [chain]);
+
+  // A path chosen in "Connect to…" (ConnectToModal), drawn when it starts
+  // here and its first step is among the filtered references.
+  const pathIds = connectPath && connectPath.length >= 2 && connectPath[0] === focusedId ? connectPath : null;
+  const pathShown = !!pathIds && filteredRefs.some((r) => r.targetEntityId === pathIds[1]);
+
+  const hood = useMemo(() => {
+    if (layout === undefined) return null;
+    let groupOf: ((r: Reference) => HoodGroup) | null = null;
+    if (groupBy !== "none") {
+      const rels = deriveRelationships(filteredRefs, { includeHubMembers: true });
+      const keyOfRef = new Map<string, string>();
+      for (const rel of rels) {
+        const key = getRelGroupKey(rel, groupBy);
+        for (const id of rel.refIds) keyOfRef.set(id, key);
+      }
+      groupOf = (r) => {
+        const key = keyOfRef.get(r.id) ?? "";
+        return { key, label: key ? getGroupLabel(key, groupBy) : "Other" };
+      };
+    }
+    return buildNeighbourhood({
+      source,
+      centreId: focusedId,
+      refs: filteredRefs,
+      templateOf: (id) => getEntity(id)?.typeId ?? chain?.templateOf(id) ?? "",
+      typeLabel: (r) => relationDisplayLabel(r.relationType),
+      groupOf,
+      path: pathShown ? pathIds : null,
+      hopTypes: (a, b) =>
+        chain ? [...new Set(edgesBetween(chain, a, b).map((e) => e.label ?? e.relationType ?? "related"))] : [],
+      collection,
+      stored: layout,
+    });
+  }, [layout, groupBy, filteredRefs, source, focusedId, chain, pathShown, pathIds, collection]);
+
+  const seedPlacement = useMemo(() => (hood ? placeNetwork(hood.graph, hood.seeds) : null), [hood]);
+  // The layout's cache key: the entity, the drawn references, the grouping
+  // and the path. The same set draws the same layout.
+  const layoutKey = useMemo(() => {
+    if (!hood) return null;
+    let h = 2166136261;
+    for (const r of filteredRefs) for (let k = 0; k < r.id.length; k++) h = Math.imul(h ^ r.id.charCodeAt(k), 16777619);
+    return `rel|${source}|${focusedId}|${groupBy}|${pathShown ? pathIds!.join(">") : ""}|${filteredRefs.length}:${(h >>> 0).toString(36)}`;
+  }, [hood, filteredRefs, source, focusedId, groupBy, pathShown, pathIds]);
+
+  const [laidOut, setLaidOut] = useState<{ key: string; placement: ReturnType<typeof placeNetwork> } | null>(null);
+  useEffect(() => {
+    if (!hood || !seedPlacement || !layoutKey) return;
+    let alive = true;
+    const nodes = hood.graph.ids.map((_, i) => i);
+    const t0 = performance.now();
+    runFocus(layoutKey, seedPlacement, { nodes, req: hood.request }).then((focus) => {
+      if (!alive || !focus) return;
+      if (import.meta.env.DEV) {
+        (window as unknown as { __relGraph?: object }).__relGraph = {
+          nodes: nodes.length,
+          edges: hood.graph.a.length,
+          workerMs: Math.round(focus.ms),
+          ms: Math.round(performance.now() - t0),
+        };
+      }
+      // Communities (the groups) at their laid-out centres, for the captions.
+      const pos = new Map<string, [number, number, number]>();
+      hood.graph.ids.forEach((id, i) => pos.set(id, [focus.pos[i * 2], focus.pos[i * 2 + 1], hood.seeds.pos.get(id)![2]]));
+      setLaidOut({ key: layoutKey, placement: placeNetwork(hood.graph, { pos }) });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [hood, seedPlacement, layoutKey]);
+  const ready = !!laidOut && laidOut.key === layoutKey;
+  const placement = useMemo(() => {
+    const pl = ready ? laidOut!.placement : seedPlacement;
+    return pl && hood && withMinExtent(pl, hood.graph);
+  }, [ready, laidOut, seedPlacement, hood]);
+
+  const graph = hood?.graph ?? null;
+  const n = graph?.ids.length ?? 0;
+  const nodeOn = useMemo(() => new Uint8Array(n).fill(1), [n, graph]);
+  const edgeOn = useMemo(() => new Uint8Array(graph?.a.length ?? 0).fill(1), [graph]);
+  const colorOf = useCallback((typeId: string) => getEntityType(typeId)?.color ?? "#6B7280", []);
+  const typeNameOf = useCallback((typeId: string) => getEntityType(typeId)?.name ?? typeId, []);
+  const titleOf = useCallback((i: number) => (graph && i < graph.ids.length ? titleOfId(graph.ids[i]) : ""), [graph, titleOfId]);
+  const edgeInfo = useCallback(
+    (e: number): EdgeInfo => ({
+      types: hood!.edgeTypes[e],
+      refs: hood!.edgeRefs[e].length || graph!.refs[e],
+      evidence: hoodEvidence(hood!, e),
+    }),
+    [hood, graph],
   );
 
-  // The pane's size, because the viewBox fit is half of what a glyph's rendered
-  // size actually is. `preserveAspectRatio="xMidYMid meet"` makes that fit
-  // min(w/VIEW_W, h/VIEW_H) — measure it, don't assume 1.
-  const [pane, setPane] = useState({ w: 0, h: 0 });
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setPane((p) => (p.w === width && p.h === height ? p : { w: width, h: height }));
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Rendered px per user unit = viewBox fit × zoom. Counter-scale the LABEL
-  // GROUPS (pill and text together, so the pill never has to hold type it has
-  // outgrown) by just enough to hold the floor — and by nothing at all once the
-  // graph is zoomed past it, where labels should grow with everything else.
-  const unitPx =
-    pane.w > 0 && pane.h > 0
-      ? Math.min(pane.w / VIEW_W, pane.h / VIEW_H) * transform.scale
-      : transform.scale;
-  const labelScale = Math.max(1, 1 / unitPx);
-
-  // The layout is computed at the scale the pills are DRAWN at: a pill the floor
-  // counter-scales 1.6× needs 1.6× the room, and pills placed at 1 met again
-  // once zoomed out. Quantised, so a zoom gesture re-lays the graph a few times
-  // rather than on every wheel tick, and not at all above the floor.
-  const pillScale = Math.round(labelScale * 10) / 10;
-
-  const { spokes, nodes, truncated } = useMemo(() => {
-    // Graph has no "hub container" node — every entity that participates
-    // shows up as its own node, so let hub members through deriveRelationships.
-    const allRels = deriveRelationships(filteredRefs, { includeHubMembers: true });
-    // A radial graph of thousands of nodes is both unreadable and slow — keep
-    // the most-evidenced relationships and surface how many were dropped.
-    let rels =
-      allRels.length > GRAPH_CAP
-        ? [...allRels].sort((a, b) => b.evidenceCount - a.evidenceCount).slice(0, GRAPH_CAP)
-        : allRels;
-    // A drawn path's first hop stays on the graph, whatever its evidence.
-    if (firstHop && rels !== allRels && !rels.some((r) => r.targetEntityId === firstHop)) {
-      const hop = allRels.find((r) => r.targetEntityId === firstHop);
-      if (hop) rels = [...rels.slice(0, GRAPH_CAP - 1), hop];
+  // The selection: the open preview, else the active reference's or
+  // aggregate's record.
+  const selected = useMemo(() => {
+    if (!graph) return -1;
+    const at = (id: string | null | undefined) => (id ? graph.index.get(id) ?? -1 : -1);
+    const p = at(previewEntityId);
+    if (p > 0) return p;
+    const ref = activeRefId ? filteredRefs.find((r) => r.id === activeRefId) : undefined;
+    if (ref) return at(ref.targetEntityId);
+    if (activeAggregateId) {
+      const rel = deriveRelationships(filteredRefs, { includeHubMembers: true }).find((x) => x.id === activeAggregateId);
+      if (rel) return at(rel.targetEntityId);
     }
-    const truncated = allRels.length - rels.length;
+    return -1;
+  }, [graph, previewEntityId, activeRefId, activeAggregateId, filteredRefs]);
+  const onSelect = useCallback(
+    (i: number) => {
+      // The centre is the view's own entity: nothing to open.
+      if (!graph || i === 0) return;
+      setPreviewEntityId(graph.ids[i]);
+    },
+    [graph, setPreviewEntityId],
+  );
+  const onClear = useCallback(() => {
+    setPreviewEntityId(null);
+    setActiveRefId(null);
+    setActiveAggregateId(null);
+  }, [setPreviewEntityId, setActiveRefId, setActiveAggregateId]);
 
-    // Bucket each relationship by the active primary grouping axis. When
-    // groupBy === "none" everything lands in one big sector around the source.
-    const byKey = new Map<string, Relationship[]>();
-    for (const r of rels) {
-      const key = getRelGroupKey(r, groupBy);
-      const list = byKey.get(key) ?? [];
-      list.push(r);
-      byKey.set(key, list);
+  // Search marks: the records whose title holds a term, best-connected
+  // first, stepped through with the canvas's stepper.
+  const terms = useMemo(() => highlightTerms(query), [query]);
+  const findOrder = useMemo(() => {
+    if (!graph || !terms.length) return null;
+    const out: number[] = [];
+    for (let i = 1; i < n; i++) {
+      const folded = fold(titleOfId(graph.ids[i]));
+      if (terms.some((t) => termIn(folded, t))) out.push(i);
     }
-    const sorted = Array.from(byKey.entries()).sort(([a], [b]) => {
-      const la = getGroupLabel(a, groupBy);
-      const lb = getGroupLabel(b, groupBy);
-      return la.localeCompare(lb);
-    });
+    out.sort((a, b) => graph.degree[b] - graph.degree[a]);
+    return out.length ? out : null;
+  }, [graph, n, terms, titleOfId]);
+  const findKey = findOrder ? `${query}|${layoutKey}` : null;
+  const [cursor, setCursor] = useState<{ key: string | null; at: number }>({ key: null, at: 0 });
+  const at = cursor.key === findKey ? cursor.at : 0;
+  const find = useMemo(
+    () =>
+      findOrder
+        ? {
+            node: findOrder[at],
+            key: `${findKey}|${at}|${ready ? 1 : 0}`,
+            index: at,
+            count: findOrder.length,
+            onStep: (dir: 1 | -1) => setCursor({ key: findKey, at: (at + dir + findOrder.length) % findOrder.length }),
+          }
+        : null,
+    [findOrder, at, findKey, ready],
+  );
 
-    const spokeCount = sorted.length;
-    const nodes: GraphNode[] = [];
-    const spokesArr: Spoke[] = [];
+  const always = useMemo(() => [0], []);
 
-    // Angular width each branch may use (leave a gap between sectors).
-    // Clamped: past ~52 spokes the gap subtraction would go negative and
-    // collapse every fan into a straight radial line.
-    const sectorSpan =
-      spokeCount === 1
-        ? Math.PI * 1.4
-        : Math.max(0.05, (Math.PI * 2) / spokeCount - 0.12);
-
-    // The pills first: where each one lands decides where its fan starts.
-    const pillMeta = sorted.map(([key, targets], i) => {
-      const angle =
-        spokeCount === 1
-          ? -Math.PI / 2
-          : (i / spokeCount) * Math.PI * 2 - Math.PI / 2;
-      const label = groupBy === "none" ? "Relationships" : getGroupLabel(key, groupBy);
-      const text = truncate(collapsed[key] ? `${label} (${targets.length})` : label, PILL_MAX_CHARS);
-      return { angle, label, text, width: pillWidth(text) };
-    });
-    // Ungrouped graphs draw no pills, so nothing can collide.
-    const grouped = groupBy !== "none";
-    const dists = grouped
-      ? placePills(pillMeta, pillMeta.map(() => LABEL_DIST), pillScale, sourceLabelW)
-      : pillMeta.map(() => LABEL_DIST);
-    // Every fan starts outside the ring the pills occupy — measured to each
-    // pill's farthest corner, since a wide pill reaches sideways into its
-    // neighbours' sectors. Otherwise a pill pushed out lands among another
-    // spoke's nodes, and the nodes paint over its text.
-    const pillsReach = Math.max(
-      0,
-      ...pillMeta.map(({ angle, width }, i) => {
-        const d = dists[i];
-        return !grouped || d === null
-          ? 0
-          : Math.hypot(
-              Math.abs(Math.cos(angle) * d) + (width / 2) * pillScale,
-              Math.abs(Math.sin(angle) * d) + (PILL_H / 2) * pillScale,
-            );
-      }),
-    );
-    const firstRing = Math.max(FIRST_RING_R, pillsReach + 24);
-
-    sorted.forEach(([key, targets], i) => {
-      const { angle, label, text, width } = pillMeta[i];
-      // A spoke without a pill still bends at the pill's usual spot.
-      const dist = dists[i] ?? LABEL_DIST;
-      const isCollapsed = !!collapsed[key];
-      const sortedTargets = [...targets].sort(
-        (a, b) => b.evidenceCount - a.evidenceCount,
-      );
-      const shown = isCollapsed ? sortedTargets.slice(0, 1) : sortedTargets;
-      const dirX = Math.cos(angle);
-      const dirY = Math.sin(angle);
-
-      // Distribute nodes across this sector in concentric rings, snaked so
-      // adjacent rings interleave and the fan looks balanced. Each ring's
-      // capacity is driven by its arc length.
-      let placed = 0;
-      let ring = 0;
-      while (placed < shown.length) {
-        const R = firstRing + ring * RING_GAP;
-        const arcLen = sectorSpan * R;
-        const capacity = Math.max(1, Math.floor(arcLen / ARC_GAP));
-        const toPlace = Math.min(capacity, shown.length - placed);
-        // Distribute evenly across the sector for this ring.
-        for (let j = 0; j < toPlace; j++) {
-          const t = toPlace === 1 ? 0.5 : j / (toPlace - 1);
-          const offset = (t - 0.5) * sectorSpan;
-          const nodeAngle = angle + offset;
-          const rel = shown[placed + j];
-          const entity = getEntity(rel.targetEntityId);
-          const type = entity ? getEntityType(entity.typeId) : undefined;
-          const selected =
-            (activeRefId !== null && rel.refIds.includes(activeRefId)) ||
-            (previewEntityId !== null &&
-              rel.targetEntityId === previewEntityId);
-          nodes.push({
-            id: rel.id,
-            title: entity?.title ?? "Unknown",
-            color: type?.color ?? "#9ca3af",
-            typeName: type?.name ?? "Unknown",
-            evidenceCount: rel.evidenceCount,
-            direction: rel.direction,
-            x: CX + Math.cos(nodeAngle) * R,
-            y: CY + Math.sin(nodeAngle) * R,
-            r: Math.min(7, 4 + Math.sqrt(rel.evidenceCount) * 1.1) * nodeScale,
-            selected,
-          });
-        }
-        placed += toPlace;
-        ring++;
-      }
-
-      spokesArr.push({
-        key,
-        label,
-        color: getGroupColor(key, groupBy),
-        angle,
-        targets: sortedTargets,
-        text,
-        width,
-        dist,
-        hidden: grouped && dists[i] === null,
-        labelX: CX + dirX * dist,
-        labelY: CY + dirY * dist,
-      });
-    });
-
-    return { spokes: spokesArr, nodes, truncated };
-  }, [filteredRefs, collapsed, groupBy, activeRefId, previewEntityId, sourceLabelW, pillScale, nodeScale, firstHop]);
-
-  // Did the open entity get opened FROM the graph? If it was selected elsewhere
-  // (a list row, the overlay), no single node owns the click — so every node of
-  // that entity reads as primary, the old behaviour, rather than all of them
-  // going faint with nothing to anchor them.
-  const pickedInGraph = nodes.some((n) => n.selected && n.id === clickedNodeId);
-
-  // The path's first hop (a node of this graph) and the nodes past it, laid
-  // out along the ray from the source through that node, beyond the outermost
-  // ring so they never land among the fan's own nodes.
-  const pathAnchor = firstHop ? nodes.find((n) => n.id.startsWith(`${firstHop}::`)) : undefined;
-  const pathExtras = useMemo(() => {
-    if (!path || !pathAnchor) return [];
-    const graph = chainGraphFor(entityCorpusOf(focusedId));
-    const dx = pathAnchor.x - CX;
-    const dy = pathAnchor.y - CY;
-    const len = Math.hypot(dx, dy) || 1;
-    const outer = Math.max(...nodes.map((n) => Math.hypot(n.x - CX, n.y - CY)));
-    const step = Math.abs(dx / len) > 0.5 ? PATH_STEP_WIDE : PATH_STEP;
-    const start = Math.max(len, outer) + step * 0.6;
-    return path.slice(2).map((id, k) => {
-      const e = getEntity(id);
-      const type = getEntityType(e?.typeId ?? graph?.templateOf(id) ?? "");
-      return {
-        id,
-        title: e?.title ?? graph?.titleOf(id) ?? id,
-        color: type?.color ?? "#9ca3af",
-        typeName: type?.name ?? "",
-        x: CX + (dx / len) * (start + step * k),
-        y: CY + (dy / len) * (start + step * k),
-      };
-    });
-  }, [path, pathAnchor, focusedId, nodes]);
-
-  // The path's names and the relation of each hop. Names go on one side of
-  // the line and relations on the other, so neither lands on the fan's group
-  // pills (which sit between the source and the first ring) or on each other.
-  const pathLabels = useMemo(() => {
-    if (!path || !pathAnchor) return null;
-    const graph = chainGraphFor(entityCorpusOf(focusedId));
-    const dx = pathAnchor.x - CX;
-    const dy = pathAnchor.y - CY;
-    const len = Math.hypot(dx, dy) || 1;
-    // The perpendicular, turned to point right (or down on a vertical-ish
-    // normal), so names read on a stable side.
-    let px = -dy / len;
-    let py = dx / len;
-    if (px < 0 || (Math.abs(px) < 1e-6 && py < 0)) ((px = -px), (py = -py));
-    const across = Math.abs(px) < 0.5; // the line runs across: names above/below
-    const points = [
-      { id: focusedId, x: CX, y: CY, r: 0 },
-      { id: path[1], x: pathAnchor.x, y: pathAnchor.y, r: pathAnchor.r, title: pathAnchor.title },
-      ...pathExtras.map((x, i) => ({ id: x.id, x: x.x, y: x.y, r: i === pathExtras.length - 1 ? 9 : 7, title: x.title })),
-    ];
-    // A pill out along the ray as well: the first hop's name otherwise
-    // sits level with the group pills around it.
-    const ux = dx / len;
-    const uy = dy / len;
-    const names = points.slice(1).map((pt, i) => ({
-      key: pt.id,
-      x: pt.x + px * (pt.r + 8) + ux * PILL_H,
-      y: pt.y + py * (pt.r + 8) + uy * PILL_H,
-      text: pt.title ?? "",
-      strong: i === points.length - 2,
-    }));
-    // The first hop's relation is the name of the group pill it leaves from,
-    // so only the hops past it are labelled.
-    const relations = points.slice(2).map((pt, i) => {
-      const prev = points[i + 1];
-      const edges = graph ? edgesBetween(graph, prev.id, pt.id) : [];
-      const text = [...new Set(edges.map((e) => e.label ?? e.relationType ?? "related"))].join(", ");
-      return { key: `${prev.id}>${pt.id}`, x: (prev.x + pt.x) / 2 - px * 8, y: (prev.y + pt.y) / 2 - py * 8, text };
-    });
-    return { names, relations, across, side: px > 0 ? "start" : "end" } as const;
-  }, [path, pathAnchor, pathExtras, focusedId]);
-
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
-      setTransform((t) => ({
-        ...t,
-        scale: Math.max(0.4, Math.min(2.5, t.scale * factor)),
-      }));
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if ((e.target as SVGElement).dataset.node) return;
-    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-    dragRef.current = {
-      active: true,
-      startX: e.clientX,
-      startY: e.clientY,
-      initTx: transform.tx,
-      initTy: transform.ty,
-      moved: false,
-    };
-  };
-
-  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!dragRef.current.active) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-    if (!dragRef.current.moved && Math.hypot(dx, dy) > 3) dragRef.current.moved = true;
-    setTransform((t) => ({ ...t, tx: dragRef.current.initTx + dx, ty: dragRef.current.initTy + dy }));
-  };
-
-  const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
-    (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
-    dragRef.current.active = false;
-  };
-
-  // FIT the drawing to the pane instead of opening at a flat 100%. The layout is
-  // laid out in a fixed 1200×900 viewBox sized for a big fan, so an entity with
-  // five connections drew a speck in the middle of the canvas while a País with
-  // a hundred overflowed it. The scale that matters is the one that makes the
-  // content fill the space it has.
-  //
-  // The group is `translate(tx ty) scale(s)` about the origin (CX,CY), so a point
-  // p lands at O + t + s·(p − O). Putting the content's centre c at the viewport
-  // centre gives t = s·(O − c).
-  const fitTransform = useMemo(() => {
-    if (nodes.length === 0) return { tx: 0, ty: 0, scale: 1 };
-
-    // Start from the source node — it's always drawn, and its label hangs below.
-    // The source's own label is wider than its circle and hangs below it — bound
-    // the LABEL, or a fit crops the name of the entity the graph is about.
-    let minX = CX - sourceLabelW / 2;
-    let maxX = CX + sourceLabelW / 2;
-    let minY = CY - SOURCE_R;
-    let maxY = CY + SOURCE_R + 36;
-
-    for (const n of [...nodes, ...pathExtras.map((x) => ({ ...x, r: 40 }))]) {
-      minX = Math.min(minX, n.x - n.r);
-      maxX = Math.max(maxX, n.x + n.r);
-      minY = Math.min(minY, n.y - n.r);
-      maxY = Math.max(maxY, n.y + n.r);
-    }
-    // Spoke labels are pills around their anchor — bound them generously, since a
-    // clipped label is exactly the thing a "fit" is supposed to prevent.
-    for (const s of spokes) {
-      if (s.hidden) continue;
-      minX = Math.min(minX, s.labelX - s.width / 2 - 5);
-      maxX = Math.max(maxX, s.labelX + s.width / 2 + 5);
-      minY = Math.min(minY, s.labelY - 14);
-      maxY = Math.max(maxY, s.labelY + 14);
-    }
-
-    const PAD = 40;
-    const scale = Math.max(
-      0.4,
-      Math.min(
-        2.5,
-        Math.min((VIEW_W - PAD * 2) / (maxX - minX), (VIEW_H - PAD * 2) / (maxY - minY)),
-      ),
-    );
-    const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
-    return { scale, tx: scale * (CX - cx), ty: scale * (CY - cy) };
-  }, [nodes, spokes, sourceLabelW, pathExtras]);
-
-  // Re-fit when the DRAWING changes (filters, grouping, collapse) — not on every
-  // render, or panning and zooming would snap back under your cursor.
-  const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}::${path?.join(">") ?? ""}`;
-  const lastFitKey = useRef<string | null>(null);
-  // The layout depends on the zoom (see `pillScale`) and the fit on the layout,
-  // so a fit can re-lay the graph larger than the fit allowed for. Follow it —
-  // but only while the view is still the one the fit set (a pan or a zoom makes
-  // a new transform object), and a bounded number of times per drawing. It
-  // converges: pills hold a constant ON-SCREEN size, so each pass shrinks the
-  // error by the share of the pane the pill ring takes — but only near the
-  // fixed point, so it takes a few passes, and quantised scales can alternate.
-  const layoutKey = `${Math.round(fitTransform.scale * 100)}:${Math.round(fitTransform.tx)}:${Math.round(fitTransform.ty)}`;
-  const lastLayoutKey = useRef<string | null>(null);
-  const fitApplied = useRef<typeof transform | null>(null);
-  const refits = useRef(0);
-  useEffect(() => {
-    if (lastFitKey.current !== fitKey) {
-      lastFitKey.current = fitKey;
-      lastLayoutKey.current = layoutKey;
-      refits.current = 0;
-      fitApplied.current = fitTransform;
-      setTransform(fitTransform);
-      return;
-    }
-    if (lastLayoutKey.current === layoutKey) return;
-    lastLayoutKey.current = layoutKey;
-    if (transform !== fitApplied.current || refits.current >= 8) return;
-    refits.current++;
-    fitApplied.current = fitTransform;
-    setTransform(fitTransform);
-  }, [fitKey, layoutKey, fitTransform, transform]);
-
-  const resetView = () => {
-    fitApplied.current = fitTransform;
-    setTransform(fitTransform);
-  };
-
-  if (nodes.length === 0) {
+  if (!graph || !placement) {
+    return <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">Loading the graph…</div>;
+  }
+  if (n <= 1) {
     return (
-      <div
-        data-component="RelationshipsGraphView"
-        data-part="empty"
-        className="flex-1 flex flex-col items-center justify-center bg-warm"
-      >
-        <Link2 size={36} aria-hidden className="text-ink-tertiary/40 mb-3" />
-        <p className="text-sm font-medium text-ink-secondary">No relationships to graph</p>
+      <div className="flex items-center justify-center h-40 text-sm font-medium text-ink-secondary">
+        No relationships to draw.
       </div>
     );
   }
-
+  const centre = titleOfId(focusedId);
   return (
-    <div
-      ref={containerRef}
-      data-component="RelationshipsGraphView"
-      className="relative flex-1 overflow-hidden bg-warm"
-    >
-      {truncated > 0 && (
-        <div
-          data-part="truncated"
-          role="status"
-          className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-md bg-paper/90 text-meta text-ink-tertiary shadow-sm"
-          style={{ border: "1px solid var(--border-soft)" }}
-        >
-          Showing the top {GRAPH_CAP} of {(GRAPH_CAP + truncated).toLocaleString()} relationships
-        </div>
-      )}
-      <svg
-        ref={svgRef}
-        data-part="canvas"
-        // A group, not an image: the canvas holds focusable branch labels and nodes.
-        role="group"
-        aria-label="Relationships graph"
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        preserveAspectRatio="xMidYMid meet"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-        style={{ width: "100%", height: "100%", cursor: dragRef.current.active ? "grabbing" : "grab", touchAction: "none" }}
-      >
-        <defs>
-          {/* Arrowhead: tip at refX, points along the line direction. We draw
-              outgoing edges label→node (tip at target) and incoming edges
-              node→label (tip near source) so a single marker-end suffices. */}
-          <marker
-            id="rel-arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto"
-          >
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--border-primary)" />
-          </marker>
-        </defs>
-        <g transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`} style={{ transformOrigin: `${CX}px ${CY}px` }}>
-          {/* Edges: when grouped, source → label → fan to nodes. When
-              groupBy === "none" there's nothing useful to label, so lines
-              fan directly from the source circle's edge. */}
-          {spokes.map((s) => {
-            const branchNodes = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
-            const direct = groupBy === "none";
-            return (
-              <g key={s.key}>
-                {!direct && (
-                  <line
-                    x1={CX}
-                    y1={CY}
-                    x2={s.labelX}
-                    y2={s.labelY}
-                    stroke="var(--border-primary)"
-                    strokeWidth={1}
-                    opacity={0.75}
-                  />
-                )}
-                {branchNodes.map((n) => {
-                  const out = n.direction === "outgoing";
-                  // Anchor at the spoke's label position when grouped, or at
-                  // the source circle's centre when ungrouped.
-                  const ax = direct ? CX : s.labelX;
-                  const ay = direct ? CY : s.labelY;
-                  const dx = n.x - ax;
-                  const dy = n.y - ay;
-                  const len = Math.hypot(dx, dy) || 1;
-                  const ux = dx / len;
-                  const uy = dy / len;
-                  const nodePad = n.r + 3;
-                  const anchorPad = direct ? SOURCE_R + 2 : 14;
-                  const startX = ax + ux * anchorPad;
-                  const startY = ay + uy * anchorPad;
-                  const endX = n.x - ux * nodePad;
-                  const endY = n.y - uy * nodePad;
-                  return (
-                    <line
-                      key={`${s.key}-${n.id}`}
-                      x1={out ? startX : endX}
-                      y1={out ? startY : endY}
-                      x2={out ? endX : startX}
-                      y2={out ? endY : startY}
-                      stroke="var(--border-primary)"
-                      strokeWidth={1}
-                      opacity={0.55}
-                      markerEnd="url(#rel-arrow)"
-                    />
-                  );
-                })}
-              </g>
-            );
-          })}
-
-          {/* Relation-type labels (midway). Skipped when ungrouped — no
-              meaningful label to apply. */}
-          {groupBy !== "none" && spokes.map((s) => {
-            if (s.hidden) return null;
-            const isCollapsed = !!collapsed[s.key];
-            const hit = matchesQuery(s.label, terms);
-            return (
-              <g
-                key={`label-${s.key}`}
-                tabIndex={0}
-                role="button"
-                aria-expanded={!isCollapsed}
-                aria-label={`${s.label} branch — ${s.targets.length} relationships, ${
-                  isCollapsed ? "collapsed" : "expanded"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (dragRef.current.moved) return;
-                  setCollapsed((c) => ({ ...c, [s.key]: !c[s.key] }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setCollapsed((c) => ({ ...c, [s.key]: !c[s.key] }));
-                  }
-                }}
-                onFocus={() => setFocusedNodeId(`label-${s.key}`)}
-                onBlur={() => setFocusedNodeId(null)}
-                style={{ cursor: "pointer", outline: "none" }}
-              >
-                <g
-                  transform={`translate(${s.labelX} ${s.labelY}) scale(${labelScale}) translate(${-s.labelX} ${-s.labelY})`}
-                >
-                  {s.text !== (isCollapsed ? `${s.label} (${s.targets.length})` : s.label) && (
-                    <title>{s.label}</title>
-                  )}
-                  <rect
-                    x={s.labelX - s.width / 2}
-                    y={s.labelY - PILL_H / 2}
-                    width={s.width}
-                    height={PILL_H}
-                    rx={4}
-                    // Matched branches take the highlight tint — the SVG stand-in
-                    // for the <mark> the list and tree put on this same label.
-                    fill={hit ? "var(--highlight-yellow-active)" : "var(--bg-surface)"}
-                    fillOpacity={hit ? 0.7 : 1}
-                    stroke={
-                      focusedNodeId === `label-${s.key}`
-                        ? "var(--accent-blue)"
-                        : s.color ?? "var(--border-primary)"
-                    }
-                    strokeWidth={focusedNodeId === `label-${s.key}` ? 1.5 : 1}
-                  />
-                  <text
-                    x={s.labelX}
-                    y={s.labelY + 4}
-                    textAnchor="middle"
-                    fontSize={LABEL_PX}
-                    fontWeight={500}
-                    fill="var(--text-secondary)"
-                  >
-                    {s.text}
-                  </text>
-                </g>
-              </g>
-            );
-          })}
-
-          {/* The "Connect to…" path: source → first hop → the nodes past it. */}
-          {pathAnchor && (
-            <polyline
-              data-part="path"
-              points={[[CX, CY], [pathAnchor.x, pathAnchor.y], ...pathExtras.map((x) => [x.x, x.y])]
-                .map(([x, y]) => `${x},${y}`)
-                .join(" ")}
-              fill="none"
-              stroke="var(--accent-blue)"
-              strokeWidth={2.5}
-              strokeLinejoin="round"
-              opacity={0.85}
-            />
-          )}
-
-          {/* Source node */}
-          <g>
-            <circle
-              cx={CX}
-              cy={CY}
-              r={SOURCE_R}
-              fill={sourceType?.color ?? "#8b5cf6"}
-              stroke="var(--text-primary)"
-              strokeWidth={1.5}
-            />
-            {/* The name sits in a PILL, like the branch labels — opaque, so an
-                edge or a node passing behind it doesn't run through the text — and
-                it's truncated hard: a full CEJIL title ("Bedoya Lima y otra.
-                Resolución de …") is wider than the whole first ring, and it was
-                sprawling straight across the branch labels. Full title on hover. */}
-            <title>{sourceTitle}</title>
-            <g
-              transform={`translate(${CX} ${CY + SOURCE_R}) scale(${labelScale}) translate(${-CX} ${-(CY + SOURCE_R)})`}
-            >
-              <rect
-                x={CX - sourceLabelW / 2}
-                y={CY + SOURCE_R + 6}
-                width={sourceLabelW}
-                height={30}
-                rx={4}
-                fill="var(--bg-surface)"
-                stroke="var(--border-primary)"
-                strokeWidth={1}
-              />
-              <text
-                x={CX}
-                y={CY + SOURCE_R + 18}
-                textAnchor="middle"
-                fontSize={LABEL_PX}
-                fontWeight={600}
-                fill="var(--text-primary)"
-              >
-                {sourceLabel}
-              </text>
-              <text
-                x={CX}
-                y={CY + SOURCE_R + 30}
-                textAnchor="middle"
-                fontSize={LABEL_PX}
-                fill="var(--text-tertiary)"
-              >
-                {sourceType?.name ?? "Entity"}
-              </text>
-            </g>
-          </g>
-
-          {/* Target nodes — keyboard-operable: each circle is a focusable
-              button (Enter/Space opens the entity overlay, same as click).
-              Focus shows a carbon halo + the tooltip, so keyboard users get
-              the same identification hover users do. */}
-          {nodes.map((n) => {
-            // `n.selected` = this node's entity is the one open. `primary` = this
-            // is the node you actually clicked. When one entity owns several
-            // nodes (one per relation type), the siblings stay marked — they ARE
-            // that entity — but only the clicked one gets the solid ring.
-            const primary = n.selected && (pickedInGraph ? clickedNodeId === n.id : true);
-            const sibling = n.selected && !primary;
-            // Pointer handlers, shared by the node and its hit circle (below).
-            const onNodeEnter = (e: React.PointerEvent) => {
-              const rect = containerRef.current?.getBoundingClientRect();
-              if (!rect) return;
-              setHover({ node: n, x: e.clientX - rect.left, y: e.clientY - rect.top });
-            };
-            const onNodeMove = (e: React.PointerEvent) => {
-              const rect = containerRef.current?.getBoundingClientRect();
-              if (!rect) return;
-              setHover((h) =>
-                h && h.node.id === n.id
-                  ? { ...h, x: e.clientX - rect.left, y: e.clientY - rect.top }
-                  : h,
-              );
-            };
-            const onNodeClick = (e: React.MouseEvent) => {
-              e.stopPropagation();
-              if (dragRef.current.moved) return;
-              setClickedNodeId(n.id);
-              setPreviewEntityId(n.id.split("::")[0]);
-            };
-            const offPath = !!pathAnchor && n.id !== pathAnchor.id;
-            return (
-            <g key={n.id} opacity={offPath ? 0.3 : 1}>
-              {/* The hit area (M15): nodes draw at 6–7px, far below a finger. An
-                  invisible r=16 circle under each takes the same pointer
-                  events; focus and the keyboard stay on the drawn node. */}
-              <circle
-                cx={n.x}
-                cy={n.y}
-                r={Math.max(16, n.r)}
-                fill="transparent"
-                aria-hidden="true"
-                onPointerEnter={onNodeEnter}
-                onPointerMove={onNodeMove}
-                onPointerLeave={() => setHover(null)}
-                onClick={onNodeClick}
-                style={{ cursor: "pointer" }}
-              />
-              {n.selected && (
-                <circle
-                  cx={n.x}
-                  cy={n.y}
-                  r={n.r + 5}
-                  fill="none"
-                  stroke="var(--text-primary)"
-                  strokeWidth={primary ? 1.5 : 1}
-                  strokeDasharray={sibling ? "2 2" : undefined}
-                  opacity={primary ? 0.55 : 0.3}
-                />
-              )}
-              {pathAnchor?.id === n.id && (
-                <circle cx={n.x} cy={n.y} r={n.r + 4} fill="none" stroke="var(--accent-blue)" strokeWidth={2} />
-              )}
-              {focusedNodeId === n.id && !n.selected && (
-                <circle
-                  cx={n.x}
-                  cy={n.y}
-                  r={n.r + 5}
-                  fill="none"
-                  stroke="var(--accent-blue)"
-                  strokeWidth={1.5}
-                />
-              )}
-              <circle
-                data-node="1"
-                cx={n.x}
-                cy={n.y}
-                r={n.r}
-                fill={n.color}
-                stroke={
-                  primary ? "var(--text-primary)" : "var(--bg-surface)"
-                }
-                strokeWidth={primary ? 2.5 : 1.5}
-                tabIndex={0}
-                role="button"
-                aria-label={`${n.title} — ${n.typeName}, ${n.evidenceCount} evidence`}
-                onPointerEnter={onNodeEnter}
-                onPointerMove={onNodeMove}
-                onPointerLeave={() => setHover(null)}
-                onFocus={(e) => {
-                  setFocusedNodeId(n.id);
-                  const rect = containerRef.current?.getBoundingClientRect();
-                  const c = (e.currentTarget as SVGCircleElement).getBoundingClientRect();
-                  if (!rect) return;
-                  setHover({
-                    node: n,
-                    x: c.left + c.width / 2 - rect.left,
-                    y: c.top - rect.top,
-                  });
-                }}
-                onBlur={() => {
-                  setFocusedNodeId(null);
-                  setHover(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setClickedNodeId(n.id);
-                    setPreviewEntityId(n.id.split("::")[0]);
-                  }
-                }}
-                onClick={onNodeClick}
-                style={{ cursor: "pointer", outline: "none" }}
-              />
-            </g>
-            );
-          })}
-
-          {pathExtras.map((x, i) => {
-            const last = i === pathExtras.length - 1;
-            return (
-              <g key={`path-${x.id}`} data-part="path-node">
-                <circle
-                  cx={x.x}
-                  cy={x.y}
-                  r={last ? 9 : 7}
-                  fill={x.color}
-                  stroke="var(--accent-blue)"
-                  strokeWidth={2}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${x.title} — ${x.typeName}, on the path`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (dragRef.current.moved) return;
-                    setPreviewEntityId(x.id);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setPreviewEntityId(x.id);
-                    }
-                  }}
-                  style={{ cursor: "pointer", outline: "none" }}
-                />
-                <title>{x.title}</title>
-              </g>
-            );
-          })}
-
-          {/* Names and relations last, over the fan. */}
-          {pathLabels?.relations.map((r) =>
-            r.text ? (
-              <PathLabel
-                key={r.key}
-                x={r.x}
-                y={r.y}
-                text={r.text}
-                scale={labelScale}
-                align={pathLabels.across ? "above" : pathLabels.side === "start" ? "end" : "start"}
-                quiet
-              />
-            ) : null,
-          )}
-          {pathLabels?.names.map((n) => (
-            <PathLabel
-              key={n.key}
-              x={n.x}
-              y={n.y}
-              text={n.text}
-              scale={labelScale}
-              strong={n.strong}
-              align={pathLabels.across ? "below" : pathLabels.side}
-            />
-          ))}
-
-        </g>
-      </svg>
-
-      {path && (
+    <div data-component="RelationshipsGraphView" className="relative flex-1 min-h-0 h-full">
+      <NetworkCanvas
+        // A new neighbourhood (a filter, a search, another entity) is a new
+        // canvas: its hover, keyboard list and focus ring hold node indexes
+        // of the graph they were taken on.
+        key={graphId(graph)}
+        graph={graph}
+        placement={placement}
+        colorOf={colorOf}
+        typeNameOf={typeNameOf}
+        titleOf={titleOf}
+        nodeOn={nodeOn}
+        edgeOn={edgeOn}
+        strength={null}
+        // Every edge here is the centre's or its neighbours': none is faint.
+        hubDegree={Number.POSITIVE_INFINITY}
+        hubEdges="full"
+        overview={false}
+        // Positions move from the seeds to the laid-out graph once it lands.
+        fitKey={ready ? `${layoutKey}|laid` : `${layoutKey}|seed`}
+        selected={selected}
+        onSelect={onSelect}
+        onClear={onClear}
+        find={find}
+        edgeInfo={edgeInfo}
+        label={`Relationships of ${centre}`}
+        path={hood!.path}
+        arrows={hood!.arrows}
+        captions={hood!.groupLabels.size ? hood!.groupLabels : null}
+        always={always}
+        noun="graph"
+      />
+      {pathIds && (
         <div
           data-part="path-bar"
+          data-overlay
           role="status"
-          className="absolute bottom-3 left-3 z-10 flex items-center gap-2 max-w-[calc(100%-14rem)] ps-3 pe-1 py-1 rounded-md bg-paper/95 shadow-sm text-meta text-ink-secondary"
-          style={{ border: "1px solid var(--border-soft)" }}
+          className={`absolute bottom-3 start-3 z-10 flex items-center gap-1 max-w-[calc(100%-14rem)] ps-2.5 pe-0.5 ${CANVAS_OVERLAY} text-meta text-ink-secondary`}
         >
           <span className="truncate">
-            {pathAnchor
-              ? `Path to ${getEntity(path[path.length - 1])?.title ?? pathExtras[pathExtras.length - 1]?.title ?? "the entity"} · ${path.length - 1} ${path.length === 2 ? "hop" : "hops"}`
+            {pathShown
+              ? `Path to ${titleOfId(pathIds[pathIds.length - 1])} · ${pathIds.length - 1} ${pathIds.length === 2 ? "hop" : "hops"}`
               : "The path's first step is hidden by the filters"}
           </span>
           <button
             type="button"
             onClick={() => setConnectPath(null)}
             aria-label="Clear path"
-            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-ink-tertiary hover:text-ink hover:bg-parchment cursor-pointer"
+            className={`${CANVAS_OVERLAY_BUTTON} inline-flex items-center justify-center`}
           >
             <X size={12} aria-hidden />
           </button>
         </div>
       )}
-
-      {hover && containerRef.current && (() => {
-        const rect = containerRef.current.getBoundingClientRect();
-        const estWidth = Math.min(240, Math.max(140, hover.node.title.length * 7 + 24));
-        const estHeight = 44;
-        const pad = 8;
-        const left = Math.min(rect.width - estWidth - pad, Math.max(pad, hover.x + 12));
-        const top = Math.min(rect.height - estHeight - pad, Math.max(pad, hover.y - estHeight - 10));
-        return (
-          <div
-            data-part="tooltip"
-            aria-hidden
-            className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-60"
-            style={{ left, top, opacity: 0.94 }}
-          >
-            {/* The tooltip is HTML, not SVG — the one place in the graph where a
-                target's title can carry a real mark. */}
-            <div className="text-meta font-semibold truncate">
-              <HighlightedText text={hover.node.title} query={query} />
-            </div>
-            <div className="text-meta opacity-80 truncate">
-              {hover.node.typeName} · {hover.node.evidenceCount} evidence
-            </div>
-          </div>
-        );
-      })()}
-
-      <div
-        data-part="zoom"
-        role="group"
-        aria-label="Zoom"
-        className="absolute bottom-3 right-3 flex items-center gap-1 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5">
-        <button
-          type="button"
-          onClick={() => setTransform((t) => ({ ...t, scale: Math.max(0.4, t.scale / 1.2) }))}
-          className="h-6 w-6 text-sm text-ink-secondary hover:text-ink cursor-pointer"
-          aria-label="Zoom out"
-        >
-          −
-        </button>
-        <span data-part="scale" className="text-meta tabular-nums text-ink-tertiary w-9 text-center">
-          {Math.round(transform.scale * 100)}%
-        </span>
-        <button
-          type="button"
-          onClick={() => setTransform((t) => ({ ...t, scale: Math.min(2.5, t.scale * 1.2) }))}
-          className="h-6 w-6 text-sm text-ink-secondary hover:text-ink cursor-pointer"
-          aria-label="Zoom in"
-        >
-          +
-        </button>
-        <button
-          type="button"
-          onClick={resetView}
-          className="h-6 px-2 text-meta text-ink-secondary hover:text-ink cursor-pointer"
-          aria-label="Reset view"
-        >
-          Reset
-        </button>
-      </div>
     </div>
   );
-}
-
-/** A name on a "Connect to…" path, held at the label floor like the branch
- *  pills. `align` says where the pill sits from (x, y): beside it (`start`
- *  runs right, `end` runs left, centred on y) or `above`/`below` it, centred
- *  on x. `quiet` is a hop's relation: no outline, secondary ink. */
-function PathLabel({
-  x,
-  y,
-  text,
-  scale,
-  strong = false,
-  align = "below",
-  quiet = false,
-}: {
-  x: number;
-  y: number;
-  text: string;
-  scale: number;
-  strong?: boolean;
-  align?: "start" | "end" | "above" | "below";
-  quiet?: boolean;
-}) {
-  const shown = truncate(text, 28);
-  const w = quiet ? pillWidth(shown) - 12 : Math.max(72, pillWidth(shown) - 8);
-  const left = align === "start" ? x : align === "end" ? x - w : x - w / 2;
-  const top = align === "above" ? y - PILL_H : align === "below" ? y : y - PILL_H / 2;
-  return (
-    <g pointerEvents="none" transform={`translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`}>
-      <rect
-        x={left}
-        y={top}
-        width={w}
-        height={PILL_H}
-        rx={4}
-        fill="var(--bg-surface)"
-        stroke={quiet ? "none" : "var(--accent-blue)"}
-        strokeWidth={1}
-        opacity={quiet ? 0.9 : 1}
-      />
-      <text
-        x={left + w / 2}
-        y={top + 15}
-        textAnchor="middle"
-        fontSize={LABEL_PX}
-        fontWeight={strong ? 600 : 500}
-        fill={quiet ? "var(--text-secondary)" : "var(--text-primary)"}
-      >
-        {shown}
-      </text>
-    </g>
-  );
-}
-
-/** Node labels are drawn, not laid out — SVG text doesn't wrap or ellipsize, so a
- *  long entity name would run straight across the canvas. */
-function truncate(s: string, max: number): string {
-  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 }
