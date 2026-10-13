@@ -40,6 +40,8 @@ One term per concept, in code, comments, docs and UI copy.
 | Background job / log entry | task / notification |
 | The assistant | Bert in the UI, `agent*` in code |
 | Pinned records, notes and citations | notebook |
+| A link's sources, note and quotes, as the card shows them | evidence |
+| When a link's sources were published (beside the period it held) | reported |
 
 ## Data model
 
@@ -63,6 +65,9 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
   Verification facet and "As of" day self-hide where no reference carries them. Per-property
   evidence is `data/fieldEvidence.ts` (a provider per corpus; Nepal's `evidence.json` loads on
   first use, not with the collection) and shows as "Why we believe this" in the card head.
+- `Reference.sources` (resolved Source records, `data/refSources.ts`), `sourceQuotes` and `note`
+  are optional; Nepal and Vegas fill them. The evidence card, the "Reported by" filter and the
+  Publisher / Publisher type facets self-hide where no reference carries them.
 - The list view renders references; the tree and graph render relationships.
 - Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
 
@@ -301,7 +306,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `relAtomFor`. Clear with `useClearRelFilters()`.
 - Default sort: list by appearance, tree and graph by most evidence.
 - The only number on this surface is the tab count (`references.length`). Toolbars and info rows
-  show none. Group headers give their unit in a tooltip and sr-only text.
+  show none. Group headers give their unit in a tooltip and sr-only text. Exception: the
+  evidence card (`RefEvidenceCard`, opened from a row's status chip) prints source and
+  independent-publisher counts, because they are the evidence.
 - Anchoring and Direction facets hide when every reference has the same value.
 - Graph (`RelationshipsGraphView.tsx`): wheel zoom needs a native `{ passive: false }` listener;
   tooltips are HTML positioned from `getBoundingClientRect`, never SVG inside the zoom transform.
