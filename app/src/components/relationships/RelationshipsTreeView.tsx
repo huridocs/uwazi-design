@@ -20,6 +20,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { RelationshipRow } from "./RelationshipRow";
 import { TreeBranch, TreeNode } from "./TreeBranch";
+import { HubMemberCard } from "./rows/HubMemberCard";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
@@ -208,35 +209,41 @@ function HubNode({
   refs: Reference[];
   hideRelLabel?: boolean;
 }) {
-  // A node expands into its EVIDENCE — the underlying text-anchored references.
-  // A relationship with no anchored refs (all of CEJIL: entity-to-entity links
-  // with no quoted passage) has nothing to reveal, and offering a chevron that
-  // opens an empty box is a promise the row can't keep.
-  const evidence = refs.filter((ref) => !!ref.sourceSelection);
+  // A hub always has something to open: its members, each as a card that says
+  // more than the pill above (template, card properties, its own link, what
+  // else it links to). Anchored or not.
   const { expanded, toggle } = useGroupExpansion({
     refIdsToWatch: hub.refIds,
     clearJumpSignal: true,
-    countable: evidence.length > 0,
   });
-  const open = expanded && evidence.length > 0;
+  const exclude = useMemo(
+    () => new Set([...hub.members.map((m) => m.entityId), ...refs.map((r) => r.sourceEntityId)]),
+    [hub, refs],
+  );
 
   return (
     <div data-part="hub-node">
       <RelationshipRow
         kind="hub"
         hub={hub}
-        expanded={open}
-        onToggleExpand={evidence.length > 0 ? toggle : undefined}
+        expanded={expanded}
+        onToggleExpand={toggle}
         hideRelLabel={hideRelLabel}
       />
-      {open && (
-        <ul data-part="evidence-list" className="ms-[14px]">
-          {evidence
-            .map((ref) => (
-              <TreeNode key={ref.id}>
-                <RelationshipRow kind="reference" reference={ref} nested />
-              </TreeNode>
-            ))}
+      {expanded && (
+        <ul data-part="hub-members" className="ms-[14px]">
+          {hub.members.map((m) => (
+            <TreeNode key={m.entityId}>
+              <div className="py-1">
+                <HubMemberCard
+                  entityId={m.entityId}
+                  refs={refs.filter((r) => r.targetEntityId === m.entityId)}
+                  hubType={hub.relationType}
+                  exclude={exclude}
+                />
+              </div>
+            </TreeNode>
+          ))}
         </ul>
       )}
     </div>

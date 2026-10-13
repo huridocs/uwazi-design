@@ -55,7 +55,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
             }
           : undefined
       }
-      ariaLabel={`${hub.refIds.length} ${onToggleExpand ? "evidence " : ""}references`}
+      ariaLabel={`${hub.refIds.length} references${onToggleExpand ? ", members" : ""}`}
       ariaExpanded={onToggleExpand ? !!expanded : undefined}
     />
   );
