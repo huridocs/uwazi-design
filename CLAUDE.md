@@ -600,6 +600,28 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     can span pages; Shift+Arrow stops at the page edge. The select-all box selects the page
     shown; the bar's "Select all N" offer selects every result across pages.
   - Snapshots carry `pageSize` as an optional key; a view saved without it opens at 30.
+- Upload (`atoms/fileUploads.ts`, run by `useFileUploadRunner` in `App`): any file type, any
+  number, in the background. Each file is an entity the moment it is queued, in the upload template
+  (`uploadTemplateId`), titled from its filename without the extension: a PDF as its primary
+  document, any other file as its first supporting file with no preview (Uwazi creates entities
+  from PDFs only; the task card says it needs a server change). Cards and List rows carry
+  `UploadStateMark`, never a number. Three files at a time in 5 MB chunks; a failed request
+  retries after 0, 1, 3 and 5 s, then fails with Retry. States: queued, uploading, uploaded,
+  processing, ready, failed (with reason), cancelled. Same name and size within a batch is left
+  out; 2 GB per file.
+  - The Beacon is the only indicator: one task ("Uploading 214 of 1,200 files, 3 failed"), amber
+    while waiting or paused, seal when only failures are left. The drawer draws it with
+    `UploadTaskCard`: actions, the files virtualised (failed first, ready folded). A batch that
+    ends with failures sends one notification with Show failed (`NotificationAction` kind
+    `uploads`).
+  - Offline (or Dev panel › Uploads › Drop connection) pauses without errors and resumes from each
+    file's last chunk. The manifest is in IndexedDB (`utils/uploadManifest.ts`, with Chromium's
+    file handles, never the bytes); after a reload the task reads "Interrupted: N files to
+    continue" and Continue reads them back or re-selects them by name, size and last modified.
+    Offset resume is the prototype's own: Uwazi takes one request per file.
+  - The Library pane is a drop target (`useLibraryDrop`): every file, folders walked.
+    `beforeunload` warns only while bytes are being sent. `window.__uploads` (dev) drops the
+    connection, fails requests and reads the queue.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with
   `Entity.span` (a Nepal event's start and end at its precision) matches when the span overlaps;
   others are a point at `createdAt`. The filter, its presets, the brush and the timeline view all
