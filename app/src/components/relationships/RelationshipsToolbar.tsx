@@ -51,7 +51,7 @@ export function RelationshipsToolbar() {
           {/* Only where no drawer holds the filters: a drawn drawer's Filters
               tab is the one way in, and carries the dot. The dock comes and
               goes with the drawer, which changes the pane's width anyway. */}
-          {!docked && <FiltersButton activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />}
+          {!docked && <FiltersButton tone="ghost" activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />}
         </div>
       }
     />

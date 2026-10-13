@@ -11,6 +11,7 @@ const meta = {
   argTypes: {
     size: { control: "inline-radio", options: ["sm", "md"] },
     activeCount: { control: { type: "number", min: 0, max: 12 } },
+    tone: { control: "inline-radio", options: ["default", "ghost"] },
   },
 } satisfies Meta<typeof FiltersButton>;
 
@@ -25,4 +26,14 @@ export const WithActiveFilters: Story = {
 
 export const SmallDrawerFlavour: Story = {
   args: { activeCount: 1, size: "sm" },
+};
+
+/** On a bar's ladder (the Relationships toolbar): no fill or edge at rest,
+ *  the count badge says filters are on. */
+export const Ghost: Story = {
+  args: { tone: "ghost" },
+};
+
+export const GhostWithActiveFilters: Story = {
+  args: { tone: "ghost", activeCount: 3 },
 };

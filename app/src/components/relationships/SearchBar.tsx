@@ -45,7 +45,9 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
       <div
         role="search"
         data-part="field"
-        className="relative flex-1 min-w-[12rem] flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-warm border border-border rounded-md
+        // On paper with its border, not warm: a warm field the width of the
+        // row, on top of the warm lane, read as a band under the header.
+        className="relative flex-1 min-w-[12rem] flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-paper border border-border rounded-md
           focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all flex-wrap"
         onClick={() => inputRef.current?.focus()}
       >

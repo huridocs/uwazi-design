@@ -18,6 +18,7 @@ import {
 import { groupingOptions } from "../../utils/connectionGrouping";
 import { Select } from "../shared/Select";
 import { ZoomControl } from "./ZoomControl";
+import { BAR_GHOST } from "../shared/warmButton";
 
 const SORTS: { id: SortOrder; label: string }[] = [
   { id: "appearance", label: "Appearance" },
@@ -95,9 +96,8 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
         aria-expanded={open}
         data-part="trigger"
         className={`relative inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer ${
-          open || modified
-            ? "bg-vellum text-ink"
-            : "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink"
+          // A ghost on the bar (no fill at rest); the dot says it is modified.
+          open ? "bg-warm text-ink" : BAR_GHOST
         }`}
       >
         <SlidersHorizontal size={size === "sm" ? 12 : 14} aria-hidden />

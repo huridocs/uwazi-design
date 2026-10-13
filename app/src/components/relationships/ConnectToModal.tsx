@@ -36,7 +36,7 @@ export function ConnectButton({ size = "md" }: { size?: "sm" | "md" }) {
         aria-label="Connect to…"
         title="Connect to…"
         aria-haspopup="dialog"
-        className={`inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer bg-warm text-ink-secondary hover:bg-parchment hover:text-ink shrink-0`}
+        className={`inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer ${BAR_GHOST} shrink-0`}
       >
         <Route size={size === "sm" ? 12 : 14} aria-hidden />
       </button>
