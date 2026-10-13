@@ -309,6 +309,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   show none. Group headers give their unit in a tooltip and sr-only text. Exception: the
   evidence card (`RefEvidenceCard`, opened from a row's status chip) prints source and
   independent-publisher counts, because they are the evidence.
+- Group headers (list view, any group-by) carry the group's shape (`GroupSummary.tsx`): members as
+  type dot and name, the span (period, else reported) on one axis shared by the panel's groups,
+  the first page or a recording mark, the evidence mix as a bar and the direction glyph. Each part
+  self-hides without data. Counts stay in the tooltips and in the header button's accessible name,
+  which states the summary in words. The header is two lines at a fixed height, open or closed.
 - Anchoring and Direction facets hide when every reference has the same value.
 - Graph (`RelationshipsGraphView.tsx`): wheel zoom needs a native `{ passive: false }` listener;
   tooltips are HTML positioned from `getBoundingClientRect`, never SVG inside the zoom transform.
