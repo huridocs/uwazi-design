@@ -1,12 +1,11 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { languageAtom } from "../../atoms/language";
+import { useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValue";
+import { RelationCaption, InheritedValueTag, MissingValue } from "./InheritedValue";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
-import { mergeConnectionRows, reduceInherited, type ConnectionGroup } from "../../utils/inheritance";
+import { mergeConnectionRows, type ConnectionGroup } from "../../utils/inheritance";
 import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
 import { TABLE_MIN } from "./tableBreakpoint";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
@@ -18,13 +17,8 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
  *  (leaf) is the last column. */
 export function ConnectionGroupCard({ group, span = "full" }: { group: ConnectionGroup; span?: CardSpan }) {
   const setOverlay = useSetAtom(previewEntityIdAtom);
-  const lang = useAtomValue(languageAtom);
   const entityHeader = getEntityType(group.targetTypeId)?.name ?? "Entity";
   const rows = mergeConnectionRows(group);
-  // Per-column rollups computed over the UNMERGED values (one per connected entity).
-  const summaries = group.columns.map((c, i) =>
-    reduceInherited(group.rows.map((r) => r.cells[i]?.value), c.reduce, { label: c.label, lang }),
-  );
   /* The narrow rendering reads `group.rows` — the UNMERGED ones. `rows` above
      is the cell-spanned view, where a value lives on the first entity that has
      it and the rest inherit it positionally; flattened into cards that would
@@ -71,14 +65,11 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                 inside the card was heavier than the label naming it. Stated on
                 each `th` instead. */}
             <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
-              {group.columns.map((c, i) => (
+              {group.columns.map((c) => (
                 <th key={c.fieldId} scope="col" data-part="column-header" className="font-semibold py-1.5 px-3 text-start whitespace-nowrap align-top">
-                  <span className="flex flex-col items-start gap-1">
-                    <span className="inline-flex items-center gap-1">
-                      <Link2 size={10} className="text-carbon" aria-hidden />
-                      {c.label}
-                    </span>
-                    {summaries[i] && <RollupChip summary={summaries[i]!} />}
+                  <span className="inline-flex items-center gap-1">
+                    <Link2 size={10} className="text-carbon" aria-hidden />
+                    {c.label}
                   </span>
                 </th>
               ))}
@@ -136,7 +127,6 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
         <ConnectionCardStack
           entities={stackEntities}
           relationLabel={group.relationLabel}
-          rollups={group.columns.map((c, i) => ({ label: c.label, summary: summaries[i] ?? null }))}
         />
       </div>
       </div>

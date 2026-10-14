@@ -4,10 +4,10 @@ import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValue";
+import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption } from "./InheritedValue";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
-import { reduceInherited, resolveRelationshipField, specInherits } from "../../utils/inheritance";
+import { resolveRelationshipField, specInherits } from "../../utils/inheritance";
 import type { RelationshipMetadataField } from "../../data/metadata";
 import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
 import { TABLE_MIN } from "./tableBreakpoint";
@@ -16,8 +16,7 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
 /** A standalone relationship field (no shared connection). Two shapes:
  *  - inherits a value → a compact bordered table (entity · inherited value), same
  *    styling as the multi-inheritance grouped card, so the columns are tied by
- *    rules instead of floating apart. Shared provenance is hoisted to one line and
- *    the reduce rollup sits in the value-column header.
+ *    rules instead of floating apart. Shared provenance is hoisted to one line.
  *  - link-only → a compact wrapping list of entity pills.
  *  Resolves against the live entity-metadata atom so edit-at-source cascades here. */
 export function RelationshipFieldCard({ field, span = "wide" }: { field: RelationshipMetadataField; span?: CardSpan }) {
@@ -26,12 +25,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const setOverlay = useSetAtom(previewEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
   const inherits = specInherits(field);
-  // `distinct` counts the inherited column's noun: its label, or for a
-  // multi-hop path the leaf's.
-  const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce, {
-    label: field.inheritLabel ?? field.inheritPath?.[field.inheritPath.length - 1]?.label,
-    lang,
-  });
   const entityHeader = field.entityLabel ?? getEntityType(resolved.values[0]?.entityTypeId)?.name ?? "Entity";
 
   // When every value shares the SAME provenance (e.g. all judges signed one
@@ -98,12 +91,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
               <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
                 <th scope="col" data-part="column-header" className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
                 <th scope="col" data-part="column-header" className="font-semibold py-1.5 px-3 text-start align-top">
-                  <span className="flex flex-col items-start gap-1">
-                    <span className="inline-flex items-center gap-1">
-                      <Link2 size={10} className="text-carbon" aria-hidden />
-                      {field.inheritLabel}
-                    </span>
-                    {rollup && <RollupChip summary={rollup} />}
+                  <span className="inline-flex items-center gap-1">
+                    <Link2 size={10} className="text-carbon" aria-hidden />
+                    {field.inheritLabel}
                   </span>
                 </th>
               </tr>
@@ -139,7 +129,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
           <ConnectionCardStack
             entities={stackEntities}
             relationLabel={resolved.relationLabel}
-            rollups={[{ label: field.inheritLabel ?? "Inherited", summary: rollup ?? null }]}
             sharedProvenance={!!sharedProvenance}
           />
         </div>

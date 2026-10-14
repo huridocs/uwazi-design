@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { useSetAtom } from "jotai";
-import { Link2, Sigma } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { EntityPill } from "../shared/EntityPill";
 import { ProvenanceLine } from "../shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
@@ -44,23 +44,6 @@ export function InheritedValueTag({
       <span data-part="value" className="truncate min-w-0">
         <ThesaurusValueLabel value={value} />
       </span>
-    </span>
-  );
-}
-
-/** A rollup summary chip — the inherited column's declared reduce (distinct /
- *  count / min / max / first) computed over its values. The Notion/Airtable
- *  "calculation" made visible: a small carbon data-badge, so a derived column
- *  says what it aggregates to, not just lists. */
-export function RollupChip({ summary }: { summary: { text: string; title: string } }) {
-  return (
-    <span
-      data-component="RollupChip"
-      title={summary.title}
-      className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-meta font-medium text-carbon-label"
-    >
-      <Sigma size={10} className="shrink-0" aria-hidden />
-      {summary.text}
     </span>
   );
 }
