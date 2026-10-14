@@ -23,6 +23,7 @@ export function CardValue({
   field,
   query,
   compact = false,
+  lines = 1,
 }: {
   field: EntityScalarField;
   /** Marked in the value, as everywhere else on the card. */
@@ -30,6 +31,10 @@ export function CardValue({
   /** The list row's middot line: one line of running text, no chips, no marks.
    *  A chip row inside a middot-separated sentence reads as neither. */
   compact?: boolean;
+  /** A text value's lines before the ellipsis: 3 on a Library card, 1 on a
+   *  row's single line (the List, a relationship row). Dates, places and chip
+   *  rows stay on one line whatever this says. */
+  lines?: 1 | 3;
 }) {
   const marked = (text: string) => (
     <ThesaurusValueLabel value={text}>
@@ -110,7 +115,14 @@ export function CardValue({
   }
 
   return (
-    <span data-component="CardValue" data-kind={field.kind} className="truncate" title={field.value}>
+    <span
+      data-component="CardValue"
+      data-kind={field.kind}
+      // `wrap-anywhere`: a URL or an id has no break point, and clamped it would
+      // still run past the card's edge.
+      className={lines === 3 ? "min-w-0 line-clamp-3 wrap-anywhere" : "truncate"}
+      title={field.value}
+    >
       {marked(field.value)}
     </span>
   );

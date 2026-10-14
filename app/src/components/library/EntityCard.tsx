@@ -548,14 +548,15 @@ export const EntityCard = memo(function EntityCard({
           )}
         </span>
       )}
-      {/* Up to two lines; the subgrid track aligns titles across a row. Without
-          subgrid support, `not-supports-…` reserves the second line instead. */}
+      {/* Up to three lines; the subgrid track aligns titles across a row, so a
+          long title grows its row's track for every card in it. Without subgrid
+          support, `not-supports-…` reserves the three lines instead. */}
       <span
         data-part="title"
-        /* `self-start`: a stretched box taller than two lines makes `line-clamp`
-           show a third line cut mid-glyph. */
-        className={`relative min-w-0 ${textCol} self-start text-sm font-semibold text-ink leading-snug line-clamp-2
-          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
+        /* `self-start`: a stretched box taller than three lines makes
+           `line-clamp` show a fourth line cut mid-glyph. */
+        className={`relative min-w-0 ${textCol} self-start text-sm font-semibold text-ink leading-snug line-clamp-3
+          not-supports-[grid-template-rows:subgrid]:min-h-[3.625rem]`}
       >
         <span
           className={sortMark(sort === "title")}
@@ -598,9 +599,10 @@ export const EntityCard = memo(function EntityCard({
               >
                 {f.label}
               </dt>
-              {/* One line per field. `+N more` is a shrink-0 sibling so the
-                  ellipsis never cuts it off. Don't combine `block` with
-                  `line-clamp-1`: `block` overrides the clamp's `display`. */}
+              {/* A text value runs to three lines (`CardValue lines={3}`); dates,
+                  places and chips keep one. `+N more` is a shrink-0 sibling so
+                  the ellipsis never cuts it off. Don't combine `block` with a
+                  `line-clamp`: `block` overrides the clamp's `display`. */}
               <dd
                 className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${side ? "self-baseline" : ""} ${sortMark(f.id === sortedId)}`}
                 title={f.id === sortedId ? sortedNote : undefined}
@@ -619,10 +621,10 @@ export const EntityCard = memo(function EntityCard({
                       underline decoration-transparent hover:decoration-current underline-offset-2
                       transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
                   >
-                    <CardValue field={f} query={query} compact={side} />
+                    <CardValue field={f} query={query} compact={side} lines={3} />
                   </button>
                 ) : (
-                  <CardValue field={f} query={query} compact={side} />
+                  <CardValue field={f} query={query} compact={side} lines={3} />
                 )}
                 {!!f.more && !ownsItsRemainder(f, side) && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
