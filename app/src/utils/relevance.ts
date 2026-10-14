@@ -11,8 +11,9 @@ import { termHit, type QueryMatchMode } from "./queryTokens";
  *  connection counts `LibraryView` already holds — so ranking adds no pass over
  *  data the filter didn't touch. The one new piece of work, counting a term's
  *  occurrences in a document body, is cached per DOCUMENT (the page array's
- *  identity): CEJIL's 3,140 doc-bearing entities read ~30 distinct documents, so
- *  a query counts each of those once however many entities borrow it.
+ *  identity): CEJIL's doc-bearing entities read a few dozen distinct texts (the
+ *  stand-in filenames), so a query counts each of those once however many
+ *  entities resolve to it.
  *
  *  The score, largest part first:
  *   1. EXACT TITLE — the folded title is the query: +1000. The old tier's first
@@ -36,7 +37,7 @@ const EXACT_TITLE = 1000;
 const TITLE_PREFIX = 150;
 const TITLE_RUN = 60;
 const PER_TERM_COVERAGE = 100;
-const WEIGHT = { title: 12, property: 5, body: 2, borrowedBody: 0.4 } as const;
+const WEIGHT = { title: 12, property: 5, body: 2 } as const;
 const MID_WORD = 0.5;
 const SECONDARY_FIELDS = 0.2;
 /** Stop counting a term in one text past this — log2 has flattened by then. */
@@ -46,13 +47,11 @@ const COUNT_CAP = 64;
  *
  *  This is attribution, not a second score: it names the field that carried the
  *  term's weight and never how much weight that was. `ownDocumentHits` is the
- *  term's occurrences in the entity's OWN document (capped at `COUNT_CAP`), and
- *  stays 0 for a borrowed one — that count describes a stand-in judgment many
- *  entities read, not this entity. */
+ *  term's occurrences in the entity's document (capped at `COUNT_CAP`). */
 export interface TermAttribution {
   /** Folded, as `highlightTerms` returns it. */
   term: string;
-  field: "title" | "property" | "document" | "borrowed document" | null;
+  field: "title" | "property" | "document" | null;
   /** The property that carried it, when `field` is "property". */
   propertyKey?: string;
   propertyLabel?: string;
@@ -134,7 +133,7 @@ export function scoreRelevance(
   maxConnections: number,
   scope: SearchScope = "all",
 ): RelevanceBreakdown {
-  const { fields, pages, blob, borrowed } = entitySearchParts(entity, language, source, scope);
+  const { fields, pages, blob } = entitySearchParts(entity, language, source, scope);
   const title = fields.find((f) => f.fieldKey === "title")?.folded ?? "";
   const terms = [...new Set(query.terms)];
   const match = query.match ?? "partial";
@@ -163,25 +162,23 @@ export function scoreRelevance(
     }
     const inProps = fieldScore(WEIGHT.property, propHits);
     const docHits = blob ? bodyHits(pages, blob, term, match) : null;
-    const inBody = docHits
-      ? fieldScore(borrowed ? WEIGHT.borrowedBody : WEIGHT.body, docHits)
-      : 0;
+    const inBody = docHits ? fieldScore(WEIGHT.body, docHits) : 0;
 
     const parts = [inTitle, inProps, inBody];
     const top = Math.max(...parts);
-    const ownDocumentHits = docHits && !borrowed ? docHits.count : 0;
+    const ownDocumentHits = docHits ? docHits.count : 0;
     if (top === 0) {
       perTerm.push({ term, field: null, ownDocumentHits });
       continue;
     }
     covered++;
-    best.push(top === inTitle ? "title" : top === inProps ? "property" : borrowed ? "borrowed body" : "body");
+    best.push(top === inTitle ? "title" : top === inProps ? "property" : "body");
     perTerm.push(
       top === inTitle
         ? { term, field: "title", ownDocumentHits }
         : top === inProps
           ? { term, field: "property", propertyKey: bestProp?.key, propertyLabel: bestProp?.label, ownDocumentHits }
-          : { term, field: borrowed ? "borrowed document" : "document", ownDocumentHits },
+          : { term, field: "document", ownDocumentHits },
     );
     score += PER_TERM_COVERAGE + top + SECONDARY_FIELDS * (inTitle + inProps + inBody - top);
   }

@@ -31,7 +31,6 @@ import { formatAtPrecision } from "../../../utils/dateFormat";
 import { passagePinKey, passagePinnedAtom, togglePassagePinAtom } from "../../../atoms/notebook";
 import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
 import { PageTag } from "../../shared/PageTag";
-import { BorrowedDocLine } from "../BorrowedDocLine";
 import { MatchedTerms } from "../MatchedTerms";
 import { AlsoUnder } from "./AlsoUnder";
 import {
@@ -242,9 +241,7 @@ export function whereMatched(s: EntitySnippets): string {
     parts.push(
       pages.length
         ? pages.map((p) => `p.${p}`).join(", ") + (rest > 0 ? ` +${rest}` : "")
-        : s.borrowedFrom
-          ? "Borrowed document"
-          : "Document",
+        : "Document",
     );
   }
   return parts.join(" · ");
@@ -338,7 +335,7 @@ export function ResultEvidence({
       )}
       {hasPages && (
         <section data-part="document" className="flex flex-col gap-1">
-          {mixed && <SectionLabel as="h3">{snippets.borrowedFrom ? "Borrowed document" : "Document"}</SectionLabel>}
+          {mixed && <SectionLabel as="h3">Document</SectionLabel>}
           {own.length > 0 && (
             <ul className="flex flex-col">
               {own.map(({ snippet, also }) => (
@@ -354,7 +351,7 @@ export function ResultEvidence({
               ))}
             </ul>
           )}
-          {(capped || snippets.borrowedFrom || commonAlso) && (
+          {(capped || commonAlso) && (
             <p data-part="document-foot" className="flex flex-wrap items-center gap-x-1.5 min-w-0 px-2 text-meta text-ink-tertiary">
               {capped && (
                 <>
@@ -376,7 +373,6 @@ export function ResultEvidence({
                   </button>
                 </>
               )}
-              <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
               {commonAlso && <AlsoUnder entities={commonAlso} onOpenEntity={handlers.onSelect} />}
             </p>
           )}
@@ -454,7 +450,7 @@ export function RankedEvidence({
                   entityId={entity.id}
                   snippet={line.snippet}
                   query={query}
-                  label={line.snippet.page === null ? (snippets.borrowedFrom ? "Borrowed document" : "Document") : undefined}
+                  label={line.snippet.page === null ? "Document" : undefined}
                   onJump={handlers.onSelectSnippet}
                   trailing={line.also.length > 0 ? <AlsoUnder entities={line.also} onOpenEntity={handlers.onSelect} /> : null}
                 />
@@ -464,7 +460,7 @@ export function RankedEvidence({
         </ul>
       )}
       <SharedLines entity={entity} shared={shared} handlers={handlers} />
-      {(lines.length > FOLD || snippets.borrowedFrom || commonAlso) && (
+      {(lines.length > FOLD || commonAlso) && (
         <p className="flex flex-wrap items-center gap-x-1.5 min-w-0 px-2 text-meta text-ink-tertiary">
           {lines.length > FOLD && (
             <button
@@ -477,7 +473,6 @@ export function RankedEvidence({
               {all ? "Show fewer passages" : `Show all ${lines.length} passages`}
             </button>
           )}
-          <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
           {commonAlso && <AlsoUnder entities={commonAlso} onOpenEntity={handlers.onSelect} />}
         </p>
       )}
@@ -538,8 +533,9 @@ export function splitShared(entity: Entity, snippets: EntitySnippets, owners: Ma
       }
     }
   }
-  // A borrowed PDF's pages are read by the same records, so every page would
-  // carry the same "also under N": said once for the record instead.
+  // A shared file's pages (a stand-in several records resolve to) are read by
+  // the same records, so every page would carry the same "also under N": said
+  // once for the record instead.
   const ids = (es: Entity[]) => es.map((e) => e.id).join(",");
   const first = own[0]?.also ?? [];
   const commonAlso = first.length > 0 && own.every((o) => ids(o.also) === ids(first)) ? first : null;

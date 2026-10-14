@@ -5,7 +5,7 @@ import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
-import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
+import { cejilRenderedDoc } from "../data/cejil/profile";
 import { bodyInScope, fieldInScope, FULL_TEXT_MIN, type SearchScope } from "./searchScope";
 import { nepalDocFileId, nepalLoaded, nepalPrimaryDoc } from "../data/nepal/load";
 import {
@@ -81,13 +81,7 @@ export interface TermHit {
   documentHits: number;
 }
 
-export type { BorrowedDoc };
-
 export interface EntitySnippets {
-  /** The connected document these passages come from when the entity does not
-   *  own the file the viewer renders (a Causa reading its Sentencia). Null for an
-   *  own document and for the mock corpus. Set even when `fullText` is empty. */
-  borrowedFrom: BorrowedDoc | null;
   /** Which text the passages were cut from: a CEJIL file `_id`, a stand-in
    *  filename, or the mock rendition. `docKey` + page identifies a passage
    *  across results. Null with no document. */
@@ -329,10 +323,6 @@ function excerptAroundTerms(
 interface DocPages {
   pages: string[];
   paged: boolean;
-  /** The connected entity this document was borrowed from (see `cejilRenderedDoc`).
-   *  Null when the entity owns its file, and always null for the mock corpus, whose
-   *  shared rendition has no connected document entity to name. */
-  borrowedFrom: BorrowedDoc | null;
   /** See `EntitySnippets.docKey`. */
   docKey: string | null;
   /** The file `_id` the pages were cut from (CEJIL only; see `cejilRenderedDoc`). */
@@ -341,14 +331,13 @@ interface DocPages {
 
 /** No document. A single shared instance, so the page-keyed caches below don't
  *  add an entry per document-less entity. */
-const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null, docKey: null, fileId: null };
+const NO_PAGES: DocPages = { pages: [], paged: false, docKey: null, fileId: null };
 
 /** Mock pages, chunked once per language. Every mock entity shares one page
  *  array, which is the identity the fold caches below key on. */
 const mockPagesCache = new Map<Language, DocPages>();
 
-/** `documentPages`, memoised per entity. On CEJIL, `cejilRenderedDoc` may walk
- *  the entity's relationships to borrow a Sentencia, and a País hub has thousands. */
+/** `documentPages`, memoised per entity. */
 const docPagesCache = new Map<string, DocPages>();
 
 function documentPages(e: Entity, language: Language, source: DataSource): DocPages {
@@ -360,10 +349,10 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       const key = `cejil:${e.id}`;
       let hit = docPagesCache.get(key);
       if (!hit) {
-        const { pages, borrowedFrom, docKey, fileId } = cejilRenderedDoc(e.id);
-        // Entities that borrow the same file get the same array instance, so the
-        // per-document fold caches are shared across them.
-        hit = pages.length ? { pages, paged: true, borrowedFrom, docKey, fileId } : NO_PAGES;
+        const { pages, docKey, fileId } = cejilRenderedDoc(e.id);
+        // Entities whose files resolve to the same text (a stand-in filename)
+        // get the same array instance, so the per-document fold caches are shared.
+        hit = pages.length ? { pages, paged: true, docKey, fileId } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
       return hit;
@@ -378,7 +367,7 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
         const doc = nepalPrimaryDoc(e.id);
         // A source and the action it records share one document, and so one
         // page array: the fold caches below are shared between them.
-        hit = doc ? { pages: doc.text, paged: true, borrowedFrom: null, docKey: doc.id, fileId: nepalDocFileId(doc.id) } : NO_PAGES;
+        hit = doc ? { pages: doc.text, paged: true, docKey: doc.id, fileId: nepalDocFileId(doc.id) } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
       return hit;
@@ -397,7 +386,6 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
         hit = {
           pages: paginate(rendition.plainText, pageCount),
           paged: false,
-          borrowedFrom: null,
           docKey: `mock-rendition:${language}`,
           fileId: null,
         };
@@ -414,7 +402,7 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
 }
 
 /** Every page of a document, folded, keyed by the page array rather than the entity.
- *  Thousands of CEJIL entities borrow the same few documents, so per-entity folding
+ *  Thousands of CEJIL entities share the same few stand-in documents, so per-entity folding
  *  repeated the same work on every keystroke. A WeakMap on the array means a
  *  reloaded corpus's new arrays miss the cache and nothing needs invalidating. */
 const foldedPagesCache = new WeakMap<string[], string[]>();
@@ -553,7 +541,6 @@ export function buildSnippetsFor(
       fullTextTotal: 0,
       fullTextHits: 0,
       termsHit: [],
-      borrowedFrom: null,
       docKey: null,
     };
   }
@@ -594,9 +581,9 @@ export function buildSnippetsFor(
   }
 
   const doc = documentPages(entity, language, source);
-  const { paged, borrowedFrom, docKey } = doc;
+  const { paged, docKey } = doc;
   // Out of scope, the document is read as having no pages: nothing is counted
-  // or excerpted from it, and `borrowedFrom` still names it.
+  // or excerpted from it.
   const pages = bodyInScope(scope) ? doc.pages : NO_PAGES.pages;
   // No early break at the cap: every page is counted so `fullTextTotal` is exact.
   // The folds are cached and shared with the filter, so this adds no second scan.
@@ -649,7 +636,6 @@ export function buildSnippetsFor(
     fullTextTotal,
     fullTextHits,
     termsHit,
-    borrowedFrom,
     docKey,
   };
 }
@@ -763,13 +749,13 @@ export function hiddenMatchOrigin(
 const blobByPages = new WeakMap<string[], string>();
 /** What a ranker needs, read from the caches the filter and snippets already fill:
  *  folded fields (title included), the page array (a cache key shared by every
- *  entity borrowing that document), the folded blob, and whether it is borrowed. */
+ *  entity whose file resolves to that text) and the folded blob. */
 export function entitySearchParts(
   entity: Entity,
   language: Language,
   source: DataSource,
   scope: SearchScope = "all",
-): { fields: FoldedField[]; pages: string[]; blob: string; borrowed: boolean } {
+): { fields: FoldedField[]; pages: string[]; blob: string } {
   const doc = documentPages(entity, language, source);
   const body = bodyInScope(scope);
   const fields = foldedFields(entity, language);
@@ -777,7 +763,6 @@ export function entitySearchParts(
     fields: scope === "all" ? fields : fields.filter((f) => fieldInScope(f.fieldKey, scope)),
     pages: body ? doc.pages : NO_PAGES.pages,
     blob: body ? entityFullTextBlob(entity, language, source) : "",
-    borrowed: doc.borrowedFrom != null,
   };
 }
 

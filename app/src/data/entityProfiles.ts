@@ -64,6 +64,9 @@ export interface EntityProfile {
    *  issuer, the source address, its terms and how its text was made. The
    *  Document tab prints it under the header (`DocProvenance`). */
   documentProvenance?: DocumentProvenance;
+  /** A record with no document of its own whose connected records hold one
+   *  (a CEJIL Causa and its Sentencias): its Document tab links to them. */
+  documentElsewhere?: { entityId: string; title: string; typeId?: string }[];
   /** The record IS a photo, a recording or a post (the Nepal corpus's media
    *  items): what the record leads with (`MediaItemCard`). */
   mediaItem?: MediaItemView;

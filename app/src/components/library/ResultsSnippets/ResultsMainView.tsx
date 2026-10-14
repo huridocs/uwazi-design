@@ -31,7 +31,6 @@ import { entityTime } from "../../../utils/timeline";
 import { SectionLabel } from "../../shared/SectionLabel";
 import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
-import { BorrowedDocLine } from "../BorrowedDocLine";
 import { AlsoUnder } from "./AlsoUnder";
 import { holdTextSelection, selectionIntent, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
@@ -551,7 +550,7 @@ function TreeBody({
                 {snippets.fullText.length > 0 && (
                   <TreeBranch
                     twoUp={twoUp}
-                    label={snippets.borrowedFrom ? "Borrowed document" : "Document"}
+                    label="Document"
                     count={snippets.fullTextTotal}
                     icon={<FileText size={11} className="text-ink-muted" />}
                     note={
@@ -559,9 +558,6 @@ function TreeBody({
                         ? `${snippets.fullText.length} of ${snippets.fullTextTotal.toLocaleString()} shown`
                         : undefined
                     }
-                    // On the always-mounted branch header, so nothing below moves
-                    // when the document is borrowed.
-                    trailing={<BorrowedDocLine from={snippets.borrowedFrom} />}
                   >
                     {own.map(({ snippet, also }) => (
                       <li key={`${snippet.page ?? snippet.text}`}>
@@ -606,7 +602,6 @@ function TreeBranch({
   count,
   icon,
   note,
-  trailing,
   children,
 }: {
   /** Lay the branch's children out in two columns — see the body. */
@@ -615,9 +610,6 @@ function TreeBranch({
   count: number;
   icon: ReactNode;
   note?: string;
-  /** Rendered after the note; the Document branch uses it for the borrowed
-   *  document's name. */
-  trailing?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
@@ -641,7 +633,6 @@ function TreeBranch({
         <SectionLabel as="span">{label}</SectionLabel>
         <span data-part="count" className="text-meta tabular-nums text-ink-tertiary">{count.toLocaleString()}</span>
         {note && <span data-part="note" className="text-meta text-ink-tertiary">· {note}</span>}
-        {trailing}
       </button>
       {open && (
         /* Two columns past 64rem, since leaves are short lines. `grid`, not
@@ -859,13 +850,12 @@ function SpineBody({
                 <span className="flex-1" />
                 {/* Where the passage is: a page (and its count), or the field.
                     `<bdi>` keeps "p.5 · 2×" in order under RTL. Fixed width,
-                    so rows line up whether or not they carry a borrowed document. */}
+                    so rows line up. */}
                 {best && (
                   <span className="hidden md:flex shrink-0 w-[14rem] items-center gap-1.5 overflow-hidden text-meta text-ink-tertiary">
                     <bdi dir="ltr" className="shrink-0">
                       {best.label}
                     </bdi>
-                    {best.isDocument && <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" fade />}
                   </span>
                 )}
               </span>
@@ -902,7 +892,7 @@ function bestPassage(
   entity: Entity,
   s: EntitySnippets,
   owners: Map<string, PassageOwner>,
-): { text: string; page: number | null; label: string; isDocument: boolean; sameAs: Entity | null } | null {
+): { text: string; page: number | null; label: string; sameAs: Entity | null } | null {
   const top = s.fullText.reduce<FullTextSnippet | null>(
     (best, cur) => (!best || compareEvidence(cur, best) < 0 ? cur : best),
     null,
@@ -912,26 +902,22 @@ function bestPassage(
     null,
   );
   if (top && (!prop || compareEvidence(prop, top) >= 0)) {
-    const parts = top.page !== null ? [`p.${top.page}`] : [s.borrowedFrom ? "Borrowed document" : "Document"];
+    const parts = top.page !== null ? [`p.${top.page}`] : ["Document"];
     if (top.hits > 1) parts.push(`${top.hits}×`);
     const owner = owners.get(passageKey(s, top, entity.id))?.owner;
     return {
       text: top.text,
       page: top.page,
       label: parts.join(" · "),
-      isDocument: true,
       sameAs: owner && owner.id !== entity.id ? owner : null,
     };
   }
-  // `isDocument` gates the borrowed-document attribution: a property hit came
-  // from the record itself, however its document was resolved.
   if (prop?.texts[0]) {
     const owner = prop.refId ? owners.get(`ref|${prop.refId}`)?.owner : undefined;
     return {
       text: prop.texts[0],
       page: null,
       label: prop.field,
-      isDocument: false,
       sameAs: owner && owner.id !== entity.id ? owner : null,
     };
   }

@@ -74,8 +74,8 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
   const setOverlay = useSetAtom(previewEntityIdAtom);
   if (!steps.length) return null;
   return (
-    // The shared `↳ …` line — the library's borrowed-document attribution rides
-    // the same one, so the two provenance statements can't drift apart.
+    // The shared `↳ …` line, the one every provenance statement rides, so they
+    // can't drift apart.
     <ProvenanceLine label={sharedLabel ? `${sharedLabel} via` : "via"}>
       {steps.map((s, i) => (
         <Fragment key={s.entityId}>

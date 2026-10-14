@@ -25,14 +25,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { label: "from", children: "Velásquez-Rodríguez v. Honduras" },
+  args: { label: "via", children: "Velásquez-Rodríguez v. Honduras" },
 };
 
 /** Every flavour in use, so drift between them is visible at a glance.
  *
- *  · `from` — the library's borrowed-document attribution. Plain text: the main
- *    pane doesn't mount the entity overlay, so a link there would be a control
- *    that does nothing.
+ *  · `also under` — a search result's passage that other records read too.
  *  · `via` — metadata's inherited value, naming each intermediary. Clickable,
  *    because that surface CAN open them. The hop is ink with a carbon underline
  *    rather than carbon text: the accent is #00B4F0, which is ~1.9:1 on the warm
@@ -45,7 +43,7 @@ export const AllStates: Story = {
   args: { label: "via", children: null },
   render: () => (
     <div className="space-y-3 max-w-md">
-      <ProvenanceLine label="from">Bámaca-Velásquez v. Guatemala</ProvenanceLine>
+      <ProvenanceLine label="also under">Bámaca-Velásquez v. Guatemala</ProvenanceLine>
 
       <ProvenanceLine label="via">
         <button className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer">
@@ -76,11 +74,11 @@ export const AllStates: Story = {
  *  how the library uses it, because a line that appears and disappears with the
  *  data would shift the rows under the reader. */
 export const Minimal: Story = {
-  args: { label: "from", children: null },
+  args: { label: "also under", children: null },
   render: () => (
     <p className="max-w-md text-meta text-ink-tertiary">
       <span className="text-ink">3 of 41 pages</span>{" "}
-      <ProvenanceLine inline label="from">
+      <ProvenanceLine inline label="also under">
         Caso Gelman vs. Uruguay
       </ProvenanceLine>
     </p>

@@ -464,7 +464,7 @@ let _libraryEntities: Entity[] | null = null;
 /** The Content card's answer for a CEJIL record, from its file records: a
  *  document per file, stored in the collection, by language and page count.
  *  Its text is its own when recovered by `_id`, a stand-in when it resolves
- *  through one of the six shared filenames (`BorrowedDocLine`), else none.
+ *  through one of the six shared filenames, else none.
  *  A media value (an Audiencia's hearing) is a video or audio by its URL, the
  *  same reading as the card's mark; one that names neither is a video, as its
  *  tile is. A URL on another host is linked, one in the collection stored. */

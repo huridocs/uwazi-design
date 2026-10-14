@@ -14,6 +14,7 @@ import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntityProfile } from "../../data/entityProfiles";
 import { saveEntityEditAtom } from "../../atoms/entityChanges";
 import { languageAtom } from "../../atoms/language";
 import { MetadataEditBody } from "../../views/MetadataView";
@@ -55,6 +56,10 @@ export function EntityDrawer() {
     if (activeDrawerTab !== "metadata") setEditing(false);
   }, [activeDrawerTab]);
   useEffect(() => setEditing(false), [focusedId]);
+  // ToC and Search read the record's own document: a record with none (a
+  // CEJIL Causa beside the records that hold its judgments) has neither.
+  const hasDocument = getEntityProfile(focusedId).hasDocument;
+  const tab = hasDocument || (activeDrawerTab !== "toc" && activeDrawerTab !== "search") ? activeDrawerTab : "metadata";
 
   return (
     // The gutter host (see `gutter-host`): the tabs and every tab body below sit
@@ -62,12 +67,12 @@ export function EntityDrawer() {
     <div
       data-component="EntityDrawer"
       data-gutter-host
-      className={`gutter-host flex flex-col h-full relative overflow-clip ${filtersGround(activeDrawerTab)}`}
+      className={`gutter-host flex flex-col h-full relative overflow-clip ${filtersGround(tab)}`}
     >
       <EntityPreviewSlideOver />
 
       <DrawerTabs
-        tabs={baseDrawerTabs.map((tab) => {
+        tabs={baseDrawerTabs.filter((t) => hasDocument || (t.id !== "toc" && t.id !== "search")).map((tab) => {
           if (tab.id === "relationships")
             return { ...tab, count: references.length };
           if (tab.id === "filters") return { ...tab, dot: relFilterCount > 0 };
@@ -75,11 +80,11 @@ export function EntityDrawer() {
           if (tab.id === "search") return { ...tab, dot: docQuery.trim().length > 0 };
           return tab;
         })}
-        activeId={activeDrawerTab}
+        activeId={tab}
         onChange={setActiveDrawerTab}
       />
 
-      {activeDrawerTab === "metadata" &&
+      {tab === "metadata" &&
         (editing ? (
           <MetadataEditBody
             key={focusedId}
@@ -95,16 +100,16 @@ export function EntityDrawer() {
         ) : (
           <MetadataDrawerContent />
         ))}
-      {activeDrawerTab === "toc" && <ToCPanel />}
-      {activeDrawerTab === "relationships" && <RelationshipsDrawerSection />}
-      {activeDrawerTab === "files" && <DrawerFilesBody />}
-      {activeDrawerTab === "search" && <DocumentSearchBody />}
-      {activeDrawerTab === "filters" && <RelationshipsFiltersTab />}
+      {tab === "toc" && <ToCPanel />}
+      {tab === "relationships" && <RelationshipsDrawerSection />}
+      {tab === "files" && <DrawerFilesBody />}
+      {tab === "search" && <DocumentSearchBody />}
+      {tab === "filters" && <RelationshipsFiltersTab />}
 
-      {!["metadata", "toc", "relationships", "files", "search", "filters"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "relationships", "files", "search", "filters"].includes(tab) && (
         <div data-part="empty" className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-tertiary capitalize">
-            {activeDrawerTab} content
+            {tab} content
           </p>
         </div>
       )}
@@ -114,8 +119,8 @@ export function EntityDrawer() {
           with Edit/Cancel/Save), so skip the shared bar for those tabs —
           otherwise a redundant 48px bar stacks underneath. The edit form
           carries its own Copy from / Cancel / Save bar, so it takes the slot. */}
-      {activeDrawerTab !== "files" && activeDrawerTab !== "relationships" && activeDrawerTab !== "filters" && !editing && (
-        <DrawerActionBar activeTab={activeDrawerTab} onEdit={() => setEditing(true)} />
+      {tab !== "files" && tab !== "relationships" && tab !== "filters" && !editing && (
+        <DrawerActionBar activeTab={tab} onEdit={() => setEditing(true)} />
       )}
     </div>
   );

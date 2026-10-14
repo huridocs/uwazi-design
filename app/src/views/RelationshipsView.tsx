@@ -51,7 +51,8 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   // A record with no file and no source link has nothing for a Document tab
   // to show: the drawer drops the tab and opens on Filters, whatever tab the
   // previous record left open.
-  const hasDocTab = profile.hasDocument || !!sourceLink;
+  const elsewhere = profile.hasDocument ? undefined : profile.documentElsewhere;
+  const hasDocTab = profile.hasDocument || !!sourceLink || !!elsewhere?.length;
   const drawerTab = hasDocTab ? chosenDrawerTab : "filters";
   // A claim opens on its evidence; undefined for every record no source takes
   // a stance on, so the block is not drawn.
@@ -134,7 +135,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
               has none), then the filters as a tab of their own. */}
           <DrawerTabs
             tabs={[
-              ...(hasDocTab ? [{ id: "document", label: profile.hasDocument ? "Document" : "Source" }] : []),
+              ...(hasDocTab ? [{ id: "document", label: profile.hasDocument || !sourceLink ? "Document" : "Source" }] : []),
               { id: "filters", label: t("System", "Filters"), dot: relFilterCount > 0 },
             ]}
             activeId={drawerTab}
@@ -146,7 +147,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
-            sourceLink && <NoDocumentPane entityId={focusedId} />
+            (sourceLink || elsewhere?.length) && <NoDocumentPane entityId={focusedId} elsewhere={elsewhere} />
           )}
           </div>
           {drawerTab === "filters" && <RelationshipsFiltersTab />}
