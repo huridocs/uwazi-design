@@ -119,13 +119,16 @@ export function EntityThumbnail({
  *  portrait slot, where a percentage of a 500px box is a poster, and `min-h-4`
  *  is the 2.25rem list chip, where a percentage is a speck.
  *
+ *  The entity's square dot at its true colour on a plaque of the same colour at
+ *  9% strength. The plaque is the same size in either frame at a given Size,
+ *  16 / 22 / 24px for Small / Medium / Large: 15% of the landscape band's height
+ *  or 8% of the portrait slot's, capped at `max-h-6`. A larger plaque made a
+ *  screen of empty slots read as coloured tiles. `min-h-4` keeps it at 16px in
+ *  the list chip (1.75–3rem) and the Small band.
  *  A slight off-white ground (`bg-placeholder`) with an inset hairline edge
  *  (`inset-ring-border-placeholder`), and the type colour: `bg-parchment`
  *  stays selection. The edge is painted inside the box, so the slot keeps its
- *  size whether or not the caller gives it a border.
- *  In the portrait slot (`frame="portrait"`) the plaque is 8% of the slot height,
- *  capped at `max-h-6`: the tall slot made 22% hit the 2rem cap at every Size.
- */
+ *  size whether or not the caller gives it a border. */
 export function QuietMark({
   tint,
   frame = "landscape",
@@ -140,7 +143,7 @@ export function QuietMark({
     <span data-component="QuietMark" className={`bg-placeholder inset-ring inset-ring-border-placeholder flex items-center justify-center ${className}`}>
       <span
         data-part="plaque"
-        className={`flex items-center justify-center ${frame === "portrait" ? "h-[8%] max-h-6" : "h-[22%] max-h-8"} min-h-4 aspect-square rounded-md`}
+        className={`flex items-center justify-center ${frame === "portrait" ? "h-[8%]" : "h-[15%]"} min-h-4 max-h-6 aspect-square rounded-md`}
         style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
       >
         <span
