@@ -129,7 +129,7 @@ import { libraryInheritedDefs, libraryRangeDefs } from "../utils/libraryFacets";
 import { buildActiveChains, chainFacetDefsFor, chainGraphFor } from "../data/chainFacets";
 import { templatesAtom } from "../atoms/templates";
 import { entityInMapBounds, matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, activeInheritedOf, activeRangesOf, countryCarriersOf, descriptorCarriersOf, type LibraryFilterState } from "../utils/libraryFilter";
-import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
+import { highlightTerms, parseSearchQuery, quotedQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
 import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -1430,9 +1430,12 @@ export function LibraryView() {
             {filtered.length !== matchTypeBase.length && (
               <> of {matchTypeBase.length.toLocaleString()}</>
             )}{" "}
-            {matchTypeBase.length === 1 ? "result" : "results"} for
+            {matchTypeBase.length === 1 ? "result" : "results"}
+            {viewMode !== "results" && " for"}
           </span>
-          <ActiveSearchChip className="min-w-0" />
+          {/* Adv. Search shows the query in the field and its bar's term
+              chips; a third copy here would only repeat it. */}
+          {viewMode !== "results" && <ActiveSearchChip className="min-w-0" />}
         </>
       ) : (
         <span dir="ltr" className="truncate">
@@ -1443,6 +1446,22 @@ export function LibraryView() {
           {entities.length === 1 ? "entity" : "entities"}
         </span>
       ));
+
+  /** What a screen reader hears: the count once a search settles, not on each
+   *  keystroke. Empty while results compute and when no search runs. */
+  const settledReadout =
+    hasQuery && !searchPending && !cejilLoading
+      ? `${filtered.length.toLocaleString()} ${filtered.length === 1 ? "result" : "results"} for ${quotedQuery(query.trim())}`
+      : "";
+  const [announcedReadout, setAnnouncedReadout] = useState("");
+  useEffect(() => {
+    if (!settledReadout) {
+      setAnnouncedReadout("");
+      return;
+    }
+    const id = window.setTimeout(() => setAnnouncedReadout(settledReadout), SEARCH_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [settledReadout]);
 
   // The bottom bar folds on its own width (`footerFold.tsx`): first the
   // actions' words, then the page group in steps. Phones have their own bar.
@@ -1776,6 +1795,7 @@ export function LibraryView() {
           )}
         </div>
       </div>
+      <span role="status" aria-live="polite" className="sr-only">{announcedReadout}</span>
       {/* The readout's own line when the row can't hold it. Mounted whenever
           the row is this narrow, with or without a query, so a search never
           adds a line. `h-6` is the chip's height, so both readout forms fit the

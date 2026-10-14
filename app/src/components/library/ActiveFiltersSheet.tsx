@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
-import { clearLibraryFiltersAtom } from "../../atoms/library";
+import { clearLibraryFacetsAtom } from "../../atoms/library";
 import { useActiveFilters } from "../../hooks/useActiveFilters";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
 
@@ -18,18 +18,11 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
  *  go; the chips wrap and scroll inside it. It can be collapsed to its handle
  *  when the facets matter more. */
 export function ActiveFiltersSheet() {
-  // Clears EVERYTHING this sheet lists — the search chip included. The facets-
-  // only clear stays on the panel's footer button, where "Clear" sits under the
-  // facet cards and doesn't look like it reaches the search box. Here it does:
-  // the query chip is in the list directly beneath it, and now that emptying the
-  // search box no longer drops the query, this is the button people reach for.
-  const clearAll = useSetAtom(clearLibraryFiltersAtom);
-  const items = useActiveFilters();
-  // Counted from the LIST, not from the facet count: this sheet renders the
-  // search chip too, and the facet count deliberately excludes it. Sizing off
-  // the facet count would print "2" over three chips — and, worse, hide the
-  // whole sheet on a search with no facets, taking the only chip that can end
-  // that search down with it.
+  // The search is not a filter, as Search in and Match are not: the masthead
+  // field holds it, and the masthead chip or Adv. Search's term chips end it.
+  // So the sheet lists the facets only, and Clear all clears what it lists.
+  const clearAll = useSetAtom(clearLibraryFacetsAtom);
+  const items = useActiveFilters().filter((f) => f.id !== "q");
   const count = items.length;
   const [open, setOpen] = useState(true);
 

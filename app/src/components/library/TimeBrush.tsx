@@ -4,6 +4,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryHasNarrowingAtom,
+  libraryClearNarrowingLabelAtom,
   clearLibraryFiltersAtom,
 } from "../../atoms/library";
 import {
@@ -53,6 +54,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   // Facets OR the search — this button clears both, and the empty screen it
   // rescues you from is most often a search that matched nothing.
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
+  const clearLabel = useAtomValue(libraryClearNarrowingLabelAtom);
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -233,7 +235,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               onClick={() => clearFilters()}
               className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
-              Clear filters
+              {clearLabel}
             </button>
           )}
         </div>

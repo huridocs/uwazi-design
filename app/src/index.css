@@ -672,3 +672,24 @@ button:not(:disabled):not([aria-disabled="true"]) {
 [data-covered] > [data-part="title-row"] > button:not([data-part="back-to-parent"]) {
   visibility: hidden;
 }
+
+/* Library Filters with no result: a facet value at 0 adds nothing, and every
+   value is at 0. The lane draws the values that would return results and what
+   is set; a card left with neither (no live row, no Clear) is left out. */
+[data-component="LibraryFilters"] [data-part="facets"][data-results="empty"] {
+  [data-state="unavailable"],
+  [data-part="preset"][aria-disabled="true"],
+  [data-part="load-more"] {
+    display: none;
+  }
+  section:not(
+      :has(
+        [data-state="checked"],
+        [data-state="unchecked"],
+        [data-part="preset"]:not([aria-disabled="true"]),
+        [data-part="clear"]
+      )
+    ) {
+    display: none;
+  }
+}

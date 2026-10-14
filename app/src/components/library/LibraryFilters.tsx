@@ -279,6 +279,15 @@ export function LibraryFilters() {
     contentSelection, contentMode, entities, searchScope, searchMatch, mapBounds,
   ]);
 
+  // Nothing matches: every facet would list its values at 0. The lane then
+  // draws only what returns results or is set (`data-results="empty"`,
+  // index.css). `some` stops at the first match, so this costs a full pass only
+  // when the result set is empty.
+  const resultsEmpty = useMemo(
+    () => entities.length > 0 && !entities.some((e) => matchesAll(e, filterState)),
+    [entities, filterState],
+  );
+
   const typeCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const e of entities)
@@ -569,7 +578,12 @@ export function LibraryFilters() {
           block lines up with the first library card. */}
       {/* A scroll lane on the host's gutter (12px, the same edge as the entity
           preview that takes this drawer slot); `px-3.5` retired. */}
-      <div ref={facetsRef} data-part="facets" className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
+      <div
+        ref={facetsRef}
+        data-part="facets"
+        data-results={resultsEmpty ? "empty" : undefined}
+        className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5"
+      >
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}

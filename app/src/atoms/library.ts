@@ -1436,6 +1436,14 @@ export const libraryHasNarrowingAtom = atom(
   (get) => get(libraryActiveFilterCountAtom) > 0 || get(libraryActiveSearchAtom) !== null,
 );
 
+/** The words for `clearLibraryFiltersAtom` on an empty chart or map: it says
+ *  what is set, so a query alone reads "Clear search", not "Clear filters". */
+export const libraryClearNarrowingLabelAtom = atom((get) => {
+  const facets = get(libraryActiveFilterCountAtom) > 0;
+  const search = get(libraryActiveSearchAtom) !== null;
+  return facets && search ? "Clear search and filters" : search ? "Clear search" : "Clear filters";
+});
+
 /** The Library's private state, for `atoms/savedViews.ts` only: a saved view
  *  must restore the sort and view exactly as the reader left them (whether
  *  they picked the sort and the view), which the public atoms

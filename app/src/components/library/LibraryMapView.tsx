@@ -9,6 +9,7 @@ import {
   librarySelectedClusterAtom,
   libraryOpenEntityIdAtom,
   libraryHasNarrowingAtom,
+  libraryClearNarrowingLabelAtom,
   clearLibraryFiltersAtom,
   libraryMapBoundsAtom,
   libraryMapBearingsAtom,
@@ -102,6 +103,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   // Facets OR the search — this button clears both, and the empty screen it
   // rescues you from is most often a search that matched nothing.
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
+  const clearLabel = useAtomValue(libraryClearNarrowingLabelAtom);
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const startingPoint = useAtomValue(collectionSettings.valueAtom).mapStartingPoint;
   const [mapBounds, setMapBounds] = useAtom(libraryMapBoundsAtom);
@@ -568,7 +570,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
                   onClick={() => clearFilters()}
                   className="mt-2.5 px-2.5 h-6 text-meta font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
                 >
-                  Clear filters
+                  {clearLabel}
                 </button>
               )}
             </div>
