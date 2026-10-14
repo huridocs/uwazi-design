@@ -245,7 +245,7 @@ export function LibraryDisplayMenu() {
     const key = storageId(option, values);
     // Card columns default by layout (`cardColumnsDefault`), so the menu shows
     // the count the grid uses when nothing is picked.
-    const fallback = option.id === "cardCols" ? cardColumnsDefault(layout) : option.default;
+    const fallback = option.id === "cardCols" ? cardColumnsDefault(layout, (values.thumbFrame as string | undefined) ?? "landscape") : option.default;
     const current = bound ? bound.value : (valueOf(key, scope, fallback) as string);
     if (option.layout === "segmented") {
       // The line under the row is always mounted. Dimmed, it names what turns

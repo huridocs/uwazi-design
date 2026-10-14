@@ -363,7 +363,9 @@ export function LibraryView() {
      21.5rem: 3 columns in a 1400px pane, as on main). Portrait and side cards
      keep size-stepped minimums, because there Size sets the picture's width:
      a portrait slot is the column's width at 3:4, so the minimum is the only
-     thing Size can change (13.5 / 17 / 21rem, all narrower than landscape).
+     thing Size can change (11 / 14 / 18rem, all narrower than landscape's
+     21.5). Portrait never drops below two columns: one column in a 650px
+     Split pane drew a 1,200px card.
      Landscape Size sets the band's height and leaves the count alone.
      A chosen count (Display › Columns) is a ceiling: each column is the larger
      of the pane's 1/N share and a floor, so the grid draws N while cards stay
@@ -379,9 +381,9 @@ export function LibraryView() {
       }[thumbSize]
     : portrait
       ? {
-          s: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
-          m: "grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))]",
-          l: "grid-cols-[repeat(auto-fill,minmax(min(21rem,100%),1fr))]",
+          s: "grid-cols-[repeat(auto-fill,minmax(min(11rem,calc(50%-0.375rem)),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(14rem,calc(50%-0.375rem)),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(18rem,calc(50%-0.375rem)),1fr))]",
         }[thumbSize]
       : "grid-cols-[repeat(auto-fill,minmax(min(21.5rem,100%),1fr))]";
   const phone = useAtomValue(breakpointAtom) === "mobile";
@@ -2334,7 +2336,10 @@ export function LibraryView() {
         {selectedId && <EntityDrawerPreview entityId={selectedId} />}
       </MobileBottomSheet>
     )}
-    {fullWidth || overview ? (
+    {/* The Overview draws through the same host as the view it leaves for,
+        with the drawer hidden: a host swap remounted the masthead, and the
+        search box lost focus on the first character typed. */}
+    {fullWidth ? (
       <div data-component="LibraryFullWidth" className="flex flex-1 overflow-hidden">
         <div data-part="content" className="flex-1 overflow-hidden">{renderLeft()}</div>
       </div>
@@ -2342,6 +2347,7 @@ export function LibraryView() {
     <AdaptiveSplitView
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
+      drawerHidden={overview}
       right={drawer}
       defaultRightWidth={460}
       minRightWidth={DRAWER_MIN_WIDTH}

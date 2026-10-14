@@ -1017,7 +1017,7 @@ export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
 export type CardColumns = "auto" | 2 | 3 | 4 | 5 | 6;
 export const libraryCardColumnsAtom = atom((get): CardColumns => {
   const frame = get(libraryThumbFrameAtom);
-  const raw = readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), `cardCols:${frame}`, "mode", cardColumnsDefault(get(libraryLayoutAtom)));
+  const raw = readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), `cardCols:${frame}`, "mode", cardColumnsDefault(get(libraryLayoutAtom), frame));
   const n = Number(raw);
   return n >= 2 && n <= 6 ? (n as CardColumns) : "auto";
 });
