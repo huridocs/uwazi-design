@@ -122,13 +122,25 @@ export function EntityThumbnail({
  *  A slight off-white ground (`bg-placeholder`) with an inset hairline edge
  *  (`inset-ring-border-placeholder`), and the type colour: `bg-parchment`
  *  stays selection. The edge is painted inside the box, so the slot keeps its
- *  size whether or not the caller gives it a border. */
-export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
+ *  size whether or not the caller gives it a border.
+ *  In the portrait slot (`frame="portrait"`) the plaque is 8% of the slot height,
+ *  capped at `max-h-6`: the tall slot made 22% hit the 2rem cap at every Size.
+ */
+export function QuietMark({
+  tint,
+  frame = "landscape",
+  className = "",
+}: {
+  tint?: string;
+  frame?: ThumbFrame;
+  className?: string;
+}) {
   const color = tint ?? "#6B7280";
   return (
     <span data-component="QuietMark" className={`bg-placeholder inset-ring inset-ring-border-placeholder flex items-center justify-center ${className}`}>
       <span
-        className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
+        data-part="plaque"
+        className={`flex items-center justify-center ${frame === "portrait" ? "h-[8%] max-h-6" : "h-[22%] max-h-8"} min-h-4 aspect-square rounded-md`}
         style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
       >
         <span
