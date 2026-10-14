@@ -18,7 +18,7 @@ import {
 import { groupingOptions } from "../../utils/connectionGrouping";
 import { Select } from "../shared/Select";
 import { ZoomControl } from "./ZoomControl";
-import { BAR_GHOST } from "../shared/warmButton";
+import { TOOL_BUTTON, TOOL_BUTTON_ON, TOOL_ICON_BOX, TOOL_SHAPE } from "../shared/toolButton";
 
 const SORTS: { id: SortOrder; label: string }[] = [
   { id: "appearance", label: "Appearance" },
@@ -77,7 +77,6 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
     sortOrder !== defaultSortFor(view) ||
     (showDensity && zoom !== DEFAULT_ZOOM);
 
-  const box = size === "sm" ? "w-6 h-6" : "w-8 h-8";
 
   // "None" plus every axis not already spoken for on the other level — the two
   // levels can't group by the same thing.
@@ -95,10 +94,8 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
         aria-haspopup="dialog"
         aria-expanded={open}
         data-part="trigger"
-        className={`relative inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer ${
-          // A ghost on the bar (no fill at rest); the dot says it is modified.
-          open ? "bg-warm text-ink" : BAR_GHOST
-        }`}
+        // The toolbar control (`toolButton.ts`), as the Library's Display.
+        className={`${TOOL_SHAPE} ${size === "sm" ? "h-6 w-6" : TOOL_ICON_BOX} ${open || modified ? TOOL_BUTTON_ON : TOOL_BUTTON}`}
       >
         <SlidersHorizontal size={size === "sm" ? 12 : 14} aria-hidden />
         {modified && (

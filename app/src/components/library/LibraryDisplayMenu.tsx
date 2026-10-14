@@ -1,3 +1,4 @@
+import { TOOL_BUTTON, TOOL_BUTTON_IDLE, TOOL_BUTTON_ON, TOOL_ICON_BOX, TOOL_SHAPE } from "../shared/toolButton";
 import { languageAtom, type Language } from "../../atoms/language";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -355,13 +356,7 @@ export function LibraryDisplayMenu() {
         // Background tint on hover, nothing raised. Open/modified keeps the
         // shadow and the ink border — the same split as FiltersButton beside it,
         // so a hovered trigger can't be mistaken for an open one.
-        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors ${
-          idle
-            ? "bg-paper text-ink-muted border-border cursor-default"
-            : open || modified
-              ? "bg-paper text-ink border-ink/40 shadow-sm cursor-pointer"
-              : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink cursor-pointer"
-        }`}
+        className={`${TOOL_SHAPE} ${TOOL_ICON_BOX} ${idle ? TOOL_BUTTON_IDLE : open || modified ? TOOL_BUTTON_ON : TOOL_BUTTON}`}
       >
         <SlidersHorizontal size={14} aria-hidden />
         {modified && (

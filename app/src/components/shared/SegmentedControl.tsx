@@ -35,7 +35,9 @@ export function SegmentedControl({
       role="group"
       data-component="SegmentedControl"
       aria-label={ariaLabel}
-      className={`${fill ? "flex w-full" : "inline-flex w-fit"} items-center rounded-md overflow-hidden ${h}`}
+      // Paper, as every toolbar control (`toolButton.ts`): on a warm or
+      // parchment ground the group keeps the same face as the buttons beside it.
+      className={`${fill ? "flex w-full" : "inline-flex w-fit"} items-center rounded-md overflow-hidden bg-paper ${h}`}
       style={{ border: "1px solid var(--border-primary)" }}
     >
       {options.map((opt, i) => {

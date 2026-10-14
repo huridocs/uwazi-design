@@ -1,3 +1,4 @@
+import { TOOL_BUTTON } from "./toolButton";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { useAtomValue } from "jotai";
@@ -183,7 +184,7 @@ export function Select({
                 ? "text-ink-secondary border border-transparent hover:bg-warm hover:text-ink"
                 : variant === "quiet"
                 ? "text-ink-tertiary border border-transparent hover:bg-warm hover:text-ink"
-                : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
+                : `border ${TOOL_BUTTON}`
           }`}
       >
         {triggerIcon && (

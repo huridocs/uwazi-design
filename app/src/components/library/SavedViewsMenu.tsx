@@ -1,3 +1,4 @@
+import { TOOL_BUTTON, TOOL_BUTTON_ON, TOOL_ICON_BOX, TOOL_SHAPE } from "../shared/toolButton";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Bookmark, Check, Clock, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -89,11 +90,7 @@ export function SavedViewsMenu() {
         aria-haspopup="dialog"
         aria-expanded={open}
         title="Views"
-        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors cursor-pointer ${
-          open || current
-            ? "bg-paper text-ink border-ink/40 shadow-sm"
-            : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink"
-        }`}
+        className={`${TOOL_SHAPE} ${TOOL_ICON_BOX} ${open || current ? TOOL_BUTTON_ON : TOOL_BUTTON}`}
       >
         <Bookmark size={14} aria-hidden fill={current ? "currentColor" : "none"} />
       </button>

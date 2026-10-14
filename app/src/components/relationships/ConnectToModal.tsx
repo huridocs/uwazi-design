@@ -15,6 +15,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { SegmentedControl } from "../shared/SegmentedControl";
 import { Checkbox } from "../shared/Checkbox";
 import { BAR_GHOST } from "../shared/warmButton";
+import { TOOL_BUTTON, TOOL_ICON_BOX, TOOL_SHAPE } from "../shared/toolButton";
 
 /** Candidates listed in the picker before a search narrows them. */
 const LIMIT = 40;
@@ -26,7 +27,6 @@ export function ConnectButton({ size = "md" }: { size?: "sm" | "md" }) {
   const scopeId = useEntityScopeId();
   const [open, setOpen] = useState(false);
   if (!chainGraphFor(entityCorpusOf(scopeId))) return null;
-  const box = size === "sm" ? "h-6 w-6" : "h-8 w-8";
   return (
     <>
       <button
@@ -36,7 +36,7 @@ export function ConnectButton({ size = "md" }: { size?: "sm" | "md" }) {
         aria-label="Connect to…"
         title="Connect to…"
         aria-haspopup="dialog"
-        className={`inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer ${BAR_GHOST} shrink-0`}
+        className={`${TOOL_SHAPE} ${size === "sm" ? "h-6 w-6" : TOOL_ICON_BOX} ${TOOL_BUTTON} shrink-0`}
       >
         <Route size={size === "sm" ? 12 : 14} aria-hidden />
       </button>

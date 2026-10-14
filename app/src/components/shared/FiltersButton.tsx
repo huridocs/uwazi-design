@@ -1,14 +1,11 @@
 import { Filter } from "lucide-react";
-import { BAR_GHOST } from "./warmButton";
+import { TOOL_BUTTON, TOOL_BUTTON_ON, TOOL_SHAPE } from "./toolButton";
 
 interface FiltersButtonProps {
   activeCount: number;
   onClick: () => void;
   size?: "sm" | "md";
   label?: string;
-  /** `ghost`: on a bar's ladder (BAR_GHOST, no fill or edge at rest), where
-   *  the count badge alone says filters are on. The Relationships toolbar. */
-  tone?: "default" | "ghost";
 }
 
 export function FiltersButton({
@@ -16,7 +13,6 @@ export function FiltersButton({
   onClick,
   size = "md",
   label = "Filters",
-  tone = "default",
 }: FiltersButtonProps) {
   const active = activeCount > 0;
   const h = size === "sm" ? "h-6" : "h-8";
@@ -35,13 +31,8 @@ export function FiltersButton({
       // hovering an inactive Filters button looked a lot like the state that
       // says filters are on. Active keeps its shadow and its ink border; only
       // hover gave them up, so the two states now differ at a glance.
-      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-colors cursor-pointer ${
-        tone === "ghost"
-          ? `${BAR_GHOST} border border-transparent ${active ? "text-ink" : ""}`
-          : active
-            ? "bg-paper text-ink border border-ink/40 shadow-sm"
-            : "bg-paper border border-border text-ink-secondary hover:bg-parchment hover:text-ink"
-      }`}
+      // The toolbar control (`toolButton.ts`).
+      className={`${TOOL_SHAPE} gap-1.5 ${h} ${px} ${textSize} font-medium ${active ? TOOL_BUTTON_ON : TOOL_BUTTON}`}
     >
       <Filter size={iconSize} data-part="icon" aria-hidden className={active ? "text-ink" : "text-ink-secondary"} />
       <span data-part="label">{label}</span>

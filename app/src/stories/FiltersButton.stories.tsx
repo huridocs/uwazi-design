@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FiltersButton } from "../components/shared/FiltersButton";
 
-/** Toolbar filters trigger. Idle = warm; with active filters = vellum + count
- *  badge + aria-pressed. size="sm" (h-6) for drawer toolbars, "md" (h-8) main. */
+/** Toolbar filters trigger, on the toolbar control (`toolButton.ts`): paper with
+ *  a border at rest; with active filters an ink border, the count badge and
+ *  aria-pressed. size="sm" (h-6) for drawer toolbars, "md" (h-8) main. */
 const meta = {
   title: "Shared/FiltersButton",
   component: FiltersButton,
@@ -11,7 +12,6 @@ const meta = {
   argTypes: {
     size: { control: "inline-radio", options: ["sm", "md"] },
     activeCount: { control: { type: "number", min: 0, max: 12 } },
-    tone: { control: "inline-radio", options: ["default", "ghost"] },
   },
 } satisfies Meta<typeof FiltersButton>;
 
@@ -26,14 +26,4 @@ export const WithActiveFilters: Story = {
 
 export const SmallDrawerFlavour: Story = {
   args: { activeCount: 1, size: "sm" },
-};
-
-/** On a bar's ladder (the Relationships toolbar): no fill or edge at rest,
- *  the count badge says filters are on. */
-export const Ghost: Story = {
-  args: { tone: "ghost" },
-};
-
-export const GhostWithActiveFilters: Story = {
-  args: { tone: "ghost", activeCount: 3 },
 };

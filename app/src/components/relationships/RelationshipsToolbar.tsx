@@ -44,14 +44,14 @@ export function RelationshipsToolbar() {
         /* ONE flex child, so the controls wrap as a CLUSTER. As three siblings
            they wrapped one at a time, and a narrow pane got Filters stranded on
            a line of its own. */
-        <div data-component="RelationshipsToolbar" className="flex items-center gap-2 shrink-0">
+        <div data-component="RelationshipsToolbar" className="flex items-center gap-1.5 shrink-0">
           <ViewControls />
           <RelationshipsDisplayMenu />
           <ConnectButton />
           {/* Only where no drawer holds the filters: a drawn drawer's Filters
               tab is the one way in, and carries the dot. The dock comes and
               goes with the drawer, which changes the pane's width anyway. */}
-          {!docked && <FiltersButton tone="ghost" activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />}
+          {!docked && <FiltersButton activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />}
         </div>
       }
     />
