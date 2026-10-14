@@ -729,8 +729,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     drew, so rows reform with the pane, Size, Frame, the drawer, Split and the page, and the first
     card in view keeps its place. `libraryCardInfoAtom.preview` counts Per row as drawn while any
     result has a preview; List draws it as On (one chip column).
-  - An empty slot (QuietMark) sits on `bg-placeholder` (`--bg-placeholder`): a slight off-white,
-    not vellum or parchment.
+  - An empty slot (QuietMark) sits on `bg-placeholder` (#FCFBF7; dark #282826) with an inset
+    hairline edge `inset-ring-border-placeholder` (#FCFCFC; dark #2C2C2B), drawn inside the box so
+    the slot keeps its size; not vellum or parchment.
   - Card text clips at three lines: the title and a text property value (`CardValue lines={3}`).
     The subgrid tracks grow with them, so a row's cards keep one height. One line stays for
     labels, dates and periods, coordinates, chip rows, filenames, the footer and the List row; a
