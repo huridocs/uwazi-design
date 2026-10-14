@@ -740,8 +740,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     result has a preview; List draws it as On (one chip column).
   - An empty slot (QuietMark) sits on `bg-placeholder` (#FCFBF7; dark #282826) with an inset
     hairline edge `inset-ring-border-placeholder` (#FCFCFC; dark #2C2C2B), drawn inside the box so
-    the slot keeps its size; not vellum or parchment. Its plaque is 22% of the slot height
-    (max 2rem) in the landscape band and list chip, 8% (max 1.5rem) in the portrait slot.
+    the slot keeps its size; not vellum or parchment. Its plaque is 16 / 22 / 24px for Small /
+    Medium / Large in either frame: 15% of the landscape band's height or 8% of the portrait slot's,
+    capped at 1.5rem; the list chip keeps the 16px floor.
   - Card text clips at three lines: the title and a text property value (`CardValue lines={3}`).
     The subgrid tracks grow with them, so a row's cards keep one height. One line stays for
     labels, dates and periods, coordinates, chip rows, filenames, the footer and the List row; a
