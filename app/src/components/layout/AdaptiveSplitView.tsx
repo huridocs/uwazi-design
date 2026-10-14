@@ -28,6 +28,8 @@ interface AdaptiveSplitViewProps {
    *  (the Library opens Results when a search starts). Uncontrolled without it. */
   openSectionId?: string | null;
   onOpenSectionChange?: (id: string | null) => void;
+  /** See `SplitView`. On phones, `left` is drawn in place of `mobileLeft`. */
+  drawerHidden?: boolean;
 }
 
 export function AdaptiveSplitView({
@@ -40,6 +42,7 @@ export function AdaptiveSplitView({
   mobileLeft,
   openSectionId: openSectionProp,
   onOpenSectionChange,
+  drawerHidden,
 }: AdaptiveSplitViewProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   const [ownOpenSectionId, setOwnOpenSectionId] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export function AdaptiveSplitView({
       <>
         <div data-component="AdaptiveSplitView" data-layout="mobile" className="flex flex-1 overflow-hidden">
           <div data-part="content" className="flex-1 overflow-hidden">
-            {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
+            {mobileLeft && !drawerHidden ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
           </div>
         </div>
         {/* Floating menu trigger when no embedded slot — sits above any action bar */}
@@ -103,6 +106,7 @@ export function AdaptiveSplitView({
       defaultRightWidth={defaultRightWidth}
       minRightWidth={minRightWidth}
       paneOverlay={paneOverlay}
+      drawerHidden={drawerHidden}
     />
   );
 }

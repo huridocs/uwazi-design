@@ -15,6 +15,10 @@ interface SplitViewProps {
   /** Drawn over the view while a Split pane is too narrow for the drawer: the
    *  connected-entity slide-over the drawer would otherwise host. */
   paneOverlay?: ReactNode;
+  /** Draws the view alone, with no divider or drawer, keeping `left` where it
+   *  was so it does not remount (the Library's Overview, whose masthead search
+   *  keeps focus as the view turns to Cards). */
+  drawerHidden?: boolean;
 }
 
 export function SplitView({
@@ -23,6 +27,7 @@ export function SplitView({
   defaultRightWidth = 400,
   minRightWidth = 320,
   paneOverlay,
+  drawerHidden = false,
 }: SplitViewProps) {
   // The drawer's width is remembered ONCE for every host (`drawerWidthAtom`), so
   // it holds across views; `useDrawerWidth` clamps it into this host's minimum
@@ -135,7 +140,7 @@ export function SplitView({
         {measured && left}
         {measured && !fits && paneOverlay}
       </div>
-      {fits && (<>
+      {fits && !drawerHidden && (<>
       {/* One edge: the divider paints the pane's border at its inline end, so
           the visible line and the drag target are the same element. The
           drawer carries no `border-l`; 4px + 1px border becomes a 5px divider. */}
