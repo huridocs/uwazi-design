@@ -1,5 +1,4 @@
-import { Children, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { FULL_TEXT_MIN, SEARCH_SCOPE_LABEL } from "../../../utils/searchScope";
+import { Children, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { breakpointAtom } from "../../../atoms/viewport";
 import { ChevronDown, FileText, Tag } from "lucide-react";
@@ -24,9 +23,10 @@ import {
   libraryResultsLayoutAtom,
   librarySearchMatchAtom,
   librarySearchScopeAtom,
-  librarySearchScopeInputAtom,
+  type LibraryPageSize,
   type ResultsLayout,
 } from "../../../atoms/library";
+import { LibraryPageEnd } from "../LibraryPagination";
 import { entityTime } from "../../../utils/timeline";
 import { SectionLabel } from "../../shared/SectionLabel";
 import { TimeSpine, SpineDate } from "../TimeSpine";
@@ -39,6 +39,9 @@ import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 import { AdvancedSearchBar } from "./AdvancedSearchBar";
+import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
+
+const NO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
 import {
   CorpusLoadState,
   HiddenByFilters,
@@ -46,10 +49,9 @@ import {
   RankedEvidence,
   ResultEvidence,
   ResultRecord,
-  ResultsBlank,
   SharedLines,
   SnippetLine,
-  WarmButton,
+  ZeroResults,
   mixesTemplates,
   passageKey,
   passageOwners,
@@ -73,9 +75,6 @@ import {
  *  strip stays mounted so toggling a chip can't shift the results; the count
  *  lives in the toolbar masthead only. */
 
-/** Entities rendered per page. Lower than the drawer's 40 because each card here
- *  is bigger, and every layout pays the same windowing cost per entity. */
-const STEP = 24;
 /** Passages excerpts more per record (it IS the passage list) but still a
  *  bounded number; the surplus is reported, never silently dropped. */
 const PASSAGES_PER_ENTITY = 8;
@@ -135,6 +134,21 @@ interface Props {
   /** The relevance breakdown LibraryView already computes once per entity per
    *  query. Read for attribution only (`MatchedTerms`); never printed as a score. */
   relevanceOf: (e: Entity) => RelevanceBreakdown;
+  /** The page of `entities` drawn, on the Library's page state (the one Cards
+   *  and List use, so the same records are on page N in every view). */
+  page: number;
+  pageSize: LibraryPageSize;
+  onPage: (page: number) => void;
+  /** The pager's accessible name ("Pages, left pane" in Split). */
+  pageLabel: string;
+  /** The scroller, for the Library's page scroll: a new page starts at the
+   *  top, and Back from a record puts `restoreScroll` back once the page is
+   *  built. */
+  laneRef: (el: HTMLDivElement | null) => void;
+  restoreScroll: number;
+  onScrollTop: (top: number) => void;
+  /** With no result, the switches that would bring results back. */
+  zeroSuggestions?: readonly ZeroResultSuggestion[];
 }
 
 export function ResultsMainView({
@@ -154,6 +168,14 @@ export function ResultsMainView({
   onClearFilters,
   totalMatches,
   relevanceOf,
+  page,
+  pageSize,
+  onPage,
+  pageLabel,
+  laneRef,
+  restoreScroll,
+  onScrollTop,
+  zeroSuggestions = NO_SUGGESTIONS,
 }: Props) {
   const layout = useAtomValue(libraryResultsLayoutAtom);
   // A Shift range runs in the ranked order these results are drawn in.
@@ -164,13 +186,13 @@ export function ResultsMainView({
   const setMatchTypes = useSetAtom(matchTypeFiltersAtom);
   useEffect(() => setMatchTypes(ALL_MATCH_TYPES), [setMatchTypes]);
   const scope = useAtomValue(librarySearchScopeAtom);
-  const setScope = useSetAtom(librarySearchScopeInputAtom);
   const narrow = useAtomValue(breakpointAtom) === "mobile";
   const match = useAtomValue(librarySearchMatchAtom);
   const hasQuotes = useAtomValue(libraryHasQuotesAtom);
-  const [visible, setVisible] = useState(STEP);
-  // The page this view draws, for "select all loaded".
-  const drawnIds = useMemo(() => rankedIds.slice(0, visible), [rankedIds, visible]);
+  const pageStart = (page - 1) * pageSize;
+  const pageEntities = useMemo(() => entities.slice(pageStart, pageStart + pageSize), [entities, pageStart, pageSize]);
+  // The page this view draws, for "select all" on the page.
+  const drawnIds = useMemo(() => pageEntities.map((e) => e.id), [pageEntities]);
   useDrawnIds(drawnIds);
   /* Pane width, quantised to 64px and held while the drawer divider is dragged
      (`useSettledWidth`). It feeds the re-snippeting memo below, so it must only
@@ -182,9 +204,8 @@ export function ResultsMainView({
   const trimmed = query.trim();
 
   useEffect(() => {
-    setVisible(STEP);
     setShowAll({});
-  }, [entities, trimmed, language, source, layout]);
+  }, [pageEntities, trimmed, language, source, layout]);
 
   const budget = excerptBudget(layout, paneW);
 
@@ -192,8 +213,7 @@ export function ResultsMainView({
   const measured = paneW > 0;
   const cappedResults = useMemo<Result[]>(
     () =>
-      (measured ? entities : [])
-        .slice(0, visible)
+      (measured ? pageEntities : [])
         .map((e) => ({
           entity: e,
           snippets: buildSnippetsFor(e, trimmed, language, source, {
@@ -204,7 +224,7 @@ export function ResultsMainView({
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    [measured, entities, visible, trimmed, language, source, layout, budget.ctx, scope, match],
+    [measured, pageEntities, trimmed, language, source, layout, budget.ctx, scope, match],
   );
 
   // Only the cards the user expanded are re-derived uncapped — the windowing
@@ -228,6 +248,40 @@ export function ResultsMainView({
     [cappedResults, showAll, trimmed, language, source, budget.ctx, scope, match],
   );
 
+  // Spine's axis spans every dated result, not only this page's.
+  const spineDomain = useMemo(() => {
+    if (layout !== "spine") return undefined;
+    let min = Infinity;
+    let max = -Infinity;
+    let count = 0;
+    for (const e of entities) {
+      const t = entityTime(e);
+      if (t === null) continue;
+      count++;
+      if (t < min) min = t;
+      if (t > max) max = t;
+    }
+    return count ? { min, max, count } : undefined;
+  }, [entities, layout]);
+
+  // Back from a record: the scroll goes back once the page is built (the
+  // scroller is empty until the pane is measured).
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const pendingScroll = useRef(restoreScroll);
+  useLayoutEffect(() => {
+    if (!results.length || pendingScroll.current <= 0 || !scrollerRef.current) return;
+    scrollerRef.current.scrollTop = pendingScroll.current;
+    pendingScroll.current = 0;
+  }, [results]);
+  const setScroller = useCallback(
+    (el: HTMLDivElement | null) => {
+      scrollerRef.current = el;
+      bodyRef(el);
+      laneRef(el);
+    },
+    [bodyRef, laneRef],
+  );
+
   // Template · country · year on each head only where the set mixes templates.
   const facts = useMemo(() => mixesTemplates(entities), [entities]);
   // Who shows each passage first, in the order Grouped and Tree draw them.
@@ -247,7 +301,6 @@ export function ResultsMainView({
     );
   }
 
-  const scopeLabel = SEARCH_SCOPE_LABEL[scope];
   // The toolbar heads every state below, the empty ones included: it can build
   // a query from nothing, and widening a scope is the way out of "No matches".
   const bar = (
@@ -276,33 +329,23 @@ export function ResultsMainView({
   if (totalMatches === 0) {
     return (
       <Frame bar={bar}>
-        <ResultsBlank>
-          <span dir="ltr" className="text-sm font-medium text-ink-secondary">
-            No matches for “{trimmed}”{scope === "all" ? "" : ` in ${scopeLabel}`}
-          </span>
-          {/* Document bodies are scanned from three characters (`fullTextSearch`),
-              so a shorter query in Full text can only come back empty. */}
-          {scope === "fulltext" && trimmed.length < FULL_TEXT_MIN && (
-            <span className="text-xs text-ink-tertiary">
-              Full text search needs at least {FULL_TEXT_MIN}&nbsp;characters.
-            </span>
-          )}
-          <span className="flex items-center gap-2">
-            {scope !== "all" && <WarmButton onClick={() => setScope("all")}>Search everywhere</WarmButton>}
-            <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
-          </span>
-        </ResultsBlank>
+        <ZeroResults query={trimmed} scope={scope} suggestions={zeroSuggestions} onClearSearch={onClearSearch} />
       </Frame>
     );
   }
 
-  const capped = entities.length > results.length + (entities.length - visible);
+  const pageCount = Math.max(1, Math.ceil(entities.length / pageSize));
 
   return (
     <Frame bar={bar} layout={layout}>
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
           `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
-      <div ref={bodyRef} data-part="results" className="@container bleed flex-1 min-h-0 overflow-auto">
+      <div
+        ref={setScroller}
+        data-part="results"
+        onScroll={(e) => onScrollTop(e.currentTarget.scrollTop)}
+        className="@container bleed flex-1 min-h-0 overflow-auto"
+      >
         {entities.length === 0 ? (
           <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
             No results with the current filters.
@@ -339,20 +382,21 @@ export function ResultsMainView({
             selectedId={selectedId}
             onSelect={onSelect}
             onSelectSnippet={onSelectSnippet}
+            domain={spineDomain}
+            undatedTotal={spineDomain ? entities.length - spineDomain.count : 0}
           />
         )}
 
-        {visible < entities.length && (
-          <div data-part="show-more" className="flex justify-center py-4">
-            <WarmButton onClick={() => setVisible((n) => n + STEP)}>
-              Show more — {(entities.length - visible).toLocaleString()} remaining
-            </WarmButton>
-          </div>
-        )}
-        {capped && visible >= entities.length && (
-          <p data-part="end" className="py-4 text-center text-meta text-ink-tertiary">
-            Showing every result for this query.
-          </p>
+        {/* The pager again under the last record, as under Cards and List. */}
+        {pageCount > 1 && (
+          <LibraryPageEnd
+            total={entities.length}
+            page={page}
+            pageSize={pageSize}
+            onPage={onPage}
+            compact={narrow}
+            label={pageLabel}
+          />
         )}
       </div>
     </Frame>
@@ -726,12 +770,19 @@ function SpineBody({
   selectedId,
   onSelect,
   onSelectSnippet,
+  domain,
+  undatedTotal,
 }: {
   results: Result[];
   query: string;
   selectedId: string | null;
   onSelect: SelectHandler;
   onSelectSnippet: (id: string, page: number) => void;
+  /** Every dated result's extent: the axis keeps the whole set's shape while
+   *  the rows are one page. */
+  domain?: { min: number; max: number; count: number };
+  /** Results across every page with no date, for the note under the axis. */
+  undatedTotal: number;
 }) {
   const { dated, owners } = useMemo(() => {
     const dated = results
@@ -742,12 +793,14 @@ function SpineBody({
     const byTime = [...dated].sort((a, b) => a.t - b.t).map((d) => d.item);
     return { dated, owners: passageOwners(byTime) };
   }, [results]);
-  const undated = results.length - dated.length;
+  const undated = undatedTotal;
 
   if (!dated.length) {
     return (
       <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
-        None of these results carries a date, so there is no axis to place them on.
+        {domain
+          ? "None of the results on this page carries a date."
+          : "None of these results carries a date, so there is no axis to place them on."}
       </p>
     );
   }
@@ -759,6 +812,7 @@ function SpineBody({
           `SPINE_ROW_H` stretches the axis and can break eliding. */}
       <TimeSpine
         rows={dated}
+        domain={domain}
         rowHeight={SPINE_ROW_H}
         dotColor={({ entity }) => getEntityType(entity.typeId)?.color ?? "#6B7280"}
         dotActive={({ entity }) => selectedId === entity.id}
@@ -794,7 +848,10 @@ function SpineBody({
                   isn't cut to a few words. */}
               <span className="flex items-center gap-2 min-w-0 h-4">
                 <span aria-hidden className="shrink-0 w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
-                <SpineDate t={t} />
+                {/* A record timed to the hour or the second (`span.hour`,
+                    `span.seconds`) prints its time: on Vegas every row is the
+                    same day. A day-only date keeps the day. */}
+                <SpineDate t={t} withTime={!!(entity.span?.seconds || entity.span?.hour)} />
                 <span className="min-w-0 max-w-[18rem] truncate text-xs font-medium text-ink">
                   <HighlightedText text={entity.title} query={query} fieldKey="title" />
                 </span>

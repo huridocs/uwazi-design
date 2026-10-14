@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
@@ -8,8 +8,11 @@ import {
   librarySearchMatchAtom,
   librarySearchScopeAtom,
   matchTypeFiltersAtom,
+  type LibraryPageSize,
   type MatchTypeFilters,
 } from "../../../atoms/library";
+import { breakpointAtom } from "../../../atoms/viewport";
+import { LibraryPageEnd } from "../LibraryPagination";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/CollapseControls";
@@ -19,13 +22,15 @@ import {
   NoSearchState,
   ResultEvidence,
   ResultRecord,
-  ResultsBlank,
-  WarmButton,
+  ZeroResults,
   passageOwners,
   type EvidenceHandlers,
   type SelectHandler,
 } from "./ResultRecord";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
+import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
+
+const NO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 
 type MatchType = keyof MatchTypeFilters;
@@ -34,10 +39,6 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
   { key: "properties", label: "Properties" },
   { key: "document", label: "Document" },
 ];
-
-/** How many entity cards to render before "Show more" (the drawer is narrow and
- *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
-const RESULTS_STEP = 40;
 
 /** What a snippet's text column loses to its surroundings inside the lane:
  *  the pane gutter both sides (24), the card's border and padding (26) and the
@@ -71,6 +72,14 @@ interface Props {
   /** LibraryView's per-query breakdown cache. Its identity changes only with the
    *  query (it is memoised there), so it doesn't defeat this component's memo. */
   relevanceOf: (e: Entity) => RelevanceBreakdown;
+  /** The page shown, on the Library's page state: the same records the main
+   *  pane's page holds where it pages, and a pager of its own at the end. */
+  page: number;
+  pageSize: LibraryPageSize;
+  onPage: (page: number) => void;
+  pageLabel: string;
+  /** With no result, the switches that would bring results back. */
+  zeroSuggestions?: readonly ZeroResultSuggestion[];
 }
 
 /** The Results-tab evidence view: per matched record, WHERE the term hit (which
@@ -104,8 +113,16 @@ export const ResultsBody = memo(function ResultsBody({
   matchTypeCounts,
   totalMatches,
   relevanceOf,
+  page,
+  pageSize,
+  onPage,
+  pageLabel,
+  zeroSuggestions = NO_SUGGESTIONS,
 }: Props) {
-  const [visible, setVisible] = useState(RESULTS_STEP);
+  const compact = useAtomValue(breakpointAtom) === "mobile";
+  const pageStart = (page - 1) * pageSize;
+  const pageEntities = useMemo(() => entities.slice(pageStart, pageStart + pageSize), [entities, pageStart, pageSize]);
+  const pageCount = Math.max(1, Math.ceil(entities.length / pageSize));
   // The chips are FILTER state (they narrow the left pane too — see
   // `matchTypeFiltersAtom`), so `entities` already reflects them.
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
@@ -139,14 +156,13 @@ export const ResultsBody = memo(function ResultsBody({
   const measured = laneW > 0;
   const capped = useMemo(
     () =>
-      (measured ? entities : [])
-        .slice(0, visible)
+      (measured ? pageEntities : [])
         .map((e) => ({
           entity: e,
           snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx, scope, match }),
         }))
         .filter((x) => x.snippets.count > 0),
-    [measured, entities, visible, trimmed, language, source, ctx, scope, match],
+    [measured, pageEntities, trimmed, language, source, ctx, scope, match],
   );
 
   // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
@@ -179,11 +195,20 @@ export const ResultsBody = memo(function ResultsBody({
     [onFocusProperty, onSelectSnippet, onSelect],
   );
 
+  // A new page starts at the top of the lane, its cards open.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const setLane = useCallback(
+    (el: HTMLDivElement | null) => {
+      scrollRef.current = el;
+      laneRef(el);
+    },
+    [laneRef],
+  );
   useEffect(() => {
-    setVisible(RESULTS_STEP);
     setExpandedMap({});
     setShowAllMap({});
-  }, [entities, trimmed, language, source]);
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [pageEntities, trimmed, language, source]);
 
   const isExpanded = (id: string) => expandedMap[id] ?? true;
   const expandedCount = rendered.filter((x) => isExpanded(x.entity.id)).length;
@@ -213,15 +238,7 @@ export const ResultsBody = memo(function ResultsBody({
   if (totalMatches === 0) {
     return (
       <Shell>
-        <ResultsBlank>
-          {/* Whole phrase is English; `dir="ltr"` keeps it from reordering in an
-              RTL drawer (isolating only the digit wasn't enough). */}
-          <span dir="ltr" className="text-sm text-ink-tertiary">
-            No matches for{" "}
-            <span className="font-medium text-ink-secondary">“{trimmed}”</span>
-          </span>
-          <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
-        </ResultsBlank>
+        <ZeroResults query={trimmed} scope={scope} suggestions={zeroSuggestions} onClearSearch={onClearSearch} />
       </Shell>
     );
   }
@@ -274,13 +291,17 @@ export const ResultsBody = memo(function ResultsBody({
           `overflow-hidden`, so in a flex column that overflows they'd shrink to
           their header height and clip their own content. Block flow keeps each
           card at its natural height and lets this container scroll. */}
-      <div ref={laneRef} data-part="results" className="bleed flex-1 overflow-auto py-3 space-y-2">
+      <div
+        ref={setLane}
+        data-part="results"
+        className="bleed flex-1 overflow-auto py-3 space-y-2"
+      >
         {entities.length === 0 && (
           <p data-part="empty" className="pt-2 text-xs text-ink-tertiary">
             No results for the selected match types.
           </p>
         )}
-        {/* The list, and only the list: the empty line and "Show more" sit
+        {/* The list, and only the list: the empty line and the pager sit
             beside it in the lane, since neither is a result. */}
         <ul data-part="list" className="space-y-2">
         {rendered.map(({ entity, snippets }) => (
@@ -309,12 +330,15 @@ export const ResultsBody = memo(function ResultsBody({
           </li>
         ))}
         </ul>
-        {visible < entities.length && (
-          <div className="flex justify-center pt-1">
-            <WarmButton onClick={() => setVisible((n) => n + RESULTS_STEP)}>
-              Show more ({(entities.length - visible).toLocaleString()})
-            </WarmButton>
-          </div>
+        {pageCount > 1 && (
+          <LibraryPageEnd
+            total={entities.length}
+            page={page}
+            pageSize={pageSize}
+            onPage={onPage}
+            compact={compact}
+            label={pageLabel}
+          />
         )}
       </div>
     </Shell>

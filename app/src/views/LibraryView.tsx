@@ -181,6 +181,9 @@ import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
 import { createPortal } from "react-dom";
 import { identityOf, sharedPass } from "../utils/sharedPass";
 import { paneHoldsEvent, useLibraryPane, useMastheadFold, usePaneResultCount, useSplitFooter, useSplitShared, type LibraryPaneSide, type PaneResults } from "../components/library/libraryPane";
+import { zeroResultSuggestions, type ZeroResultSuggestion } from "../utils/zeroResultSuggestions";
+
+const NO_ZERO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -934,6 +937,16 @@ export function LibraryView() {
     [entities, filterState, q],
   );
 
+  // With no result, the switches that would bring some back (the Results
+  // bodies' zero state). Counted only while the result is empty.
+  const zeroSuggestions = useMemo(
+    () =>
+      q && matchTypeBase.length === 0
+        ? zeroResultSuggestions(entities, filterState, { query, match: searchMatch })
+        : NO_ZERO_SUGGESTIONS,
+    [q, matchTypeBase.length, entities, filterState, query, searchMatch],
+  );
+
   // Everything but the map's area: what the map draws, so panning brings pins
   // in and out of the area without rebuilding the map. `filtered` narrows it
   // by the area with the same test the `map` node compiles to.
@@ -1094,11 +1107,13 @@ export function LibraryView() {
     return () => setPreviewCount(null);
   }, [withPreview, total, setPreviewCount]);
 
-  // Cards and List show one page of the results (`LibraryPagination` in the
-  // footer). The page belongs to the results it was chosen for: a new key
-  // (collection, filters, query, sort, map area) reads as page 1, and coming
+  // Cards, List and Adv. Search show one page of the results
+  // (`LibraryPagination` in the footer), and the drawer's Results tab pages on
+  // the same state. The page belongs to the results it was chosen for: a new
+  // key (collection, filters, query, sort, map area) reads as page 1, and coming
   // Back from a record rebuilds the same key, so the page and its scroll hold.
-  const paged = viewMode === "cards" || viewMode === "list";
+  // Adv. Search scrolls inside its own body, which registers itself as the lane.
+  const paged = viewMode === "cards" || viewMode === "list" || viewMode === "results";
   // `passKey` without the chain templates' identity, which is new on every
   // mount and would turn Back into a new key, and without the language, so a
   // language switch keeps the page.
@@ -1150,6 +1165,14 @@ export function LibraryView() {
       el.scrollTop = pendingScroll.current;
       pendingScroll.current = 0;
     }
+  }, []);
+  const setResultsLane = useCallback((el: HTMLDivElement | null) => {
+    laneRef.current = el;
+    // `ResultsMainView` restores the scroll itself, once its page is built.
+    if (el) pendingScroll.current = 0;
+  }, []);
+  const keepPageScroll = useCallback((top: number) => {
+    pageScroll.current.top = top;
   }, []);
   useEffect(
     () => () => {
@@ -1822,8 +1845,8 @@ export function LibraryView() {
           groundDown.current = { x: e.clientX, y: e.clientY };
         }}
         onClick={clearOnGround}
-        ref={setLane}
-        onScroll={paged ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
+        ref={viewMode === "results" ? undefined : setLane}
+        onScroll={paged && viewMode !== "results" ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
         // Only a real tap opens an item here, never the end of a scroll.
         data-tap-guard
         // A canvas lane spans the pane on purpose: `__gutter()` lists it and
@@ -1910,6 +1933,14 @@ export function LibraryView() {
               onClearFilters={() => clearFacets()}
               totalMatches={matchTypeBase.length}
               relevanceOf={scoreOf}
+              zeroSuggestions={zeroSuggestions}
+              page={page}
+              pageSize={pageSize}
+              onPage={goToPage}
+              pageLabel={paneSide ? `Pages, ${paneSide} pane` : "Pages"}
+              laneRef={setResultsLane}
+              restoreScroll={pendingScroll.current}
+              onScrollTop={keepPageScroll}
             />
           </div>
         ) : viewMode === "network" ? (
@@ -1995,7 +2026,7 @@ export function LibraryView() {
           />
         )}
         {/* The pager again under the last card or row (`LibraryPageEnd`). */}
-        {paged && !overview && !cejilLoading && filtered.length > 0 && pageCount > 1 && (
+        {paged && viewMode !== "results" && !overview && !cejilLoading && filtered.length > 0 && pageCount > 1 && (
           <LibraryPageEnd
             total={filtered.length}
             page={page}
@@ -2115,6 +2146,11 @@ export function LibraryView() {
       matchTypeCounts={matchTypeCounts}
       totalMatches={matchTypeBase.length}
       relevanceOf={scoreOf}
+      zeroSuggestions={zeroSuggestions}
+      page={page}
+      pageSize={pageSize}
+      onPage={goToPage}
+      pageLabel={paneSide ? `Results pages, ${paneSide} pane` : "Results pages"}
     />
     </SearchMarkProvider>
   );
