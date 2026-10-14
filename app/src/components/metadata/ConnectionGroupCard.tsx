@@ -1,4 +1,5 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { languageAtom } from "../../atoms/language";
 import { Link2 } from "lucide-react";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
@@ -17,11 +18,12 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
  *  (leaf) is the last column. */
 export function ConnectionGroupCard({ group, span = "full" }: { group: ConnectionGroup; span?: CardSpan }) {
   const setOverlay = useSetAtom(previewEntityIdAtom);
+  const lang = useAtomValue(languageAtom);
   const entityHeader = getEntityType(group.targetTypeId)?.name ?? "Entity";
   const rows = mergeConnectionRows(group);
   // Per-column rollups computed over the UNMERGED values (one per connected entity).
   const summaries = group.columns.map((c, i) =>
-    reduceInherited(group.rows.map((r) => r.cells[i]?.value), c.reduce),
+    reduceInherited(group.rows.map((r) => r.cells[i]?.value), c.reduce, { label: c.label, lang }),
   );
   /* The narrow rendering reads `group.rows` — the UNMERGED ones. `rows` above
      is the cell-spanned view, where a value lives on the first entity that has

@@ -26,7 +26,12 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const setOverlay = useSetAtom(previewEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
   const inherits = specInherits(field);
-  const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce);
+  // `distinct` counts the inherited column's noun: its label, or for a
+  // multi-hop path the leaf's.
+  const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce, {
+    label: field.inheritLabel ?? field.inheritPath?.[field.inheritPath.length - 1]?.label,
+    lang,
+  });
   const entityHeader = field.entityLabel ?? getEntityType(resolved.values[0]?.entityTypeId)?.name ?? "Entity";
 
   // When every value shares the SAME provenance (e.g. all judges signed one

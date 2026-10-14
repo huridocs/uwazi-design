@@ -4,6 +4,7 @@ import { getEntityProp } from "../data/entityMetadata";
 import { relationTypes, type RelationType } from "../data/references";
 import type { InheritReduce, RelationshipMetadataField } from "../data/metadata";
 import { chains, leafValues, type ChainGraph, type ChainSegment, type ProvenanceStep } from "./chainTraversal";
+import { distinctRollup } from "./rollupNoun";
 export type { ProvenanceStep } from "./chainTraversal";
 
 /** Resolves one native prop of a source entity. Defaults to the static const;
@@ -75,6 +76,9 @@ export interface InheritSpec {
 export function reduceInherited(
   values: (string | undefined)[],
   mode: InheritReduce | undefined,
+  /** What `distinct` counts: the inherited column's label, in `lang`
+   *  ("3 countries"). Without it the chip counts values. */
+  noun: { label?: string; lang: Language } = { lang: "EN" },
 ): { text: string; title: string } | null {
   if (!mode || mode === "list") return null;
   const present = values.filter((v): v is string => !!v);
@@ -83,8 +87,7 @@ export function reduceInherited(
     case "count":
       return { text: `${present.length} total`, title: `${present.length} inherited values` };
     case "distinct": {
-      const n = new Set(present).size;
-      return { text: `${n} distinct`, title: `${n} distinct values across ${present.length}` };
+      return distinctRollup(new Set(present).size, present.length, noun.label, noun.lang);
     }
     case "first":
       return { text: present[0], title: `First value: ${present[0]}` };
