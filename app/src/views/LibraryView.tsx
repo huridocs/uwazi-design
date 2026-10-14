@@ -5,6 +5,7 @@ import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, ChevronDown, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
+import { appViewAtom } from "../atoms/navigation";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
@@ -1215,13 +1216,26 @@ export function LibraryView() {
   const keepPageScroll = useCallback((top: number) => {
     pageScroll.current.top = top;
   }, []);
+  // The scroll is kept only for Back from a record: leaving for Settings,
+  // Import CSV or Pages, the Library opens at the top when it comes back. The
+  // view switched to is already in `appViewAtom` when this unmounts.
   useEffect(
     () => () => {
       const { key, page: p, top } = pageScroll.current;
-      setPageState({ key, page: p, scroll: top });
+      setPageState({ key, page: p, scroll: store.get(appViewAtom) === "entity" ? top : 0 });
     },
-    [setPageState],
+    [setPageState, store],
   );
+  // Another view mode opens at its top: the lane is one element for every
+  // mode, so it would carry the last one's offset. Before paint, and only on a
+  // change, so Back's restore (on mount) and a language switch are untouched.
+  const laneView = useRef(viewMode);
+  useLayoutEffect(() => {
+    if (laneView.current === viewMode) return;
+    laneView.current = viewMode;
+    if (laneRef.current) laneRef.current.scrollTop = 0;
+    pageScroll.current.top = 0;
+  }, [viewMode]);
 
   /* One answer for the whole grid: does any entity on screen resolve a property?
      Every card gets it so all claim the same subgrid row tracks; a per-card test
