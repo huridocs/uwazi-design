@@ -82,6 +82,15 @@ export function MobileBottomSheet({
     sheetRef.current?.toggleAttribute("inert", !live);
   }, [live, sheetRef]);
 
+  /* A sheet opened, or switched to another section while open (its title
+     changes), starts at the top of its body; the body is the one element the
+     sheet keeps mounted, so it would carry the last section's scroll. Before
+     paint, so the old offset never shows. */
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (open && bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [open, title]);
+
   // Reset snap point when reopened
   useEffect(() => {
     if (open) setSnap(defaultSnap);
@@ -284,7 +293,7 @@ export function MobileBottomSheet({
         )}
 
         {/* Content */}
-        <div data-part="body" className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
+        <div ref={bodyRef} data-part="body" className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
           {typeof children === "function" ? children(chrome) : children}
         </div>
         {footer ? (

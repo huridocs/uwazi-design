@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   Search,
@@ -625,6 +625,16 @@ export function LibraryView() {
   const [createOpen, setCreateOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  // Another view mode opens at its top: the lane is one element for every
+  // mode, so it would carry the last one's offset. Before paint, and only on a
+  // change, so a language switch (no mode change) keeps its place.
+  const laneRef = useRef<HTMLDivElement | null>(null);
+  const laneView = useRef(viewMode);
+  useLayoutEffect(() => {
+    if (laneView.current === viewMode) return;
+    laneView.current = viewMode;
+    if (laneRef.current) laneRef.current.scrollTop = 0;
+  }, [viewMode]);
   /** Create entity: the chosen template opens as a draft in the drawer, on its
    *  edit form. Guarded — the drawer may be holding another entity's edit. */
   const recentTemplates = useAtomValue(recentTemplatesAtom);
@@ -1080,6 +1090,7 @@ export function LibraryView() {
 
       {/* Results */}
       <div
+        ref={laneRef}
         // A Shift+click is a range, not a text selection across the grid.
         onMouseDown={(e) => {
           if (e.shiftKey) e.preventDefault();
