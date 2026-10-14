@@ -41,8 +41,7 @@ function At({ width, children }: { width: number; children: React.ReactNode }) {
   );
 }
 
-/** Wide enough: the table, with its merged cells and Σ rollups in the column
- *  heads. */
+/** Wide enough: the table, with its merged cells. */
 export const Default: Story = {
   render: () => (
     <At width={720}>
@@ -57,9 +56,7 @@ export const Default: Story = {
 };
 
 /** Below the threshold: one card per connected ENTITY, merges expanded so each
- *  is self-contained, em-dash where the connected entity has no value, and the
- *  rollups hoisted to a single header line — they summarise the column, so they
- *  belong to the set rather than to any card in it. */
+ *  is self-contained, em-dash where the connected entity has no value. */
 export const NarrowContainer: Story = {
   render: () => (
     <At width={390}>

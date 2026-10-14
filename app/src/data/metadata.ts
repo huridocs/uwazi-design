@@ -74,7 +74,7 @@ export interface MetadataField {
 /** How a column of inherited values rolls up into a single summary (the Notion /
  *  Airtable "rollup calculation"). `list` = no summary (the values are the
  *  presentation); `distinct`/`count` summarise the set; `min`/`max`/`first` pick
- *  one. Omitted → no rollup chip (unchanged). */
+ *  one. The record does not draw it: the rows show the values. */
 export type InheritReduce = "list" | "distinct" | "count" | "min" | "max" | "first";
 
 export interface RelationshipMetadataField {

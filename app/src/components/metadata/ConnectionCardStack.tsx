@@ -1,7 +1,7 @@
 import { useSetAtom } from "jotai";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RollupChip } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, ProvenanceTrail } from "./InheritedValueChip";
 import type { ProvenanceStep } from "../../utils/inheritance";
 
 /** One connected entity, flattened — no merged cells, no shared rows. */
@@ -31,43 +31,21 @@ export interface StackEntity {
  *
  *  Which is why the MERGE IS EXPANDED here: a card that inherits its Country
  *  from the row three above it is exactly the failure the scroll had. Every card
- *  repeats every value it holds.
- *
- *  The rollups move up to one header line. They summarise the whole column, so
- *  they belong to the set, not to any card in it — and repeating "2 distinct" on
- *  each of six cards would say something false. */
+ *  repeats every value it holds. */
 export function ConnectionCardStack({
   entities,
   relationLabel,
-  rollups,
   sharedProvenance,
 }: {
   entities: StackEntity[];
   relationLabel: string;
-  /** Per-column summaries, in column order. Nulls are skipped. */
-  rollups?: { label: string; summary: { text: string; title: string } | null }[];
   /** True when every row's provenance is identical and hoisted by the caller —
    *  the cards then leave their own trails off, as the table does. */
   sharedProvenance?: boolean;
 }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
-  const chips = (rollups ?? []).filter((r) => r.summary);
-
   return (
     <div className="mt-1.5 space-y-1.5">
-      {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {chips.map((r) => (
-            <span key={r.label} className="inline-flex items-center gap-1">
-              <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
-                {r.label}
-              </span>
-              <RollupChip summary={r.summary!} />
-            </span>
-          ))}
-        </div>
-      )}
-
       {entities.map((e) => (
         <div key={e.entityId} className="rounded-md border border-border/40 p-2.5 space-y-1.5">
           <button

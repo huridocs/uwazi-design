@@ -197,7 +197,7 @@ function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
  *  with two dates and four links rendered as four near-empty boxes.
  *
  *  Connections that DO inherit keep their card — they carry a table (entities ×
- *  inherited columns), provenance trails and rollups, which is real content. */
+ *  inherited columns), and provenance trails, which is real content. */
 export function connectionItem(field: RelationshipMetadataField): MetadataItem {
   return {
     id: field.id,
