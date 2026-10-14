@@ -56,7 +56,10 @@ const MARK_RING = 3;
 const CLUSTER_EPS = 2 * (MARK_R + MARK_RING / 2) + 1;
 /** The UTC day an instant falls on, the same day `formatDay` prints, so two rows
  *  share a value here exactly when they show the same date. */
-const dayOf = (t: number) => Math.floor(t / 86_400_000);
+const DAY_MS = 86_400_000;
+/** The least room between two axis marks: one caption line and a little air. */
+const MARK_MIN_GAP = 16;
+const dayOf = (t: number) => Math.floor(t / DAY_MS);
 /** The brace stem's x in the leader gutter (0 = row edge, `LEADER_W - 4` = axis):
  *  clear of the capsule, close enough that the ticks into the rows stay short. */
 const STEM_X = 7;
@@ -107,6 +110,11 @@ interface Props<T> {
   dotActive?: (item: T) => boolean;
   /** The row body. The spine positions it; the caller decides what it shows. */
   renderRow: (item: T, ctx: { t: number }) => ReactNode;
+  /** The axis's extent and density when `rows` are one page of a larger set:
+   *  the scale and the marks come from the whole set, so the axis keeps its
+   *  shape from page to page, and the time before the page's first row reads
+   *  as an elided break. Absent: the rows' own extent. */
+  domain?: { min: number; max: number; count: number };
 }
 
 /** The proportional chronology, shared by the Timeline's Spine layout and the
@@ -124,6 +132,7 @@ export function TimeSpine<T>({
   dotColor,
   dotActive,
   renderRow,
+  domain,
 }: Props<T>) {
   const geom = useTrackGeom();
   const AXIS_GUTTER = geom.AXIS;
@@ -137,16 +146,27 @@ export function TimeSpine<T>({
     // shifting them separately detaches the leaders from their dots.
     const PAD = Math.ceil(rowHeight / 2);
     const sorted = [...input].sort((a, b) => a.t - b.t);
-    const min = sorted.length ? sorted[0].t : 0;
-    const max = sorted.length ? sorted[sorted.length - 1].t : 0;
+    const min = sorted.length ? Math.min(sorted[0].t, domain?.min ?? Infinity) : 0;
+    const max = sorted.length ? Math.max(sorted[sorted.length - 1].t, domain?.max ?? -Infinity) : 0;
+    const density = Math.max(sorted.length, domain?.count ?? 0);
+    const lo = sorted.length ? sorted[0].t : 0;
+    const hi = sorted.length ? sorted[sorted.length - 1].t : 0;
     const yearMs = 365.2425 * 86_400_000;
     // The scale adapts to event density: a fixed px-per-year collapses a busy year
     // into a list and stretches a 40-year range into empty space. Each event gets
     // roughly one row of axis.
-    const spanYears = Math.max((max - min) / yearMs, 1 / 365);
+    // Under a day (the Vegas recordings, eleven minutes to the second) the
+    // scale is not capped, so rows still spread by their time: the cap would
+    // give the whole span under a pixel and the push would stack them as a list.
+    const subDay = max - min < DAY_MS;
+    const spanYears = Math.max((max - min) / yearMs, subDay ? 1 / (365 * 86_400) : 1 / 365);
+    // Under a day the scale is the drawn rows' own (their count over their
+    // extent): a `domain` from midnight would give eleven minutes of rows a few
+    // pixels. The time before them is elided as any silence is.
+    const rowsYears = Math.max((hi - lo) / yearMs, 1 / (365 * 86_400));
     const scale = Math.min(
-      Math.max((sorted.length * rowHeight * 1.35) / spanYears, PX_PER_YEAR),
-      40_000,
+      Math.max(subDay ? (sorted.length * rowHeight * 1.35) / rowsYears : (density * rowHeight * 1.35) / spanYears, PX_PER_YEAR),
+      subDay ? Infinity : 40_000,
     );
     const raw = (t: number) => 6 + ((t - min) / yearMs) * scale;
 
@@ -208,7 +228,24 @@ export function TimeSpine<T>({
     const years: { label: string; y: number }[] = [];
     const d0 = new Date(min);
     const d1 = new Date(max);
-    if (spanYears < 2.5) {
+    if (subDay) {
+      // Hours, minutes or seconds, stepped so a mark lands every few rows, over
+      // the rows drawn: a `domain` reaching back to midnight (records dated by
+      // the day) would otherwise step by the hour across a band that is elided.
+      const span = Math.max(hi - lo, 1000);
+      const step =
+        span <= 2 * 60_000 ? 10_000
+        : span <= 15 * 60_000 ? 60_000
+        : span <= 90 * 60_000 ? 5 * 60_000
+        : span <= 6 * 3_600_000 ? 30 * 60_000
+        : 3_600_000;
+      for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) {
+        const pos = at(t);
+        // The label column fits "22:12"; a mark inside a minute shows its seconds.
+        const secs = new Date(t).getUTCSeconds();
+        if (pos >= 0) years.push({ label: secs ? `:${String(secs).padStart(2, "0")}` : formatTime(t), y: pos });
+      }
+    } else if (spanYears < 2.5) {
       const step = spanYears < 0.6 ? 1 : 3;
       for (
         let m = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), 1));
@@ -233,12 +270,24 @@ export function TimeSpine<T>({
     }
     // A range starting mid-period has no tick above its first row, so anchor the
     // top of the axis explicitly.
-    if (!years.length || years[0].y > 14) {
+    if (subDay && (!years.length || years[0].y > 14)) {
+      years.unshift({ label: formatTime(Math.floor(min / 60_000) * 60_000), y: 6 });
+    } else if (!years.length || years[0].y > 14) {
       const anchor = bucketOf(min, spanYears < 2.5 ? "month" : "year").label;
       years.unshift({ label: spanYears < 2.5 ? anchor.slice(0, 3) : anchor, y: 6 });
     }
     // The single shift into the reserve — see PAD above.
     const laid = rows.map((r) => ({ ...r, y: r.y + PAD, ideal: r.ideal + PAD }));
+    // With a `domain` the marks run to the set's end, past the page's last row:
+    // only those on the canvas are drawn.
+    // A mark closer to the one above than a label's height is left out: with a
+    // `domain`, a band elided before the first row can hold many.
+    let lastMark = -Infinity;
+    const marks = years.filter((y) => {
+      if (y.y + PAD > height - PAD || y.y - lastMark < MARK_MIN_GAP) return false;
+      lastMark = y.y;
+      return true;
+    });
 
     // Rows join one cluster if either test holds (a union: the day test only adds):
     //  - drawn distance within CLUSTER_EPS, since at a compressed scale nearby
@@ -250,7 +299,8 @@ export function TimeSpine<T>({
     for (const r of laid) {
       const open = clusters[clusters.length - 1];
       const last = open?.members[open.members.length - 1];
-      const sameDay = last ? dayOf(last.row.t) === dayOf(r.row.t) : false;
+      // Under a day every row shares the day, so only the drawn distance counts.
+      const sameDay = last && !subDay ? dayOf(last.row.t) === dayOf(r.row.t) : false;
       if (open && (sameDay || r.ideal - open.bottom <= CLUSTER_EPS)) {
         open.members.push(r);
         open.bottom = r.ideal;
@@ -269,11 +319,11 @@ export function TimeSpine<T>({
       rows: laid,
       clusters,
       height,
-      years: years.map((y) => ({ ...y, y: y.y + PAD })),
+      years: marks.map((y) => ({ ...y, y: y.y + PAD })),
       gaps: gaps.map((g) => ({ ...g, y: g.y + PAD })),
       spans,
     };
-  }, [input, rowHeight]);
+  }, [input, rowHeight, domain?.min, domain?.max, domain?.count]);
 
   // No rows renders nothing: the extent would collapse to the epoch and the
   // anchor mark would print a lone "1970". Callers show their own empty state.

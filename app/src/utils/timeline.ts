@@ -286,7 +286,12 @@ export const formatDay = (ms: number): string => formatMomentIn(ms, false);
  *  (the timeline's and the Results view's) so an elision reads the same in each. */
 export function elapsed(ms: number): string {
   const days = ms / 86_400_000;
-  if (days >= 730) return `${Math.round(days / 365.2425)} years`;
-  if (days >= 55) return `${Math.round(days / 30.44)} months`;
-  return `${Math.max(1, Math.round(days))} days`;
+  const n = (v: number, unit: string) => `${v} ${unit}${v === 1 ? "" : "s"}`;
+  if (days >= 730) return n(Math.round(days / 365.2425), "year");
+  if (days >= 55) return n(Math.round(days / 30.44), "month");
+  // Under a day (the Vegas recordings): hours, minutes or seconds.
+  if (ms >= 86_400_000) return n(Math.round(days), "day");
+  if (ms >= 3_600_000) return n(Math.round(ms / 3_600_000), "hour");
+  if (ms >= 60_000) return n(Math.round(ms / 60_000), "minute");
+  return n(Math.max(1, Math.round(ms / 1000)), "second");
 }
