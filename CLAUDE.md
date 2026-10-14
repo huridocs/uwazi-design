@@ -119,9 +119,11 @@ Known gaps, kept on purpose:
 - `scripts/recover-cejil-docs.cjs` calls a third party's production server. It is serial,
   entity-capped (`CEJIL_RECOVER_LIMIT`) and byte-capped (`CEJIL_RECOVER_BUDGET_MB`), and stops on
   429/5xx. Do not parallelise it or raise the caps.
-- A CEJIL entity without a PDF reads a connected one's (`cejilRenderedDoc`). The snippet path
-  carries that as `borrowedFrom`, printed as `↳ from <document>` by `BorrowedDocLine`, on a line
-  that is already mounted. `↳ via` and `↳ from` both render through `shared/ProvenanceLine.tsx`.
+- A CEJIL record shows a document only when it owns the file. One with none whose connected
+  records hold one (a Causa and its Sentencias) keeps a Document tab whose `NoDocumentPane` names
+  those records (`EntityProfile.documentElsewhere`, `cejilDocumentHolders`), each opening its own
+  Document tab; ToC and Search are left out. `↳ via`, `↳ also under` and `↳ copied from` render
+  through `shared/ProvenanceLine.tsx`.
 - Document tab renditions: `documentFormatAtom` = `pdf | text | html` switches the rendition of the
   default primary document. `DocumentViewer` keeps the PDF mounted and hidden, because remounting
   leaves the canvases blank. Rendition text is `data/velasquez-judgment-{en,es,fr,ar}.txt`, parsed
