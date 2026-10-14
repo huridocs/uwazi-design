@@ -146,13 +146,16 @@ function VideoThumb({
  *  9% strength. The plaque is 22% of the slot height: larger, a screen of empty
  *  slots reads as coloured tiles rather than empty slots. `max-h-8` caps it in
  *  the portrait slot and `min-h-4` keeps it visible in the 2.25rem list chip.
- *  A slight off-white ground (`bg-placeholder`) and the type colour only:
+ *  A slight off-white ground (`bg-placeholder`) with an inset hairline edge
+ *  (`inset-ring-border-placeholder`), and the type colour only:
  *  `bg-parchment` is reserved for selection, and vellum's cream read as a
  *  filled slot rather than an empty one. */
 export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
   const color = tint ?? "#6B7280";
   return (
-    <span data-component="QuietMark" className={`bg-placeholder flex items-center justify-center ${className}`}>
+    // The edge is an inset ring, painted inside the box: the slot keeps its
+    // size whether or not the caller gives it a border.
+    <span data-component="QuietMark" className={`bg-placeholder inset-ring inset-ring-border-placeholder flex items-center justify-center ${className}`}>
       <span
         data-part="plaque"
         className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
