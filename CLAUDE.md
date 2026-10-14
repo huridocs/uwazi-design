@@ -259,6 +259,13 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   the lead action when there is no commit; `BAR_GHOST` for the rest; `BAR_DANGER` (seal text) for
   Delete. Groups are split by `BarDivider`. A selection shows its count in a fixed slot; the bar
   is not tinted.
+- A toolbar that steers a view (Library masthead, Settings list toolbars, the Relationships
+  toolbar) draws its controls with `components/shared/toolButton.ts`: paper, a `border-border`
+  hairline, `h-8`, `rounded-md`, with rest, on (open or modified: ink border, small shadow) and
+  idle states. `Select`'s default, `FiltersButton`, the Library's Display and Views and the
+  Relationships Display and Connect use it; `SegmentedControl` is paper. These are paper controls
+  and keep their border on warm or parchment; the no-edge rule is for warm-filled buttons and the
+  bar ladder.
 - Every dialog is `components/shared/Modal.tsx`; the one exception is Bert's `AgentModal`.
   - Widths: `sm` 28rem, `md` 32, `lg` 40, `xl` 48 (full screen below md), `grid` up to 80rem for
     spreadsheet bodies.
@@ -303,9 +310,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
   and tree views. In the Relationships tab the toolbar is the first block of the warm lane, under
   DocMeta's rule, so the header has the same shape as on every other tab; it sits outside the
-  scroller and stays at the lane's top. The search field is on paper with its border; Display,
-  Connect and Filters are ghosts (`BAR_GHOST`; `FiltersButton tone="ghost"`), as buttons on warm
-  take no edge. The drawer section, slide-over and Library preview have no warm lane and draw it
+  scroller and stays at the lane's top. The search field and every control (the view switcher,
+  Display, Connect, Filters) are paper with their border, the toolbar control in `toolButton.ts`,
+  6px apart, as in the Library masthead. The drawer section, slide-over and Library preview have no warm lane and draw it
   on paper.
 - Filters are a drawer tab where the entity view has a drawer (Metadata, Relationships and
   Document views: `RelationshipsFiltersTab`, registered with `useRelFiltersDock`). While that
