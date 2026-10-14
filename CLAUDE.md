@@ -731,6 +731,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     result has a preview; List draws it as On (one chip column).
   - An empty slot (QuietMark) sits on `bg-placeholder` (`--bg-placeholder`): a slight off-white,
     not vellum or parchment.
+  - Card text clips at three lines: the title and a text property value (`CardValue lines={3}`).
+    The subgrid tracks grow with them, so a row's cards keep one height. One line stays for
+    labels, dates and periods, coordinates, chip rows, filenames, the footer and the List row; a
+    relationship row's `CardValue` keeps one line.
   - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]`; in it Size
     sets the column width (`cardGridCols`: 11 / 14 / 18rem, always narrower than landscape's
     21.5rem, never fewer than two columns), and Columns defaults to Auto in every layout.
