@@ -75,6 +75,10 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
   2 s off its moment's median (`contest.clock`, from `vegasSyncAnalysis()`).
   `Reference.succession` is `supersedes`, which is not a dispute. The Nepal build reads
   `disputed-notes.json` when present and runs without it.
+- `Reference.hubId` for Nepal and Vegas comes from the seed's `data/hubs.json` (Research's
+  `build_hubs.py`: Nepal one hub per claim stance and per event's `involved`, Vegas one per
+  moment's `captures`), read by `scripts/seedHubs.mjs`, which stops the build on a malformed hub.
+  Regenerate it after `merge.py` or `build_seed.py`.
 - The plain List renders references, one row each; a grouped List renders one row per record in
   each group (`MemberCard` variant `row`), holding every reference the group has for it. The tree
   and graph render relationships.
