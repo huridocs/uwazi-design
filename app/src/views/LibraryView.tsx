@@ -254,16 +254,18 @@ export function LibraryView() {
   // Landscape grows with the display: 1 / sm 2 / xl 3, then 4 at a 1920px
   // viewport (120rem) and 5 at 2560px (160rem). Portrait cards are made
   // portrait by the GRID: the 3:4 slot spans the card's width, so the column
-  // width sets the slot's height, and Size steps the column count (S hangs
-  // five across at xl, L three) instead of a slot-height table.
+  // width sets the slot's height. Size sets that width from the PANE, not the
+  // viewport (`auto-fill` over 11 / 14 / 18rem), and never fewer than two
+  // columns: by viewport, a 422px drawer pane drew four 97px cards, and a
+  // phone's Large drew one 659px-tall card, larger than landscape.
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const cardGridCols =
     thumbFrame === "portrait" && cardInfo.preview
       ? {
-          s: "grid-cols-2 sm:grid-cols-4 xl:grid-cols-5",
-          m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
-          l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
+          s: "grid-cols-[repeat(auto-fill,minmax(min(11rem,calc(50%-0.375rem)),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(14rem,calc(50%-0.375rem)),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(18rem,calc(50%-0.375rem)),1fr))]",
         }[thumbSize]
       : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 min-[120rem]:grid-cols-4 min-[160rem]:grid-cols-5";
   const [sort, setSort] = useAtom(librarySortAtom);
