@@ -541,7 +541,7 @@ export const EntityCard = memo(function EntityCard({
               />
             )
           ) : (
-            <QuietMark tint={getEntityType(entity.typeId)?.color} className="h-full w-full rounded" />
+            <QuietMark tint={getEntityType(entity.typeId)?.color} frame={thumbFrame} className="h-full w-full rounded" />
           )}
         </span>
       )}

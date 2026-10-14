@@ -145,12 +145,23 @@ function VideoThumb({
  *  The entity's square dot at its true colour on a plaque of the same colour at
  *  9% strength. The plaque is 22% of the slot height: larger, a screen of empty
  *  slots reads as coloured tiles rather than empty slots. `max-h-8` caps it in
- *  the portrait slot and `min-h-4` keeps it visible in the 2.25rem list chip.
+ *  the landscape band and `min-h-4` keeps it visible in the 2.25rem list chip.
+ *  In the portrait slot (`frame="portrait"`) the plaque is 8% of the slot height,
+ *  capped at `max-h-6`: the tall slot made 22% hit the 2rem cap at every Size,
+ *  and the mark read large against the text below it.
  *  A slight off-white ground (`bg-placeholder`) with an inset hairline edge
  *  (`inset-ring-border-placeholder`), and the type colour only:
  *  `bg-parchment` is reserved for selection, and vellum's cream read as a
  *  filled slot rather than an empty one. */
-export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
+export function QuietMark({
+  tint,
+  frame = "landscape",
+  className = "",
+}: {
+  tint?: string;
+  frame?: ThumbFrame;
+  className?: string;
+}) {
   const color = tint ?? "#6B7280";
   return (
     // The edge is an inset ring, painted inside the box: the slot keeps its
@@ -158,7 +169,7 @@ export function QuietMark({ tint, className = "" }: { tint?: string; className?:
     <span data-component="QuietMark" className={`bg-placeholder inset-ring inset-ring-border-placeholder flex items-center justify-center ${className}`}>
       <span
         data-part="plaque"
-        className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
+        className={`flex items-center justify-center ${frame === "portrait" ? "h-[8%] max-h-6" : "h-[22%] max-h-8"} min-h-4 aspect-square rounded-md`}
         style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
       >
         <span
