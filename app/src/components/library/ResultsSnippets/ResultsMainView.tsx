@@ -8,7 +8,6 @@ import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
   MAX_FULLTEXT,
-  type BorrowedDoc,
   type EntitySnippets,
   type FullTextSnippet,
   type MetadataSnippet,
@@ -38,7 +37,6 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { BAR_GHOST } from "../../shared/warmButton";
 import { ListInfoRow } from "../../shared/ListInfoRow";
-import { BorrowedDocLine } from "../BorrowedDocLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 
@@ -569,14 +567,6 @@ function GroupedBody({
                     <SectionLabel icon={<FileText size={11} />}>
                       Document
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
-                      {/* Rides the section label rather than taking a line of
-                          its own — the label is mounted whether or not the
-                          document is borrowed, so the passages under it never
-                          move (CLAUDE.md). Trailing the page count, not pushed
-                          to the far edge: across a card that can be a metre wide
-                          an `ms-auto` attribution parks nowhere near the thing
-                          it attributes. */}
-                      <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
                     </SectionLabel>
                     <div className="mt-1.5 flex flex-col gap-1">
                       {snippets.fullText.map((s, i) => (
@@ -692,10 +682,6 @@ function TreeBody({
                       ? `${snippets.fullText.length} of ${snippets.fullTextTotal.toLocaleString()} shown`
                       : undefined
                   }
-                  // On the branch header, not above the passages: the header is
-                  // there whether or not the document is borrowed, so nothing
-                  // below it moves.
-                  trailing={<BorrowedDocLine from={snippets.borrowedFrom} />}
                 >
                   {snippets.fullText.map((s, i) => (
                     <PassageRow
@@ -783,10 +769,6 @@ interface FlatPassage {
   field: string | null;
   fieldKey: string | null;
   text: string;
-  /** For document rows: the connected document the passage was quoted from. The
-   *  flattening loses the entity's snippets, and this list is exactly where the
-   *  same judgment shows up under a dozen different case names. */
-  from: BorrowedDoc | null;
 }
 
 function PassagesBody({
@@ -835,7 +817,6 @@ function PassagesBody({
             field: m.field,
             fieldKey: m.fieldKey,
             text: t,
-            from: null,
           });
         }
       }
@@ -847,7 +828,6 @@ function PassagesBody({
           field: null,
           fieldKey: null,
           text: s.text,
-          from: snippets.borrowedFrom,
         });
       }
       // Pages counted but not excerpted — said out loud rather than dropped.
@@ -955,11 +935,6 @@ function PassagesBody({
                       row.field
                     )}
                   </bdi>
-                  {/* The attribution line is mounted for every row, so naming the
-                      source document here costs no height and moves nothing. It
-                      is what turns a run of identical passages under a dozen
-                      case names into a dozen cases citing one judgment. */}
-                  <BorrowedDocLine from={row.from} className="min-w-0" />
                 </span>
               </span>
             </button>

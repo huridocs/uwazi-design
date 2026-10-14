@@ -124,43 +124,14 @@ function buildRendition(title: string, pages: string[]): DocRendition {
   return { plainText: paras.join("\n\n"), html: blocks };
 }
 
-/** The connected document an entity's rendered PDF was borrowed FROM — the
- *  entity that owns it, named. Absent when the entity renders its own file. */
-export interface BorrowedDoc {
-  entityId: string;
-  title: string;
-}
-
-/** Url'd PDF files for an entity, else borrow from a connected document entity
- *  (a Causa → its Sentencia), so opening a case shows its primary judgment. */
-/** The document the viewer ACTUALLY renders for this entity: its per-page text,
- *  plus — when the file came from a CONNECTED entity — which one.
- *
- *  Goes through `docFilesFor`, the same selection the profile/viewer uses — which
- *  falls back to a RELATED entity's PDF (a Causa shows its Sentencia). Reading
- *  the entity's own files instead gave two wrong answers: no pages at all for a
- *  Causa, and — when a differently-languaged file happened to carry fullText —
- *  page numbers belonging to a file that wasn't on screen (the "p.9 lands on 15"
- *  report). Page numbers must refer to the document being displayed.
- *
- *  `borrowedFrom` is that same fallback, said out loud: `titleSid !== sharedId` is
- *  exactly the borrow, and it's what `buildCejilProfile` already titles the
- *  document group with.
- *
- *  Both answers come off ONE `docFilesFor` walk on purpose: the fallback scans the
- *  entity's relationships, and a País hub has thousands of edges — asking twice is
- *  not free. */
-export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedFrom: BorrowedDoc | null } {
-  const { files, titleSid } = docFilesFor(sharedId);
-  const primary = files[0];
-  if (!primary) return { pages: [], borrowedFrom: null };
-  return {
-    pages: docPagesOf(primary),
-    borrowedFrom:
-      titleSid === sharedId
-        ? null
-        : { entityId: titleSid, title: cejilBySidLang().get(`${titleSid}::es`)?.title || titleSid },
-  };
+/** The document the viewer renders for this entity: its per-page text. A
+ *  record shows a document only when it owns the file: one without a PDF of its
+ *  own has none (a Causa does not read its Sentencia's; its Document tab names
+ *  the records that hold one, `cejilDocumentHolders`). Page numbers refer to
+ *  this file. */
+export function cejilRenderedDoc(sharedId: string): { pages: string[] } {
+  const primary = ownPdfFiles(sharedId)[0];
+  return { pages: primary ? docPagesOf(primary) : [] };
 }
 
 /** A file's per-page text — BY FILE `_id` first.
@@ -175,26 +146,35 @@ export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedF
  *  The filename fallback is for every record that pilot hasn't reached: they
  *  still point at the 6 stand-ins, and dropping them would take the whole
  *  corpus's full-text search down to the recovered handful. A record resolving
- *  through the fallback is showing another document's text — that is what
- *  `BorrowedDocLine` warns about, and it goes away as records are recovered. */
+ *  through the fallback is showing another document's text, and it goes away as
+ *  records are recovered. */
 function docPagesOf(file: CejilFile): string[] {
   const byKey = cejilFullText();
   return byKey[file._id] ?? byKey[file.filename] ?? [];
 }
 
-function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {
-  const own = (cejilFilesBySid().get(sharedId) || []).filter((f) => f.url && f.isPdf);
-  if (own.length) return { files: own, titleSid: sharedId };
-  const candidates = (cejilRelsByEntity().get(sharedId) || [])
-    .map((r) => (r.from === sharedId ? r.to : r.from))
-    .map((o) => ({ o, files: (cejilFilesBySid().get(o) || []).filter((f) => f.url && f.isPdf), tpl: cejilBySidLang().get(`${o}::es`)?.template }))
-    .filter((c) => c.files.length)
-    .sort((a, b) => (b.tpl === SENTENCIA_TPL ? 1 : 0) - (a.tpl === SENTENCIA_TPL ? 1 : 0));
-  return candidates.length ? { files: candidates[0].files, titleSid: candidates[0].o } : { files: [], titleSid: sharedId };
+/** The entity's own fetched PDFs: a file record with a URL. */
+function ownPdfFiles(sharedId: string): CejilFile[] {
+  return (cejilFilesBySid().get(sharedId) || []).filter((f) => f.url && f.isPdf);
 }
 
-/** Shared-ids that actually surface a viewable PDF — their own downloaded PDF
- *  or one borrowed from a connected Sentencia. The single source of truth for
+/** For a record with no PDF of its own: the connected records that hold one
+ *  (Sentencias first, then by title), for its Document tab to link to. */
+export function cejilDocumentHolders(sharedId: string): { entityId: string; title: string; typeId?: string }[] {
+  if (ownPdfFiles(sharedId).length) return [];
+  const seen = new Set<string>();
+  return (cejilRelsByEntity().get(sharedId) || [])
+    .map((r) => (r.from === sharedId ? r.to : r.from))
+    .filter((o) => !seen.has(o) && (seen.add(o), ownPdfFiles(o).length > 0))
+    .map((o) => {
+      const es = cejilBySidLang().get(`${o}::es`);
+      return { entityId: o, title: es?.title || o, typeId: es?.template };
+    })
+    .sort((a, b) => (b.typeId === SENTENCIA_TPL ? 1 : 0) - (a.typeId === SENTENCIA_TPL ? 1 : 0) || a.title.localeCompare(b.title));
+}
+
+/** Shared-ids that own a viewable PDF (a downloaded file of their own). The
+ *  single source of truth for
  *  the Library card's "has document" indicator, so it matches exactly what
  *  buildCejilProfile renders (a file record alone isn't enough — most are
  *  metadata-only, with no fetched binary). */
@@ -202,7 +182,7 @@ let _docBearing: Set<string> | null = null;
 export function cejilDocBearingIds(): Set<string> {
   if (!cejilLoaded()) return new Set();
   if (!_docBearing) {
-    _docBearing = new Set([...cejilSharedIdSet()].filter((sid) => docFilesFor(sid).files.length > 0));
+    _docBearing = new Set([...cejilSharedIdSet()].filter((sid) => ownPdfFiles(sid).length > 0));
   }
   return _docBearing;
 }
@@ -417,13 +397,23 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 
-  // Document-bearing when we fetched a real PDF for this entity OR for one of its
-  // connected documents (a Causa surfaces its Sentencia) — never the mock PDF.
-  const { files: urlFiles, titleSid } = docFilesFor(sharedId);
+  // Document-bearing when we fetched a real PDF for this entity — never a
+  // connected record's, never the mock PDF.
+  const urlFiles = ownPdfFiles(sharedId);
   if (urlFiles.length === 0) {
-    return { id: sharedId, typeId: es.template, hasDocument: false, metadata, documentGroups: [], files: [], relationships: { kind: "references" } };
+    const holders = cejilDocumentHolders(sharedId);
+    return {
+      id: sharedId,
+      typeId: es.template,
+      hasDocument: false,
+      metadata,
+      documentGroups: [],
+      files: [],
+      relationships: { kind: "references" },
+      ...(holders.length ? { documentElsewhere: holders } : {}),
+    };
   }
-  const docTitle = cejilBySidLang().get(`${titleSid}::es`)?.title || es.title;
+  const docTitle = es.title;
 
   const groupId = `g-cejil-${sharedId}`;
   const files: FileEntry[] = urlFiles.map((f) => ({

@@ -12,6 +12,8 @@ import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { docSearchQueryAtom } from "../../atoms/references";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntityProfile } from "../../data/entityProfiles";
 
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },
@@ -32,6 +34,10 @@ export function ReferencePanel() {
   // highlighted?" has no visible answer at all.
   const relFilterCount = useAtomValue(activeFilterCountAtom);
   const docQuery = useAtomValue(docSearchQueryAtom);
+  // ToC and Search read the record's own document: a record with none (a
+  // CEJIL Causa beside the records that hold its judgments) has neither.
+  const hasDocument = getEntityProfile(useAtomValue(focusedEntityIdAtom)).hasDocument;
+  const tab = hasDocument || (activeDrawerTab !== "toc" && activeDrawerTab !== "search") ? activeDrawerTab : "metadata";
 
   return (
     // The gutter host (see `gutter-host`): the tabs and every tab body below sit
@@ -40,27 +46,27 @@ export function ReferencePanel() {
       <EntityOverlay />
 
       <DrawerTabs
-        tabs={baseDrawerTabs.map((tab) => {
+        tabs={baseDrawerTabs.filter((t) => hasDocument || (t.id !== "toc" && t.id !== "search")).map((tab) => {
           if (tab.id === "connections")
             return { ...tab, count: references.length, dot: relFilterCount > 0 };
           if (tab.id === "files") return { ...tab, count: files.length };
           if (tab.id === "search") return { ...tab, dot: docQuery.trim().length > 0 };
           return tab;
         })}
-        activeId={activeDrawerTab}
+        activeId={tab}
         onChange={setActiveDrawerTab}
       />
 
-      {activeDrawerTab === "metadata" && <MetadataDrawerContent />}
-      {activeDrawerTab === "toc" && <ToCPanel />}
-      {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
-      {activeDrawerTab === "files" && <DrawerFilesBody />}
-      {activeDrawerTab === "search" && <DocumentSearchBody />}
+      {tab === "metadata" && <MetadataDrawerContent />}
+      {tab === "toc" && <ToCPanel />}
+      {tab === "connections" && <RelationshipsDrawerSection />}
+      {tab === "files" && <DrawerFilesBody />}
+      {tab === "search" && <DocumentSearchBody />}
 
-      {!["metadata", "toc", "connections", "files", "search"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "connections", "files", "search"].includes(tab) && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">
-            {activeDrawerTab} content
+            {tab} content
           </p>
         </div>
       )}
@@ -69,8 +75,8 @@ export function ReferencePanel() {
           row, RelationshipsDrawerSection's bottom RelationshipsActionBar
           with Edit/Cancel/Save), so skip the shared bar for those tabs —
           otherwise a redundant 48px bar stacks underneath. */}
-      {activeDrawerTab !== "files" && activeDrawerTab !== "connections" && (
-        <DrawerActionBar activeTab={activeDrawerTab} />
+      {tab !== "files" && tab !== "connections" && (
+        <DrawerActionBar activeTab={tab} />
       )}
     </div>
   );

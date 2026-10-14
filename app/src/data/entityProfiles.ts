@@ -58,6 +58,9 @@ export interface EntityProfile {
   metadata: Record<Language, AnyMetadataField[]>;
   pdfMetadata?: PdfMetaByLang;
   relationships: RelationshipSource;
+  /** A record with no document of its own whose connected records hold one
+   *  (a CEJIL Causa and its Sentencias): its Document tab links to them. */
+  documentElsewhere?: { entityId: string; title: string; typeId?: string }[];
 }
 
 /** Canonical main entity. `e3` is already the source of the whole references[]

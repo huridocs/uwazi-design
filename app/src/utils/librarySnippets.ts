@@ -5,7 +5,7 @@ import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
-import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
+import { cejilRenderedDoc } from "../data/cejil/profile";
 import { highlightTerms, fold, foldWithMap } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
@@ -65,15 +65,7 @@ export interface FullTextSnippet {
   hits: number;
 }
 
-export type { BorrowedDoc };
-
 export interface EntitySnippets {
-  /** The connected document these passages were quoted from, when the entity
-   *  doesn't own the file the viewer renders (a Causa reading its Sentencia).
-   *  Null for an entity's own document, and for the mock corpus. It describes
-   *  the DOCUMENT, not the match, so it's set whether or not `fullText` is
-   *  empty; surfaces render it beside document passages. */
-  borrowedFrom: BorrowedDoc | null;
   /** metadata groups + **every** matched page — NOT `fullText.length`. The
    *  excerpt list is capped (`MAX_FULLTEXT`); this count isn't, so a card can say
    *  "5 of 23" instead of quietly presenting 5 as the whole story. */
@@ -282,20 +274,11 @@ function excerptAroundTerms(
 interface DocPages {
   pages: string[];
   paged: boolean;
-  /** The connected entity this document was borrowed from — see
-   *  `cejilRenderedDoc`. Null when the entity owns its file.
-   *
-   *  The mock corpus borrows too, in its way (every doc-bearing type shares one
-   *  Velásquez rendition), but there is no connected DOCUMENT ENTITY to name —
-   *  the sharing is a seed-data shortcut, not a relationship the data records —
-   *  so it stays null rather than inventing an attribution. Its snippets already
-   *  carry no page for the same reason. */
-  borrowedFrom: BorrowedDoc | null;
 }
 
 /** No document. ONE instance, so the page-keyed caches below don't accumulate a
  *  distinct entry per document-less entity (and `[] !== []` doesn't defeat them). */
-const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null };
+const NO_PAGES: DocPages = { pages: [], paged: false };
 
 /** `paginate` is deterministic in (rendition, pageCount), so the mock corpus's
  *  chunking is done once per language rather than per entity per keystroke —
@@ -303,11 +286,8 @@ const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null };
  *  the identity the fold caches below key on. */
 const mockPagesCache = new Map<Language, DocPages>();
 
-/** `documentPages`, memoised per entity. The lookup itself is not free on CEJIL:
- *  `cejilDocPagesFor` resolves the entity's own PDF or borrows one from a
- *  connected Sentencia, which walks that entity's relationships — and a País hub
- *  has thousands. That walk was being redone on every call, i.e. per entity per
- *  keystroke, to arrive at the same array every time. */
+/** `documentPages`, memoised per entity, so the lookup runs once per entity
+ *  rather than per entity per keystroke. */
 const docPagesCache = new Map<string, DocPages>();
 
 function documentPages(e: Entity, language: Language, source: DataSource): DocPages {
@@ -320,12 +300,11 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       const key = `cejil:${e.id}`;
       let hit = docPagesCache.get(key);
       if (!hit) {
-        // The file the VIEWER renders, and whether it came from a connected
-        // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
-        const { pages, borrowedFrom } = cejilRenderedDoc(e.id);
-        // Entities that borrow the SAME file get the same array instance back, so
-        // the per-document fold cache below is shared across all of them.
-        hit = pages.length ? { pages, paged: true, borrowedFrom } : NO_PAGES;
+        // The file the viewer renders: the record's own PDF, or none.
+        const { pages } = cejilRenderedDoc(e.id);
+        // Entities whose files resolve to the same text (a stand-in filename)
+        // get the same array instance, so the per-document fold cache is shared.
+        hit = pages.length ? { pages, paged: true } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
       return hit;
@@ -339,7 +318,7 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       if (!hit) {
         const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
         const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
-        hit = { pages: paginate(rendition.plainText, pageCount), paged: false, borrowedFrom: null };
+        hit = { pages: paginate(rendition.plainText, pageCount), paged: false };
         mockPagesCache.set(language, hit);
       }
       return hit;
@@ -357,10 +336,9 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
  *
  *  This is where the search was spending its time. `fold` is an NFD normalise, a
  *  `\p{Diacritic}` regex strip and a lowercase over the whole text, and the
- *  corpus has ~4,400 entities sharing ~80 documents: an entity with no PDF of its
- *  own borrows a connected Sentencia's, so the SAME judgment was folded once per
- *  entity that pointed at it — thousands of times — and then again on the next
- *  keystroke, because nothing kept the result. Keyed by document, each one folds
+ *  corpus's records resolve to a few stand-in documents (shared filenames), so
+ *  the SAME text was folded once per entity that pointed at it, thousands of
+ *  times, and then again on the next keystroke, because nothing kept the result. Keyed by document, each one folds
  *  once for the life of the corpus.
  *
  *  A WeakMap on the array (the same idiom as `foldedFieldsCache`): a reloaded
@@ -498,7 +476,7 @@ export function buildSnippetsFor(
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) {
-    return { count: 0, metadata, fullText, fullTextTotal: 0, borrowedFrom: null };
+    return { count: 0, metadata, fullText, fullTextTotal: 0 };
   }
 
   // `foldedFields`, not `entitySearchFields`: the same per-entity fold the categoriser
@@ -510,7 +488,7 @@ export function buildSnippetsFor(
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
 
-  const { pages, paged, borrowedFrom } = documentPages(entity, language, source);
+  const { pages, paged } = documentPages(entity, language, source);
   // No early break: the loop used to stop at the cap, which is exactly why the
   // total was unknowable. Folding every page is the same work the search filter
   // already does for this entity (`entityFullTextBlob` folds the whole doc), so
@@ -528,7 +506,7 @@ export function buildSnippetsFor(
     if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
   }
 
-  return { count: metadata.length + fullTextTotal, metadata, fullText, fullTextTotal, borrowedFrom };
+  return { count: metadata.length + fullTextTotal, metadata, fullText, fullTextTotal };
 }
 
 export interface MatchCategories {
@@ -650,7 +628,7 @@ export function hiddenMatchOrigin(
  *
  *  Keyed by the DOCUMENT, not the entity. It used to be `source:language:id`,
  *  which meant the corpus's ~80 judgments were folded — and then stored — once
- *  per entity that reads them, and thousands of entities read a borrowed one. The
+ *  per entity that reads them, and thousands of entities share a stand-in. The
  *  fold is shared with `buildSnippetsFor` through `foldedPages`, so a document
  *  that has been excerpted is already folded for the filter, and vice versa.
  *

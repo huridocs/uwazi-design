@@ -10,7 +10,6 @@ import { EntityPill } from "../components/shared/EntityPill";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../components/shared/ThesaurusValueLabel";
 import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
-import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
 import { PdfPageThumb } from "../components/shared/PdfPageThumb";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
@@ -1449,13 +1448,11 @@ sendFill(selection.text);                                    // commits, then di
               <div id="sh-provenance-line" ref={reg("sh-provenance-line")}>
                 <CatalogEntry
                   name="ProvenanceLine"
-                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. The library attributes a passage to the document it was quoted from (↳ from), metadata names the hops an inherited value was reached through (↳ via, clickable), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
-                  code={`<ProvenanceLine label="from">Caso Gelman vs. Uruguay</ProvenanceLine>
-<ProvenanceLine label="via">{hops.map(...)}</ProvenanceLine>
+                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. Metadata names the hops an inherited value was reached through (↳ via, clickable), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
+                  code={`<ProvenanceLine label="via">{hops.map(...)}</ProvenanceLine>
 <ProvenanceLine label="copied from"><EntityPill typeId="country" label="Argentina" /></ProvenanceLine>`}
                 >
                   <div className="w-full max-w-md space-y-3">
-                    <ProvenanceLine label="from">Bámaca-Velásquez v. Guatemala</ProvenanceLine>
                     <ProvenanceLine label="via">
                       <button className="min-w-0 truncate text-carbon hover:underline cursor-pointer">
                         Sentencia de 25 de noviembre de 2000
@@ -1497,27 +1494,6 @@ className={\`… border \${issueBorderClass(issues[field.id])} …\`}`}
                         <FieldMessage issue={issue} reserve />
                       </div>
                     ))}
-                  </div>
-                </CatalogEntry>
-              </div>
-
-              <div id="sh-borrowed-doc-line" ref={reg("sh-borrowed-doc-line")}>
-                <CatalogEntry
-                  name="BorrowedDocLine"
-                  description="↳ from <document> — the passages beside it were quoted from a document the result doesn't own. A case with no PDF of its own reads a connected judgment's, so hundreds of results can quote the same page of the same file; unattributed that reads as duplicates or a bug. Renders NOTHING for an entity's own document, so it must ride a line that is mounted either way."
-                  code={`<BorrowedDocLine from={snippets.borrowedFrom} />
-
-{/* null → renders nothing; host line stays put. */}`}
-                >
-                  <div className="w-full max-w-md space-y-2">
-                    <SectionLabel as="p">
-                      Document
-                      <BorrowedDocLine from={{ entityId: "e-1", title: "Velásquez-Rodríguez v. Honduras" }} />
-                    </SectionLabel>
-                    <SectionLabel as="p">
-                      Document
-                      <BorrowedDocLine from={null} />
-                    </SectionLabel>
                   </div>
                 </CatalogEntry>
               </div>

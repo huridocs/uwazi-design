@@ -6,10 +6,9 @@ import { CornerDownRight } from "lucide-react";
  *
  *  Two surfaces make that statement about different things and must make it the
  *  same way: metadata's inherited values name the hops a value was reached
- *  through (`↳ via Sentencia X`, {@link ProvenanceTrail}), and the library's
- *  search results name the document a passage was quoted from (`↳ from Sentencia
- *  X`, {@link BorrowedDocLine}). Same corner glyph, same quiet 11px tertiary
- *  type, so a reader learns the mark once.
+ *  through (`↳ via Sentencia X`, {@link ProvenanceTrail}), and Copy From names
+ *  where a staged value came from (`↳ copied from`). Same corner glyph, same
+ *  quiet 11px tertiary type, so a reader learns the mark once.
  *
  *  Purely presentational — the `label` is the verb and the children are whatever
  *  the surface points at (clickable hops in metadata, a plain title in the

@@ -12,6 +12,7 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
+import { NoDocumentPane } from "../components/entity/NoDocumentPane";
 import { ReferencePanel } from "../components/relationships/ReferencePanel";
 import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
 import { ToCPanel } from "../components/relationships/ToCPanel";
@@ -73,7 +74,10 @@ export function EntityView() {
   // Count = inventory (how many relationships exist). Dot = the facets the user
   // ticked, still narrowing that panel while they read the Document tab — the
   // reason a panel can say "3" when the tab says 10.
-  const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
+  // A record whose document is on connected records keeps a Document tab that
+  // names them (`NoDocumentPane`); it opens on Metadata, as it owns no file.
+  const elsewhere = profile.hasDocument ? undefined : profile.documentElsewhere;
+  const tabs = tabsForType(profile.typeId, profile.hasDocument || !!elsewhere?.length).map((tab) => {
     if (tab.id === "relationships")
       return { ...tab, count: relCount, dot: relFilterCount > 0 };
     if (tab.id === "files") return { ...tab, count: filesCount };
@@ -122,8 +126,14 @@ export function EntityView() {
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
-      <DocMeta />
-      <DocumentViewer actionBarMenu={menuTrigger} />
+      {elsewhere?.length ? (
+        <NoDocumentPane elsewhere={elsewhere} />
+      ) : (
+        <>
+          <DocMeta />
+          <DocumentViewer actionBarMenu={menuTrigger} />
+        </>
+      )}
     </div>
   );
 
@@ -153,16 +163,21 @@ export function EntityView() {
               </div>
             ),
           },
-          {
-            id: "toc",
-            label: t("System", "Table of contents"),
-            content: (
-              <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
-                {/* The sheet header already says "Table of contents". */}
-                <ToCPanel titled={false} />
-              </div>
-            ),
-          },
+          // A record with no document of its own has no contents to list.
+          ...(profile.hasDocument
+            ? [
+                {
+                  id: "toc",
+                  label: t("System", "Table of contents"),
+                  content: (
+                    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
+                      {/* The sheet header already says "Table of contents". */}
+                      <ToCPanel titled={false} />
+                    </div>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
       <CreateRelationshipModal />
