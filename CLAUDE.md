@@ -615,8 +615,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
   search box holds the result count and `ActiveSearchChip`. The only other place the total
   appears is the pagination range, which says which part of that same filtered total is shown.
-- Pagination (Cards and List only; Overview, Map, Timeline, Network, Sync, Evidence and Adv.
-  Search draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
+- Pagination (Cards, List, Adv. Search and the drawer/rail/sheet Results tab; Overview, Map,
+  Timeline, Network, Sync and Evidence draw the whole set): `LibraryPagination` sits at the end of the Library footer, where
   `ActionBar` keeps the PDF's page stepper; both draw `Folio` ("‹ 3 / 147 ›", caption type,
   ghost chevrons; the page is a field: Enter or blur goes, Escape reverts, ArrowUp/Down step;
   Home/End or Shift-click reach the first and last page). The viewer's search-match stepper is a
@@ -643,6 +643,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
     can span pages; Shift+Arrow stops at the page edge. The select-all box selects the page
     shown; the bar's "Select all N" offer selects every result across pages.
+  - Adv. Search and the Results tab read the same page state as Cards and List, so page N holds
+    the same records in every view; Adv. Search's scroller registers as the lane for the scroll
+    restore. Spine pages its rows and draws its axis from every dated result (`TimeSpine`
+    `domain`). Passage folding is per page: the first record on the page owns a shared passage.
   - Snapshots carry `pageSize` as an optional key; a view saved without it opens at 30.
 - Upload (`atoms/fileUploads.ts`, run by `useFileUploadRunner` in `App`): any file type, any
   number, in the background. Each file is an entity the moment it is queued, in the upload template
