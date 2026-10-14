@@ -135,6 +135,14 @@ const CARD_INFO: DisplaySection = {
   separator: true,
   options: [
     { id: "preview", label: "Thumbnail", default: true },
+    // Per row: each grid row decides (`thumbSlotsPerRow`). Its own key, so a
+    // view saved before it opens as it was. No effect while Thumbnail is off.
+    {
+      id: "previewPerRow",
+      label: "Thumbnail per row",
+      detail: "A row keeps the slot when any card in it has a preview",
+      default: false,
+    },
     { id: "metadata", label: "Metadata", default: true },
     { id: "connections", label: "Relationships", default: true },
   ],

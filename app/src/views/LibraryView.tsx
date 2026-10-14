@@ -50,6 +50,7 @@ import {
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryCardInfoAtom,
+  thumbSlotsPerRow,
   librarySelectModeAtom,
   libraryThumbFrameAtom,
   libraryThumbSizeAtom,
@@ -635,6 +636,64 @@ export function LibraryView() {
     laneView.current = viewMode;
     if (laneRef.current) laneRef.current.scrollTop = 0;
   }, [viewMode]);
+
+  // Thumbnail per row: which cards keep the slot, from the columns the grid
+  // drew. Rows reform with the pane (a ResizeObserver) and with Size and
+  // Frame, which change the columns but not the grid's width.
+  const [colsDrawn, setColsDrawn] = useState(0);
+  const cardGridEl = useRef<HTMLDivElement | null>(null);
+  const cardGridRO = useRef<ResizeObserver | null>(null);
+  const measureCols = useCallback(() => {
+    const el = cardGridEl.current;
+    if (el) setColsDrawn(getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length);
+  }, []);
+  const cardGridRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      cardGridRO.current?.disconnect();
+      cardGridEl.current = el;
+      if (!el) return;
+      measureCols();
+      cardGridRO.current = new ResizeObserver(measureCols);
+      cardGridRO.current.observe(el);
+    },
+    [measureCols],
+  );
+  useLayoutEffect(measureCols, [measureCols, cardGridCols]);
+  const rowSlots = useMemo(
+    () =>
+      viewMode === "cards" && cardInfo.preview && cardInfo.perRow && colsDrawn > 0
+        ? thumbSlotsPerRow(shown, colsDrawn)
+        : null,
+    [viewMode, cardInfo.preview, cardInfo.perRow, colsDrawn, shown],
+  );
+  // When rows reform, the cards above change height: the first card in view
+  // keeps its place. Noted on scroll while Per row is on, restored before paint.
+  const rowAnchor = useRef<{ id: string; top: number } | null>(null);
+  const noteRowAnchor = useCallback(() => {
+    const lane = laneRef.current;
+    if (!lane) return;
+    const laneTop = lane.getBoundingClientRect().top;
+    for (const box of lane.querySelectorAll<HTMLElement>('[data-component="EntityCard"] [data-select-id]')) {
+      const card = box.closest<HTMLElement>('[data-component="EntityCard"]');
+      const r = card?.getBoundingClientRect();
+      if (r && r.bottom > laneTop) {
+        rowAnchor.current = { id: box.dataset.selectId!, top: r.top - laneTop };
+        return;
+      }
+    }
+  }, []);
+  const rowShape = rowSlots ? `${colsDrawn}:${rowSlots.map((on) => (on ? 1 : 0)).join("")}` : "";
+  useLayoutEffect(() => {
+    const lane = laneRef.current;
+    const a = rowAnchor.current;
+    if (rowShape && lane && a && lane.scrollTop > 0) {
+      const card = lane
+        .querySelector(`[data-select-id="${CSS.escape(a.id)}"]`)
+        ?.closest<HTMLElement>('[data-component="EntityCard"]');
+      if (card) lane.scrollTop += card.getBoundingClientRect().top - lane.getBoundingClientRect().top - a.top;
+    }
+    noteRowAnchor();
+  }, [rowShape, noteRowAnchor]);
   /** Create entity: the chosen template opens as a draft in the drawer, on its
    *  edit form. Guarded — the drawer may be holding another entity's edit. */
   const recentTemplates = useAtomValue(recentTemplatesAtom);
@@ -1091,6 +1150,8 @@ export function LibraryView() {
       {/* Results */}
       <div
         ref={laneRef}
+        // Per row: the card a reform keeps in place.
+        onScroll={rowSlots ? noteRowAnchor : undefined}
         // A Shift+click is a range, not a text selection across the grid.
         onMouseDown={(e) => {
           if (e.shiftKey) e.preventDefault();
@@ -1166,10 +1227,11 @@ export function LibraryView() {
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
-          <div className={`grid ${cardGridCols} gap-3`}>
-            {shown.map((e) => (
+          <div ref={cardGridRef} className={`grid ${cardGridCols} gap-3`}>
+            {shown.map((e, i) => (
               <EntityCard
                 key={e.id}
+                preview={rowSlots ? rowSlots[i] : undefined}
                 entity={e}
                 layout="cards"
                 query={query}

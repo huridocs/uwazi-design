@@ -89,6 +89,7 @@ export const EntityCard = memo(function EntityCard({
   onRemove,
   className = "",
   as: Root = "div",
+  preview,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -114,12 +115,14 @@ export const EntityCard = memo(function EntityCard({
   className?: string;
   /** The element: `li` when the host is a list. */
   as?: "div" | "li";
+  /** Thumbnail per row: this card's row's answer, over the Display setting. */
+  preview?: boolean;
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
-  const showPreview = info.preview;
+  const showPreview = preview ?? info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
 

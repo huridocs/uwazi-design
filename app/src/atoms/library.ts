@@ -675,12 +675,30 @@ export const libraryListDensityAtom = displayOption<ListDensity>(
 
 /** What a CARD carries, for whichever mode is drawing cards. Replaces the old
  *  `libraryInfoAtom`, which the list table also read. */
+/** Thumbnail per row: which cards keep the slot, in the order drawn. A row
+ *  (`columns` cards, the count the grid drew) keeps it for every card when any
+ *  of them has a preview; a row with none draws text cards. The one place the
+ *  per-row rule lives. */
+export function thumbSlotsPerRow(entities: readonly { preview?: unknown }[], columns: number): boolean[] {
+  const cols = Math.max(1, columns);
+  const out: boolean[] = new Array(entities.length).fill(false);
+  for (let i = 0; i < entities.length; i += cols) {
+    const end = Math.min(i + cols, entities.length);
+    let any = false;
+    for (let j = i; j < end && !any; j++) any = !!entities[j].preview;
+    if (any) for (let j = i; j < end; j++) out[j] = true;
+  }
+  return out;
+}
+
 export const libraryCardInfoAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
   return {
     preview: read("preview"),
+    /** Thumbnail per row: which card keeps the slot is `thumbSlotsPerRow`. */
+    perRow: readOption(state, mode, "previewPerRow", "mode", false) === true,
     metadata: read("metadata"),
     country: read("country"),
     date: read("date"),
