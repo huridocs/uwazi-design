@@ -686,8 +686,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     from `libraryCardInfoAtom.preview`, never the stored value. Whenever thumbnails are drawn,
     by Auto or On, every card keeps the slot, with a `QuietMark` where there is no preview; a
     grid row never mixes shapes. Off drops the slot from every card.
-  - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]` with
-    narrower columns (`cardGridCols`); Size sets the column count.
+  - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]`; in it Size
+    sets the column width (`cardGridCols`: 11 / 14 / 18rem, always narrower than landscape's
+    21.5rem, never fewer than two columns), and Columns defaults to Auto in every layout.
+    Landscape defaults to 3 columns in the Drawer layout (`cardColumnsDefault(layout, frame)`).
   - Fit (`libraryThumbFitAtom`): `auto` covers when the image's orientation matches the frame
     and mats otherwise; `cover` fills; `contain` mats.
   - Every box has a definite size before load. The list chip is always square.
