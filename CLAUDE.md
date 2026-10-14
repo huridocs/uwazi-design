@@ -102,7 +102,9 @@ Known gaps, kept on purpose:
 - Fields sharing a `connectionKey` are one connection with several inherited columns, edited
   together. `groupConnections` returns groups and singles.
 - `steps` render as a `↳ via …` trail (`ProvenanceTrail`), hoisted to one line when every row
-  shares it. `reduce` (`list|distinct|count|min|max|first`) renders a `Σ` `RollupChip`.
+  shares it. `reduce` (`list|distinct|count|min|max|first`) renders a `Σ` `RollupChip`;
+  `distinct` reads "3 countries", the column label pluralised by `utils/rollupNoun.ts` (EN, ES, FR;
+  a multi-word or unknown label falls back to "3 values").
 - Record and edit form place relationship fields at their template position; there is no
   "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
   are put in template order by `orderByTemplate`; fields the template does not declare go last.
