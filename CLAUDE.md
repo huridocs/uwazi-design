@@ -711,7 +711,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails:
-  - Display › Thumbnail is Auto / On / Off (stored under `preview`). Auto is on when at least
+  - Display › Thumbnail is Auto / On / Off / Per row (stored under `preview`). Auto is on when at least
     half of the filtered results have a preview: an image, a document's first page (CEJIL file
     records, Sample documents, Nepal PDFs) or a recording (CEJIL Audiencias, Nepal videos). A
     YouTube recording draws its still (`YouTubeStill`, `Entity.youtubeId`) under the play mark;
@@ -721,8 +721,16 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     always puts the record's `preview` kind in Contains, so the two never disagree. CEJIL media
     values are Video or Audio by URL kind, linked or stored by host. Read the resolved answer
     from `libraryCardInfoAtom.preview`, never the stored value. Whenever thumbnails are drawn,
-    by Auto or On, every card keeps the slot, with a `QuietMark` where there is no preview; a
+    by Auto or On (Per row: every card in the row), every card keeps the slot, with a `QuietMark` where there is no preview; a
     grid row never mixes shapes. Off drops the slot from every card.
+  - Per row: each grid row keeps the slot (QuietMark where a card has none) when any of its cards
+    has a preview by `carriesContent`; a row with none draws text cards. The rule is
+    `thumbSlotsPerRow` (`atoms/library.ts`), read by the Library with the column count the grid
+    drew, so rows reform with the pane, Size, Frame, the drawer, Split and the page, and the first
+    card in view keeps its place. `libraryCardInfoAtom.preview` counts Per row as drawn while any
+    result has a preview; List draws it as On (one chip column).
+  - An empty slot (QuietMark) sits on `bg-placeholder` (`--bg-placeholder`): a slight off-white,
+    not vellum or parchment.
   - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]`; in it Size
     sets the column width (`cardGridCols`: 11 / 14 / 18rem, always narrower than landscape's
     21.5rem, never fewer than two columns), and Columns defaults to Auto in every layout.
