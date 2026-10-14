@@ -1,20 +1,35 @@
-import { Fragment, useState, type MouseEvent, type ReactNode } from "react";
-import { useAtomValue } from "jotai";
-import { ChevronDown, Search } from "lucide-react";
+import { Fragment, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { ChevronDown, Pin, Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
 import {
   compareEvidence,
-  evidenceBadge,
   type EntitySnippets,
   type FullTextSnippet,
   type MetadataSnippet,
 } from "../../../utils/librarySnippets";
-import { resultsCurrentPageAtom } from "../../../atoms/library";
+import {
+  librarySearchMatchInputAtom,
+  librarySearchScopeInputAtom,
+  resultsCurrentPageAtom,
+} from "../../../atoms/library";
+import { useActiveFilters } from "../../../hooks/useActiveFilters";
+import { FULL_TEXT_MIN, SEARCH_SCOPE_LABEL, type SearchScope } from "../../../utils/searchScope";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { SectionLabel } from "../../shared/SectionLabel";
-import { CountBadge } from "../../shared/CountBadge";
+import { PinToggle } from "../../shared/PinToggle";
+import { TimeTag } from "../../shared/TimeTag";
+import { EvidenceStatus } from "../../relationships/rows/EvidenceStatus";
+import { ContestedClock } from "../../relationships/rows/ContestedClock";
+import { UploadStateMark } from "../UploadStateMark";
+import { getEntity } from "../../../data/entities";
+import { snippetReferences } from "../../../utils/snippetRefs";
+import { reportedAt, sourcePublisher } from "../../../utils/refEvidence";
+import { formatAtPrecision } from "../../../utils/dateFormat";
+import { passagePinKey, passagePinnedAtom, togglePassagePinAtom } from "../../../atoms/notebook";
+import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
 import { PageTag } from "../../shared/PageTag";
 import { BorrowedDocLine } from "../BorrowedDocLine";
 import { MatchedTerms } from "../MatchedTerms";
@@ -75,7 +90,7 @@ export function passageOwners(results: Result[]): Map<string, PassageOwner> {
       claim(out, key, entity);
     }
     // A reference's quote is one passage whichever end it is read from (Nepal:
-    // "Quote" on the source, "Source quote" on its target).
+    // the source that says it and the record it is about).
     for (const g of properties(snippets)) if (g.refId) claim(out, `ref|${g.refId}`, entity);
   }
   return out;
@@ -131,13 +146,11 @@ export function ResultRecord({
   onToggle?: () => void;
   /** Multi-term queries: which field carried each term (`MatchedTerms`). */
   relevance?: RelevanceBreakdown | null;
-  /** Kept for the head's own marks, after the count: the pin and the upload
-   *  state go here. Nothing fills it yet. */
+  /** More marks for the head, after the upload state. */
   headSlot?: ReactNode;
   children?: ReactNode;
 }) {
   const type = getEntityType(entity.typeId);
-  const badge = evidenceBadge(snippets);
   const open = onToggle ? expanded !== false : true;
   const isCard = variant === "card";
 
@@ -165,7 +178,7 @@ export function ResultRecord({
       {/* Presses go through to the button beneath; the record's own controls
           take them back. */}
       <div className="relative min-w-0 pointer-events-none [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
-        <header data-part="head" className={`flex flex-col gap-0.5 ${isCard ? "px-3 py-2" : "px-3 pt-2.5"}`}>
+        <header data-part="head" className={`@container flex flex-col gap-0.5 ${isCard ? "px-3 py-2" : "px-3 pt-2.5"}`}>
           {/* One line at a fixed height: the title truncates before the
               count, the slot or the facts give way, so the badge never wraps. */}
           <div className="flex items-center gap-2 min-w-0 h-6">
@@ -192,15 +205,63 @@ export function ResultRecord({
             <h2 data-part="title" className="min-w-0 truncate text-sm font-medium text-ink">
               <HighlightedText text={entity.title} query={query} fieldKey="title" />
             </h2>
-            <CountBadge {...badge} />
+            <WhereBadge snippets={snippets} className="hidden @md:inline-block" />
+            <UploadStateMark entityId={entity.id} />
             {headSlot}
             {facts && <Facts entity={entity} typeName={type?.name} />}
+            <PinToggle entityId={entity.id} title={entity.title} reveal className={facts ? "" : "ms-auto"} />
           </div>
+          {/* A narrow card (the drawer, the rail, a phone) gives the badge its
+              own line, so the title keeps the width. */}
+          <WhereBadge snippets={snippets} className="@md:hidden self-start max-w-full" />
           <MatchedTerms relevance={relevance ?? null} query={query} />
         </header>
         {open && children}
       </div>
     </article>
+  );
+}
+
+/** Where the record matched, in the order a reader checks: the title, the
+ *  fields by name (two, then "+N"), then the pages (the two best in page
+ *  order, then "+N"; "Document" where it has no pages). Attribution, not a
+ *  score: it says where to look, and the ranking says how much. It holds the
+ *  line at the badge's height and truncates rather than wrap. */
+export function whereMatched(s: EntitySnippets): string {
+  const parts: string[] = [];
+  if (s.metadata.some((m) => m.fieldKey === "title")) parts.push("Title");
+  const fields = [...new Set(properties(s).map((m) => m.field))];
+  if (fields.length) parts.push(fields.slice(0, 2).join(", ") + (fields.length > 2 ? ` +${fields.length - 2}` : ""));
+  if (s.fullTextTotal > 0) {
+    const pages = s.fullText
+      .map((p) => p.page)
+      .filter((p): p is number => p !== null)
+      .slice(0, 2)
+      .sort((a, b) => a - b);
+    const rest = s.fullTextTotal - pages.length;
+    parts.push(
+      pages.length
+        ? pages.map((p) => `p.${p}`).join(", ") + (rest > 0 ? ` +${rest}` : "")
+        : s.borrowedFrom
+          ? "Borrowed document"
+          : "Document",
+    );
+  }
+  return parts.join(" · ");
+}
+
+function WhereBadge({ snippets, className = "" }: { snippets: EntitySnippets; className?: string }) {
+  const where = whereMatched(snippets);
+  if (!where) return null;
+  return (
+    <span
+      data-component="WhereBadge"
+      title={`Matched in ${where}`}
+      dir="ltr"
+      className={`shrink-0 max-w-[55%] h-5 px-1.5 leading-5 truncate whitespace-nowrap text-xs font-medium rounded-md bg-parchment text-ink-tertiary ${className}`}
+    >
+      {where}
+    </span>
   );
 }
 
@@ -347,14 +408,15 @@ export function RankedEvidence({
   const [all, setAll] = useState(false);
   const { own, props, shared, commonAlso } = splitShared(entity, snippets, owners);
   type Line =
-    | { kind: "field"; group: MetadataSnippet; text: string; refs: number; groupsMet: number; hits: number }
+    | { kind: "field"; group: MetadataSnippet; text: string; refs: number; refIds: string[]; groupsMet: number; hits: number }
     | { kind: "page"; snippet: FullTextSnippet; also: Entity[]; groupsMet: number; hits: number };
   const lines: Line[] = [
-    ...props.map(({ group, text, refs }) => ({
+    ...props.map(({ group, text, refs, refIds }) => ({
       kind: "field" as const,
       group,
       text,
       refs,
+      refIds,
       groupsMet: group.groupsMet,
       hits: group.hits,
     })),
@@ -382,6 +444,7 @@ export function RankedEvidence({
                   query={query}
                   label={line.group.field}
                   note={refsNote(line.refs)}
+                  refIds={line.refIds}
                   onActivate={() => handlers.onFocusProperty(entity.id, line.group.fieldKey)}
                 />
               </li>
@@ -428,6 +491,8 @@ export interface PropLine {
   group: MetadataSnippet;
   text: string;
   refs: number;
+  /** The references whose words these are (Nepal quotes, Vegas annotations). */
+  refIds: string[];
 }
 
 /** Passages another record shows first, by that record; `null` is a quote. */
@@ -463,9 +528,11 @@ export function splitShared(entity: Entity, snippets: EntitySnippets, owners: Ma
     for (const text of group.texts) {
       const k = `${group.field}|${text}`;
       const seen = byText.get(k);
-      if (seen) seen.refs++;
-      else {
-        const line = { group, text, refs: 1 };
+      if (seen) {
+        seen.refs++;
+        if (group.refId) seen.refIds.push(group.refId);
+      } else {
+        const line = { group, text, refs: 1, refIds: group.refId ? [group.refId] : [] };
         byText.set(k, line);
         props.push(line);
       }
@@ -553,6 +620,7 @@ export function PropertyRuns({
                   text={l.text}
                   query={query}
                   note={refsNote(l.refs)}
+                  refIds={l.refIds}
                   onActivate={() => onFocusProperty(entity.id, l.group.fieldKey)}
                 />
               </li>
@@ -594,6 +662,7 @@ export function SnippetLine({
   query,
   label,
   note,
+  refIds,
   onJump,
   onActivate,
   trailing,
@@ -608,6 +677,9 @@ export function SnippetLine({
   label?: string;
   /** Last in the tag: "3 references" for words several references quote. */
   note?: string;
+  /** The references whose words these are: their evidence goes on a line
+   *  under the excerpt (`LineEvidence`). */
+  refIds?: string[];
   onJump?: (id: string, page: number) => void;
   onActivate?: () => void;
   trailing?: ReactNode;
@@ -637,28 +709,110 @@ export function SnippetLine({
     </span>
   );
   const go = page !== null && onJump ? () => onJump(entityId, page) : onActivate;
-  if (!go) {
-    return (
-      <div data-component="SnippetLine" data-variant="passive" className="flex items-baseline gap-1.5 px-2 py-1">
-        <span className="min-w-0 flex-1">{body}</span>
-        {trailing}
-      </div>
-    );
-  }
   const isActive = page !== null && active?.entityId === entityId && active.page === page;
   return (
-    <div data-component="SnippetLine" className="flex items-baseline gap-1.5">
-      <button
-        type="button"
-        aria-pressed={page !== null ? isActive : undefined}
-        onClick={go}
-        className={`min-w-0 flex-1 text-start rounded-md px-2 py-1 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/25 ${
-          isActive ? "bg-parchment" : "hover:bg-warm"
-        }`}
-      >
-        {body}
-      </button>
-      {trailing}
+    <div data-component="SnippetLine" data-variant={go ? undefined : "passive"} className="group/line flex flex-col">
+      <div className="flex items-start gap-1">
+        {go ? (
+          <button
+            type="button"
+            aria-pressed={page !== null ? isActive : undefined}
+            onClick={go}
+            className={`min-w-0 flex-1 text-start rounded-md px-2 py-1 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/25 ${
+              isActive ? "bg-parchment" : "hover:bg-warm"
+            }`}
+          >
+            {body}
+          </button>
+        ) : (
+          <span className="min-w-0 flex-1 px-2 py-1">{body}</span>
+        )}
+        <PassagePin
+          entityId={entityId}
+          text={snippet?.text ?? text ?? ""}
+          page={page ?? undefined}
+          refId={refIds?.[0]}
+        />
+        {trailing && <span className="shrink-0 self-center">{trailing}</span>}
+      </div>
+      {refIds && refIds.length > 0 && <LineEvidence entityId={entityId} refIds={refIds} />}
+    </div>
+  );
+}
+
+/** "Pin passage": the line's words to the notebook, cited through
+ *  `notebookCitations` with their page, or through their reference for a
+ *  quote or an annotation. Shown on the line's hover and focus; kept once
+ *  pinned. */
+function PassagePin({ entityId, text, page, refId }: { entityId: string; text: string; page?: number; refId?: string }) {
+  const passage = { entityId, text, ...(page !== undefined ? { page } : {}), ...(refId ? { refId } : {}) };
+  const pinned = useAtomValue(passagePinnedAtom(passagePinKey(passage)));
+  const toggle = useSetAtom(togglePassagePinAtom);
+  return (
+    <button
+      type="button"
+      data-component="PassagePin"
+      data-state={pinned ? "on" : "off"}
+      aria-pressed={pinned}
+      aria-label={pinned ? "Remove passage from notebook" : "Pin passage to notebook"}
+      title={pinned ? "Remove passage from notebook" : "Pin passage"}
+      onClick={(e) => {
+        e.stopPropagation();
+        toggle(passage);
+      }}
+      className={`hit-area shrink-0 mt-1 inline-flex items-center justify-center w-6 h-6 rounded-md transition-[opacity,color,background-color] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40 focus-visible:opacity-100 ${
+        pinned
+          ? "text-ink hover:bg-parchment"
+          : "text-ink-muted hover:text-ink hover:bg-parchment opacity-0 group-hover/line:opacity-100 group-focus-within/line:opacity-100 pointer-coarse:opacity-100"
+      }`}
+    >
+      <Pin size={12} aria-hidden fill={pinned ? "currentColor" : "none"} />
+    </button>
+  );
+}
+
+/** What stands behind a quote or an annotation, under its words: the link's
+ *  status chip (it opens `RefEvidenceCard`), a clock off its moment
+ *  (`ContestedClock`), the time it opens the recording at (`TimeTag`), and
+ *  who reported it and when. Each part self-hides where the reference has
+ *  nothing for it. */
+function LineEvidence({ entityId, refIds }: { entityId: string; refIds: string[] }) {
+  const refs = useMemo(() => snippetReferences(entityId, refIds), [entityId, refIds]);
+  if (!refs.length) return null;
+  const rated = refs.filter((r) => r.verification);
+  const verification = rated.length
+    ? rated.every((r) => r.verification === rated[0].verification)
+      ? rated[0].verification
+      : ("mixed" as const)
+    : undefined;
+  const clock = refs.find((r) => r.contest?.clock)?.contest?.clock;
+  const anchor = refs.find((r) => r.mediaAnchor)?.mediaAnchor;
+  const publishers = [...new Set(refs.flatMap((r) => (r.sources ?? []).map(sourcePublisher)))];
+  // The earliest report among them, at the precision its source states.
+  let first: { t: number; precision: "day" | "month" | "year" } | undefined;
+  for (const r of refs) {
+    const t = reportedAt(r);
+    if (t === undefined || (first && first.t <= t)) continue;
+    const src = r.sources?.find((s) => s.published === t);
+    first = { t, precision: src?.datePrecision ?? "day" };
+  }
+  const reported = first ? formatAtPrecision(new Date(first.t * 1000), first.precision) : undefined;
+  const words = [
+    publishers.length ? publishers.slice(0, 2).join(", ") + (publishers.length > 2 ? ` +${publishers.length - 2}` : "") : undefined,
+    reported,
+  ].filter(Boolean) as string[];
+  if (!verification && !clock && !anchor && !words.length) return null;
+  return (
+    <div data-part="line-evidence" className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0 ps-2 pb-1 text-meta text-ink-tertiary">
+      <EvidenceStatus verification={verification} period={refs.find((r) => r.period)?.period} refs={refs} />
+      {clock && <ContestedClock deviation={clock.deviation} />}
+      {anchor && <TimeTag anchor={anchor} recordingTitle={getEntity(anchor.recordingId)?.title} />}
+      {words.map((w, i) => (
+        <Fragment key={i}>
+          {(i > 0 || verification || clock || anchor) && <Sep />}
+          <span className="min-w-0 truncate">{w}</span>
+        </Fragment>
+      ))}
     </div>
   );
 }
@@ -706,6 +860,61 @@ export function NoSearchState({ hint }: { hint: string }) {
       <Search size={20} className="text-ink-muted" aria-hidden="true" />
       <span className="text-sm font-medium text-ink-secondary">Search to see where terms match</span>
       <span className="text-xs text-ink-tertiary">{hint}</span>
+    </ResultsBlank>
+  );
+}
+
+/** No result for the query. Says so, then offers each switch that would bring
+ *  results back, with how many it would return (`zeroResultSuggestions`):
+ *  partial words while Match is whole words, every field while Search in is
+ *  narrowed, each excluding facet dropped. One click applies one. Clear search
+ *  stays last. */
+export function ZeroResults({
+  query,
+  scope,
+  suggestions,
+  onClearSearch,
+}: {
+  query: string;
+  scope: SearchScope;
+  suggestions: readonly ZeroResultSuggestion[];
+  onClearSearch: () => void;
+}) {
+  const setMatch = useSetAtom(librarySearchMatchInputAtom);
+  const setScope = useSetAtom(librarySearchScopeInputAtom);
+  const filters = useActiveFilters();
+  const offers = suggestions.flatMap((sg) => {
+    if (sg.kind === "match") return [{ key: "match", label: "Partial words", count: sg.count, apply: () => setMatch("partial") }];
+    if (sg.kind === "scope") return [{ key: "scope", label: "Search everywhere", count: sg.count, apply: () => setScope("all") }];
+    const chips = filters.filter((f) => f.facetKey === sg.key);
+    if (!chips.length) return [];
+    return [
+      {
+        key: `exclude:${sg.key}`,
+        label: `Remove “Exclude ${chips[0].group}”`,
+        count: sg.count,
+        apply: () => chips.forEach((c) => c.remove()),
+      },
+    ];
+  });
+  return (
+    <ResultsBlank>
+      <span dir="ltr" className="text-sm font-medium text-ink-secondary">
+        No matches for “{query}”{scope === "all" ? "" : ` in ${SEARCH_SCOPE_LABEL[scope]}`}
+      </span>
+      {/* Document bodies are scanned from three characters (`fullTextSearch`),
+          so a shorter query in Full text can only come back empty. */}
+      {scope === "fulltext" && query.length < FULL_TEXT_MIN && (
+        <span className="text-xs text-ink-tertiary">Full text search needs at least {FULL_TEXT_MIN}&nbsp;characters.</span>
+      )}
+      <span data-part="offers" className="flex flex-wrap items-center justify-center gap-2">
+        {offers.map((o) => (
+          <WarmButton key={o.key} onClick={o.apply}>
+            {o.label}: <span className="tabular-nums">{o.count.toLocaleString()}</span>
+          </WarmButton>
+        ))}
+        <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
+      </span>
     </ResultsBlank>
   );
 }

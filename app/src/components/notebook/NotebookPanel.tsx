@@ -120,12 +120,15 @@ export function NotebookBody({ onClose }: { onClose?: () => void }) {
   const [status, setStatus] = useState("");
 
   const ids = useMemo(() => file.pins.map((p) => p.id), [file.pins]);
-  const entries = useMemo(() => buildNotebookEntries(ids, (id) => referencesFor(id, refs)), [ids, refs]);
+  const entries = useMemo(
+    () => buildNotebookEntries(ids, (id) => referencesFor(id, refs), file.passages),
+    [ids, refs, file.passages],
+  );
   const citationCount = entries.reduce((n, e) => n + e.citations.length, 0);
   const name = file.name.trim() || UNNAMED_NOTEBOOK;
   const slug = `notebook-${collection.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "collection"}`;
   const day = new Date().toISOString().slice(0, 10);
-  const empty = ids.length === 0;
+  const empty = entries.length === 0;
 
   const download = (text: string, filename: string, type: string) => {
     const url = URL.createObjectURL(new Blob([text], { type }));
@@ -137,7 +140,9 @@ export function NotebookBody({ onClose }: { onClose?: () => void }) {
     a.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  const pinnedAt = (id: string) => file.pins.find((p) => p.id === id)?.at;
+  // A record in the notebook only through a passage dates from that passage.
+  const pinnedAt = (id: string) =>
+    file.pins.find((p) => p.id === id)?.at ?? file.passages?.find((p) => p.entityId === id)?.at;
 
   const exportCsv = () => {
     downloadCsv(notebookCsv(entries, pinnedAt), `${slug}-${day}.csv`);
@@ -200,7 +205,7 @@ export function NotebookBody({ onClose }: { onClose?: () => void }) {
             value={tab}
             onChange={(id) => setTab(id as Tab)}
             options={[
-              { id: "pinned", label: `Pinned ${ids.length}` },
+              { id: "pinned", label: `Pinned ${entries.length}` },
               { id: "notes", label: "Notes" },
               { id: "citations", label: `Citations ${citationCount}` },
             ]}
@@ -334,7 +339,7 @@ export function NotebookBody({ onClose }: { onClose?: () => void }) {
       <ConfirmDialog
         open={confirmClear}
         title={`Clear “${name}”?`}
-        message={`Unpins ${ids.length} ${ids.length === 1 ? "record" : "records"} and deletes the notes. The records stay in the collection.`}
+        message={`Unpins ${entries.length} ${entries.length === 1 ? "record" : "records"} and deletes the notes. The records stay in the collection.`}
         confirmLabel="Clear notebook"
         variant="danger"
         onConfirm={() => {

@@ -13,6 +13,7 @@ import { isCejilEntity } from "../data/cejil/profile";
 import { STANCES, STANCE_LABEL, type Stance } from "../data/nepal/claimEvidence";
 import { isVegasEntity, vegasEntity, vegasRefsByEntity } from "../data/vegas/load";
 import { formatClock, formatOffset, vegasLinkAt, vegasRecordingUrl, vegasSourceLink } from "../data/vegas/links";
+import type { PassagePin } from "../atoms/notebook";
 
 /** Where a record can be read and who put it there. */
 export interface RecordSource {
@@ -132,11 +133,11 @@ export function recordSource(id: string): RecordSource {
  *  reference's `from`), with its stance, the link's status and the PDF page
  *  where the quote was found. Other collections: the record's anchored
  *  references, quoted from the record's own document. */
-function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
+function citationsOf(id: string, refs: readonly Reference[], onlyRef?: string): Citation[] {
   const out: Citation[] = [];
   if (isNepalEntity(id)) {
     for (const r of nepalRefsByEntity().get(id) ?? []) {
-      if (!r.quote) continue;
+      if (!r.quote || (onlyRef && r.id !== onlyRef)) continue;
       const src = recordSource(r.from);
       const stance = (STANCES as string[]).includes(r.type) ? (r.type as Stance) : undefined;
       out.push({
@@ -158,7 +159,7 @@ function citationsOf(id: string, refs: readonly Reference[]): Citation[] {
     // annotation is the passage, cited to the recording at its offset.
     for (const r of vegasRefsByEntity().get(id) ?? []) {
       const m = r.media;
-      if (!m?.label) continue;
+      if (!m?.label || (onlyRef && r.id !== onlyRef)) continue;
       const rec = vegasEntity(m.recording);
       const src = recordSource(m.recording);
       out.push({
@@ -205,22 +206,54 @@ function dedupe(list: Citation[]): Citation[] {
   });
 }
 
+/** A passage pinned from a search result, cited as one. A quote or an
+ *  annotation is cited through its reference, as the record's own citations
+ *  are (source, stance, status, page or time); a page or a property is cited
+ *  to the record it was found on, with the page. */
+export function passageCitation(p: PassagePin): Citation {
+  if (p.refId && (isNepalEntity(p.entityId) || isVegasEntity(p.entityId))) {
+    const [c] = citationsOf(p.entityId, [], p.refId);
+    if (c) return c;
+  }
+  const src = recordSource(p.entityId);
+  return {
+    sourceId: p.entityId,
+    sourceTitle: getEntity(p.entityId)?.title ?? p.entityId,
+    url: src.url,
+    publisher: src.publisher,
+    date: src.date,
+    quote: p.text,
+    page: p.page ? `p. ${p.page}` : undefined,
+  };
+}
+
 /** The notebook's entries, in pin order. `refsOf` gives a record's references
- *  (`referencesFor`); only non-Nepal records read it. */
-export function buildNotebookEntries(ids: readonly string[], refsOf: (id: string) => readonly Reference[]): NotebookEntry[] {
-  return ids.map((id) => {
+ *  (`referencesFor`); only non-Nepal records read it. A pinned passage joins
+ *  its record's entry when the record is pinned too; otherwise its record gets
+ *  an entry holding only the passages pinned from it, after the pinned records. */
+export function buildNotebookEntries(
+  ids: readonly string[],
+  refsOf: (id: string) => readonly Reference[],
+  passages: readonly PassagePin[] = [],
+): NotebookEntry[] {
+  const entry = (id: string, citations: Citation[]): NotebookEntry => {
     const e = getEntity(id);
-    if (!e) return { id, title: id, template: "", source: {}, citations: [], found: false };
+    if (!e) return { id, title: id, template: "", source: {}, citations, found: false };
     return {
       id,
       title: e.title,
       template: getEntityType(e.typeId)?.name ?? "",
       ...statusOf(e),
       source: recordSource(id),
-      citations: citationsOf(id, refsOf(id)),
+      citations,
       found: true,
     };
-  });
+  };
+  const byRecord = new Map<string, Citation[]>();
+  for (const p of passages) byRecord.set(p.entityId, [...(byRecord.get(p.entityId) ?? []), passageCitation(p)]);
+  const pinned = ids.map((id) => entry(id, dedupe([...citationsOf(id, refsOf(id)), ...(byRecord.get(id) ?? [])])));
+  const loose = [...byRecord.entries()].filter(([id]) => !ids.includes(id)).map(([id, cs]) => entry(id, dedupe(cs)));
+  return [...pinned, ...loose];
 }
 
 /* ── Exports ────────────────────────────────────────────────────────────── */

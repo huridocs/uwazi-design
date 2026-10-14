@@ -49,8 +49,8 @@ function searchFieldsOf(e: NepalEntity, tpl: TemplateDef, quotes: SearchField[] 
   return quotes ? out.concat(quotes) : out;
 }
 
-/** The references' anchored quotes as search fields: on the source as
- *  "Quote", on the record it is about as "Source quote". One field per quote,
+/** The references' anchored quotes as search fields, "Quote" on both ends:
+ *  on the source that says it and on the record it is about. One field per quote,
  *  so a Results snippet is cut from one quote and never runs into the next.
  *  Keyed by reference, so each field is its own group in the snippets. */
 function quoteFieldsByEntity(refs: NepalReference[]): Map<string, SearchField[]> {
@@ -63,7 +63,7 @@ function quoteFieldsByEntity(refs: NepalReference[]): Map<string, SearchField[]>
   for (const r of refs) {
     if (!r.quote) continue;
     add(r.from, { key: `quote:${r.id}`, label: "Quote", value: r.quote });
-    if (r.to !== r.from) add(r.to, { key: `quote:${r.id}`, label: "Source quote", value: r.quote });
+    if (r.to !== r.from) add(r.to, { key: `quote:${r.id}`, label: "Quote", value: r.quote });
   }
   return out;
 }

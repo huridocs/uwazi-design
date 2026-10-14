@@ -584,6 +584,13 @@ export function LibraryFilters() {
         data-results={resultsEmpty ? "empty" : undefined}
         className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5"
       >
+        {/* With no result the cards below fold away (index.css); this says
+            why, so the lane doesn't read as broken. */}
+        {resultsEmpty && (
+          <p data-part="no-results" className="px-1 text-xs text-ink-tertiary text-pretty">
+            Nothing matches this search, so no filter can add a&nbsp;result.
+          </p>
+        )}
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}

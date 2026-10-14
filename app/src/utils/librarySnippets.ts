@@ -40,9 +40,9 @@ export interface MetadataSnippet {
    *  so fields and pages rank on one scale (`compareEvidence`). */
   hits: number;
   groupsMet: number;
-  /** A reference's anchored quote (`quote:<id>` fields, Nepal): the reference
-   *  it was cut from, for the evidence its row can carry (status, publisher,
-   *  date). Absent on every other field. */
+  /** A field that is one reference's words: a Nepal quote (`quote:<id>`) or a
+   *  Las Vegas map annotation (`anchor:<id>`). The reference, for the evidence
+   *  its line carries (status, publisher, date, time). Absent elsewhere. */
   refId?: string;
 }
 
@@ -105,6 +105,12 @@ export interface EntitySnippets {
   /** One entry per distinct query term, in query order. */
   termsHit: TermHit[];
 }
+
+/** The reference behind a `quote:<id>` or `anchor:<id>` field. */
+const refIdOf = (fieldKey: string): { refId?: string } => {
+  const m = /^(?:quote|anchor):(.+)$/.exec(fieldKey);
+  return m ? { refId: m[1] } : {};
+};
 
 /** Count badge: matched pages as "passages" when the document matched, else
  *  matched fields. Fields and pages are not summed, since they are different units.
@@ -582,7 +588,7 @@ export function buildSnippetsFor(
         texts: [excerpt],
         hits: Math.max(1, fieldHits),
         groupsMet: groups.reduce((n, g) => (g.some((t) => inField.has(t)) ? n + 1 : n), 0),
-        ...(fieldKey.startsWith("quote:") ? { refId: fieldKey.slice("quote:".length) } : {}),
+        ...refIdOf(fieldKey),
       });
     }
   }

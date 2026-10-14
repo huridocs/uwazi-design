@@ -15,9 +15,27 @@ export interface NotebookPin {
   at: number;
 }
 
+/** A pinned passage: the words a search result showed, on the record they
+ *  were found on, with where they are (a page, or the reference a quote or
+ *  annotation belongs to). Cited on its own; the record is not pinned. */
+export interface PassagePin {
+  entityId: string;
+  text: string;
+  page?: number;
+  /** The reference behind a quote or annotation (`MetadataSnippet.refId`). */
+  refId?: string;
+  at: number;
+}
+
+/** One passage's identity: the same words in the same place pin once. */
+export const passagePinKey = (p: Omit<PassagePin, "at">) =>
+  `${p.entityId}\u0000${p.refId ?? ""}\u0000${p.page ?? ""}\u0000${p.text}`;
+
 export interface Notebook {
   name: string;
   pins: NotebookPin[];
+  /** Absent in notebooks saved before passages could be pinned. */
+  passages?: PassagePin[];
   /** Markdown. */
   notes: string;
   updatedAt: number;
@@ -70,7 +88,16 @@ const pinnedIdsAtom = atom((get) => {
  *  only the card it changes. */
 export const entityPinnedAtom = atomFamily((id: string) => atom((get) => get(pinnedIdsAtom).has(id)));
 
-export const notebookPinCountAtom = atom((get) => get(notebookAtom).pins.length);
+export const notebookPinCountAtom = atom((get) => get(notebookAtom).pins.length + (get(notebookAtom).passages?.length ?? 0));
+
+const pinnedPassagesAtom = atom((get) => {
+  const out = new Set<string>();
+  for (const c of Object.values(get(notebooksStoreAtom))) for (const p of c?.passages ?? []) out.add(passagePinKey(p));
+  return out;
+});
+
+/** Is this passage pinned? Read per line, as `entityPinnedAtom` is per card. */
+export const passagePinnedAtom = atomFamily((key: string) => atom((get) => get(pinnedPassagesAtom).has(key)));
 
 /** Change one collection's notebook. */
 const updateNotebook = atom(null, (get, set, { corpus, fn }: { corpus: DataSource; fn: (c: Notebook) => Notebook }) => {
@@ -92,8 +119,27 @@ export const togglePinAtom = atom(null, (get, set, id: string) => {
   });
 });
 
+/** Pin or unpin a passage in its record's collection's notebook. */
+export const togglePassagePinAtom = atom(null, (get, set, passage: Omit<PassagePin, "at">) => {
+  const corpus = (entityCorpusOf(passage.entityId) as DataSource | undefined) ?? get(dataSourceAtom);
+  const key = passagePinKey(passage);
+  set(updateNotebook, {
+    corpus,
+    fn: (c) => {
+      const list = c.passages ?? [];
+      return list.some((p) => passagePinKey(p) === key)
+        ? { ...c, passages: list.filter((p) => passagePinKey(p) !== key) }
+        : { ...c, passages: [...list, { ...passage, at: Date.now() }] };
+    },
+  });
+});
+
+/** Take a record out of the notebook: its pin and any passage pinned from it. */
 export const unpinAtom = atom(null, (get, set, id: string) => {
-  set(updateNotebook, { corpus: get(dataSourceAtom), fn: (c) => ({ ...c, pins: c.pins.filter((p) => p.id !== id) }) });
+  set(updateNotebook, {
+    corpus: get(dataSourceAtom),
+    fn: (c) => ({ ...c, pins: c.pins.filter((p) => p.id !== id), passages: (c.passages ?? []).filter((p) => p.entityId !== id) }),
+  });
 });
 
 export const renameNotebookAtom = atom(null, (get, set, name: string) => {

@@ -10,8 +10,11 @@ import type { RelevanceBreakdown, TermAttribution } from "../../utils/relevance"
  *  it borrows) and strikes the terms it missed. The groups follow the order the
  *  score weighs fields in, which is also the order a reader would check them.
  *
- *  Multi-term queries only. With one term the line would only repeat the section
- *  labels under it, so it renders nothing. The borrowed document's SOURCE is not
+ *  Multi-term queries, and a single term found only in a document: with one
+ *  term that hit the title or a property the line would only repeat the labels
+ *  under it, so it renders nothing; a hit only in the text is worth saying,
+ *  because the snippets alone don't say the record carries nothing else. The
+ *  borrowed document's SOURCE is not
  *  named here: `BorrowedDocLine` rides the Document section label on every
  *  surface, single-term queries included, and this line only says "Borrowed
  *  document" so the field reads correctly beside the others.
@@ -31,7 +34,11 @@ export function MatchedTerms({
   missedOnly?: boolean;
   className?: string;
 }) {
-  if (!relevance || relevance.perTerm.length < 2) return null;
+  if (!relevance || relevance.perTerm.length === 0) return null;
+  if (relevance.perTerm.length === 1) {
+    const f = relevance.perTerm[0].field;
+    if (f !== "document" && f !== "borrowed document") return null;
+  }
   const typed = typedTerms(query);
   const groups = groupAttribution(relevance.perTerm).filter((g) => !missedOnly || g.field === null);
   if (groups.length === 0) return null;

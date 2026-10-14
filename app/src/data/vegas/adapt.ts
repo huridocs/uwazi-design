@@ -11,7 +11,7 @@ import { registerContentProvider, type EntityContent } from "../../utils/entityC
 import { vegasTemplateById } from "./schema";
 import { vegasCorpus, vegasEntity } from "./load";
 import { formatClock } from "./links";
-import type { VegasEntity } from "./types";
+import type { VegasEntity, VegasReference } from "./types";
 
 /** The clock properties, printed with their time of day when the record is
  *  timed to the second or the minute. Other dates (published, accessed, as
@@ -56,12 +56,33 @@ function fieldsOf(e: VegasEntity, tpl: TemplateDef): CardField[] | undefined {
   return out.length ? out : undefined;
 }
 
-function searchFieldsOf(e: VegasEntity, tpl: TemplateDef) {
-  const out: { key: string; label: string; value: string }[] = [];
+function searchFieldsOf(e: VegasEntity, tpl: TemplateDef, anchors?: SearchField[]) {
+  const out: SearchField[] = [];
   for (const p of tpl.properties) {
     if (GEOMETRY_PROPS.has(p.name)) continue;
     const values = displayValues(p, e);
     if (values.length) out.push({ key: p.name, label: p.label, value: values.join(", ") });
+  }
+  return anchors ? out.concat(anchors) : out;
+}
+
+type SearchField = { key: string; label: string; value: string };
+
+/** The map's annotations as search fields on the recording they are in, one
+ *  per anchored reference ("5th Volley Begins (1 sec. in)"). Keyed by
+ *  reference (`anchor:<id>`), so a Results snippet carries the reference: its
+ *  status, its sources, the time it opens the recording at. The moment it
+ *  annotates is not given them: its own title already says it. */
+function anchorFieldsByRecording(refs: VegasReference[]): Map<string, SearchField[]> {
+  const out = new Map<string, SearchField[]>();
+  for (const r of refs) {
+    const m = r.media;
+    if (!m?.label) continue;
+    const value = m.qualifier && !m.label.includes(m.qualifier) ? `${m.label} (${m.qualifier})` : m.label;
+    const f = { key: `anchor:${r.id}`, label: "Annotation", value };
+    const arr = out.get(m.recording);
+    if (arr) arr.push(f);
+    else out.set(m.recording, [f]);
   }
   return out;
 }
@@ -181,6 +202,7 @@ export function vegasLibraryEntities(): Entity[] {
   const c = vegasCorpus();
   if (!c) return [];
   if (_entities) return _entities;
+  const anchors = anchorFieldsByRecording(c.references);
   _entities = c.entities.map((e) => {
     const tpl = vegasTemplateById.get(e.template)!;
     const geo = geoOf(e);
@@ -200,7 +222,7 @@ export function vegasLibraryEntities(): Entity[] {
       ...(listCells ? { listCells } : {}),
       ...previewOf(e),
       fields: fieldsOf(e, tpl),
-      searchFields: searchFieldsOf(e, tpl),
+      searchFields: searchFieldsOf(e, tpl, anchors.get(e.sharedId)),
     };
   });
   return _entities;
