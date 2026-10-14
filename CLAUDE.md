@@ -441,6 +441,20 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - What a record leaves out: the title's snippet; section labels unless it mixes properties and
     pages; a field label after the first line of its run; identical quote text (printed once with
     "N references"); template · country · year unless the set mixes templates.
+  - A record's head carries a `WhereBadge` (where it matched: Title, field names, the best pages
+    "p.2, p.13 +6"; under 28rem on a line of its own), `UploadStateMark`, `headSlot` and
+    `PinToggle`.
+  - A quote or annotation line (`MetadataSnippet.refId`, from `quote:<id>` and `anchor:<id>`
+    fields) carries its reference's evidence on a line under it: `EvidenceStatus` (opens
+    `RefEvidenceCard`), `ContestedClock`, `TimeTag`, publisher and reported date.
+    `utils/snippetRefs.ts` resolves the reference on the record the line was found on. Las Vegas
+    recordings have one Annotation search field per anchored reference.
+  - Every snippet line has "Pin passage" (hover, focus, always on touch). Notebook `passages` hold
+    the words with their page or reference; `passageCitation` cites a quote or annotation through
+    its reference, anything else to its record. A passage joins its record's entry, or gets one of
+    its own.
+  - No result: `ZeroResults` offers the `zeroResultSuggestions` switches, each with its count and
+    applied in one click; the empty Filters lane says why its cards are gone.
   - In Adv. Search the readout is the count alone; the query is the field and the bar's term
     chips, and the drawer's Active filters leave it out. With no result, facets at 0 hide
     (`data-results="empty"`, ticked rows stay), the chart's button names what it clears, and
@@ -753,7 +767,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   e-mail). Verification is the first property facet (`defaultfilter`), after Status, Template
   and Content, the order Uwazi gives built-in and property filters. Its List opens on its own columns
   (`COLLECTION_COLUMNS` and `listCells` in `listColumns.tsx`). A reference's quote is a search
-  field ("Quote" on the source, "Source quote" on its target), so search and Adv. Search snippets
+  field ("Quote" on both ends), so search and Adv. Search snippets
   reach it through `entitySearchFields`, with no second index.
   - Documents: 23 Government of Nepal PDFs, unaltered, in `public/nepal-data/docs/`; their
     per-page OCR text, issuer and source in `docs.json`. 51 records (sources and the actions they
