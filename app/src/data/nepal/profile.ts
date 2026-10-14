@@ -146,6 +146,7 @@ export function nepalReferencesFor(id: string): Reference[] {
       ...(r.date ? { period: r.date } : {}),
       ...refEvidenceFrom(r, nepalEntity, (s) => nepalRefsByEntity().get(s), (q) => pageOf(q) || undefined, docOf),
       ...(r.note ? { note: r.note } : {}),
+      ...(r.hub ? { hubId: r.hub } : {}),
       ...refContestFrom(r, contestLookups),
       createdAt: "",
     };

@@ -30,6 +30,8 @@
 //   recording, the offset into it in seconds, the end when known, the clock
 //   time it was annotated at, the map's label and its qualifier.
 // - A reference ships its status, its anchor, its sources and Research's note.
+// - A reference in one of Research's hubs (data/hubs.json, when it is there)
+//   ships the hub's id (`hub`): the recordings that capture one moment.
 //
 // Privacy and harm (README §4 and §10.5, the rules of the seed's validate.py;
 // the build stops if one fails):
@@ -59,6 +61,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readSeedHubs } from "./seedHubs.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The seed lives outside git, in the main checkout's dev/results.
@@ -359,6 +362,9 @@ for (const r of seedRefs) {
   if (r.anchor && !byId.has(r.anchor.recording)) fail(`${r.id}: anchor recording ${r.anchor.recording} is missing`);
   if (!["confirmed", "single-source", "disputed"].includes(r.verification)) fail(`${r.id}: verification ${r.verification}`);
 }
+const seedHubs = readSeedHubs(seedDir, seedRefs, (id) => byId.has(id));
+for (const e of seedHubs.errors) fail(e);
+const { hubOf } = seedHubs;
 stopIfFailed("seed checks");
 
 /* ── References ─────────────────────────────────────────────────────── */
@@ -383,6 +389,7 @@ const relationships = seedRefs.map((r) => {
   // passed the seed checks above (`checkStrings` reads the whole reference).
   if (r.sources?.length) out.sources = r.sources;
   if (r.note?.trim()) out.note = r.note.trim();
+  if (hubOf.has(r.id)) out.hub = hubOf.get(r.id);
   return out;
 });
 
@@ -530,7 +537,7 @@ writeFileSync(join(pubOut, "thesauri.json"), JSON.stringify(thesauri));
 writeFileSync(join(pubOut, "evidence.json"), JSON.stringify(evidence));
 const recordings = entities.filter((x) => x.template === "vegas_recording").length;
 console.log(
-  `${entities.length} entities (${recordings} recordings), ${relationships.length} references (${anchored} with a media anchor), ` +
+  `${entities.length} entities (${recordings} recordings), ${relationships.length} references (${anchored} with a media anchor, ${hubOf.size} in ${seedHubs.hubs} hubs), ` +
     `${templates.length} templates, ${relationTypes.length} relationship types, ${thesauri.length} thesauri; ` +
     `evidence: ${evidenceRows} rows on ${Object.keys(evidence).length} records. Nothing bundled.`,
 );

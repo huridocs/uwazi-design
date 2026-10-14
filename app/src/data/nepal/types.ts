@@ -78,6 +78,8 @@ export interface NepalReference {
   date?: { from: number | null; to: number | null };
   /** The Source records that back the link. */
   sources?: string[];
+  /** The hub this link is a member of (seed `hubs.json`): the claim's sources on one side, or the records involved in an event. */
+  hub?: string;
   /** Research's note on how the sources were read. */
   note?: string;
   /** Research's review of a disputed link (`disputed-notes.json`, README

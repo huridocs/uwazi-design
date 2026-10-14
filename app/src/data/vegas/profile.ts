@@ -176,6 +176,7 @@ export function vegasReferencesFor(id: string): Reference[] {
       ...(r.date ? { period: r.date } : {}),
       ...refEvidenceFrom(r, vegasEntity, (s) => vegasRefsByEntity().get(s), () => undefined),
       ...(r.note ? { note: r.note } : {}),
+      ...(r.hub ? { hubId: r.hub } : {}),
       ...vegasContest(r),
       ...(m
         ? {

@@ -42,6 +42,9 @@
 //   the sources that back it and Research's note; a disputed one also ships
 //   Research's review of the dispute (`dispute`, from disputed-notes.json
 //   beside the seed's data/, when it is there).
+// - A reference in one of Research's hubs (data/hubs.json, when it is there)
+//   ships the hub's id (`hub`): the claim's sources on one side, or the
+//   people and organisations involved in an event.
 //
 // - Media items: the `file` image property holds the bundled copy's public
 //   path; its pixel size goes on the record (`image`) so the record reserves
@@ -58,6 +61,7 @@
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readSeedHubs } from "./seedHubs.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The seed lives outside git, in the main checkout's dev/results.
@@ -212,6 +216,9 @@ for (const d of disputedNotes) {
       throw new Error(`disputed-notes ${d.refId}: a phone number or an e-mail address`);
   disputeOf.set(d.refId, d);
 }
+const seedHubs = readSeedHubs(seedDir, seedRefs, (id) => titleOf.has(id));
+if (seedHubs.errors.length) throw new Error(seedHubs.errors.join("\n"));
+const { hubOf } = seedHubs;
 const VERIFICATION = new Set(["confirmed", "single-source", "disputed"]);
 let anchored = 0;
 let anchorElsewhere = 0;
@@ -261,6 +268,7 @@ const relationships = seedRefs.map((r) => {
     if (d.conflictingClaimIds?.length) dispute.conflicting = d.conflictingClaimIds;
     out.dispute = dispute;
   }
+  if (hubOf.has(r.id)) out.hub = hubOf.get(r.id);
   return out;
 });
 
@@ -518,6 +526,6 @@ for (const id of attached) {
 const mb = (n) => (n / 1048576).toFixed(1);
 console.log(
   `${entities.length} entities, ${relationships.length} references (${anchored} anchored, ${pageAnchored} to a page of a bundled PDF, ` +
-    `${anchorElsewhere} quotes on a third record dropped), ${templates.length} templates, ${relationTypes.length} relationship types, ` +
+    `${anchorElsewhere} quotes on a third record dropped, ${hubOf.size} in ${seedHubs.hubs} hubs), ${templates.length} templates, ${relationTypes.length} relationship types, ` +
     `${thesauri.length} thesauri; ${imagesToCopy.size} images (${mb(mediaBytes)} MB), ${attached.size} PDFs (${mb(docBytes)} MB)`,
 );

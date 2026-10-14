@@ -68,6 +68,8 @@ export interface VegasReference {
   sources?: string[];
   /** Research's note on how the sources were read. */
   note?: string;
+  /** The hub this link is a member of (seed `hubs.json`): the recordings that capture one moment. */
+  hub?: string;
 }
 
 export interface VegasThesaurus {
