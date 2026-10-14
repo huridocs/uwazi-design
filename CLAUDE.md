@@ -205,6 +205,11 @@ Known gaps, kept on purpose:
 - A table whose columns need more than the pane does not squeeze: `DataTable overflow="host"`
   sizes the card to its track minimums and the `bleed` lane scrolls it sideways, header and first
   column sticky. The Library List uses it; widths by type are `LIST_TRACK` in `listColumns.tsx`.
+- A view you switch to opens at its top. A scroller that outlives the switch (the Library lane
+  across view modes, a sheet's body across sections) resets in a layout effect keyed on the view,
+  before paint. Kept on purpose: Back from a record (page and scroll), a language switch, a new
+  page size, the Document tab's PDF page, passage jumps, click-to-fill, and panels that are not the
+  view switched (the drawer's Filters lane, the Settings nav rail).
 - Vertical rhythm is `stack` (8px). Each host declares `--body-top`; the first block of every tab
   body takes it with `body-top`, so first blocks line up across tabs.
 - A padded control declares its edge: `data-gutter-align="box"` or `"text"`.
