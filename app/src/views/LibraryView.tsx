@@ -2104,6 +2104,8 @@ export function LibraryView() {
       onRetry={handleCejilRetry}
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
+      onSelect={handleSelect}
+      selectedId={selectedId}
       // Stable identities, or the memo on ResultsBody is decorative: a fresh
       // arrow per render is a changed prop, and this list re-snippets its whole
       // visible page when it re-renders.

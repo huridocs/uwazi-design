@@ -1,5 +1,4 @@
 import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
@@ -14,7 +13,18 @@ import {
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/CollapseControls";
-import { EntityResultCard } from "./EntityResultCard";
+import {
+  CorpusLoadState,
+  HiddenByFilters,
+  NoSearchState,
+  ResultEvidence,
+  ResultRecord,
+  ResultsBlank,
+  WarmButton,
+  passageOwners,
+  type EvidenceHandlers,
+  type SelectHandler,
+} from "./ResultRecord";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 
@@ -29,10 +39,10 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
  *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
 const RESULTS_STEP = 40;
 
-/** What a passage row's text column loses to its surroundings inside the lane:
- *  the pane gutter both sides (24), the card's border and padding (18), the page
- *  spine's rail indent (16) and the row's own padding (16). */
-const PASSAGE_INSET = 74;
+/** What a snippet's text column loses to its surroundings inside the lane:
+ *  the pane gutter both sides (24), the card's border and padding (26) and the
+ *  line's own padding (16). */
+const PASSAGE_INSET = 66;
 
 interface Props {
   query: string;
@@ -45,6 +55,10 @@ interface Props {
   onRetry: () => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
+  /** Open a record (its head, or the record a "same passage" line names). */
+  onSelect: SelectHandler;
+  /** The record open in the preview. */
+  selectedId: string | null;
   onClearSearch: () => void;
   /** How many query matches the active facets are excluding (0 = none hidden). */
   hiddenByFilters: number;
@@ -59,12 +73,13 @@ interface Props {
   relevanceOf: (e: Entity) => RelevanceBreakdown;
 }
 
-/** The Results-tab evidence view: per matched entity, WHERE the term hit — which
- *  metadata field, which document page — with the term highlighted. Composed
- *  from shared primitives (§11): `ListInfoRow` header, `RelationshipGroupedCard`
- *  per entity, and the full-text page spine. The left pane already lists the
- *  entity set; this shows the snippets the grid can't. Blank-state order: error →
- *  loading → no-search → no-results → list.
+/** The Results-tab evidence view: per matched record, WHERE the term hit (which
+ *  field, which page) with the term marked. The drawer, the rail panel and the
+ *  phone sheet all draw it. One `ResultRecord` card per record, the shape every
+ *  results surface shares, with `ResultEvidence` under it; a page another
+ *  record already shows reads "↳ Same passage as …". The left pane already
+ *  lists the records; this shows the snippets the grid can't. Blank-state
+ *  order: error → loading → no-search → no-results → list.
  *
  *  MEMOISED. Every render of this rebuilds `buildSnippetsFor` for its whole
  *  visible page — a windowing pass per entity — and LibraryView re-renders on
@@ -81,6 +96,8 @@ export const ResultsBody = memo(function ResultsBody({
   onRetry,
   onFocusProperty,
   onSelectSnippet,
+  onSelect,
+  selectedId,
   onClearSearch,
   hiddenByFilters,
   onClearFilters,
@@ -155,6 +172,13 @@ export const ResultsBody = memo(function ResultsBody({
     [capped, showAllMap, trimmed, language, source, ctx, scope, match],
   );
 
+  // Who shows each passage first, in the order the cards are drawn.
+  const owners = useMemo(() => passageOwners(rendered), [rendered]);
+  const handlers = useMemo<EvidenceHandlers>(
+    () => ({ onFocusProperty, onSelectSnippet, onSelect }),
+    [onFocusProperty, onSelectSnippet, onSelect],
+  );
+
   useEffect(() => {
     setVisible(RESULTS_STEP);
     setExpandedMap({});
@@ -170,27 +194,7 @@ export const ResultsBody = memo(function ResultsBody({
   if (source === "cejil" && cejilLoading) {
     return (
       <Shell>
-        <Centered>
-          {cejilError ? (
-            <>
-              <span role="alert" className="text-sm text-ink-tertiary">Couldn’t load the CEJIL collection.</span>
-              <button
-                type="button"
-                data-part="retry"
-                onClick={onRetry}
-                className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
-                  hover:text-ink rounded-md transition-colors cursor-pointer"
-              >
-                Retry
-              </button>
-            </>
-          ) : (
-            <>
-              <span aria-hidden className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-              <span role="status" className="text-sm text-ink-tertiary">Loading the full CEJIL collection…</span>
-            </>
-          )}
-        </Centered>
+        <CorpusLoadState error={cejilError} onRetry={onRetry} />
       </Shell>
     );
   }
@@ -199,11 +203,7 @@ export const ResultsBody = memo(function ResultsBody({
   if (!trimmed) {
     return (
       <Shell>
-        <Centered>
-          <Search size={20} className="text-ink-muted" aria-hidden="true" />
-          <span className="text-sm font-medium text-ink-secondary">Search to see where terms match</span>
-          <span className="text-xs text-ink-tertiary">Results show the passages behind each hit.</span>
-        </Centered>
+        <NoSearchState hint="Results show the passages behind each hit." />
       </Shell>
     );
   }
@@ -213,23 +213,15 @@ export const ResultsBody = memo(function ResultsBody({
   if (totalMatches === 0) {
     return (
       <Shell>
-        <Centered>
+        <ResultsBlank>
           {/* Whole phrase is English; `dir="ltr"` keeps it from reordering in an
               RTL drawer (isolating only the digit wasn't enough). */}
           <span dir="ltr" className="text-sm text-ink-tertiary">
             No matches for{" "}
             <span className="font-medium text-ink-secondary">“{trimmed}”</span>
           </span>
-          <button
-            type="button"
-            data-part="clear-search"
-            onClick={onClearSearch}
-            className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
-              hover:text-ink rounded-md transition-colors cursor-pointer"
-          >
-            Clear search
-          </button>
-        </Centered>
+          <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
+        </ResultsBlank>
       </Shell>
     );
   }
@@ -273,28 +265,9 @@ export const ResultsBody = memo(function ResultsBody({
         />
 
         {/* Always mounted, contents hidden when nothing is excluded: this line
-            appears and vanishes as facets are ticked — exactly while the user is
-            reading the list below — so mounting it late shoved every card down.
-            The height is reserved; only the contents toggle. */}
-        <div
-          data-part="hidden-by-filters"
-          aria-hidden={hiddenByFilters === 0}
-          className={`pb-2 text-meta text-ink-tertiary ${
-            hiddenByFilters === 0 ? "invisible" : ""
-          }`}
-        >
-          {hiddenByFilters.toLocaleString()} more{" "}
-          {hiddenByFilters === 1 ? "match" : "matches"} hidden by filters
-          <span className="mx-1 text-ink-muted">·</span>
-          <button
-            type="button"
-            onClick={onClearFilters}
-            tabIndex={hiddenByFilters === 0 ? -1 : undefined}
-            className="font-medium text-carbon hover:underline cursor-pointer"
-          >
-            Clear filters
-          </button>
-        </div>
+            appears and vanishes as facets are ticked, while the list below is
+            being read, so mounting it late shoved every card down. */}
+        <HiddenByFilters count={hiddenByFilters} onClear={onClearFilters} />
       </header>
 
       {/* Block flow (space-y), NOT flex-col: the grouped cards are
@@ -312,36 +285,35 @@ export const ResultsBody = memo(function ResultsBody({
         <ul data-part="list" className="space-y-2">
         {rendered.map(({ entity, snippets }) => (
           <li key={entity.id} data-part="result">
-          <EntityResultCard
-            entity={entity}
-            snippets={snippets}
-            query={trimmed}
-            relevance={relevanceOf(entity)}
-            expanded={isExpanded(entity.id)}
-            onToggle={() =>
-              setExpandedMap((m) => ({ ...m, [entity.id]: !(m[entity.id] ?? true) }))
-            }
-            onFocusProperty={onFocusProperty}
-            onSelectSnippet={onSelectSnippet}
-            showAllFullText={showAllMap[entity.id] ?? false}
-            onToggleFullText={() =>
-              setShowAllMap((m) => ({ ...m, [entity.id]: !m[entity.id] }))
-            }
-          />
+            <ResultRecord
+              variant="card"
+              entity={entity}
+              snippets={snippets}
+              query={trimmed}
+              relevance={relevanceOf(entity)}
+              selected={selectedId === entity.id}
+              onSelect={onSelect}
+              expanded={isExpanded(entity.id)}
+              onToggle={() => setExpandedMap((m) => ({ ...m, [entity.id]: !(m[entity.id] ?? true) }))}
+            >
+              <ResultEvidence
+                entity={entity}
+                snippets={snippets}
+                query={trimmed}
+                owners={owners}
+                showAll={showAllMap[entity.id] ?? false}
+                onToggleShowAll={() => setShowAllMap((m) => ({ ...m, [entity.id]: !m[entity.id] }))}
+                handlers={handlers}
+              />
+            </ResultRecord>
           </li>
         ))}
         </ul>
         {visible < entities.length && (
           <div className="flex justify-center pt-1">
-            <button
-              type="button"
-              data-part="show-more"
-              onClick={() => setVisible((n) => n + RESULTS_STEP)}
-              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
-                hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-            >
+            <WarmButton onClick={() => setVisible((n) => n + RESULTS_STEP)}>
               Show more ({(entities.length - visible).toLocaleString()})
-            </button>
+            </WarmButton>
           </div>
         )}
       </div>
@@ -352,12 +324,4 @@ export const ResultsBody = memo(function ResultsBody({
 function Shell({ children }: { children: ReactNode }) {
   // `data-tap-guard`: a swipe through the results never opens one (useTapGuard).
   return <div data-component="ResultsBody" data-tap-guard className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
-}
-
-function Centered({ children }: { children: ReactNode }) {
-  return (
-    <div data-part="blank" className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center">
-      {children}
-    </div>
-  );
 }

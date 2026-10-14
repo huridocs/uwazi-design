@@ -8,9 +8,11 @@ interface CountBadgeProps {
   label?: string;
 }
 
+/** One line, never wrapped and never squeezed: beside a long title it is the
+ *  title that truncates ("1 / field" on two lines was the failure). */
 export function CountBadge({ count, unit, label }: CountBadgeProps) {
   return (
-    <span data-component="CountBadge" title={label} className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-md bg-parchment text-ink-tertiary">
+    <span data-component="CountBadge" title={label} className="inline-flex shrink-0 items-center justify-center min-w-[20px] h-5 px-1.5 whitespace-nowrap text-xs font-medium rounded-md bg-parchment text-ink-tertiary">
       <span aria-hidden={label ? true : undefined}>
         {count.toLocaleString()}
         {unit && ` ${unit}`}

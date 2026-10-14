@@ -40,6 +40,10 @@ export interface MetadataSnippet {
    *  so fields and pages rank on one scale (`compareEvidence`). */
   hits: number;
   groupsMet: number;
+  /** A reference's anchored quote (`quote:<id>` fields, Nepal): the reference
+   *  it was cut from, for the evidence its row can carry (status, publisher,
+   *  date). Absent on every other field. */
+  refId?: string;
 }
 
 export interface FullTextSnippet {
@@ -578,6 +582,7 @@ export function buildSnippetsFor(
         texts: [excerpt],
         hits: Math.max(1, fieldHits),
         groupsMet: groups.reduce((n, g) => (g.some((t) => inField.has(t)) ? n + 1 : n), 0),
+        ...(fieldKey.startsWith("quote:") ? { refId: fieldKey.slice("quote:".length) } : {}),
       });
     }
   }

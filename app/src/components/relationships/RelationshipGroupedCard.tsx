@@ -107,7 +107,7 @@ export function RelationshipGroupedCard({
         </span>
       ) : (
         <>
-          <span data-part="title" className="text-sm font-medium text-ink truncate">
+          <span data-part="title" className="min-w-0 text-sm font-medium text-ink truncate">
             <HighlightedText text={title} query={highlight} />
           </span>
           <CountBadge count={count} unit={countUnit} label={countLabel} />
