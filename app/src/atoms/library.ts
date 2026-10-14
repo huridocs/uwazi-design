@@ -1081,20 +1081,44 @@ export const libraryThumbAutoAtom = atom((get) => {
   return { on: count === null || count.withPreview * 2 >= count.total, count };
 });
 
+/** Thumbnail Per row: which cards keep the slot, in the order drawn. A row
+ *  (`columns` cards, the count the grid measured) keeps it for every card
+ *  when any of them has a preview by `carriesContent`, the test Auto counts;
+ *  a row with none draws text cards. The one place the per-row rule lives. */
+export function thumbSlotsPerRow(entities: readonly Entity[], columns: number, source: DataSource): boolean[] {
+  const cols = Math.max(1, columns);
+  const out: boolean[] = new Array(entities.length).fill(false);
+  for (let i = 0; i < entities.length; i += cols) {
+    const end = Math.min(i + cols, entities.length);
+    let any = false;
+    for (let j = i; j < end && !any; j++) any = carriesContent(entities[j], source);
+    if (any) for (let j = i; j < end; j++) out[j] = true;
+  }
+  return out;
+}
+
 /** What a card carries, for whichever mode is drawing cards. */
 export const libraryCardInfoAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
   const thumbRaw = readOption(state, mode, "preview", "mode", DEFAULT_THUMB_MODE);
-  const thumbMode: ThumbMode = thumbRaw === "on" || thumbRaw === "off" ? thumbRaw : "auto";
+  const thumbMode: ThumbMode = thumbRaw === "on" || thumbRaw === "off" || thumbRaw === "row" ? thumbRaw : "auto";
   const { on: thumbAuto, count: thumbCount } = get(libraryThumbAutoAtom);
   const fieldsRaw = readOption(state, mode, "cardFields", "mode", DEFAULT_CARD_FIELDS);
   const fields: CardFields =
     fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all" ? fieldsRaw : DEFAULT_CARD_FIELDS;
   return {
-    /** Thumbnails drawn, with Auto resolved. */
-    preview: thumbMode === "auto" ? thumbAuto : thumbMode === "on",
+    /** Thumbnails drawn, with Auto resolved. Per row counts as drawn while any
+     *  result has a preview: some row keeps the slot, so Size, Frame and Fit
+     *  apply, and List (whose chip column needs one width) draws as On. Which
+     *  card keeps it is `thumbSlotsPerRow`. */
+    preview:
+      thumbMode === "auto"
+        ? thumbAuto
+        : thumbMode === "row"
+          ? thumbCount === null || thumbCount.withPreview > 0
+          : thumbMode === "on",
     thumbMode,
     thumbAuto,
     thumbCount,

@@ -244,7 +244,8 @@ const LANGUAGE: DisplaySection = {
  *  card keeps the slot, with a `QuietMark` where there is nothing to draw. The menu
  *  says what Auto resolved to and the count behind it. Stored `true` / `false`
  *  from the old switch read as On / Off. */
-export type ThumbMode = "auto" | "on" | "off";
+/** `row`: each grid row decides on its own (`thumbSlotsPerRow`). */
+export type ThumbMode = "auto" | "on" | "off" | "row";
 export const DEFAULT_THUMB_MODE: ThumbMode = "auto";
 
 /** What a CARD carries.
@@ -267,6 +268,7 @@ const CARD_INFO: DisplaySection = {
         { id: "auto", label: "Auto" },
         { id: "on", label: "On" },
         { id: "off", label: "Off" },
+        { id: "row", label: "Per row" },
       ],
     },
     { id: "connections", label: "Relationships", default: true },

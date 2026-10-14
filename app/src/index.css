@@ -6,6 +6,7 @@
   --color-paper: var(--bg-surface);
   --color-warm: var(--bg-warm);
   --color-vellum: var(--bg-muted);
+  --color-placeholder: var(--bg-placeholder);
   --color-ink: var(--text-primary);
   --color-ink-secondary: var(--text-secondary);
   --color-ink-tertiary: var(--text-tertiary);

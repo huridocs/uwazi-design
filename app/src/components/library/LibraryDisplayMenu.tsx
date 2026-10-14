@@ -403,6 +403,7 @@ export function LibraryDisplayMenu() {
 function thumbNote(mode: string, auto: boolean, count: PreviewCount | null): string {
   if (mode === "on") return "A slot on every card";
   if (mode === "off") return "Text cards for every result";
+  if (mode === "row") return "A row keeps the slot when any card in it has a preview";
   if (!count) return "On";
   const n = `${count.withPreview.toLocaleString()} of ${count.total.toLocaleString()}`;
   return `${auto ? "On" : "Off"}: ${n} have a preview`;

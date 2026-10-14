@@ -48,6 +48,7 @@ import {
   libraryCardInfoAtom,
   libraryResultsPreviewCountAtom,
   previewCount,
+  thumbSlotsPerRow,
   libraryCardSideAtom,
   libraryChainFiltersAtom,
   libraryCountryFiltersAtom,
@@ -1134,6 +1135,46 @@ export function LibraryView() {
     },
     [pageKey, setPageState],
   );
+  // Thumbnail Per row: which cards keep the slot, from the columns the grid
+  // drew. Rows reform with the column count (resize, Size, Frame, the drawer,
+  // Split) and with the page.
+  const colsDrawn = useAtomValue(libraryCardColumnsInEffectAtom);
+  const rowSlots = useMemo(
+    () =>
+      viewMode === "cards" && cardInfo.thumbMode === "row" && colsDrawn > 0
+        ? thumbSlotsPerRow(shown, colsDrawn, dataSource)
+        : null,
+    [viewMode, cardInfo.thumbMode, colsDrawn, shown, dataSource],
+  );
+  // When rows reform, the cards above change height: keep the first card in
+  // view where it was, as a new page size keeps the page's first result.
+  const rowAnchor = useRef<{ id: string; top: number } | null>(null);
+  const noteRowAnchor = useCallback(() => {
+    const lane = laneRef.current;
+    if (!lane) return;
+    const laneTop = lane.getBoundingClientRect().top;
+    for (const box of lane.querySelectorAll<HTMLElement>('[data-component="EntityCard"] [data-select-id]')) {
+      const card = box.closest<HTMLElement>('[data-component="EntityCard"]');
+      const r = card?.getBoundingClientRect();
+      if (r && r.bottom > laneTop) {
+        rowAnchor.current = { id: box.dataset.selectId!, top: r.top - laneTop };
+        return;
+      }
+    }
+  }, []);
+  const rowShape = rowSlots ? `${colsDrawn}:${rowSlots.map((on) => (on ? 1 : 0)).join("")}` : "";
+  useLayoutEffect(() => {
+    const lane = laneRef.current;
+    const a = rowAnchor.current;
+    if (rowShape && lane && a && lane.scrollTop > 0) {
+      const card = lane
+        .querySelector(`[data-select-id="${CSS.escape(a.id)}"]`)
+        ?.closest<HTMLElement>('[data-component="EntityCard"]');
+      if (card) lane.scrollTop += card.getBoundingClientRect().top - lane.getBoundingClientRect().top - a.top;
+    }
+    noteRowAnchor();
+  }, [rowShape, noteRowAnchor]);
+
   // A new size keeps the first result of the page in view.
   const setPageSize = useSetAtom(libraryPageSizeAtom);
   const changePageSize = useCallback(
@@ -1846,7 +1887,15 @@ export function LibraryView() {
         }}
         onClick={clearOnGround}
         ref={viewMode === "results" ? undefined : setLane}
-        onScroll={paged && viewMode !== "results" ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
+        onScroll={
+          (paged && viewMode !== "results") || rowSlots
+            ? (e) => {
+                if (paged && viewMode !== "results") pageScroll.current.top = e.currentTarget.scrollTop;
+                // Per row: the card a reform keeps in place.
+                if (rowSlots) noteRowAnchor();
+              }
+            : undefined
+        }
         // Only a real tap opens an item here, never the end of a scroll.
         data-tap-guard
         // A canvas lane spans the pane on purpose: `__gutter()` lists it and
@@ -1975,10 +2024,11 @@ export function LibraryView() {
           </div>
         ) : viewMode === "cards" ? (
           <ul ref={cardGridRef} className={`grid ${colCount ? "" : cardGridCols} gap-3`} style={cardGridStyle}>
-            {shown.map((e) => (
+            {shown.map((e, i) => (
               <EntityCard
                 key={e.id}
                 as="li"
+                preview={rowSlots ? rowSlots[i] : undefined}
                 entity={e}
                 layout="cards"
                 query={query}
