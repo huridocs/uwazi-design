@@ -427,6 +427,25 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     falls back to All elsewhere (collection switch, snapshot).
     Whole words scans CEJIL's full text in 1–5 ms per keystroke against 0–1 ms for partial
     (measured 2026-10-06); the per-keystroke cost is still the re-render.
+  - Every results surface (the drawer's Results tab, the rail panel, the phone sheet, Adv.
+    Search's Grouped, Tree and Passages) draws a record with `ResultRecord`
+    (`ResultsSnippets/ResultRecord.tsx`), the `MemberCard` shape: a stretched button opens the
+    record; head (dot, h2 title, a `CountBadge` that never wraps, `headSlot`, facts) and snippets
+    keep their own targets. `ResultEvidence` (Grouped, drawer), `RankedEvidence` (Passages: one
+    row per record, its passages ranked, folding past three) and `SnippetLine` (one excerpt with
+    its trailing tag; `PageSpine` rows too) are the only copies. Blank states come from the same
+    file.
+  - A passage shows once per drawn list (`passageOwners`): keyed by `docKey` and page, and by
+    reference for a quote (`MetadataSnippet.refId`). Later records read "↳ Same passage as …"
+    with their page tags; Spine names the earliest record on the axis.
+  - What a record leaves out: the title's snippet; section labels unless it mixes properties and
+    pages; a field label after the first line of its run; identical quote text (printed once with
+    "N references"); template · country · year unless the set mixes templates.
+  - In Adv. Search the readout is the count alone; the query is the field and the bar's term
+    chips, and the drawer's Active filters leave it out. With no result, facets at 0 hide
+    (`data-results="empty"`, ticked rows stay), the chart's button names what it clears, and
+    `utils/zeroResultSuggestions.ts` gives the switches that would bring results back. The
+    masthead's sr-only status announces the count once the search settles.
   - `TimeSpine`: the one chronology for the timeline and the Adv. Search spine. Callers pass rows,
     `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
     marks share one capsule and brace with no count; the "N later" label sits at the row
