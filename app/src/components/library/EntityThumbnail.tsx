@@ -119,12 +119,14 @@ export function EntityThumbnail({
  *  portrait slot, where a percentage of a 500px box is a poster, and `min-h-4`
  *  is the 2.25rem list chip, where a percentage is a speck.
  *
- *  Vellum ground and the type colour, nothing new: `bg-parchment` stays
- *  selection and no other colour enters the card. */
+ *  A slight off-white ground (`bg-placeholder`) with an inset hairline edge
+ *  (`inset-ring-border-placeholder`), and the type colour: `bg-parchment`
+ *  stays selection. The edge is painted inside the box, so the slot keeps its
+ *  size whether or not the caller gives it a border. */
 export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
   const color = tint ?? "#6B7280";
   return (
-    <span className={`bg-vellum flex items-center justify-center ${className}`}>
+    <span data-component="QuietMark" className={`bg-placeholder inset-ring inset-ring-border-placeholder flex items-center justify-center ${className}`}>
       <span
         className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
         style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}

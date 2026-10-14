@@ -347,10 +347,7 @@ export const EntityCard = memo(function EntityCard({
               className="h-full w-full rounded overflow-hidden border border-border/60"
             />
           ) : (
-            <QuietMark
-              tint={getEntityType(entity.typeId)?.color}
-              className="h-full w-full rounded border border-border/60"
-            />
+            <QuietMark tint={getEntityType(entity.typeId)?.color} className="h-full w-full rounded" />
           )}
         </span>
       )}

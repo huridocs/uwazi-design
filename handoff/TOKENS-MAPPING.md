@@ -55,6 +55,8 @@ every swap is also a hue shift toward the warm palette).
 | Surface (cards, panels) | `--bg-surface` | `bg-paper` | `#FFFFFF` | `#242424` | `white` |
 | Warm fill (buttons, hover, sections) | `--bg-warm` | `bg-warm` | `#FCFAF8` | `#2A2A2A` | `gray-50` |
 | Muted fill | `--bg-muted` | `bg-vellum` | `#F5EED7` | `#333333` | `gray-100` |
+| Empty thumbnail slot | `--bg-placeholder` | `bg-placeholder` | `#FCFBF7` | `#282826` | `gray-50` |
+| Empty thumbnail slot edge | `--border-placeholder` | `inset-ring-border-placeholder` | `#FCFCFC` | `#2C2C2B` | `gray-100` |
 | Modal scrim | `--bg-overlay` | `bg-overlay` | `#00000066` | `#000000AA` | ad-hoc rgba |
 | Selected (non-card) | `--bg-selected` | `bg-selected` | `#F0EDED` | `#333333` | `primary-100` |
 

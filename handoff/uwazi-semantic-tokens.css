@@ -27,6 +27,8 @@
   --bg-surface: #FFFFFF;   /* paper */
   --bg-warm: #FCFAF8;      /* warm — action buttons, hover, section fills */
   --bg-muted: #F5EED7;     /* vellum */
+  --bg-placeholder: #FCFBF7; /* empty thumbnail slot: slight off-white, not parchment or vellum */
+  --border-placeholder: #FCFCFC; /* its hairline edge, drawn inside the slot */
   --bg-overlay: #00000066;
   --bg-selected: #F0EDED;
 
@@ -81,6 +83,8 @@
   --bg-surface: #242424;
   --bg-warm: #2A2A2A;
   --bg-muted: #333333;
+  --bg-placeholder: #282826;
+  --border-placeholder: #2C2C2B;
   --bg-overlay: #000000AA;
   --bg-selected: #333333;
 
@@ -130,6 +134,8 @@
   --color-paper: var(--bg-surface);
   --color-warm: var(--bg-warm);
   --color-vellum: var(--bg-muted);
+  --color-placeholder: var(--bg-placeholder);
+  --color-border-placeholder: var(--border-placeholder);
   --color-ink: var(--text-primary);
   --color-ink-secondary: var(--text-secondary);
   --color-ink-tertiary: var(--text-tertiary);

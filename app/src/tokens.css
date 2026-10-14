@@ -4,6 +4,11 @@
   --bg-surface: #FFFFFF;
   --bg-warm: #FCFAF8;
   --bg-muted: #F5EED7;
+  /* An empty thumbnail slot (QuietMark): a slight off-white, so it is not
+     parchment's selected cream or vellum's yellow, with a hairline edge drawn
+     inside it. Juan's values. */
+  --bg-placeholder: #FCFBF7;
+  --border-placeholder: #FCFCFC;
   --bg-overlay: #00000066;
   --bg-selected: #F0EDED;
 
@@ -103,6 +108,10 @@
   --bg-surface: #242424;
   --bg-warm: #2A2A2A;
   --bg-muted: #333333;
+  /* The light pair's shape: one small lift over the card's #242424, and an
+     edge slightly lighter than that ground. */
+  --bg-placeholder: #282826;
+  --border-placeholder: #2C2C2B;
   --bg-overlay: #000000AA;
   --bg-selected: #333333;
 
