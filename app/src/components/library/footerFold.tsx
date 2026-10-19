@@ -7,10 +7,11 @@ import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSta
  *    1  the actions show their icons only (named, with a tooltip);
  *    2  the page size shows its number only ("30");
  *    3  the range shows the total only ("4,398");
- *    4  the stepper only ("‹ 3 / 147 ›").
+ *    4  the stepper only ("‹ 3 / 147 ›");
+ *    5  the selection's scope buttons shorten ("Page (30)", "All 4,398").
  *  `FOOTER_FOLD_MAX` is the last step. */
-export type FooterFold = 0 | 1 | 2 | 3 | 4;
-export const FOOTER_FOLD_MAX: FooterFold = 4;
+export type FooterFold = 0 | 1 | 2 | 3 | 4 | 5;
+export const FOOTER_FOLD_MAX: FooterFold = 5;
 
 const FooterFoldContext = createContext<FooterFold>(0);
 export const FooterFoldProvider = FooterFoldContext.Provider;

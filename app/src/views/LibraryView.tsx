@@ -3,7 +3,7 @@ import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckSquare, ChevronDown, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
+import { CheckSquare, ChevronDown, ListChecks, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
 import { appViewAtom } from "../atoms/navigation";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "../atoms/dataSource";
@@ -76,6 +76,7 @@ import {
   libraryResultsSheetOpenAtom,
   librarySearchDraftAtom,
   librarySelectModeAtom,
+  selectIdsAtom,
   librarySelectedClusterAtom,
   SEARCH_SETTLE_MS,
   libraryOpenEntityIdAtom,
@@ -122,6 +123,7 @@ import { LibraryPageEnd, LibraryPagination } from "../components/library/Library
 import { Hint } from "../components/shared/Hint";
 import { FooterFoldProvider, useFooterFold, useFooterFoldMeasure } from "../components/library/footerFold";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
+import { SelectMenuButton } from "../components/library/SelectMenuButton";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
 import { networkFindStepAtom } from "../atoms/network";
@@ -445,6 +447,16 @@ export function LibraryView() {
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
   const [selectMode, setSelectMode] = useAtom(librarySelectModeAtom);
+  const selectIds = useSetAtom(selectIdsAtom);
+  /** The Select menu's page and every-result items: the set, in select mode,
+   *  so the next click on a record refines it rather than replacing it. */
+  const startSelection = useCallback(
+    (ids: readonly string[]) => {
+      setSelectMode(true);
+      selectIds(ids);
+    },
+    [setSelectMode, selectIds],
+  );
   const discardDraft = useSetAtom(discardDraftAtom);
   const [previewEntityId, setOverlayEntity] = useAtom(previewEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -1676,11 +1688,13 @@ export function LibraryView() {
         {!selectionActive && !menuTrigger && (canSelect || pagination) && (
           <div data-fold-push className="ms-auto shrink-0 flex items-center gap-1">
             {canSelect && (
-              <FooterButton
-                icon={<CheckSquare size={13} className="text-ink-tertiary" />}
-                label="Select"
-                hint={`Pick several records: click one to add or remove it.\u00a0${MOD_KEY} + click works without this; Shift + click adds a range.`}
-                onClick={() => setSelectMode(true)}
+              <SelectMenuButton
+                pageCount={drawnIds.length}
+                total={filteredIds.length}
+                paged={paged}
+                onRecords={() => setSelectMode(true)}
+                onPage={() => startSelection(drawnIds)}
+                onAll={() => startSelection(filteredIds)}
               />
             )}
             {canSelect && pagination && <BarDivider className="hidden sm:block" />}
@@ -2171,7 +2185,27 @@ export function LibraryView() {
             // The visible way into bulk selection on a touch screen (a long
             // press on an item still works): the selection bar shows and a
             // tap toggles, until Clear.
-            { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+            { label: "Select records", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+            ...(canSelect && drawnIds.length > 0
+              ? [
+                  {
+                    label: paged
+                      ? `Select this page (${drawnIds.length.toLocaleString()})`
+                      : `Select all shown (${drawnIds.length.toLocaleString()})`,
+                    icon: <CheckSquare size={14} />,
+                    onClick: () => startSelection(drawnIds),
+                  },
+                ]
+              : []),
+            ...(canSelect && filteredIds.length > drawnIds.length
+              ? [
+                  {
+                    label: `Select all ${filteredIds.length.toLocaleString()} results`,
+                    icon: <ListChecks size={14} />,
+                    onClick: () => startSelection(filteredIds),
+                  },
+                ]
+              : []),
             { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
             { label: "Upload", icon: <Upload size={14} />, onClick: () => void handleUpload() },
             ...(canImport
@@ -2587,21 +2621,14 @@ function SplitExportButton({
   );
 }
 
-/** The modifier this platform calls Cmd — Ctrl everywhere but Apple's. */
-const MOD_KEY =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "Cmd" : "Ctrl";
-
 function FooterButton({
   icon,
   label,
-  hint: hintText,
   onClick,
   lead = false,
 }: {
   icon: ReactNode;
   label: string;
-  /** The tooltip, when it says more than the label. */
-  hint?: string;
   onClick?: () => void;
   /** The bar's one filled button; the rest are ghosts (`warmButton.ts`). */
   lead?: boolean;
@@ -2610,7 +2637,7 @@ function FooterButton({
   // button keeps its name through `aria-label`.
   const iconOnly = useFooterFold() >= 1;
   return (
-    <Hint text={hintText ?? label} describe={false} muted={!iconOnly && !hintText}>
+    <Hint text={label} describe={false} muted={!iconOnly}>
       {(hint) => (
         <button
           {...hint}

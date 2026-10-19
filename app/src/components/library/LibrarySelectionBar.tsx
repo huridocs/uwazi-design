@@ -19,7 +19,6 @@ import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
 import { useFooterFold } from "./footerFold";
-import { SelectAllBox } from "./SelectAllBox";
 
 /** The Library footer's SELECTED state — swapped in place of the baseline
  *  actions, in the same bar at the same height. It shows for a selection
@@ -28,10 +27,10 @@ import { SelectAllBox } from "./SelectAllBox";
  *
  *  Order: the actions (`useSelectionActions` — the same list the phone sheet
  *  and the selection drawer's menu show), then the end group, in the three
- *  scopes a selection has: the "This page · 30" box, the readout (a live
- *  region in a fixed slot, its second line saying how much of the selection
- *  is off this page), "Select all N" for every result across pages, and
- *  Clear. Below a 56rem bar every action keeps only its icon and its name.
+ *  scopes a selection has as text buttons, "Select page (30)" and "Select
+ *  all N" (every result across pages), then the readout (a live region in a
+ *  fixed slot, its second line saying how much of the selection is off this
+ *  page) and Clear. Below a 56rem bar every action keeps only its icon and its name.
  *
  *  This component subscribes to the selection; the view around it does not. */
 export function LibrarySelectionBar({
@@ -98,6 +97,14 @@ export function LibrarySelectionBar({
             : "None shown"
           : `${notShown.toLocaleString()} not ${where}`;
   const selectEvery = () => selectIds(filteredIds);
+  // The bar's last fold step shortens the scope labels; none is ever a bare number.
+  const folded = fold >= 5;
+  const pageCount = loadedIds.length.toLocaleString();
+  const totalText = total.toLocaleString();
+  const pageLabels = paged
+    ? { select: `Select page (${pageCount})`, selectShort: `Page (${pageCount})`, deselect: "Deselect page" }
+    : { select: `Select all shown (${pageCount})`, selectShort: `Shown (${pageCount})`, deselect: "Deselect shown" };
+  const pageSlot = paged ? (folded ? "w-[6.5rem]" : "w-[8rem]") : folded ? "w-[7rem]" : "w-[10.75rem]";
 
   const showList = () => {
     if (isMobile) return setSheetOpen(true);
@@ -125,18 +132,45 @@ export function LibrarySelectionBar({
         </Fragment>
       ))}
       {filtersSlot}
-      {/* The selection itself at the bar's logical END (it flips under RTL),
-          from the narrowest scope to the widest: this page, the count, every
-          result, Clear. `ms-auto` pins the group to the end, so nothing at
-          the start moves. Every part keeps a fixed slot: the count and its
-          second line change inside theirs, and the "Select all N" slot is
-          there whenever the results run past the page, holding the offer or,
-          once taken, "All N results". */}
+      {/* The selection itself at the bar's logical END (it flips under RTL):
+          its two scopes as text buttons, this page and every result, then
+          the count and Clear. `ms-auto` pins the group to the end, so nothing
+          at the start moves. Every part keeps a fixed slot, sized for its
+          longer label: a scope's label changes inside it ("Select page (30)"
+          / "Deselect page"), and the count's two lines change inside theirs.
+          The every-result slot is there whenever the results run past the
+          page; that depends on the results, not on a tick. */}
       <span data-part="selection-end" data-fold-push className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
-        <span className={`inline-flex shrink-0 me-1 ${fold >= 4 ? "w-[4rem]" : "w-[7.25rem]"}`}>
-          <SelectAllBox loadedIds={loadedIds} paged={paged} compact={fold >= 4} />
+        <span data-part="select-page" className={`shrink-0 inline-flex ${pageSlot}`}>
+          <ScopeButton
+            label={pageAllPicked ? pageLabels.deselect : folded ? pageLabels.selectShort : pageLabels.select}
+            name={pageAllPicked ? `Deselect the ${pageCount} records ${where}` : `Select the ${pageCount} records ${where}`}
+            hint={
+              pageAllPicked && n > loadedIds.length
+                ? `Deselect the ${pageCount} records ${where}. The\u00a0others stay selected.`
+                : undefined
+            }
+            disabled={loadedIds.length === 0}
+            onClick={() => (pageAllPicked ? deselect(loadedIds) : selectIds(loadedIds))}
+          />
         </span>
-        <span className="shrink-0 w-[9rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
+        {acrossPages && (
+          <span data-part="select-every" className={`shrink-0 inline-flex ${folded ? "w-[6rem]" : "w-[9rem]"}`}>
+            {moreToSelect ? (
+              <ScopeButton
+                label={folded ? `All ${totalText}` : `Select all ${totalText}`}
+                name={`Select all ${totalText} results, across every page`}
+                hint={`Select every result of this search and its filters: ${totalText} records on every page.`}
+                onClick={selectEvery}
+              />
+            ) : (
+              <span className="inline-flex items-center h-7 px-2.5 text-xs font-medium text-ink-secondary tabular-nums whitespace-nowrap">
+                {folded ? "All selected" : `All ${totalText} selected`}
+              </span>
+            )}
+          </span>
+        )}
+        <span className="shrink-0 w-[9rem] ms-1 flex flex-col justify-center text-xs tabular-nums leading-tight">
           <span role="status" aria-live="polite" className="flex flex-col min-w-0">
             <button
               type="button"
@@ -152,25 +186,6 @@ export function LibrarySelectionBar({
             </span>
           </span>
         </span>
-        {acrossPages && (
-          <span data-part="select-every" className={`shrink-0 inline-flex ${fold >= 4 ? "w-[5.75rem]" : "w-[8.75rem]"}`}>
-            {moreToSelect ? (
-              <BarButton
-                icon={<ListChecks size={13} />}
-                label={fold >= 4 ? `All ${total.toLocaleString()}` : `Select all ${total.toLocaleString()}`}
-                name={`Select all ${total.toLocaleString()} results, across every page`}
-                hint={`Select every result of this search and its filters: ${total.toLocaleString()} records on every page.`}
-                keepLabel
-                onClick={selectEvery}
-              />
-            ) : (
-              <span className="inline-flex items-center gap-1.5 h-7 px-3 text-xs font-medium text-ink-secondary tabular-nums whitespace-nowrap">
-                <ListChecks size={13} className="text-ink-tertiary" aria-hidden />
-                {fold >= 4 ? `All ${total.toLocaleString()}` : `All ${total.toLocaleString()} results`}
-              </span>
-            )}
-          </span>
-        )}
         <BarButton icon={<X size={13} />} label="Clear" name={n === 0 ? "Stop selecting" : "Clear the selection"} onClick={() => clear()} />
       </span>
       {/* Phone: the count and its second line; the scopes are in the Actions
@@ -203,12 +218,12 @@ export function LibrarySelectionBar({
           scopes={[
             pageAllPicked
               ? {
-                  label: `Deselect ${paged ? "this page" : "all shown"} (${loadedIds.length.toLocaleString()})`,
+                  label: paged ? "Deselect page" : "Deselect shown",
                   icon: <SquareMinus size={14} />,
                   onClick: () => deselect(loadedIds),
                 }
               : {
-                  label: `Select ${paged ? "this page" : "all shown"} (${loadedIds.length.toLocaleString()})`,
+                  label: paged ? `Select page (${pageCount})` : `Select all shown (${pageCount})`,
                   icon: <CheckSquare size={14} />,
                   onClick: () => selectIds(loadedIds),
                   disabledReason: loadedIds.length === 0 ? "Nothing shown" : undefined,
@@ -216,9 +231,9 @@ export function LibrarySelectionBar({
             ...(acrossPages
               ? [
                   moreToSelect
-                    ? { label: `Select all ${total.toLocaleString()} results`, icon: <ListChecks size={14} />, onClick: selectEvery }
+                    ? { label: `Select all ${totalText}`, icon: <ListChecks size={14} />, onClick: selectEvery }
                     : {
-                        label: `All ${total.toLocaleString()} results selected`,
+                        label: `All ${totalText} selected`,
                         icon: <ListChecks size={14} />,
                         done: true,
                       },
@@ -382,5 +397,41 @@ function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void
         </li>
       ))}
     </ul>
+  );
+}
+
+/** One of the bar's two scope buttons ("Select page (30)", "Select all
+ *  4,398"): words, no icon, on `BAR_GHOST`. Its slot is fixed by the caller,
+ *  so the label can change without moving anything. */
+function ScopeButton({
+  label,
+  name,
+  hint: hintText,
+  disabled = false,
+  onClick,
+}: {
+  label: string;
+  name: string;
+  hint?: string;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Hint text={hintText ?? name} describe={false} muted={!hintText}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          aria-label={name}
+          aria-disabled={disabled || undefined}
+          onClick={disabled ? undefined : onClick}
+          className={`inline-flex items-center h-7 px-2.5 text-xs font-medium tabular-nums whitespace-nowrap ${BAR_GHOST} rounded-md transition-colors ${
+            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          {label}
+        </button>
+      )}
+    </Hint>
   );
 }

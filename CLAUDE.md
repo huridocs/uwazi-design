@@ -651,17 +651,20 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     keeps the page's first result in view.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
     can span pages; Shift+Arrow stops at the page edge.
-  - Selecting several starts from the footer, never from a card: the idle bar's Select (before
-    the page group; on phones the Actions sheet's first item) turns on `librarySelectModeAtom`,
-    where a plain click on a record, a snippet or a matched property toggles it, and a ground
-    click does not end it. Cmd/Ctrl and Shift + click and the long press still start one from
-    the view. Cards carry no visible checkbox.
-  - The selection bar's end group, each part in a fixed slot: "This page · 30" (`SelectAllBox`,
-    "All shown" in views that do not page), the count with a second line that always says how
-    much of the selection is off this page ("All on this page", "4 not on this page", "None on
-    this page"), "Select all N" for every result across pages (once taken, "All N results"; the
-    slot shows only while the results run past the page), then Clear. On phones the count keeps
-    its second line and the Actions sheet lists the two scopes above the actions.
+  - Selecting several starts from the footer, never from a card: the idle bar's Select menu
+    (`SelectMenuButton`, before the page group; on phones the Actions sheet) offers "Select
+    records", "Select this page (30)" ("Select all shown" where the view does not page) and
+    "Select all N results". Each turns on `librarySelectModeAtom`, where a plain click on a
+    record, a snippet or a matched property toggles it, and a ground click does not end it.
+    Cmd/Ctrl and Shift + click and the long press still start one from the view. No checkbox
+    is drawn on cards or in the bar.
+  - The selection bar's end group, each part in a fixed slot sized for its longer label:
+    "Select page (30)" / "Deselect page", "Select all N" / "All N selected" (shown only while
+    the results run past the page), the count with a second line that always says how much
+    of the selection is off this page ("All 3 on this page", "4 not on this page", "None on
+    this page"), then Clear. The last fold step shortens the scope labels ("Page (30)",
+    "All 4,398", "All selected"), never to a bare number. On phones the count keeps its
+    second line and the Actions sheet lists the two scopes above the actions.
   - Adv. Search and the Results tab read the same page state as Cards and List, so page N holds
     the same records in every view; Adv. Search's scroller registers as the lane for the scroll
     restore. Spine pages its rows and draws its axis from every dated result (`TimeSpine`
