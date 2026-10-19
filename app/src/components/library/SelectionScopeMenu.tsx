@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { CheckSquare, ChevronDown } from "lucide-react";
+import { Check, CheckSquare, ChevronDown } from "lucide-react";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Hint } from "../shared/Hint";
 import { useFooterFold } from "./footerFold";
@@ -87,7 +87,7 @@ export function SelectionScopeMenu({
       list[e.key === "Home" ? 0 : list.length - 1]?.focus();
     }
   };
-  const row = "w-full flex flex-col items-start px-3 py-1.5 text-start text-xs rounded-md tabular-nums";
+  const row = "w-full px-3 py-1.5 text-start text-xs rounded-md tabular-nums";
 
   let trigger: ReactNode;
   if (selecting) {
@@ -99,16 +99,24 @@ export function SelectionScopeMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`w-full flex flex-col items-start justify-center px-2.5 py-1 text-start leading-tight tabular-nums ${BAR_GHOST} aria-expanded:bg-warm rounded-md transition-colors cursor-pointer`}
+        className={`relative w-full h-full flex items-center px-2.5 text-start leading-tight tabular-nums ${BAR_GHOST} aria-expanded:bg-warm rounded-md transition-colors cursor-pointer`}
       >
+        {/* The count sits at the slot's middle whether or not a note is
+            under it; the note is a caption placed below the middle, so it
+            comes and goes without moving the count. */}
         <span className="flex items-center gap-1 max-w-full text-xs font-semibold text-ink">
           <span className="truncate">{count.toLocaleString()} selected</span>
           <ChevronDown size={12} className="shrink-0 text-ink-tertiary" aria-hidden />
         </span>
-        {/* Always mounted, so the count never moves when the note comes. */}
-        <span data-part="note" aria-hidden className="max-w-full text-meta text-ink-tertiary truncate">
-          {note || " "}
-        </span>
+        {note && (
+          <span
+            data-part="note"
+            aria-hidden
+            className="absolute inset-x-2.5 top-1/2 mt-[0.5rem] text-meta leading-tight text-ink-tertiary truncate"
+          >
+            {note}
+          </span>
+        )}
       </button>
     );
   } else {
@@ -139,7 +147,7 @@ export function SelectionScopeMenu({
       ref={wrapRef}
       data-component="SelectionScopeMenu"
       // The count's slot is fixed, sized for "4,398 selected" and its note.
-      className={`relative shrink-0 flex items-center ${selecting ? "w-[9rem] self-stretch py-1" : ""}`}
+      className={`relative shrink-0 flex items-center ${selecting ? "w-[9rem] self-stretch py-0.5" : ""}`}
     >
       {trigger}
       {open && (
@@ -170,8 +178,16 @@ export function SelectionScopeMenu({
             <div key={it.label}>
               {it.apart && <div role="separator" className="my-1 h-px bg-border" />}
               {it.done ? (
-                <p role="menuitem" aria-disabled tabIndex={-1} className={`${row} text-ink-tertiary focus:outline-none focus-visible:bg-warm`}>
-                  {it.label}
+                // A state reached, not an action: the words in ink with a
+                // check at the row's end, so the text keeps the column.
+                <p
+                  role="menuitem"
+                  aria-disabled
+                  tabIndex={-1}
+                  className={`${row} flex items-center gap-2 text-ink-secondary focus:outline-none focus-visible:bg-warm`}
+                >
+                  <span className="flex-1 min-w-0">{it.label}</span>
+                  <Check size={13} className="shrink-0 text-ink" aria-hidden />
                 </p>
               ) : (
                 <button
@@ -181,7 +197,7 @@ export function SelectionScopeMenu({
                     close();
                     it.onClick?.();
                   }}
-                  className={`${row} text-ink hover:bg-warm focus:outline-none focus-visible:bg-warm cursor-pointer`}
+                  className={`${row} flex flex-col items-start text-ink hover:bg-warm focus:outline-none focus-visible:bg-warm cursor-pointer`}
                 >
                   <span>{it.label}</span>
                   {it.help && <span className="text-meta text-ink-tertiary">{it.help}</span>}

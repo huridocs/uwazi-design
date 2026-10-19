@@ -76,13 +76,13 @@ import {
   libraryResultsSheetOpenAtom,
   librarySearchDraftAtom,
   librarySelectModeAtom,
-  selectIdsAtom,
   librarySelectedClusterAtom,
   SEARCH_SETTLE_MS,
   libraryOpenEntityIdAtom,
   libraryRailPanelAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
+  enterSelectModeAtom,
   librarySelectionListAskedAtom,
   librarySortAtom,
   librarySortDirAtom,
@@ -446,17 +446,11 @@ export function LibraryView() {
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
-  const [selectMode, setSelectMode] = useAtom(librarySelectModeAtom);
-  const selectIds = useSetAtom(selectIdsAtom);
+  const selectMode = useAtomValue(librarySelectModeAtom);
   /** The Select menu's page and every-result items: the set, in select mode,
    *  so the next click on a record refines it rather than replacing it. */
-  const startSelection = useCallback(
-    (ids: readonly string[]) => {
-      setSelectMode(true);
-      selectIds(ids);
-    },
-    [setSelectMode, selectIds],
-  );
+  const enterSelectMode = useSetAtom(enterSelectModeAtom);
+  const startSelection = useCallback((ids: readonly string[]) => enterSelectMode(ids), [enterSelectMode]);
   const discardDraft = useSetAtom(discardDraftAtom);
   const [previewEntityId, setOverlayEntity] = useAtom(previewEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -1682,9 +1676,23 @@ export function LibraryView() {
           (selectionActive ? (
             <>
               <BarDivider className="hidden sm:block" />
-              {/* Held at its widest, so a filter that shortens the range
-                  does not move the selection's group before it. */}
-              <FooterHold>{pagination}</FooterHold>
+              {/* As wide as the unfiltered collection's pager, so a filter
+                  turned on or off does not move the selection's group. */}
+              <FooterHold
+                reserve={
+                  <LibraryPagination
+                    total={Math.max(entities.length, filtered.length)}
+                    page={1}
+                    pageSize={pageSize}
+                    onPage={() => {}}
+                    onPageSize={() => {}}
+                    compact={isMobile}
+                    label="Pages"
+                  />
+                }
+              >
+                {pagination}
+              </FooterHold>
             </>
           ) : null)}
         {/* The way into picking several records, at the bar's end where the
@@ -1701,7 +1709,7 @@ export function LibraryView() {
                     {
                       label: "Select records",
                       help: `Click records to add them. ${MOD_KEY}\u00a0+ click works anytime.`,
-                      onClick: () => setSelectMode(true),
+                      onClick: () => enterSelectMode(),
                     },
                     ...(drawnIds.length > 0
                       ? [
@@ -2217,7 +2225,7 @@ export function LibraryView() {
             // The visible way into bulk selection on a touch screen (a long
             // press on an item still works): the selection bar shows and a
             // tap toggles, until Clear.
-            { label: "Select records", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+            { label: "Select records", icon: <CheckSquare size={14} />, onClick: () => enterSelectMode() },
             ...(canSelect && drawnIds.length > 0
               ? [
                   {

@@ -91,33 +91,20 @@ function contentWidth(row: HTMLElement) {
   return total + gap * Math.max(0, parts - 1);
 }
 
-/** Holds a footer part at the widest it has been since it mounted, for the
- *  current fold step. The selection bar wraps the pager in it: a filter that
- *  turns "1–30 of 4,398" into "1–30 of 652" would otherwise move the
- *  selection's end group, which sits before the pager. A new fold step starts
- *  over, so holding never keeps the bar from folding back. */
-export function FooterHold({ children }: { children: ReactNode }) {
-  const fold = useFooterFold();
-  const inner = useRef<HTMLSpanElement | null>(null);
-  const [held, setHeld] = useState({ fold, width: 0 });
-  useLayoutEffect(() => {
-    const el = inner.current;
-    if (!el) return;
-    const measure = () =>
-      setHeld((h) => {
-        const w = el.offsetWidth;
-        if (h.fold !== fold) return { fold, width: w };
-        return w > h.width ? { fold, width: w } : h;
-      });
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [fold]);
+/** Reserves a footer part's widest width: the part and an unseen `reserve`
+ *  share one grid cell, so the cell is as wide as the wider of the two. The
+ *  selection bar wraps the pager in it with a copy of the pager for the
+ *  unfiltered collection as the reserve: a filter that turns "1–30 of 4,398"
+ *  into "1–30 of 652" would otherwise move the selection's end group, which
+ *  sits before the pager, and clearing it would move it back. The reserve
+ *  reads the same fold step, so it folds with the part. */
+export function FooterHold({ reserve, children }: { reserve: ReactNode; children: ReactNode }) {
+  const reserveRef = useCallback((el: HTMLSpanElement | null) => el?.setAttribute("inert", ""), []);
   return (
-    <span className="shrink-0 flex justify-end" style={{ minWidth: held.fold === fold && held.width ? `${held.width}px` : undefined }}>
-      <span ref={inner} className="inline-flex">
-        {children}
+    <span className="shrink-0 grid justify-items-end">
+      <span className="col-start-1 row-start-1 inline-flex">{children}</span>
+      <span ref={reserveRef} aria-hidden className="col-start-1 row-start-1 inline-flex invisible">
+        {reserve}
       </span>
     </span>
   );

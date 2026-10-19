@@ -314,6 +314,9 @@ export const ResultsBody = memo(function ResultsBody({
               relevance={relevanceOf(entity)}
               selected={selectedId === entity.id}
               onSelect={onSelect}
+              // The same selected look as the view's records: in select mode a
+              // click here picks the record.
+              selectable
               expanded={isExpanded(entity.id)}
               onToggle={() => setExpandedMap((m) => ({ ...m, [entity.id]: !(m[entity.id] ?? true) }))}
             >
