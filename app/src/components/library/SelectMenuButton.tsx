@@ -21,6 +21,7 @@ export function SelectMenuButton({
   pageCount,
   total,
   paged,
+  filtersActive = false,
   onRecords,
   onPage,
   onAll,
@@ -31,6 +32,8 @@ export function SelectMenuButton({
   total: number;
   /** The view pages its results: the middle item means "this page". */
   paged: boolean;
+  /** Filters narrow the results: the last item says "filtered". */
+  filtersActive?: boolean;
   onRecords: () => void;
   onPage: () => void;
   onAll: () => void;
@@ -118,7 +121,7 @@ export function SelectMenuButton({
           </button>
           {acrossPages && (
             <button type="button" role="menuitem" onClick={() => pick(onAll)} className={item}>
-              {`Select all ${total.toLocaleString()} results`}
+              {`Select all ${total.toLocaleString()}${filtersActive ? " filtered" : ""} results`}
             </button>
           )}
         </div>

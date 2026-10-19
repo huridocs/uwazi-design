@@ -660,11 +660,21 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     is drawn on cards or in the bar.
   - The selection bar's end group, each part in a fixed slot sized for its longer label:
     "Select page (30)" / "Deselect page", "Select all N" / "All N selected" (shown only while
-    the results run past the page), the count with a second line that always says how much
-    of the selection is off this page ("All 3 on this page", "4 not on this page", "None on
-    this page"), then Clear. The last fold step shortens the scope labels ("Page (30)",
-    "All 4,398", "All selected"), never to a bare number. On phones the count keeps its
-    second line and the Actions sheet lists the two scopes above the actions.
+    the results run past the page), the count, then Clear. "All" is always the filtered
+    results, N the masthead's count; with a search, facet, date or map area on it reads
+    "Select all 652 filtered" (the menu: "Select all 652 filtered results"). The last fold
+    step shortens the scope labels ("Page (30)", "All 4,398"), never to a bare number.
+  - The selection is ids and a filter change drops none. The count's second line says where
+    they sit in the results ("All 3 on this page", "12 on this page, 40 on other pages",
+    "None match the filters"); while filters are on a third line, always there, names what
+    they hide ("8 hidden by filters", "None hidden by filters") with a Drop button that
+    deselects those. Clearing the filters brings them back as selected. An action on a
+    selection holding hidden records asks first (`HiddenScopeDialog`: all N, or only the ones
+    in view); Delete's confirm names them. The selection drawer lists every selected record,
+    so its Actions menu does not ask.
+  - Phones: the count with one line (the hidden count when there is one), Actions and Clear
+    as icons, and no Filters button while selecting (the end menu holds it). The Actions sheet
+    lists the scopes, Drop included, above the actions.
   - Adv. Search and the Results tab read the same page state as Cards and List, so page N holds
     the same records in every view; Adv. Search's scroller registers as the lane for the scroll
     restore. Spine pages its rows and draws its axis from every dated result (`TimeSpine`

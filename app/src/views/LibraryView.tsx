@@ -1309,6 +1309,9 @@ export function LibraryView() {
   }, [selectionListAsked, selectionActive, selectionDrawerOpen, setSelectionListAsked]);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
+  /** A search, facet, date or map area narrows the results: the selection's
+   *  "all" is the filtered results, and a selected record may be hidden. */
+  const filtersActive = hasQuery || filtered.length !== entities.length;
   // The grid's and the table's order — Timeline and Results register their own,
   // so this one stands down while they draw (see `useSelectionOrder`).
   // The whole result order, not the page: a Shift+click on another page of
@@ -1603,6 +1606,7 @@ export function LibraryView() {
             filteredIds={filteredIds}
             loadedIds={drawnIds}
             paged={paged}
+            filtersActive={filtersActive}
             corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
@@ -1692,6 +1696,7 @@ export function LibraryView() {
                 pageCount={drawnIds.length}
                 total={filteredIds.length}
                 paged={paged}
+                filtersActive={filtersActive}
                 onRecords={() => setSelectMode(true)}
                 onPage={() => startSelection(drawnIds)}
                 onAll={() => startSelection(filteredIds)}
@@ -1708,21 +1713,25 @@ export function LibraryView() {
         {menuTrigger && (
           <div data-part="sheets" data-fold-push className="ms-auto shrink-0 flex items-center gap-1">
             {pagination && <div className="me-1 flex">{pagination}</div>}
-            {/* Filters one tap away, not behind the menu. */}
-            <button
-              type="button"
-              data-part="filters"
-              onClick={() => setOpenSection("filters")}
-              aria-haspopup="dialog"
-              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
-              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
-            >
-              <Filter size={13} className="text-ink-tertiary" aria-hidden />
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="min-w-4 px-1 rounded-md bg-warm text-ink text-meta font-semibold tabular-nums">{activeFilterCount}</span>
-              )}
-            </button>
+            {/* Filters one tap away, not behind the menu. With a selection
+                the bar needs the room for its count, and the menu still
+                holds Filters. */}
+            {!selectionActive && (
+              <button
+                type="button"
+                data-part="filters"
+                onClick={() => setOpenSection("filters")}
+                aria-haspopup="dialog"
+                aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
+                className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
+              >
+                <Filter size={13} className="text-ink-tertiary" aria-hidden />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="min-w-4 px-1 rounded-md bg-warm text-ink text-meta font-semibold tabular-nums">{activeFilterCount}</span>
+                )}
+              </button>
+            )}
             {menuTrigger}
           </div>
         )}
@@ -2200,7 +2209,7 @@ export function LibraryView() {
             ...(canSelect && filteredIds.length > drawnIds.length
               ? [
                   {
-                    label: `Select all ${filteredIds.length.toLocaleString()} results`,
+                    label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
                     icon: <ListChecks size={14} />,
                     onClick: () => startSelection(filteredIds),
                   },
