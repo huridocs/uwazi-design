@@ -3,7 +3,6 @@ import { useSetAtom } from "jotai";
 import { PenLine } from "lucide-react";
 import { libraryBulkEditOpenAtom } from "../../atoms/library";
 import { getEntity, getEntityType } from "../../data/entities";
-import { typeLabelColor } from "../../utils/typeColor";
 import { MetadataEditBody } from "../../views/MetadataView";
 
 /** The selection drawer's EDIT state: the bulk form over the selection, in
@@ -42,12 +41,12 @@ export function LibraryBulkEditDrawer({ ids }: { ids: string[] }) {
           {byTemplate.map(([typeId, count]) => {
             const type = getEntityType(typeId);
             const color = type?.color ?? "#6B7280";
-            // The type's square dot in its true colour; the NAME in the shared
-            // label colour (never the raw one — see utils/typeColor).
+            // The type's square dot in its true colour is the only
+            // per-template colour; the name is ink, as in every template picker.
             return (
               <span key={typeId} className="inline-flex items-center gap-1.5 text-xs">
                 <span className="w-[0.4375rem] h-[0.4375rem] rounded-[2px] shrink-0" style={{ backgroundColor: color }} aria-hidden />
-                <span className="font-medium" style={{ color: typeLabelColor(color) }}>
+                <span className="font-medium text-ink">
                   {type?.name ?? typeId}
                 </span>
                 <span className="text-meta text-ink-tertiary tabular-nums">{count.toLocaleString()}</span>

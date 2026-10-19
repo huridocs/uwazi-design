@@ -966,8 +966,8 @@ function EntityEditBody({
           </EditSection>
         )}
 
-        {/* Template: drawn like every other type label (square dot, name in
-            `typeLabelColor`, not the raw colour, to clear AA in dark). */}
+        {/* Template: the type's square dot carries its colour; the name is ink,
+            as in every template picker. */}
         {!draft && templateSection}
 
         {/* Description */}
