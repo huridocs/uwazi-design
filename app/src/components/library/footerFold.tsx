@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 /** How far the Library's bottom bar has folded to fit its own width (not the
  *  viewport's: a drawer, Split's divider or the rail decide it). Each step
@@ -7,11 +7,10 @@ import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSta
  *    1  the actions show their icons only (named, with a tooltip);
  *    2  the page size shows its number only ("30");
  *    3  the range shows the total only ("4,398");
- *    4  the stepper only ("‹ 3 / 147 ›");
- *    5  the selection's scope buttons shorten ("Page (30)", "All 4,398").
+ *    4  the stepper only ("‹ 3 / 147 ›").
  *  `FOOTER_FOLD_MAX` is the last step. */
-export type FooterFold = 0 | 1 | 2 | 3 | 4 | 5;
-export const FOOTER_FOLD_MAX: FooterFold = 5;
+export type FooterFold = 0 | 1 | 2 | 3 | 4;
+export const FOOTER_FOLD_MAX: FooterFold = 4;
 
 const FooterFoldContext = createContext<FooterFold>(0);
 export const FooterFoldProvider = FooterFoldContext.Provider;
@@ -90,4 +89,36 @@ function contentWidth(row: HTMLElement) {
     }
   }
   return total + gap * Math.max(0, parts - 1);
+}
+
+/** Holds a footer part at the widest it has been since it mounted, for the
+ *  current fold step. The selection bar wraps the pager in it: a filter that
+ *  turns "1–30 of 4,398" into "1–30 of 652" would otherwise move the
+ *  selection's end group, which sits before the pager. A new fold step starts
+ *  over, so holding never keeps the bar from folding back. */
+export function FooterHold({ children }: { children: ReactNode }) {
+  const fold = useFooterFold();
+  const inner = useRef<HTMLSpanElement | null>(null);
+  const [held, setHeld] = useState({ fold, width: 0 });
+  useLayoutEffect(() => {
+    const el = inner.current;
+    if (!el) return;
+    const measure = () =>
+      setHeld((h) => {
+        const w = el.offsetWidth;
+        if (h.fold !== fold) return { fold, width: w };
+        return w > h.width ? { fold, width: w } : h;
+      });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fold]);
+  return (
+    <span className="shrink-0 flex justify-end" style={{ minWidth: held.fold === fold && held.width ? `${held.width}px` : undefined }}>
+      <span ref={inner} className="inline-flex">
+        {children}
+      </span>
+    </span>
+  );
 }

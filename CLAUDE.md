@@ -651,30 +651,32 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     keeps the page's first result in view.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
     can span pages; Shift+Arrow stops at the page edge.
-  - Selecting several starts from the footer, never from a card: the idle bar's Select menu
-    (`SelectMenuButton`, before the page group; on phones the Actions sheet) offers "Select
+  - Selecting several starts from the footer, never from a card: the idle bar's "Select ▾"
+    (`SelectionScopeMenu`, before the page group; on phones the Actions sheet) offers "Select
     records", "Select this page (30)" ("Select all shown" where the view does not page) and
     "Select all N results". Each turns on `librarySelectModeAtom`, where a plain click on a
     record, a snippet or a matched property toggles it, and a ground click does not end it.
     Cmd/Ctrl and Shift + click and the long press still start one from the view. No checkbox
     is drawn on cards or in the bar.
-  - The selection bar's end group, each part in a fixed slot sized for its longer label:
-    "Select page (30)" / "Deselect page", "Select all N" / "All N selected" (shown only while
-    the results run past the page), the count, then Clear. "All" is always the filtered
-    results, N the masthead's count; with a search, facet, date or map area on it reads
-    "Select all 652 filtered" (the menu: "Select all 652 filtered results"). The last fold
-    step shortens the scope labels ("Page (30)", "All 4,398"), never to a bare number.
-  - The selection is ids and a filter change drops none. The count's second line says where
-    they sit in the results ("All 3 on this page", "12 on this page, 40 on other pages",
-    "None match the filters"); while filters are on a third line, always there, names what
-    they hide ("8 hidden by filters", "None hidden by filters") with a Drop button that
-    deselects those. Clearing the filters brings them back as selected. An action on a
-    selection holding hidden records asks first (`HiddenScopeDialog`: all N, or only the ones
-    in view); Delete's confirm names them. The selection drawer lists every selected record,
-    so its Actions menu does not ask.
-  - Phones: the count with one line (the hidden count when there is one), Actions and Clear
-    as icons, and no Filters button while selecting (the end menu holds it). The Actions sheet
-    lists the scopes, Drop included, above the actions.
+  - While selecting the bar holds three things: the bulk actions at its start (Edit, Export
+    and Delete as icons with a Hint; Change template, Share and Permissions in Actions), and
+    at its end the selection control and Clear. The control is the same `SelectionScopeMenu`
+    in a fixed 9rem slot, "652 selected ▾" with at most one short line under it, only when
+    something needs saying ("3,746 hidden by filters"); the line stays mounted. Its menu
+    opens with where the selection sits, as text ("30 on this page", "622 on other pages",
+    "3,746 hidden by filters"), then the scopes: Select records (when select mode is off),
+    Select / Deselect this page, Select all N [filtered] results / All N selected, Drop N
+    hidden by filters, Show the selected records, Clear selection. "All" is always the
+    filtered results, N the masthead's count. The pager after the group is held at its
+    widest (`FooterHold`), so a filter that shortens the range does not move the group.
+  - The selection is ids and a filter change drops none; clearing the filters brings the
+    hidden ones back as selected. An action on a selection holding hidden records asks first
+    (`HiddenScopeDialog`; "Only the N in view" is the commit, "All N" the ghost); Delete's
+    confirm names them. The selection drawer lists every selected record, so its Actions
+    menu does not ask.
+  - Phones: the count and its one line are a button that opens a sheet with where the
+    selection sits, the scopes and every action; Clear is an icon, and there is no Filters
+    button while selecting (the end menu holds it).
   - Adv. Search and the Results tab read the same page state as Cards and List, so page N holds
     the same records in every view; Adv. Search's scroller registers as the lane for the scroll
     restore. Spine pages its rows and draws its axis from every dated result (`TimeSpine`

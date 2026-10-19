@@ -299,7 +299,9 @@ export function LibrarySplitView() {
     <div
       data-part="library-footer"
       data-gutter-host
-      className="gutter-host @container shrink-0 flex items-center gap-1 h-12 bg-paper"
+      // Above the panes (the divider is z-40): the bar's menus open upward
+      // over them.
+      className="gutter-host @container relative z-50 shrink-0 flex items-center gap-1 h-12 bg-paper"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <div ref={setFooterSlot} data-part="pane-actions" className="flex-1 min-w-0 flex items-center gap-1" />

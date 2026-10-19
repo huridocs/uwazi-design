@@ -1,7 +1,7 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { CheckSquare, ListChecks, SquareMinus, X } from "lucide-react";
+import { CheckSquare, ChevronUp, ListChecks, MousePointerClick, PanelRight, SquareMinus, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
@@ -11,26 +11,31 @@ import {
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
   librarySelectionListAskedAtom,
+  librarySelectModeAtom,
   selectIdsAtom,
 } from "../../atoms/library";
 import type { Corpus } from "../../data/entityChanges";
-import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
+import { SelectionDialogs, useSelectionActions } from "./selectionActions";
+import { SelectionActionsMenu } from "./SelectionActionsMenu";
+import { MOD_KEY, SelectionScopeMenu, type ScopeItem } from "./SelectionScopeMenu";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
-import { useFooterFold } from "./footerFold";
+
+/** The bulk actions the bar keeps in view, as icons; the rest are in its
+ *  Actions menu. Delete sits apart, past a hairline. */
+const IN_VIEW = new Set(["edit", "export", "delete"]);
 
 /** The Library footer's SELECTED state — swapped in place of the baseline
  *  actions, in the same bar at the same height. It shows for a selection
  *  started from the view (Cmd/Ctrl or Shift + click, a long press) and for
- *  the bar's Select mode, which may start with nothing picked.
+ *  select mode, which may start with nothing picked.
  *
- *  Order: the actions (`useSelectionActions` — the same list the phone sheet
- *  and the selection drawer's menu show), then the end group, in the three
- *  scopes a selection has as text buttons, "Select page (30)" and "Select
- *  all N" (every result across pages), then the readout (a live region in a
- *  fixed slot, its second line saying how much of the selection is off this
- *  page) and Clear. Below a 56rem bar every action keeps only its icon and its name.
+ *  Three things: the bulk actions at the bar's start (Edit, Export and
+ *  Delete as icons, the rest in Actions; `useSelectionActions`, the same
+ *  list the phone sheet and the selection drawer show), and at its end the
+ *  selection control (`SelectionScopeMenu`, "652 selected ▾", which holds
+ *  every scope and says where the selection sits) and Clear.
  *
  *  This component subscribes to the selection; the view around it does not. */
 export function LibrarySelectionBar({
@@ -56,19 +61,21 @@ export function LibrarySelectionBar({
   filtersSlot?: ReactNode;
 }) {
   const selection = useAtomValue(librarySelectionAtom);
+  const selectMode = useAtomValue(librarySelectModeAtom);
+  const setSelectMode = useSetAtom(librarySelectModeAtom);
   const clear = useSetAtom(clearSelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
+  const deselect = useSetAtom(deselectIdsAtom);
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
   const askList = useSetAtom(librarySelectionListAskedAtom);
   const setPreview = useSetAtom(libraryOpenEntityIdAtom);
   const [sheetOpen, setSheetOpen] = useState(false);
   // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
-  // and the selection drawer isn't rendered — so the bar there is the count,
-  // an Actions button opening a sheet of the same actions, and Clear.
+  // and the selection drawer isn't rendered: the bar there is the count, which
+  // opens a sheet of the scopes and the actions, and Clear.
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
 
   const n = selection.size;
-  const deselect = useSetAtom(deselectIdsAtom);
   const pageAllPicked = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
   // Where each selected record is: drawn here, in the results on another
   // page (or, in a view that draws a subset, not drawn), or hidden by the
@@ -86,173 +93,123 @@ export function LibrarySelectionBar({
     else hiddenIds.push(id);
   }
   const hidden = hiddenIds.length;
-  const notInView = hidden;
   const total = filteredIds.length;
-  // More results than the view draws: the whole-library scope exists. It
-  // depends on the results, not the selection, so its slot comes and goes
-  // only with a page change, never with a tick.
+  // More results than the view draws: the every-result scope exists.
   const acrossPages = total > loadedIds.length;
-  const moreToSelect = acrossPages && filteredIds.some((id) => !selection.has(id));
-  const fold = useFooterFold();
+  const moreToSelect = filteredIds.some((id) => !selection.has(id));
   const where = paged ? "on this page" : "shown";
+  const elsewhere = paged ? "on other pages" : "not shown";
   const fmt = (x: number) => x.toLocaleString();
-  // The readout's second line: where the selection sits in the results.
-  const placement =
-    n === 0
-      ? "Click records to add them"
-      : onPage + offPage === 0
-        ? "None match the filters"
-        : offPage === 0 && hidden === 0
-          ? `All ${fmt(n)} ${where}`
-          : offPage === 0
-            ? `${fmt(onPage)} ${where}`
-            : paged
-              ? `${fmt(onPage)} on this page, ${fmt(offPage)} on other pages`
-              : `${fmt(onPage)} shown, ${fmt(offPage)} not shown`;
-  // Its third line, while filters are on: what they hide.
-  const hiddenLine =
-    n === 0 ? "" : hidden === 0 ? "None hidden by filters" : hidden === n ? `All ${fmt(n)} hidden by filters` : `${fmt(hidden)} hidden by filters`;
-  const readout = [placement, filtersActive ? hiddenLine : ""].filter(Boolean).join(", ");
-  const selectEvery = () => selectIds(filteredIds);
-  // The bar's last fold step shortens the scope labels; none is ever a bare number.
-  const folded = fold >= 5;
-  const pageCount = loadedIds.length.toLocaleString();
-  const totalText = total.toLocaleString();
-  const pageLabels = paged
-    ? { select: `Select page (${pageCount})`, selectShort: `Page (${pageCount})`, deselect: "Deselect page" }
-    : { select: `Select all shown (${pageCount})`, selectShort: `Shown (${pageCount})`, deselect: "Deselect shown" };
   const filtered = filtersActive ? " filtered" : "";
-  const allSlot = folded ? "w-[7.75rem]" : filtersActive ? "w-[11rem]" : "w-[9rem]";
-  const pageSlot = paged ? (folded ? "w-[6.5rem]" : "w-[8rem]") : folded ? "w-[7rem]" : "w-[10.75rem]";
+
+  // Where the selection sits, for the menu's top and the accessible names.
+  const lines =
+    n === 0
+      ? ["Click records to add them."]
+      : [
+          onPage === n ? `All ${fmt(n)} ${where}` : onPage > 0 ? `${fmt(onPage)} ${where}` : "",
+          offPage > 0 ? `${fmt(offPage)} ${elsewhere}` : "",
+          hidden === n ? `All ${fmt(n)} hidden by filters` : hidden > 0 ? `${fmt(hidden)} hidden by filters` : "",
+        ].filter(Boolean);
+  // The bar's one line under the count: only what needs saying.
+  const note = n === 0 ? "Click records to add them" : hidden > 0 ? `${fmt(hidden)} hidden by filters` : "";
+  const name = `${fmt(n)} selected${n > 0 ? `: ${lines.join(", ")}` : ""}. Selection menu`;
 
   const showList = () => {
-    if (isMobile) return setSheetOpen(true);
     setPreview(null);
     openDrawer(true);
     askList(true);
   };
+  const pageCount = fmt(loadedIds.length);
+  const scopes: ScopeItem[] = [
+    ...(!selectMode
+      ? [{ label: "Select records", icon: <MousePointerClick size={14} />, help: `Click records to add them. ${MOD_KEY} + click works anytime.`, onClick: () => setSelectMode(true) }]
+      : []),
+    ...(loadedIds.length > 0
+      ? [
+          pageAllPicked
+            ? { label: paged ? "Deselect this page" : "Deselect all shown", icon: <SquareMinus size={14} />, onClick: () => deselect(loadedIds) }
+            : { label: paged ? `Select this page (${pageCount})` : `Select all shown (${pageCount})`, icon: <CheckSquare size={14} />, onClick: () => selectIds(loadedIds) },
+        ]
+      : []),
+    ...(acrossPages
+      ? [
+          moreToSelect
+            ? { label: `Select all ${fmt(total)}${filtered} results`, icon: <ListChecks size={14} />, onClick: () => selectIds(filteredIds) }
+            : { label: `All ${fmt(total)}${filtered} results selected`, icon: <ListChecks size={14} />, done: true },
+        ]
+      : []),
+    ...(hidden > 0 ? [{ label: `Drop ${fmt(hidden)} hidden by filters`, icon: <SquareMinus size={14} />, onClick: () => deselect(hiddenIds) }] : []),
+    ...(n > 0 && !isMobile ? [{ label: "Show the selected records", icon: <PanelRight size={14} />, onClick: showList }] : []),
+    { label: n === 0 ? "Stop selecting" : "Clear selection", onClick: () => clear(), apart: true },
+  ];
   const actions = useSelectionActions({ order: filteredIds, corpus, isMobile, visibleIds: filteredIds });
+  const inView = actions.filter((a) => IN_VIEW.has(a.id));
+  const more = actions.filter((a) => !IN_VIEW.has(a.id));
 
   return (
     <>
       {/* The work on the selection first, at the bar's START where the idle
-          bar keeps its own actions: Edit leads, the rest are ghosts, Delete
-          sits past a hairline. */}
-      {actions.map((a) => (
+          bar keeps its own actions: Edit leads, Export beside it, the rest in
+          Actions, Delete past a hairline. */}
+      {inView.map((a) => (
         <Fragment key={a.id}>
-          {a.danger && <BarDivider className="hidden sm:block" />}
+          {a.danger && (
+            <>
+              <span className="hidden sm:block">
+                <SelectionActionsMenu actions={more} align="start" />
+              </span>
+              <BarDivider className="hidden sm:block" />
+            </>
+          )}
           <BarButton
             icon={a.icon}
-            label={a.label}
+            label={a.id === "export" ? "Export CSV of the selection" : `${a.label} the selection`}
+            hint={a.label}
             onClick={a.onClick}
             disabledReason={a.disabledReason}
             tone={a.id === "edit" ? "lead" : a.danger ? "danger" : "ghost"}
           />
         </Fragment>
       ))}
-      {/* Phones carry Filters as a button of their own, at the bar's end. */}
+      {/* Phones carry Filters in the end menu. */}
       <span className="hidden sm:contents">{filtersSlot}</span>
-      {/* The selection itself at the bar's logical END (it flips under RTL):
-          its two scopes as text buttons, this page and every result, then
-          the count and Clear. `ms-auto` pins the group to the end, so nothing
-          at the start moves. Every part keeps a fixed slot, sized for its
-          longer label: a scope's label changes inside it ("Select page (30)"
-          / "Deselect page"), and the count's two lines change inside theirs.
-          The every-result slot is there whenever the results run past the
-          page; that depends on the results, not on a tick. */}
-      <span data-part="selection-end" data-fold-push className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
-        <span data-part="select-page" className={`shrink-0 inline-flex ${pageSlot}`}>
-          <ScopeButton
-            label={pageAllPicked ? pageLabels.deselect : folded ? pageLabels.selectShort : pageLabels.select}
-            name={pageAllPicked ? `Deselect the ${pageCount} records ${where}` : `Select the ${pageCount} records ${where}`}
-            hint={
-              pageAllPicked && n > loadedIds.length
-                ? `Deselect the ${pageCount} records ${where}. The\u00a0others stay selected.`
-                : undefined
-            }
-            disabled={loadedIds.length === 0}
-            onClick={() => (pageAllPicked ? deselect(loadedIds) : selectIds(loadedIds))}
-          />
+      {/* The selection itself at the bar's logical END (it flips under RTL),
+          where the idle bar keeps Select: the count, its menu and Clear.
+          `ms-auto` pins the group to the end, so nothing at the start moves;
+          the count's slot is fixed. */}
+      <span data-part="selection-end" data-fold-push className="hidden sm:flex ms-auto shrink-0 self-stretch items-center gap-1">
+        <span role="status" aria-live="polite" className="sr-only">
+          {`${fmt(n)} selected${note ? `, ${note}` : ""}`}
         </span>
-        {acrossPages && (
-          <span data-part="select-every" className={`shrink-0 inline-flex ${allSlot}`}>
-            {moreToSelect ? (
-              <ScopeButton
-                label={folded ? `All ${totalText}${filtered}` : `Select all ${totalText}${filtered}`}
-                name={`Select all ${totalText}${filtered} results, across every page`}
-                hint={
-                  filtersActive
-                    ? `Select every result the current search and filters give: ${totalText} records on every page.`
-                    : `Select every record in the collection: ${totalText} on every page.`
-                }
-                onClick={selectEvery}
-              />
-            ) : (
-              <span className="inline-flex items-center h-7 px-2.5 text-xs font-medium text-ink-secondary tabular-nums whitespace-nowrap">
-                {`All ${totalText} selected`}
-              </span>
-            )}
-          </span>
-        )}
-        <span className="shrink-0 w-[13rem] ms-1 flex flex-col justify-center text-xs tabular-nums leading-tight">
-          <span role="status" aria-live="polite" className="flex flex-col min-w-0">
-            <button
-              type="button"
-              onClick={showList}
-              aria-label={`${n.toLocaleString()} selected, ${readout.toLowerCase()}. Show the selection`}
-              className="self-start max-w-full font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
-                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-            >
-              {n.toLocaleString()} selected
-            </button>
-            <span aria-hidden data-part="placement" className="text-meta leading-tight text-ink-tertiary truncate">
-              {placement}
-            </span>
-            {/* While filters are on the third line is always there, so a
-                filter change never adds or removes a line. */}
-            {filtersActive && (
-              <span data-part="hidden" className="flex items-baseline gap-1.5 min-w-0 text-meta leading-tight text-ink-tertiary">
-                <span aria-hidden className="truncate">{hiddenLine || "\u00a0"}</span>
-                {/* One click takes the hidden ones out; the rest stay. */}
-                {hidden > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => deselect(hiddenIds)}
-                    aria-label={`Drop the ${fmt(hidden)} hidden records from the selection`}
-                    title="Deselect the records the filters hide"
-                    className="shrink-0 font-medium text-ink-secondary hover:text-ink underline underline-offset-2 decoration-border cursor-pointer rounded-sm
-                      focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-                  >
-                    Drop
-                  </button>
-                )}
-              </span>
-            )}
-          </span>
-        </span>
-        <BarButton icon={<X size={13} />} label="Clear" name={n === 0 ? "Stop selecting" : "Clear the selection"} onClick={() => clear()} />
+        <SelectionScopeMenu
+          count={n}
+          note={note}
+          name={name}
+          summary={{ head: `${fmt(n)} selected`, lines }}
+          items={scopes}
+        />
+        <BarButton icon={<X size={13} />} label={n === 0 ? "Stop selecting" : "Clear the selection"} hint="Clear" onClick={() => clear()} />
       </span>
-      {/* Phone: the count and its second line; the scopes are in the Actions
-          sheet, which has the room to name them. */}
-      <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto flex flex-col leading-tight tabular-nums">
-        <span className="text-xs font-semibold text-ink whitespace-nowrap">{n.toLocaleString()} selected</span>
-        {/* One line here: what the filters hide when they hide any (the
-            sheet's head says the rest), else where the selection sits. */}
-        <span className="text-meta leading-tight text-ink-tertiary truncate">{hidden > 0 ? `${fmt(hidden)} hidden` : placement}</span>
-      </span>
-      {/* Phone: the same actions, reachable. */}
+      {/* Phone: the count opens a sheet with where the selection sits, the
+          scopes and the actions. */}
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={sheetOpen}
-        aria-label="Actions on the selection"
-        className={`sm:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 ${BAR_LEAD} rounded-md cursor-pointer`}
+        aria-label={`${name.replace(/\. Selection menu$/, "")}. Scopes and actions`}
+        className={`sm:hidden shrink-0 me-auto flex flex-col items-start px-2 py-1 leading-tight tabular-nums ${BAR_GHOST} rounded-md cursor-pointer`}
       >
-        {/* An icon of its own: the count needs the room, and the bar's end
-            already has a "more" button. */}
-        <ListChecks size={15} className="text-ink-secondary" aria-hidden />
+        <span className="flex items-center gap-1 text-xs font-semibold text-ink whitespace-nowrap">
+          {fmt(n)} selected
+          <ChevronUp size={12} className="text-ink-tertiary" aria-hidden />
+        </span>
+        <span className="text-meta text-ink-tertiary truncate">{note || " "}</span>
       </button>
+      <span role="status" aria-live="polite" className="sr-only sm:hidden">
+        {`${fmt(n)} selected${note ? `, ${note}` : ""}`}
+      </span>
       <button
         type="button"
         onClick={() => clear()}
@@ -263,89 +220,55 @@ export function LibrarySelectionBar({
       </button>
       {sheetOpen && (
         <ActionsSheet
-          heading={`${n.toLocaleString()} selected · ${readout}`}
+          heading={`${fmt(n)} selected`}
+          lines={lines}
           onClose={() => setSheetOpen(false)}
-          scopes={[
-            pageAllPicked
-              ? {
-                  label: paged ? "Deselect page" : "Deselect shown",
-                  icon: <SquareMinus size={14} />,
-                  onClick: () => deselect(loadedIds),
-                }
-              : {
-                  label: paged ? `Select page (${pageCount})` : `Select all shown (${pageCount})`,
-                  icon: <CheckSquare size={14} />,
-                  onClick: () => selectIds(loadedIds),
-                  disabledReason: loadedIds.length === 0 ? "Nothing shown" : undefined,
-                },
-            ...(acrossPages
-              ? [
-                  moreToSelect
-                    ? { label: `Select all ${totalText}${filtered}`, icon: <ListChecks size={14} />, onClick: selectEvery }
-                    : {
-                        label: `All ${totalText} selected`,
-                        icon: <ListChecks size={14} />,
-                        done: true,
-                      },
-                ]
-              : []),
-            ...(hidden > 0
-              ? [{ label: `Drop ${fmt(hidden)} hidden by filters`, icon: <SquareMinus size={14} />, onClick: () => deselect(hiddenIds) }]
-              : []),
-          ]}
+          scopes={scopes
+            .filter((s) => !s.apart)
+            .map((s) => ({ label: s.label, icon: s.icon, onClick: s.onClick, done: s.done }))}
           actions={actions}
         />
       )}
-      <SelectionDialogs corpus={corpus} notInView={notInView} />
+      <SelectionDialogs corpus={corpus} notInView={hidden} />
     </>
   );
 }
 
-/** A footer action. Disabled ones stay focusable (`aria-disabled`) and keep
- *  their width, and say why. Below a 56rem bar the label hides and the name
- *  stays as `aria-label`. */
+/** A selection action on the bar: an icon with a Hint that names it. Disabled
+ *  ones stay focusable (`aria-disabled`) and say why. */
 function BarButton({
   icon,
   label,
-  name,
   hint: hintText,
-  keepLabel = false,
   onClick,
   disabledReason,
   tone = "ghost",
 }: {
   icon: ReactNode;
+  /** The accessible name, saying what it acts on. */
   label: string;
-  /** The accessible name, when it says more than the label. */
-  name?: string;
-  /** The tooltip, when it says more than the label. */
+  /** The tooltip; the label by default. */
   hint?: string;
-  /** Keep the words on a folded bar (they carry a count). */
-  keepLabel?: boolean;
   onClick?: () => void;
   disabledReason?: string;
   /** Weight on the bar's ladder (`warmButton.ts`). */
   tone?: "lead" | "ghost" | "danger";
 }) {
   const disabled = !!disabledReason;
-  // From the bar's first fold the label goes; the hint then names the action.
-  const fold = useFooterFold();
-  const iconOnly = !keepLabel && fold >= 1;
   return (
-    <Hint text={disabledReason ?? hintText ?? label} describe={disabled} muted={!disabled && !iconOnly && !hintText}>
+    <Hint text={disabledReason ?? hintText ?? label} describe={disabled}>
       {(hint) => (
         <button
           {...hint}
           type="button"
-          aria-label={name ?? label}
+          aria-label={label}
           aria-disabled={disabled || undefined}
           onClick={disabled ? undefined : onClick}
-          className={`hidden sm:flex shrink-0 items-center gap-1.5 ${iconOnly ? "px-2.5" : "px-3"} py-1.5 text-xs font-medium ${
+          className={`hidden sm:flex shrink-0 items-center justify-center w-8 h-8 ${
             tone === "lead" ? BAR_LEAD : tone === "danger" ? BAR_DANGER : BAR_GHOST
           } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
-          <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>
-          {!iconOnly && <span>{label}</span>}
+          <span className={tone === "danger" ? "" : tone === "lead" ? "text-ink" : "text-ink-tertiary"}>{icon}</span>
         </button>
       )}
     </Hint>
@@ -358,6 +281,7 @@ function BarButton({
 export function ActionsSheet({
   count,
   heading,
+  lines,
   scopes,
   actions,
   onClose,
@@ -365,6 +289,8 @@ export function ActionsSheet({
   count?: number;
   /** The sheet's first line; "N selected" by default. */
   heading?: string;
+  /** Text under the heading (where the selection sits). */
+  lines?: string[];
   /** What the selection covers (this page, every result), listed above the
    *  actions and apart from them. */
   scopes?: SheetItem[];
@@ -372,6 +298,7 @@ export function ActionsSheet({
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
+  const title = heading ?? `${(count ?? 0).toLocaleString()} selected`;
   return createPortal(
     <div
       data-component="SelectionActionsSheet"
@@ -389,9 +316,14 @@ export function ActionsSheet({
         }}
         className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
       >
-        <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
-          {heading ?? `${(count ?? 0).toLocaleString()} selected`}
-        </p>
+        <div className="px-3 py-2 tabular-nums">
+          <p className={lines ? "text-xs font-semibold text-ink" : "text-meta text-ink-tertiary"}>{title}</p>
+          {lines?.map((l) => (
+            <p key={l} className="text-meta text-ink-tertiary">
+              {l}
+            </p>
+          ))}
+        </div>
         {scopes && scopes.length > 0 && (
           <>
             <SheetList items={scopes} onClose={onClose} />
@@ -407,7 +339,7 @@ export function ActionsSheet({
 
 interface SheetItem {
   label: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   onClick?: () => void;
   disabledReason?: string;
   danger?: boolean;
@@ -453,38 +385,3 @@ function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void
   );
 }
 
-/** One of the bar's two scope buttons ("Select page (30)", "Select all
- *  4,398"): words, no icon, on `BAR_GHOST`. Its slot is fixed by the caller,
- *  so the label can change without moving anything. */
-function ScopeButton({
-  label,
-  name,
-  hint: hintText,
-  disabled = false,
-  onClick,
-}: {
-  label: string;
-  name: string;
-  hint?: string;
-  disabled?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Hint text={hintText ?? name} describe={false} muted={!hintText}>
-      {(hint) => (
-        <button
-          {...hint}
-          type="button"
-          aria-label={name}
-          aria-disabled={disabled || undefined}
-          onClick={disabled ? undefined : onClick}
-          className={`inline-flex items-center h-7 px-2.5 text-xs font-medium tabular-nums whitespace-nowrap ${BAR_GHOST} rounded-md transition-colors ${
-            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-          }`}
-        >
-          {label}
-        </button>
-      )}
-    </Hint>
-  );
-}

@@ -236,14 +236,20 @@ function HiddenScopeDialog() {
           <button type="button" onClick={close} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
             Cancel
           </button>
+          {/* The commit is the narrower scope: what the reader sees is what
+              the action takes, unless they ask for the hidden ones too. */}
+          <button
+            type="button"
+            onClick={() => go(false)}
+            className={inView > 0 ? `${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer tabular-nums` : `${MODAL_COMMIT} tabular-nums`}
+          >
+            All {n.toLocaleString()}
+          </button>
           {inView > 0 && (
-            <button type="button" onClick={() => go(true)} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer tabular-nums`}>
+            <button type="button" onClick={() => go(true)} className={`${MODAL_COMMIT} tabular-nums`}>
               Only the {inView.toLocaleString()} in view
             </button>
           )}
-          <button type="button" onClick={() => go(false)} className={`${MODAL_COMMIT} tabular-nums`}>
-            All {n.toLocaleString()}
-          </button>
         </>
       }
     >

@@ -121,9 +121,9 @@ import {
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibraryPageEnd, LibraryPagination } from "../components/library/LibraryPagination";
 import { Hint } from "../components/shared/Hint";
-import { FooterFoldProvider, useFooterFold, useFooterFoldMeasure } from "../components/library/footerFold";
+import { FooterFoldProvider, FooterHold, useFooterFold, useFooterFoldMeasure } from "../components/library/footerFold";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
-import { SelectMenuButton } from "../components/library/SelectMenuButton";
+import { MOD_KEY, SelectionScopeMenu } from "../components/library/SelectionScopeMenu";
 import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { LibraryNetworkView } from "../components/library/LibraryNetworkView";
 import { networkFindStepAtom } from "../atoms/network";
@@ -1600,7 +1600,7 @@ export function LibraryView() {
     <div ref={footerFold.ref} data-part="footer-row" data-fold={footerFold.fold} className="flex-1 min-w-0 self-stretch flex items-center gap-1">
         {/* The bar swaps in place between the baseline actions and the
             selection's, at the same height. The selection's readout, Clear and
-            select-all sit at the bar's end in `LibrarySelectionBar`. */}
+            selection menu sit at the bar's end in `LibrarySelectionBar`. */}
         {selectionActive && (
           <LibrarySelectionBar
             filteredIds={filteredIds}
@@ -1682,25 +1682,48 @@ export function LibraryView() {
           (selectionActive ? (
             <>
               <BarDivider className="hidden sm:block" />
-              {pagination}
+              {/* Held at its widest, so a filter that shortens the range
+                  does not move the selection's group before it. */}
+              <FooterHold>{pagination}</FooterHold>
             </>
           ) : null)}
         {/* The way into picking several records, at the bar's end where the
-            selection's own end group (this page, every result, the count)
-            takes its place once it is on. Cmd/Ctrl and Shift + click still
+            selection's count and its menu (the same control) take its place
+            once it is on. Cmd/Ctrl and Shift + click still
             start one from the view. */}
         {!selectionActive && !menuTrigger && (canSelect || pagination) && (
           <div data-fold-push className="ms-auto shrink-0 flex items-center gap-1">
             {canSelect && (
-              <SelectMenuButton
-                pageCount={drawnIds.length}
-                total={filteredIds.length}
-                paged={paged}
-                filtersActive={filtersActive}
-                onRecords={() => setSelectMode(true)}
-                onPage={() => startSelection(drawnIds)}
-                onAll={() => startSelection(filteredIds)}
-              />
+              <span className="hidden sm:flex">
+                <SelectionScopeMenu
+                  name="Select"
+                  items={[
+                    {
+                      label: "Select records",
+                      help: `Click records to add them. ${MOD_KEY}\u00a0+ click works anytime.`,
+                      onClick: () => setSelectMode(true),
+                    },
+                    ...(drawnIds.length > 0
+                      ? [
+                          {
+                            label: paged
+                              ? `Select this page (${drawnIds.length.toLocaleString()})`
+                              : `Select all shown (${drawnIds.length.toLocaleString()})`,
+                            onClick: () => startSelection(drawnIds),
+                          },
+                        ]
+                      : []),
+                    ...(filteredIds.length > drawnIds.length
+                      ? [
+                          {
+                            label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
+                            onClick: () => startSelection(filteredIds),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </span>
             )}
             {canSelect && pagination && <BarDivider className="hidden sm:block" />}
             {pagination}
