@@ -105,7 +105,7 @@ export function SelectionScopeMenu({
             under it; the note is a caption placed below the middle, so it
             comes and goes without moving the count. */}
         <span className="flex items-center gap-1 max-w-full text-xs font-semibold text-ink">
-          <span className="truncate">{count.toLocaleString()} selected</span>
+          <span className="truncate"><bdi>{count.toLocaleString()} selected</bdi></span>
           <ChevronDown size={12} className="shrink-0 text-ink-tertiary" aria-hidden />
         </span>
         {note && (
@@ -114,7 +114,7 @@ export function SelectionScopeMenu({
             aria-hidden
             className="absolute inset-x-2.5 top-1/2 mt-[0.5rem] text-meta leading-tight text-ink-tertiary truncate"
           >
-            {note}
+            <bdi>{note}</bdi>
           </span>
         )}
       </button>
@@ -166,10 +166,10 @@ export function SelectionScopeMenu({
         >
           {summary && (
             <div id={summaryId} data-part="summary" className="px-3 pt-1.5 pb-2 mb-1 border-b border-border-soft tabular-nums">
-              <p className="text-xs font-semibold text-ink">{summary.head}</p>
+              <p className="text-xs font-semibold text-ink"><bdi>{summary.head}</bdi></p>
               {summary.lines.map((l) => (
                 <p key={l} className="text-meta text-ink-tertiary">
-                  {l}
+                  <bdi>{l}</bdi>
                 </p>
               ))}
             </div>
@@ -186,7 +186,7 @@ export function SelectionScopeMenu({
                   tabIndex={-1}
                   className={`${row} flex items-center gap-2 text-ink-secondary focus:outline-none focus-visible:bg-warm`}
                 >
-                  <span className="flex-1 min-w-0">{it.label}</span>
+                  <span className="flex-1 min-w-0"><bdi>{it.label}</bdi></span>
                   <Check size={13} className="shrink-0 text-ink" aria-hidden />
                 </p>
               ) : (
@@ -199,8 +199,8 @@ export function SelectionScopeMenu({
                   }}
                   className={`${row} flex flex-col items-start text-ink hover:bg-warm focus:outline-none focus-visible:bg-warm cursor-pointer`}
                 >
-                  <span>{it.label}</span>
-                  {it.help && <span className="text-meta text-ink-tertiary">{it.help}</span>}
+                  <span><bdi>{it.label}</bdi></span>
+                  {it.help && <span className="text-meta text-ink-tertiary"><bdi>{it.help}</bdi></span>}
                 </button>
               )}
             </div>

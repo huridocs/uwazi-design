@@ -661,21 +661,27 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - While selecting the bar holds three things: the bulk actions at its start (Edit, Export
     and Delete as icons with a Hint; Change template, Share and Permissions in Actions), and
     at its end the selection control and Clear. The control is the same `SelectionScopeMenu`
-    in a fixed 9rem slot, "652 selected ▾" with at most one short line under it, only when
-    something needs saying ("3,746 hidden by filters"); the line stays mounted. Its menu
+    in a fixed 9rem slot, "652 selected ▾" centred, with at most one short caption below the
+    middle, only when something needs saying ("3,746 hidden by filters"), so neither moves
+    the other. Its menu
     opens with where the selection sits, as text ("30 on this page", "622 on other pages",
     "3,746 hidden by filters"), then the scopes: Select records (when select mode is off),
-    Select / Deselect this page, Select all N [filtered] results / All N selected, Drop N
+    Select / Deselect this page, Select all N [filtered] results / All N selected (text
+    and a check, not a button), Drop N
     hidden by filters, Show the selected records, Clear selection. "All" is always the
-    filtered results, N the masthead's count. The pager after the group is held at its
-    widest (`FooterHold`), so a filter that shortens the range does not move the group.
+    filtered results, N the masthead's count. The pager after the group shares a grid cell
+    with an unseen copy of the unfiltered collection's pager (`FooterHold`), so a filter
+    turned on or off never moves the group. In select mode a tick does not reopen the
+    selection list, which would replace the drawer's tabs; select mode opens it once
+    (`enterSelectModeAtom`), and the drawer's Results records draw the selected look.
   - The selection is ids and a filter change drops none; clearing the filters brings the
     hidden ones back as selected. An action on a selection holding hidden records asks first
     (`HiddenScopeDialog`; "Only the N in view" is the commit, "All N" the ghost); Delete's
     confirm names them. The selection drawer lists every selected record, so its Actions
     menu does not ask.
   - Phones: the count and its one line are a button that opens a sheet with where the
-    selection sits, the scopes and every action; Clear is an icon, and there is no Filters
+    selection sits, the scopes, every action and Clear selection last; Clear is also an
+    icon on the bar, and there is no Filters
     button while selecting (the end menu holds it).
   - Adv. Search and the Results tab read the same page state as Cards and List, so page N holds
     the same records in every view; Adv. Search's scroller registers as the lane for the scroll
