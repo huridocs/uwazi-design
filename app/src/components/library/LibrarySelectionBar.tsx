@@ -1,11 +1,12 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { MoreHorizontal, X } from "lucide-react";
+import { CheckSquare, ListChecks, MoreHorizontal, SquareMinus, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
+  deselectIdsAtom,
   librarySelectedEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
@@ -18,26 +19,32 @@ import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
 import { SelectAllBox } from "./SelectAllBox";
 
-/** The Library footer's SELECTED state — swapped in place of the four
- *  baseline actions, in the same bar at the same height.
+/** The Library footer's SELECTED state — swapped in place of the baseline
+ *  actions, in the same bar at the same height. It shows for a selection
+ *  started from the view (Cmd/Ctrl or Shift + click, a long press) and for
+ *  the bar's Select mode, which may start with nothing picked.
  *
- *  Order: one fixed slot holding the readout (a live region, so 9 → 10 → 100
- *  moves no button) and, under it, its one offer ("Select all N", else "N not
- *  shown"), then the actions (`useSelectionActions` — the same list the phone sheet and
- *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
- *  keeps only its icon and its name.
+ *  Order: the actions (`useSelectionActions` — the same list the phone sheet
+ *  and the selection drawer's menu show), then the end group, in the three
+ *  scopes a selection has: the "This page · 30" box, the readout (a live
+ *  region in a fixed slot, its second line saying how much of the selection
+ *  is off this page), "Select all N" for every result across pages, and
+ *  Clear. Below a 56rem bar every action keeps only its icon and its name.
  *
  *  This component subscribes to the selection; the view around it does not. */
 export function LibrarySelectionBar({
   filteredIds,
   loadedIds,
+  paged = true,
   corpus,
   filtersSlot,
 }: {
   /** Every id the current results hold (filters, query, match types). */
   filteredIds: readonly string[];
-  /** The ids "Show more" has loaded. */
+  /** The ids the view in front draws (a page of Cards or List). */
   loadedIds: readonly string[];
+  /** The view pages its results, so "shown" is "this page". */
+  paged?: boolean;
   corpus: Corpus;
   /** The active-filters readout, placed after the actions and before the
    *  end group. */
@@ -55,17 +62,38 @@ export function LibrarySelectionBar({
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
 
   const n = selection.size;
+  const deselect = useSetAtom(deselectIdsAtom);
+  const pageAllPicked = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
   const inView = new Set(filteredIds);
   let notInView = 0;
   for (const id of selection) if (!inView.has(id)) notInView++;
-  // Selected but not DRAWN — filtered out, or past what "Show more" has
-  // loaded. After "Select all 4,398" and the box unticked, 4,278 stay
+  // Selected but not DRAWN — filtered out, or on another page. After "Select all 4,398" and the box unticked, 4,278 stay
   // selected; this is where that is said, not left silent.
   const drawn = new Set(loadedIds);
   let notShown = 0;
   for (const id of selection) if (!drawn.has(id)) notShown++;
-  const allLoaded = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
-  const moreToSelect = allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
+  const total = filteredIds.length;
+  // More results than the view draws: the whole-library scope exists. It
+  // depends on the results, not the selection, so its slot comes and goes
+  // only with a page change, never with a tick.
+  const acrossPages = total > loadedIds.length;
+  const moreToSelect = acrossPages && filteredIds.some((id) => !selection.has(id));
+  const where = paged ? "on this page" : "shown";
+  // The readout's second line: always whether any of the selection is off
+  // this page (another page, or filtered out).
+  const placement =
+    n === 0
+      ? "Click records to add them"
+      : notShown === 0
+        ? paged
+          ? "All on this page"
+          : "All shown"
+        : notShown === n
+          ? paged
+            ? "None on this page"
+            : "None shown"
+          : `${notShown.toLocaleString()} not ${where}`;
+  const selectEvery = () => selectIds(filteredIds);
 
   const showList = () => {
     if (isMobile) return setSheetOpen(true);
@@ -92,59 +120,59 @@ export function LibrarySelectionBar({
         </Fragment>
       ))}
       {filtersSlot}
-      {/* The selection itself at the bar's logical END (it flips under RTL):
-          the select-all box, the count with its one offer, and Clear. The box
-          is there only for a MULTIPLE selection; below two it keeps its slot
-          `invisible` (out of the tab order and the accessibility tree), so
-          the count doesn't move when the second item joins. `ms-auto` pins
-          the group to the end, so nothing at the start moves either.
-
-          The count and its offer share a FIXED slot. The count sits on the
-          bar's midline; the offer ("Select all 1,084", else "3 not shown")
-          hangs under it, out of flow, so it comes and goes without moving
-          anything. */}
+      {/* The selection itself at the bar's logical END (it flips under RTL),
+          from the narrowest scope to the widest: this page, the count, every
+          result, Clear. `ms-auto` pins the group to the end, so nothing at
+          the start moves. Every part keeps a fixed slot: the count and its
+          second line change inside theirs, and the "Select all N" slot is
+          there whenever the results run past the page, holding the offer or,
+          once taken, "All N results". */}
       <span data-part="selection-end" className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
-        <span className={`inline-flex shrink-0 me-2 ${n >= 2 ? "" : "invisible"}`}>
-          <SelectAllBox loadedIds={loadedIds} />
+        <span className="inline-flex shrink-0 me-1">
+          <SelectAllBox loadedIds={loadedIds} paged={paged} />
         </span>
-        <span className="relative shrink-0 w-[7.5rem] flex items-center text-xs tabular-nums leading-tight">
-          <span role="status" aria-live="polite" className="flex min-w-0">
+        <span className="shrink-0 w-[9rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
+          <span role="status" aria-live="polite" className="flex flex-col min-w-0">
             <button
               type="button"
               onClick={showList}
-              className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
+              aria-label={`${n.toLocaleString()} selected, ${placement.toLowerCase()}. Show the selection`}
+              className="self-start max-w-full font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
                 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
             >
               {n.toLocaleString()} selected
             </button>
-          </span>
-          <span aria-live="polite" className="hidden sm:flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
-            {moreToSelect ? (
-              <button
-                type="button"
-                onClick={() => selectIds(filteredIds)}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                Select all {filteredIds.length.toLocaleString()}
-              </button>
-            ) : notShown > 0 ? (
-              <button
-                type="button"
-                onClick={showList}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                {notShown.toLocaleString()} not shown
-              </button>
-            ) : null}
+            <span aria-hidden data-part="placement" className="text-meta text-ink-tertiary truncate">
+              {placement}
+            </span>
           </span>
         </span>
-        <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
+        {acrossPages && (
+          <span data-part="select-every" className="shrink-0 inline-flex w-[8.75rem]">
+            {moreToSelect ? (
+              <BarButton
+                icon={<ListChecks size={13} />}
+                label={`Select all ${total.toLocaleString()}`}
+                name={`Select all ${total.toLocaleString()} results, across every page`}
+                hint={`Select every result of this search and its filters: ${total.toLocaleString()} records on every page.`}
+                keepLabel
+                onClick={selectEvery}
+              />
+            ) : (
+              <span className="inline-flex items-center gap-1.5 h-7 px-3 text-xs font-medium text-ink-secondary tabular-nums whitespace-nowrap">
+                <ListChecks size={13} className="text-ink-tertiary" aria-hidden />
+                {`All ${total.toLocaleString()} results`}
+              </span>
+            )}
+          </span>
+        )}
+        <BarButton icon={<X size={13} />} label="Clear" name={n === 0 ? "Stop selecting" : "Clear the selection"} onClick={() => clear()} />
       </span>
-      {/* Phone: the count alone (the box and the offer need a wider bar). */}
-      <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto text-xs font-semibold text-ink tabular-nums">
-        {n.toLocaleString()} selected
+      {/* Phone: the count and its second line; the scopes are in the Actions
+          sheet, which has the room to name them. */}
+      <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto flex flex-col leading-tight tabular-nums">
+        <span className="text-xs font-semibold text-ink">{n.toLocaleString()} selected</span>
+        <span className="text-meta text-ink-tertiary">{placement}</span>
       </span>
       {/* Phone: the same actions, reachable. */}
       <button
@@ -165,8 +193,33 @@ export function LibrarySelectionBar({
       </button>
       {sheetOpen && (
         <ActionsSheet
-          count={n}
+          heading={`${n.toLocaleString()} selected · ${placement}`}
           onClose={() => setSheetOpen(false)}
+          scopes={[
+            pageAllPicked
+              ? {
+                  label: `Deselect ${paged ? "this page" : "all shown"} (${loadedIds.length.toLocaleString()})`,
+                  icon: <SquareMinus size={14} />,
+                  onClick: () => deselect(loadedIds),
+                }
+              : {
+                  label: `Select ${paged ? "this page" : "all shown"} (${loadedIds.length.toLocaleString()})`,
+                  icon: <CheckSquare size={14} />,
+                  onClick: () => selectIds(loadedIds),
+                  disabledReason: loadedIds.length === 0 ? "Nothing shown" : undefined,
+                },
+            ...(acrossPages
+              ? [
+                  moreToSelect
+                    ? { label: `Select all ${total.toLocaleString()} results`, icon: <ListChecks size={14} />, onClick: selectEvery }
+                    : {
+                        label: `All ${total.toLocaleString()} results selected`,
+                        icon: <ListChecks size={14} />,
+                        done: true,
+                      },
+                ]
+              : []),
+          ]}
           actions={actions}
         />
       )}
@@ -181,33 +234,44 @@ export function LibrarySelectionBar({
 function BarButton({
   icon,
   label,
+  name,
+  hint: hintText,
+  keepLabel = false,
   onClick,
   disabledReason,
   tone = "ghost",
 }: {
   icon: ReactNode;
   label: string;
+  /** The accessible name, when it says more than the label. */
+  name?: string;
+  /** The tooltip, when it says more than the label. */
+  hint?: string;
+  /** Keep the words below a 56rem bar (they carry a count). */
+  keepLabel?: boolean;
   onClick?: () => void;
   disabledReason?: string;
   /** Weight on the bar's ladder (`warmButton.ts`). */
   tone?: "lead" | "ghost" | "danger";
 }) {
   const disabled = !!disabledReason;
+  // Below a 56rem bar the label goes (unless it carries a count); the hint
+  // then names the action.
   return (
-    <Hint text={disabledReason ?? label} describe={disabled}>
+    <Hint text={disabledReason ?? hintText ?? label} describe={disabled}>
       {(hint) => (
         <button
           {...hint}
           type="button"
-          aria-label={label}
+          aria-label={name ?? label}
           aria-disabled={disabled || undefined}
           onClick={disabled ? undefined : onClick}
-          className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${
+          className={`hidden sm:flex shrink-0 items-center gap-1.5 ${keepLabel ? "px-3" : "px-2.5 @[56rem]:px-3"} py-1.5 text-xs font-medium ${
             tone === "lead" ? BAR_LEAD : tone === "danger" ? BAR_DANGER : BAR_GHOST
           } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
           <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>
-          <span className="hidden @[56rem]:inline">{label}</span>
+          <span className={keepLabel ? "" : "hidden @[56rem]:inline"}>{label}</span>
         </button>
       )}
     </Hint>
@@ -220,13 +284,17 @@ function BarButton({
 export function ActionsSheet({
   count,
   heading,
+  scopes,
   actions,
   onClose,
 }: {
   count?: number;
   /** The sheet's first line; "N selected" by default. */
   heading?: string;
-  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string; danger?: boolean }[];
+  /** What the selection covers (this page, every result), listed above the
+   *  actions and apart from them. */
+  scopes?: SheetItem[];
+  actions: SheetItem[];
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
@@ -250,32 +318,63 @@ export function ActionsSheet({
         <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
           {heading ?? `${(count ?? 0).toLocaleString()} selected`}
         </p>
-        <ul className="flex flex-col">
-          {actions.map((a) => (
-            <li key={a.label}>
-              <button
-                type="button"
-                aria-disabled={a.disabledReason ? true : undefined}
-                onClick={() => {
-                  if (a.disabledReason) return;
-                  onClose();
-                  a.onClick?.();
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm rounded-md ${
-                  a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
-                }`}
-              >
-                <span className="text-ink-tertiary" aria-hidden>
-                  {a.icon}
-                </span>
-                <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
-                {a.disabledReason && <span className="text-meta text-ink-muted">{a.disabledReason}</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
+        {scopes && scopes.length > 0 && (
+          <>
+            <SheetList items={scopes} onClose={onClose} />
+            <div role="separator" className="mx-3 my-1 h-px bg-border-soft" />
+          </>
+        )}
+        <SheetList items={actions} onClose={onClose} />
       </div>
     </div>,
     document.body,
+  );
+}
+
+interface SheetItem {
+  label: string;
+  icon: ReactNode;
+  onClick?: () => void;
+  disabledReason?: string;
+  danger?: boolean;
+  /** A state already reached ("All 4,398 results selected"): read, not pressed. */
+  done?: boolean;
+}
+
+function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void }) {
+  return (
+    <ul className="flex flex-col">
+      {items.map((a) => (
+        <li key={a.label}>
+          {a.done ? (
+            <p className="w-full flex items-center gap-3 px-3 py-3 text-sm text-ink-secondary tabular-nums">
+              <span className="text-ink-tertiary" aria-hidden>
+                {a.icon}
+              </span>
+              {a.label}
+            </p>
+          ) : (
+            <button
+              type="button"
+              aria-disabled={a.disabledReason ? true : undefined}
+              onClick={() => {
+                if (a.disabledReason) return;
+                onClose();
+                a.onClick?.();
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm tabular-nums rounded-md ${
+                a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
+              }`}
+            >
+              <span className="text-ink-tertiary" aria-hidden>
+                {a.icon}
+              </span>
+              <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
+              {a.disabledReason && <span className="text-meta text-ink-tertiary">{a.disabledReason}</span>}
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }

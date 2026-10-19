@@ -68,6 +68,15 @@ export function LibrarySelectionDrawer({
       onSelect={onSelect}
       query={query}
       onRemove={{ remove: (id) => deselect([id]), can: () => true }}
+      empty={
+        <div data-part="empty" className="body-top flex flex-col gap-1">
+          <p className="text-sm font-medium text-ink-secondary">Nothing selected yet</p>
+          <p className="text-xs text-ink-tertiary">
+            Click records in the view to add them here.{" "}
+            {"Clear,\u00a0in the bar, stops selecting."}
+          </p>
+        </div>
+      }
       footer={
         <>
           {/* The same footer every Library drawer body has: Close at the
@@ -81,6 +90,8 @@ export function LibrarySelectionDrawer({
             Close
           </button>
           <span className="flex-1" />
+          {/* Nothing to act on yet: the actions keep their place, unseen. */}
+          <span className={`flex items-center gap-2 ${selection.size === 0 ? "invisible" : ""}`}>
           <button
             type="button"
             onClick={editAction.onClick}
@@ -90,6 +101,7 @@ export function LibrarySelectionDrawer({
             Edit
           </button>
           <SelectionActionsMenu actions={actions.filter((a) => a.id !== "edit")} />
+          </span>
         </>
       }
     />

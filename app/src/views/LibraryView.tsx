@@ -289,7 +289,7 @@ export function LibraryView() {
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
-  const setSelectMode = useSetAtom(librarySelectModeAtom);
+  const [selectMode, setSelectMode] = useAtom(librarySelectModeAtom);
   const discardDraft = useSetAtom(discardDraftAtom);
   const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -769,7 +769,9 @@ export function LibraryView() {
   const groundDown = useRef<{ x: number; y: number } | null>(null);
   const clearOnGround = useCallback(
     (e: React.MouseEvent) => {
-      if (!selectionActive || viewMode === "map") return;
+      // Select mode keeps going until Clear or Escape: a click that misses a
+      // record while picking them is not a request to stop.
+      if (!selectionActive || selectMode || viewMode === "map") return;
       if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.button !== 0) return;
       const t = e.target as Element;
       if (
@@ -785,8 +787,10 @@ export function LibraryView() {
       if (String(window.getSelection() ?? "").length > 0) return;
       clearSelection();
     },
-    [selectionActive, viewMode, clearSelection],
+    [selectionActive, selectMode, viewMode, clearSelection],
   );
+  /** Views whose records a click can pick (the bar's Select). */
+  const canSelect = viewMode === "cards" || viewMode === "list" || viewMode === "results" || viewMode === "map";
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
   // The grid's and the table's order — Results registers its own, so this one
@@ -836,6 +840,8 @@ export function LibraryView() {
       // Touch, with a selection going: a tap adds or removes (a long press
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
+      // The bar's Select mode: a plain click adds or removes, on any pointer.
+      if (e && selectMode && intent !== "range") return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
       const preview = () => {
         // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
@@ -864,6 +870,7 @@ export function LibraryView() {
       toggleSelection,
       rangeSelection,
       selectionActive,
+      selectMode,
       collapseSelection,
       setAnchor,
     ],
@@ -884,21 +891,25 @@ export function LibraryView() {
   // mobile handleSelect opens the full view; the page jump still applies.
   const handleSnippetSelect = useCallback(
     (id: string, page: number) => {
+      // Select mode: a passage is part of its record, so the click picks it.
+      if (selectMode) return toggleSelection(id);
       selectFrom(true, id, undefined, true);
       setScrollToPage(page);
       setResultsActivePage({ entityId: id, page });
     },
-    [selectFrom, setScrollToPage, setResultsActivePage],
+    [selectMode, toggleSelection, selectFrom, setScrollToPage, setResultsActivePage],
   );
 
   // Results-tab Properties hit: open the entity preview and deep-focus the field
   // (the drawer switches to its Metadata tab and flashes the field by key).
   const handleFocusProperty = useCallback(
     (id: string, fieldKey: string) => {
+      // Select mode: a matched property is part of its record, so the click picks it.
+      if (selectMode) return toggleSelection(id);
       handleSelect(id);
       setFocusMetadataField({ entityId: id, fieldKey });
     },
-    [handleSelect, setFocusMetadataField],
+    [selectMode, toggleSelection, handleSelect, setFocusMetadataField],
   );
 
   // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
@@ -1311,6 +1322,8 @@ export function LibraryView() {
           <LibrarySelectionBar
             filteredIds={filteredIds}
             loadedIds={drawnIds}
+            // No pages here: "Show more" loads the next results into the view.
+            paged={false}
             corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
@@ -1358,6 +1371,19 @@ export function LibraryView() {
             </button>
             <ActiveFiltersButton className="ms-2" />
           </>
+        )}
+        {/* The way into picking several records, at the bar's end where the
+            selection's own end group (all shown, every result, the count)
+            takes its place once it is on. Cmd/Ctrl and Shift + click still
+            start one from the view. */}
+        {!selectionActive && !menuTrigger && canSelect && (
+          <div className="ms-auto shrink-0 flex items-center gap-1">
+            <FooterButton
+              icon={<CheckSquare size={13} className="text-ink-tertiary" />}
+              label="Select"
+              onClick={() => setSelectMode(true)}
+            />
+          </div>
         )}
         {/* Not rendered: the file input Upload PDF opens. */}
         <input
