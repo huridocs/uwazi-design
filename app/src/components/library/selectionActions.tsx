@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { FileDown, LayoutTemplate, Lock, PenLine, Share2, Trash2 } from "lucide-react";
 import {
   deselectIdsAtom,
@@ -48,14 +49,17 @@ export function useSelectionActions({
   const language = useAtomValue(languageAtom);
   const types = useAtomValue(libraryTypesAtom);
   const setPreview = useSetAtom(libraryOpenEntityIdAtom);
+  const guard = useDirtyGuard();
   const open = useSetAtom(librarySelectionDialogAtom);
   const n = selection.size;
 
   const edit = () => {
     if (n === 1) {
       const [id] = selection;
-      store.set(libraryEditRequestAtom, id);
-      setPreview(id);
+      guard(() => {
+        store.set(libraryEditRequestAtom, id);
+        setPreview(id);
+      });
       return;
     }
     store.set(openBulkEditAtom);

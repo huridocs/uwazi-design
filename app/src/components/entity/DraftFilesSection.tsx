@@ -5,6 +5,7 @@ import { fileKindOf, type DraftFile } from "../../utils/createEntity";
 import { FILE_LIMIT, FILE_LIMIT_LABEL } from "../../atoms/fileUploads";
 import { droppedFiles, dragHasFiles } from "../../utils/pickFiles";
 import { BAR_GHOST } from "../shared/warmButton";
+import { SectionLabel } from "../shared/SectionLabel";
 
 const KIND_ICON: Record<FileKind, typeof FileText> = {
   pdf: FileText,
@@ -33,7 +34,18 @@ const typeLabel = (f: File) => {
   return ext && ext.length <= 5 ? ext : KIND_LABEL[fileKindOf(f.name, f.type)];
 };
 
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+// The count is bound to its noun, so a line never ends on the number.
+const plural = (n: number, one: string, many = `${one}s`) => `${n}\u00a0${n === 1 ? one : many}`;
+
+/** "2 documents and 1 supporting file"; "no files" when both are 0. */
+function countLine(documents: number, supporting: number): string {
+  const parts = [documents ? plural(documents, "document") : "", supporting ? plural(supporting, "supporting file") : ""].filter(Boolean);
+  return parts.join(" and ") || "no files";
+}
+
+/** Names when there are one or two, else the count: the status line holds
+ *  two lines at most. */
+const which = (names: string[]) => (names.length <= 2 ? names.join(" and ") : plural(names.length, "file"));
 
 let seq = 0;
 
@@ -53,30 +65,48 @@ export function DraftFilesSection({ files, onChange }: { files: DraftFile[]; onC
   const documents = files.filter((f) => f.role === "document");
   const supporting = files.filter((f) => f.role === "supporting");
 
+  /** The status line after a change: what changed, and what is listed now. */
+  const listed = (next: DraftFile[]) =>
+    `Listed: ${countLine(next.filter((f) => f.role === "document").length, next.filter((f) => f.role === "supporting").length)}.`;
+
   const add = (picked: { file: File; handle?: FileSystemFileHandle }[], role: DraftFile["role"]) => {
     const taken = new Set(files.map((f) => `${f.file.name}:${f.file.size}`));
     const added: DraftFile[] = [];
-    const out: string[] = [];
-    let moved = 0;
+    const empty: string[] = [];
+    const large: string[] = [];
+    const twice: string[] = [];
+    const moved: string[] = [];
     for (const { file, handle } of picked) {
       const key = `${file.name}:${file.size}`;
-      if (file.size === 0) out.push(`${file.name} is empty`);
-      else if (file.size > FILE_LIMIT) out.push(`${file.name} is larger than ${FILE_LIMIT_LABEL}`);
-      else if (taken.has(key)) out.push(`${file.name} is already listed`);
+      if (file.size === 0) empty.push(file.name);
+      else if (file.size > FILE_LIMIT) large.push(file.name);
+      else if (taken.has(key)) twice.push(file.name);
       else {
         taken.add(key);
         const pdf = fileKindOf(file.name, file.type) === "pdf";
-        if (role === "document" && !pdf) moved++;
+        if (role === "document" && !pdf) moved.push(file.name);
         added.push({ key: `draft-file-${++seq}`, file, ...(handle ? { handle } : {}), role: role === "document" && !pdf ? "supporting" : role });
       }
     }
-    if (added.length) onChange([...files, ...added]);
-    const parts = [
-      added.length ? `${plural(added.length, "file")} added` : "",
-      moved ? `${plural(moved, "file")} not a PDF, listed under Supporting files` : "",
-      out.length ? `Left out: ${out.join("; ")}` : "",
+    const next = added.length ? [...files, ...added] : files;
+    if (added.length) onChange(next);
+    const out = [
+      empty.length ? `${which(empty)} (empty)` : "",
+      large.length ? `${which(large)} (over ${FILE_LIMIT_LABEL})` : "",
+      twice.length ? `${which(twice)} (already listed)` : "",
     ].filter(Boolean);
-    setStatus(parts.join(". ") + (parts.length ? "." : ""));
+    setStatus(
+      [
+        added.length
+          ? `Added ${countLine(added.filter((f) => f.role === "document").length, added.filter((f) => f.role === "supporting").length)}.`
+          : "",
+        moved.length ? `${which(moved)} ${moved.length === 1 ? "is not a PDF, so it is" : "are not PDFs, so they are"} under Supporting files.` : "",
+        out.length ? `Left out: ${out.join(", ")}.` : "",
+        added.length ? listed(next) : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
   };
 
   /** After a row goes, the focus moves to the next row's Remove, else the
@@ -93,11 +123,12 @@ export function DraftFilesSection({ files, onChange }: { files: DraftFile[]; onC
   const remove = (f: DraftFile) => {
     const list = f.role === "document" ? documents : supporting;
     const index = list.indexOf(f);
-    onChange(files.filter((x) => x !== f));
+    const next = files.filter((x) => x !== f);
+    onChange(next);
     setStatus(
       f.role === "document" && index === 0 && documents.length > 1
-        ? `${f.file.name} removed. ${documents[1].file.name} is now the primary document.`
-        : `${f.file.name} removed.`,
+        ? `Removed ${f.file.name}. ${documents[1].file.name} is now the primary document.`
+        : `Removed ${f.file.name}. ${listed(next)}`,
     );
     focusAfterRemove(f.role, index);
   };
@@ -115,7 +146,7 @@ export function DraftFilesSection({ files, onChange }: { files: DraftFile[]; onC
       <FileList
         role="document"
         title="Documents"
-        help="PDF. The first is the primary document."
+        help={"PDF. The\u00a0first is the primary document."}
         accept=".pdf,application/pdf"
         files={documents}
         onAdd={(picked) => add(picked, "document")}
@@ -131,8 +162,9 @@ export function DraftFilesSection({ files, onChange }: { files: DraftFile[]; onC
         onRemove={remove}
       />
       <p className="text-xs text-ink-tertiary">Files upload after the entity is saved.</p>
-      {/* Always mounted at one line, so a message shifts nothing below it. */}
-      <p role="status" aria-live="polite" className="min-h-4 text-xs text-ink-secondary">
+      {/* Always mounted at two lines' height, so no message moves anything:
+          it names at most two files and counts the rest. */}
+      <p role="status" aria-live="polite" className="h-8 line-clamp-2 text-xs text-ink-secondary">
         {status}
       </p>
     </div>
@@ -166,9 +198,11 @@ function FileList({
 
   return (
     <div data-list={role} role="group" aria-labelledby={headingId} className="space-y-1.5">
+      {/* Sub-labels under the field's "Files" label: the caps label, as a
+          field's own table header is (RelationshipFieldEditor). */}
       <div className="flex items-baseline gap-2">
-        <span id={headingId} className="text-xs font-medium text-ink-secondary">
-          {title}
+        <span id={headingId}>
+          <SectionLabel as="span">{title}</SectionLabel>
         </span>
         <span id={helpId} className="text-xs text-ink-tertiary">
           {help}

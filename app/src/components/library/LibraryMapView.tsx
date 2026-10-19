@@ -1,5 +1,6 @@
 import { startTransition, useEffect, useMemo, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -94,6 +95,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(libraryOpenEntityIdAtom);
+  // A record open on its form asks before a pin or a cluster replaces it.
+  const guard = useDirtyGuard();
   const openId = useAtomValue(libraryOpenEntityIdAtom);
   // Full width: the open rail panel's covered width. Fits pad that side by it,
   // and what the panel shows is centred in the rest.
@@ -188,8 +191,10 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
 
     const selectCluster = (cluster: L.MarkerCluster, fromKeyboard: boolean) => {
       keyboardOpen.current = fromKeyboard;
-      setSelectedId(null);
-      setSelectedCluster(clusterInfo(cluster));
+      guard(() => {
+        setSelectedId(null);
+        setSelectedCluster(clusterInfo(cluster));
+      });
     };
     const zoomCluster = (cluster: L.MarkerCluster) => {
       const bounds = cluster.getBounds();
@@ -259,10 +264,11 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
           `Open ${e.title}`,
         ),
       } as PinOptions);
-      const open = () => {
-        setSelectedCluster(null);
-        setSelectedId(e.id);
-      };
+      const open = () =>
+        guard(() => {
+          setSelectedCluster(null);
+          setSelectedId(e.id);
+        });
       pin.on("click", open);
       pin.on("keypress", (ev) => {
         if (!isActivation(ev)) return;
@@ -319,7 +325,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     };
     // `located` follows `entities`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, entities, setSelectedCluster, setSelectedId]);
+  }, [map, entities, setSelectedCluster, setSelectedId, guard]);
 
   /** Fit the pins, as the map's own move: it writes no area. */
   function fitResults(group: L.MarkerClusterGroup, animate: boolean) {

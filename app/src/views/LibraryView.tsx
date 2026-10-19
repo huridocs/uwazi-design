@@ -1392,10 +1392,12 @@ export function LibraryView() {
           setSelectedId(id);
         }
       };
-      if (collapse) collapseSelection(preview);
-      else preview();
+      // A record open on its form (a draft, an edit) asks before another
+      // takes the drawer: leaving drops the form.
+      guard(() => (collapse ? collapseSelection(preview) : preview()));
     },
     [
+      guard,
       isMobile,
       openEntity,
       setOverlayEntity,
@@ -1429,8 +1431,8 @@ export function LibraryView() {
   );
   const clearNetworkSelection = useCallback(() => {
     if (isMobile) setOverlayEntity(null);
-    else setSelectedId(null);
-  }, [isMobile, setOverlayEntity, setSelectedId]);
+    else guard(() => setSelectedId(null));
+  }, [isMobile, setOverlayEntity, setSelectedId, guard]);
   useTouchSelection(toggleSelection, splitPane?.root);
   useTapGuard();
 
