@@ -90,8 +90,8 @@ export function LibrarySelectionBar({
       ? "Click records to add them"
       : notShown === 0
         ? paged
-          ? "All on this page"
-          : "All shown"
+          ? `All ${n.toLocaleString()} on this page`
+          : `All ${n.toLocaleString()} shown`
         : notShown === n
           ? paged
             ? "None on this page"
@@ -133,7 +133,7 @@ export function LibrarySelectionBar({
           there whenever the results run past the page, holding the offer or,
           once taken, "All N results". */}
       <span data-part="selection-end" data-fold-push className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
-        <span className="inline-flex shrink-0 me-1">
+        <span className={`inline-flex shrink-0 me-1 ${fold >= 4 ? "w-[4rem]" : "w-[7.25rem]"}`}>
           <SelectAllBox loadedIds={loadedIds} paged={paged} compact={fold >= 4} />
         </span>
         <span className="shrink-0 w-[9rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
