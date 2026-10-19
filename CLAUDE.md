@@ -671,9 +671,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     hidden by filters, Show the selected records, Clear selection. "All" is always the
     filtered results, N the masthead's count. The pager after the group shares a grid cell
     with an unseen copy of the unfiltered collection's pager (`FooterHold`), so a filter
-    turned on or off never moves the group. In select mode a tick does not reopen the
-    selection list, which would replace the drawer's tabs; select mode opens it once
-    (`enterSelectModeAtom`), and the drawer's Results records draw the selected look.
+    turned on or off never moves the group. The selection list opens in the drawer only
+    when a selection starts from nothing (a modifier click or long press) or select mode
+    starts (`enterSelectModeAtom`); later ticks leave the drawer on its tab or preview,
+    which the list would replace, and "Show the selected records" reopens it
+    (`showSelectionList`). The drawer's Results records draw the selected look.
   - The selection is ids and a filter change drops none; clearing the filters brings the
     hidden ones back as selected. An action on a selection holding hidden records asks first
     (`HiddenScopeDialog`; "Only the N in view" is the commit, "All N" the ghost); Delete's

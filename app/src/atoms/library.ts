@@ -334,7 +334,8 @@ export const entitySelectedAtom = atomFamily((id: string) =>
   atom((get) => get(librarySelectionAtom).has(id)),
 );
 /** The selection drawer lists the selection; its X closes the list without
- *  clearing it, and any new tick opens it again. */
+ *  clearing it. A selection started from nothing opens it again; later ticks
+ *  do not (`showSelectionList`). */
 export const librarySelectionDrawerOpenAtom = atom(true);
 
 /** Full width: the selection list slides over the results only when the
@@ -422,11 +423,12 @@ export const libraryPageStateAtom = atom<LibraryPageState>({ key: "", page: 1, s
 
 /** Show the selection list in the drawer by dropping the preview, unless the
  *  preview holds an open form: ticking a box must not unmount it and lose input.
- *  In select mode a tick leaves the drawer as it is: the reader may be picking
- *  from its Results tab, which the list would replace. The list opens with
- *  select mode, and the bar's menu reopens it once closed. */
-function showSelectionList(get: Getter, set: Setter) {
-  if (get(librarySelectModeAtom)) return;
+ *  Only when a selection starts from nothing: a later tick leaves the drawer
+ *  on whatever the reader has there (the Results tab, a preview), since the
+ *  list would replace it. In select mode no tick opens it; the list opens with
+ *  select mode. The bar's menu ("Show the selected records") reopens it. */
+function showSelectionList(get: Getter, set: Setter, wasEmpty: boolean) {
+  if (!wasEmpty || get(librarySelectModeAtom)) return;
   if (!get(editSessionOpenAtom)) set(libraryOpenEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 }
@@ -440,10 +442,11 @@ export const enterSelectModeAtom = atom(null, (get, set, ids?: readonly string[]
   if (ids?.length) set(selectIdsAtom, ids);
 });
 
-/** Toggle one id. Sets the anchor, ends any range, and drops the preview so the
- *  drawer shows the selection. */
+/** Toggle one id. Sets the anchor, ends any range, and, when it starts the
+ *  selection, drops the preview so the drawer shows the list. */
 export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
   selectionWrite(get, set, () => {
+    const wasEmpty = get(librarySelectionAtom).size === 0;
     const next = new Set(get(librarySelectionAtom));
     // As in Finder, the gesture that starts a selection includes the card already
     // open in the preview (the anchor from its plain click).
@@ -455,7 +458,7 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
     set(librarySelectionAtom, next);
     set(librarySelectionAnchorAtom, id);
     set(lastRangeAtom, []);
-    showSelectionList(get, set);
+    showSelectionList(get, set, wasEmpty);
   }),
 );
 
@@ -471,14 +474,16 @@ function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: str
   const b = order.indexOf(id);
   if (a < 0 || b < 0) {
     // Select it (not toggle: a Shift+click never deselects) and anchor it.
+    const wasEmpty = get(librarySelectionAtom).size === 0;
     const next = new Set(get(librarySelectionAtom));
     next.add(id);
     set(librarySelectionAtom, next);
     set(librarySelectionAnchorAtom, id);
     set(lastRangeAtom, []);
-    showSelectionList(get, set);
+    showSelectionList(get, set, wasEmpty);
     return;
   }
+  const wasEmpty = get(librarySelectionAtom).size === 0;
   const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
   const next = new Set(get(librarySelectionAtom));
   for (const x of get(lastRangeAtom)) next.delete(x);
@@ -490,17 +495,18 @@ function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: str
   if (anchor) next.add(anchor);
   set(librarySelectionAtom, next);
   set(lastRangeAtom, added.filter((x) => x !== anchor));
-  showSelectionList(get, set);
+  showSelectionList(get, set, wasEmpty);
 }
 
 /** Add ids (select all loaded, select all results, a map cluster). */
 export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) =>
   selectionWrite(get, set, () => {
+    const wasEmpty = get(librarySelectionAtom).size === 0;
     const next = new Set(get(librarySelectionAtom));
     for (const id of ids) next.add(id);
     set(librarySelectionAtom, next);
     set(lastRangeAtom, []);
-    showSelectionList(get, set);
+    showSelectionList(get, set, wasEmpty);
   }),
 );
 
