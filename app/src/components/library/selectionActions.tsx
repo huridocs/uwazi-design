@@ -77,7 +77,7 @@ export function useSelectionActions({
   const noOtherTemplate =
     types.length < 2 && [...selection].every((id) => getEntity(id)?.typeId === types[0]?.id);
 
-  return [
+  const actions: SelectionAction[] = [
     {
       id: "edit",
       label: "Edit",
@@ -97,6 +97,8 @@ export function useSelectionActions({
     { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onClick: () => open("permissions") },
     { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => open("delete"), danger: true },
   ];
+  // Select mode starts with nothing picked: every action waits for a record.
+  return n === 0 ? actions.map((a) => ({ ...a, disabledReason: "Select records first" })) : actions;
 }
 
 /** The selection's dialogs, mounted once (by the footer bar, which is there

@@ -73,8 +73,8 @@ export function holdTextSelection(e: MouseEvent) {
 /** One entity's selection control, shared by cards, table rows, timeline
  *  lines, Results cards and drawer rows.
  *
- *  Not rendered in the Library: selection uses Cmd/Ctrl- and Shift-click (on
- *  touch, a long press or `librarySelectModeAtom`). It stays as a visually hidden, focusable
+ *  Not drawn in the Library: selection starts from the footer's Select
+ *  (`librarySelectModeAtom`), or Cmd/Ctrl- and Shift-click, or a long press. It stays as a visually hidden, focusable
  *  checkbox named "Select <title>" for keyboard and screen-reader users; the row
  *  draws its focus ring (`FOCUS_RING_ON_SELECT`).
  *

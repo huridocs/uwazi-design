@@ -444,7 +444,7 @@ export function LibraryView() {
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
-  const setSelectMode = useSetAtom(librarySelectModeAtom);
+  const [selectMode, setSelectMode] = useAtom(librarySelectModeAtom);
   const discardDraft = useSetAtom(discardDraftAtom);
   const [previewEntityId, setOverlayEntity] = useAtom(previewEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -1116,6 +1116,8 @@ export function LibraryView() {
   // Back from a record rebuilds the same key, so the page and its scroll hold.
   // Adv. Search scrolls inside its own body, which registers itself as the lane.
   const paged = viewMode === "cards" || viewMode === "list" || viewMode === "results";
+  /** Views whose records a click can pick (the bar's Select). */
+  const canSelect = paged || viewMode === "timeline" || viewMode === "map";
   // `passKey` without the chain templates' identity, which is new on every
   // mount and would turn Back into a new key, and without the language, so a
   // language switch keeps the page.
@@ -1268,7 +1270,9 @@ export function LibraryView() {
   const groundDown = useRef<{ x: number; y: number } | null>(null);
   const clearOnGround = useCallback(
     (e: React.MouseEvent) => {
-      if (!selectionActive || viewMode === "map") return;
+      // Select mode keeps going until Clear or Escape: a click that misses a
+      // record while picking them is not a request to stop.
+      if (!selectionActive || selectMode || viewMode === "map") return;
       if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.button !== 0) return;
       const t = e.target as Element;
       if (
@@ -1284,7 +1288,7 @@ export function LibraryView() {
       if (String(window.getSelection() ?? "").length > 0) return;
       clearSelection();
     },
-    [selectionActive, viewMode, clearSelection],
+    [selectionActive, selectMode, viewMode, clearSelection],
   );
   const [selectionDrawerOpen, setSelectionDrawerOpen] = useAtom(librarySelectionDrawerOpenAtom);
   const [selectionListAsked, setSelectionListAsked] = useAtom(librarySelectionListAskedAtom);
@@ -1368,6 +1372,8 @@ export function LibraryView() {
       // Touch, with a selection going: a tap adds or removes (a long press
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
+      // The bar's Select mode: a plain click adds or removes, on any pointer.
+      if (e && selectMode && intent !== "range") return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
       const preview = () => {
         // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
@@ -1398,6 +1404,7 @@ export function LibraryView() {
       toggleSelection,
       rangeSelection,
       selectionActive,
+      selectMode,
       collapseSelection,
       setAnchor,
       currentSelectionOrder,
@@ -1434,6 +1441,8 @@ export function LibraryView() {
   // what opens — the reading language may pick another document entirely.
   const handleSnippetSelect = useCallback(
     (id: string, page: number) => {
+      // Select mode: a passage is part of its record, so the click picks it.
+      if (selectMode) return toggleSelection(id);
       setPassageFile(null);
       selectFrom(true, id, undefined, true);
       const entity = getEntity(id);
@@ -1441,17 +1450,19 @@ export function LibraryView() {
       setScrollToPage(page);
       setResultsActivePage({ entityId: id, page });
     },
-    [selectFrom, setPassageFile, language, dataSource, setScrollToPage, setResultsActivePage],
+    [selectMode, toggleSelection, selectFrom, setPassageFile, language, dataSource, setScrollToPage, setResultsActivePage],
   );
 
   // Results-tab Properties hit: open the entity preview and deep-focus the field
   // (the drawer switches to its Metadata tab and flashes the field by key).
   const handleFocusProperty = useCallback(
     (id: string, fieldKey: string) => {
+      // Select mode: a matched property is part of its record, so the click picks it.
+      if (selectMode) return toggleSelection(id);
       handleSelect(id);
       setFocusMetadataField({ entityId: id, fieldKey });
     },
-    [handleSelect, setFocusMetadataField],
+    [selectMode, toggleSelection, handleSelect, setFocusMetadataField],
   );
 
   // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
@@ -1577,6 +1588,7 @@ export function LibraryView() {
           <LibrarySelectionBar
             filteredIds={filteredIds}
             loadedIds={drawnIds}
+            paged={paged}
             corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
@@ -1654,9 +1666,25 @@ export function LibraryView() {
               <BarDivider className="hidden sm:block" />
               {pagination}
             </>
-          ) : (
-            <div data-fold-push className="ms-auto shrink-0 flex">{pagination}</div>
-          ))}
+          ) : null)}
+        {/* The way into picking several records, at the bar's end where the
+            selection's own end group (this page, every result, the count)
+            takes its place once it is on. Cmd/Ctrl and Shift + click still
+            start one from the view. */}
+        {!selectionActive && !menuTrigger && (canSelect || pagination) && (
+          <div data-fold-push className="ms-auto shrink-0 flex items-center gap-1">
+            {canSelect && (
+              <FooterButton
+                icon={<CheckSquare size={13} className="text-ink-tertiary" />}
+                label="Select"
+                hint={`Pick several records: click one to add or remove it.\u00a0${MOD_KEY} + click works without this; Shift + click adds a range.`}
+                onClick={() => setSelectMode(true)}
+              />
+            )}
+            {canSelect && pagination && <BarDivider className="hidden sm:block" />}
+            {pagination}
+          </div>
+        )}
         {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
             the bar's END, where the entity view's bar keeps it: in thumb reach,
             and a menu at the bottom opens upward. Only the drawer nav moved;
@@ -2557,14 +2585,21 @@ function SplitExportButton({
   );
 }
 
+/** The modifier this platform calls Cmd — Ctrl everywhere but Apple's. */
+const MOD_KEY =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "Cmd" : "Ctrl";
+
 function FooterButton({
   icon,
   label,
+  hint: hintText,
   onClick,
   lead = false,
 }: {
   icon: ReactNode;
   label: string;
+  /** The tooltip, when it says more than the label. */
+  hint?: string;
   onClick?: () => void;
   /** The bar's one filled button; the rest are ghosts (`warmButton.ts`). */
   lead?: boolean;
@@ -2573,7 +2608,7 @@ function FooterButton({
   // button keeps its name through `aria-label`.
   const iconOnly = useFooterFold() >= 1;
   return (
-    <Hint text={label} describe={false} muted={!iconOnly}>
+    <Hint text={hintText ?? label} describe={false} muted={!iconOnly && !hintText}>
       {(hint) => (
         <button
           {...hint}

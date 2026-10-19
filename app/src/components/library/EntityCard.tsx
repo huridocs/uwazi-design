@@ -26,7 +26,7 @@ import {
   lastPointerWasTouch,
   selectionIntent,
 } from "./EntitySelectBox";
-import { librarySelectionActiveAtom } from "../../atoms/library";
+import { librarySelectionActiveAtom, librarySelectModeAtom } from "../../atoms/library";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { measurePeekRoom, peekEnter, peekLeave } from "./docPeek";
 import { CardValue, ownsItsRemainder } from "./CardValue";
@@ -482,12 +482,14 @@ export const EntityCard = memo(function EntityCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // A selection gesture (Cmd/Ctrl or Shift, or a touch tap
-                  // while a selection is active) selects instead. Read at click
+                  // A selection gesture (Cmd/Ctrl or Shift, a touch tap
+                  // while a selection is active, any click in the bar's
+                  // Select mode) selects instead. Read at click
                   // time so no card subscribes to the selection.
                   if (
                     selectionIntent(e) ||
-                    (lastPointerWasTouch() && store.get(librarySelectionActiveAtom))
+                    (lastPointerWasTouch() && store.get(librarySelectionActiveAtom)) ||
+                    store.get(librarySelectModeAtom)
                   ) {
                     onSelect(entity.id, e);
                     return;

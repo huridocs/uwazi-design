@@ -39,6 +39,7 @@ export function EntityListDrawer({
   query,
   onRemove,
   footer,
+  empty,
 }: {
   icon: ReactNode;
   title: string;
@@ -62,6 +63,8 @@ export function EntityListDrawer({
   onRemove?: { remove: (id: string) => void; can: (id: string) => boolean };
   /** A footer bar under the list (the selection drawer's Close + actions). */
   footer?: ReactNode;
+  /** What the rows lane says with no ids (the bar's Select mode, nothing picked yet). */
+  empty?: ReactNode;
 }) {
   const openEntity = useSetAtom(openEntityAtom);
   const range = useSetAtom(rangeSelectionAtom);
@@ -131,6 +134,7 @@ export function EntityListDrawer({
             ))}
           </ul>
         </SelectionOrderScope>
+        {ids.length === 0 && empty}
         {ids.length > visible && (
           <div className="flex justify-center pt-3">
             <button

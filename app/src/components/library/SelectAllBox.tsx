@@ -3,27 +3,31 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { deselectIdsAtom, librarySelectionAtom, selectIdsAtom } from "../../atoms/library";
 import { Hint } from "../shared/Hint";
 
-/** The tri-state "select all" for the Library footer. It shows only while a
- *  MULTIPLE selection is on (the bar's end group), so it is never seen
- *  unchecked in practice.
+/** The tri-state "select this page" for the Library footer's selection bar,
+ *  with its words and count beside it: "This page · 30" where the view pages
+ *  its results (Cards, List, Adv. Search), "All shown · 124" where it draws
+ *  them all (Timeline, Map). The label is the box's click target too.
  *
- *  Its state is over the SHOWN entities (the page of Cards or List, or what
- *  the view in front draws): none
- *  of them selected = unchecked, some = mixed, all = checked. Unchecked or
- *  mixed, a click selects every shown entity; checked, it deselects the
- *  shown ones — and only those (see the click). Mixed used to deselect, which
- *  made sense while the box sat in the idle bar; shown only with a selection,
- *  it left the box no way to select at all. Selecting
- *  the rest of a larger result set is the footer readout's own offer, so this
- *  box never reaches past what the reader can see.
+ *  Its state is over the SHOWN entities: none of them selected = unchecked,
+ *  some = mixed, all = checked. Unchecked or mixed, a click selects every
+ *  shown entity; checked, it deselects the shown ones, and only those (see
+ *  the click). Selecting the rest of a larger result set is the bar's
+ *  "Select all N", so this box never reaches past what the reader can see.
  *
- *  The hint carries the gestures Uwazi prints under its grid, because a
- *  checkbox is not where anyone expects to learn them. */
-/** The modifier this platform calls Cmd — Ctrl everywhere but Apple's. */
-const MOD =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "Cmd" : "Ctrl";
-
-export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: readonly string[]; disabled?: boolean }) {
+ *  `compact` (a folded bar) keeps the count and drops the words; the
+ *  accessible name and the tooltip still say "page". */
+export function SelectAllBox({
+  loadedIds,
+  paged = true,
+  compact = false,
+  disabled = false,
+}: {
+  loadedIds: readonly string[];
+  /** The view pages its results: the box means "this page". */
+  paged?: boolean;
+  compact?: boolean;
+  disabled?: boolean;
+}) {
   const selection = useAtomValue(librarySelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
   const deselect = useSetAtom(deselectIdsAtom);
@@ -34,15 +38,16 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   const all = loadedIds.length > 0 && picked === loadedIds.length;
   const mixed = picked > 0 && !all;
   const off = disabled || loadedIds.length === 0;
+  const count = loadedIds.length.toLocaleString();
+  const where = paged ? "on this page" : "shown";
   // Selected beyond what is shown: the box won't touch those, and says so
-  // before the click (the bar's "N not shown" says so after).
+  // before the click.
   const beyond = selection.size - picked;
-  const text =
-    all && beyond > 0
-      ? `Deselect the ${picked.toLocaleString()} shown; ${beyond.toLocaleString()} more stay selected (Clear ends the selection).`
-      : all
-        ? "Deselect the shown entities."
-        : `Select all ${loadedIds.length.toLocaleString()} shown. ${MOD} or Shift + click selects several; on touch, long-press.`;
+  const text = all
+    ? beyond > 0
+      ? `Deselect the ${count} ${where}. The\u00a0${beyond.toLocaleString()} selected elsewhere stay selected.`
+      : `Deselect the ${count} ${where}.`
+    : `Select the ${count} records ${where}.`;
 
   // `indeterminate` is a DOM property with no attribute.
   useEffect(() => {
@@ -52,7 +57,13 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   return (
     <Hint text={text} describe={false}>
       {(hint) => (
-        <span {...hint} className="inline-flex items-center">
+        <label
+          {...hint}
+          data-part="select-page"
+          className={`inline-flex items-center gap-1.5 h-7 px-1.5 rounded-md text-xs whitespace-nowrap ${
+            off ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-paper/60"
+          }`}
+        >
           <input
             ref={ref}
             type="checkbox"
@@ -63,10 +74,8 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
             aria-disabled={off || undefined}
             aria-label={
               all
-                ? beyond > 0
-                  ? `Deselect the ${picked.toLocaleString()} shown entities; ${beyond.toLocaleString()} more stay selected`
-                  : "Deselect the shown entities"
-                : "Select all shown entities"
+                ? `Deselect the ${count} records ${where}`
+                : `Select the ${count} records ${where}`
             }
             onChange={() => {}}
             onClick={(e) => {
@@ -76,14 +85,18 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
                 return;
               }
               // Clears only what it can see: the shown ids. Entities picked
-              // under another filter (counted "not in view") stay — Clear, in
-              // the bar, is the one that ends a whole selection.
+              // on another page or under another filter stay; Clear, in the
+              // bar, is the one that ends a whole selection.
               if (all) deselect(loadedIds);
               else selectIds(loadedIds);
             }}
-            className={`w-3.5 h-3.5 rounded shrink-0 accent-ink ${off ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            className="w-3.5 h-3.5 rounded shrink-0 accent-ink cursor-[inherit]"
           />
-        </span>
+          <span aria-hidden className="text-ink-secondary tabular-nums">
+            {!compact && <>{paged ? "This page" : "All shown"} · </>}
+            {count}
+          </span>
+        </label>
       )}
     </Hint>
   );
