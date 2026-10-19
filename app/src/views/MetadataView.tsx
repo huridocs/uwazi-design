@@ -25,7 +25,7 @@ import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
 import { ListeningChip } from "../components/metadata/ListeningChip";
 import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import type { CopyMatch, CopyPlan, CopyUnit } from "../utils/copyFrom";
-import { templateFields, type EditResult } from "../utils/createEntity";
+import { templateFields, type DraftFile, type EditResult } from "../utils/createEntity";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityPreviewSlideOver } from "../components/relationships/EntityPreviewSlideOver";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
@@ -54,7 +54,7 @@ import type { Corpus } from "../data/entityChanges";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { breakpointAtom } from "../atoms/viewport";
-import { draftEntityIdAtom, draftPinsAtom, draftTitlesAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityChanges";
+import { draftEntityIdAtom, draftFilesAtom, draftPinsAtom, draftTitlesAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityChanges";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { templateMirror } from "../data/templates/mirror";
 import { corpusTypes } from "../atoms/dataSource";
@@ -73,6 +73,7 @@ import { RelationshipsFiltersTab, filtersGround, useRelFiltersDock } from "../co
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
+import { DraftFilesSection } from "../components/entity/DraftFilesSection";
 import { ModalHostProvider } from "../components/shared/Modal";
 import { paneOwnsEvent, useLibraryPane } from "../components/library/libraryPane";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
@@ -297,6 +298,10 @@ function EntityEditBody({
   const [machineTitles, setMachineTitles] = useState<Partial<Record<Language, boolean>>>({});
   const title = titles[language];
   const setTitle = (v: string) => setTitleFor(language, v);
+  /* A draft's files (Create entity): held with the draft, uploaded after Save. */
+  const [draftFilesState, setDraftFilesState] = useAtom(draftFilesAtom);
+  const draftFiles = draft && draftFilesState?.id === focusedId ? draftFilesState.files : NO_FILES;
+  const setDraftFiles = (files: DraftFile[]) => setDraftFilesState({ id: focusedId, files });
   const setTitleFor = (lang: Language, v: string, machine = false) => {
     setTitles((prev) => ({ ...prev, [lang]: v }));
     setMachineTitles((prev) => (prev[lang] === machine ? prev : { ...prev, [lang]: machine }));
@@ -462,8 +467,8 @@ function EntityEditBody({
     window.setTimeout(() => {
       if (!aliveRef.current) return;
       if (title.includes("[fail]")) setSaveState("failed");
-      else if (then === "another" && draft) draft.onSaveAndNew({ titles, fieldsByLang }, pinned);
-      else onSave({ titles, fieldsByLang });
+      else if (then === "another" && draft) draft.onSaveAndNew({ titles, fieldsByLang, files: draftFiles }, pinned);
+      else onSave({ titles, fieldsByLang, ...(draft ? { files: draftFiles } : {}) });
     }, 800);
   };
   const templateSection = (
@@ -873,7 +878,8 @@ function EntityEditBody({
       const ids = connections[d.key];
       return ids !== undefined && ids.join("|") !== d.entityIds.join("|");
     }) ||
-    copyActive;
+    copyActive ||
+    draftFiles.length > 0;
   useRegisterDirtyForm(sessionId, dirtyLabel, dirty);
 
   return (
@@ -1185,6 +1191,14 @@ function EntityEditBody({
             </EditSection>
           );
         })}
+
+        {/* A new entity takes its documents and supporting files here; an
+            existing one manages them on its Files tab. */}
+        {draft && (
+          <EditSection label="Files">
+            <DraftFilesSection files={draftFiles} onChange={setDraftFiles} />
+          </EditSection>
+        )}
       </div>
 
       {/* Save summary: a fixed-height line, always mounted, so a failed save
@@ -1286,6 +1300,8 @@ function EntityEditBody({
 }
 
 /* ── Edit helpers ── */
+
+const NO_FILES: DraftFile[] = [];
 
 /** A property's pin. Revealed on the field's hover or focus (`.pin-host` /
  *  `.pin-toggle` in index.css); always shown once pinned. */

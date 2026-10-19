@@ -686,7 +686,16 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     file handles, never the bytes); after a reload the task reads "Interrupted: N files to
     continue" and Continue reads them back or re-selects them by name, size and last modified.
     Offset resume is the prototype's own: Uwazi takes one request per file.
-  - The Library pane is a drop target (`useLibraryDrop`): every file, folders walked.
+  - Create entity's draft form ends in a Files section (`DraftFilesSection`): Documents (PDFs;
+    the first is the primary document, "Make primary" moves one up; a dropped non-PDF joins
+    Supporting files) and Supporting files (any type). The form holds them in `draftFilesAtom`
+    (a retyped draft keeps them; the dirty guard counts them) and uploads nothing. On Save the
+    entity is created, then `attachUploadsAtom` queues them as that entity's files
+    (`UploadItem.attach`): they join its record, its card carries `UploadStateMark`, and a cancelled
+    or dismissed file leaves only the record. They are not restored after a reload, since the
+    created entity is not either. Cancel discards them with the draft.
+  - The Library pane is a drop target (`useLibraryDrop`): every file, folders walked. A box marked
+    `data-drop-owner` takes its own drops and the pane's overlay steps aside over it.
     `beforeunload` warns only while bytes are being sent. `window.__uploads` (dev) drops the
     connection, fails requests and reads the queue.
 - Date filter: bounds are a day or a day and "HH:MM", read as UTC (`dateBoundMs`). A record with

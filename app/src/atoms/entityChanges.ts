@@ -21,6 +21,7 @@ import {
   templateFields,
   today,
   type AttachedFile,
+  type DraftFile,
   type EditResult,
 } from "../utils/createEntity";
 import type { Language } from "./language";
@@ -474,6 +475,9 @@ export const draftVersionAtom = atom(0);
  *  remounts on the new template re-seeds each language's title as it was,
  *  instead of copying the one the entity carries into all four. */
 export const draftTitlesAtom = atom<{ id: string; titles: Record<Language, string> } | null>(null);
+/** The files chosen on the open draft's form. Held here, not in the form,
+ *  so a retyped draft's form remounts with them; uploaded only after Save. */
+export const draftFilesAtom = atom<{ id: string; files: DraftFile[] } | null>(null);
 
 /** The open draft's template changed on its form: it becomes an entity of
  *  `typeId`, holding `fieldsByLang` — the new template's properties with the
@@ -608,6 +612,7 @@ export const commitDraftAtom = atom(
     }
     setDraftMirror(null);
     set(draftEntityIdAtom, null);
+    set(draftFilesAtom, null);
     set(createEntitiesAtom, {
       corpus: hit.corpus,
       entries: [{ entity, record: { ...record, metadata: result.fieldsByLang } }],
@@ -671,6 +676,7 @@ export const discardDraftAtom = atom(null, (get, set, id: string) => {
   if (get(draftEntityIdAtom) !== id) return;
   setDraftMirror(null);
   set(draftEntityIdAtom, null);
+  set(draftFilesAtom, null);
 });
 
 /* ── Upload ─────────────────────────────────────────────────────────────── */

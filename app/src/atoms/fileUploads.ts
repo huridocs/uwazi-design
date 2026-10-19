@@ -3,10 +3,12 @@ import { atom, useStore, type Getter, type Setter } from "jotai";
 import { notificationsAtom, tasksAtom, toastsAtom, type Task } from "./notifications";
 import { addUploadedDocumentsAtom, deleteEntitiesAtom, newEntityId, patchEntitiesAtom } from "./entityChanges";
 import { dataSourceAtom } from "./dataSource";
+import { focusedEntityIdAtom } from "./focusedEntity";
+import { documentGroupsAtom, filesAtom } from "./files";
 import { registerSettingsReset } from "./settingsReset";
 import { overlayRecord, type Corpus } from "../data/entityChanges";
-import type { FileKind } from "../data/files";
-import { buildRecord, fileKindOf, templateFields, titleFromFilename, uploadTemplateId } from "../utils/createEntity";
+import type { DocumentGroup, FileEntry, FileKind } from "../data/files";
+import { buildRecord, fileKindOf, recordFileOf, templateFields, titleFromFilename, uploadTemplateId, type DraftFile } from "../utils/createEntity";
 import { loadManifest, saveManifest } from "../utils/uploadManifest";
 import { inputPick, type PickedFile } from "../utils/pickFiles";
 
@@ -40,7 +42,12 @@ import { inputPick, type PickedFile } from "../utils/pickFiles";
  *  modified, and each continues from its offset.
  *
  *  The Beacon is the indicator: one task for the queue, its files listed in
- *  the notifications drawer (`UploadTaskCard`). */
+ *  the notifications drawer (`UploadTaskCard`).
+ *
+ *  A new entity's own files (Create entity's Files section) go through the
+ *  same queue once the entity is saved (`attachUploadsAtom`): they join that
+ *  entity's record instead of making entities of their own, and cancelling
+ *  one takes only that file off the record. */
 
 export const CHUNK = 5 * 1024 * 1024;
 export const PARALLEL = 3;
@@ -84,6 +91,9 @@ export interface UploadItem {
   until?: number;
   /** Failed before sending (empty, over the cap): no entity, no retry. */
   refused?: boolean;
+  /** A file attached to an entity that already exists (a saved draft's), at
+   *  this record file id. Without it the file made its own entity. */
+  attach?: { fileId: string };
 }
 
 export interface UploadQueue {
@@ -148,14 +158,16 @@ export const uploadOnlineAtom = atom((get) => get(browserOnlineAtom) && !get(dro
 /** What the Library marks on an entity whose file is not ready. */
 export type UploadMark = "uploading" | "waiting" | "paused" | "processing" | "failed";
 
+/** An entity with several files shows the one that needs the reader most. */
+const MARK_RANK: Record<UploadMark, number> = { failed: 4, paused: 3, waiting: 2, uploading: 1, processing: 0 };
+
 export const uploadEntityStateAtom = atom((get) => {
   const q = get(uploadQueueAtom);
   const online = get(uploadOnlineAtom);
   const out = new Map<string, UploadMark>();
   for (const i of q?.items ?? []) {
     if (i.state === "ready" || i.state === "cancelled") continue;
-    out.set(
-      i.entityId,
+    const mark: UploadMark =
       i.state === "failed"
         ? "failed"
         : i.state === "uploaded" || i.state === "processing"
@@ -164,8 +176,9 @@ export const uploadEntityStateAtom = atom((get) => {
             ? "paused"
             : online
               ? "uploading"
-              : "waiting",
-    );
+              : "waiting";
+    const had = out.get(i.entityId);
+    if (!had || MARK_RANK[mark] > MARK_RANK[had]) out.set(i.entityId, mark);
   }
   return out;
 });
@@ -182,11 +195,28 @@ const fileOf = (i: UploadItem, url?: string) => ({ name: i.name, size: i.size, u
  *  matched nothing, when `resumeOnly` (Continue's re-select) is set. */
 export const enqueueUploadsAtom = atom(
   null,
-  (get, set, { corpus, picked, resumeOnly = false }: { corpus: Corpus; picked: PickedFile[]; resumeOnly?: boolean }) => {
+  (
+    get,
+    set,
+    {
+      corpus,
+      picked,
+      resumeOnly = false,
+      attachTo,
+    }: {
+      corpus: Corpus;
+      picked: (PickedFile & { role?: DraftFile["role"] })[];
+      resumeOnly?: boolean;
+      /** The entity the files belong to; without it each file makes one. */
+      attachTo?: string;
+    },
+  ) => {
     const q = get(uploadQueueAtom);
     const live = (q?.items ?? []).filter((i) => i.state !== "cancelled");
     const waiting = new Map(live.filter((i) => i.state === "interrupted").map((i) => [i.fingerprint, i]));
-    const taken = new Set(live.map((i) => `${i.name}:${i.size}`));
+    // An entity's own files are compared with that entity's only.
+    const nameKey = (f: { name: string; size: number }, entityId?: string) => `${entityId ?? ""}|${f.name}:${f.size}`;
+    const taken = new Set(live.map((i) => nameKey(i, i.attach ? i.entityId : undefined)));
     // Files the batch already knows (finished before a reload, or refused):
     // chosen again on Continue, they are neither resumed nor unmatched.
     const known = new Set([...(q?.earlier ?? []), ...(q?.items ?? []).map((i) => i.fingerprint)]);
@@ -194,8 +224,8 @@ export const enqueueUploadsAtom = atom(
     const added: UploadItem[] = [];
     const unmatched: string[] = [];
     let duplicates = 0;
-    const typeId = uploadTemplateId(corpus);
-    for (const { file: f, handle } of picked) {
+    const typeId = attachTo ? (overlayRecord(attachTo)?.typeId ?? uploadTemplateId(corpus)) : uploadTemplateId(corpus);
+    for (const { file: f, handle, role } of picked) {
       const fp = fingerprintOf(f);
       const match = waiting.get(fp);
       if (match) {
@@ -209,11 +239,11 @@ export const enqueueUploadsAtom = atom(
         if (!known.has(fp)) unmatched.push(f.name);
         continue;
       }
-      if (taken.has(`${f.name}:${f.size}`)) {
+      if (taken.has(nameKey(f, attachTo))) {
         duplicates++;
         continue;
       }
-      taken.add(`${f.name}:${f.size}`);
+      taken.add(nameKey(f, attachTo));
       const key = `${fp}#${++seq}`;
       files.set(key, f);
       if (handle) handles.set(key, handle);
@@ -226,8 +256,9 @@ export const enqueueUploadsAtom = atom(
         type: f.type,
         lastModified: f.lastModified,
         kind: fileKindOf(f.name, f.type),
-        entityId: newEntityId(),
+        entityId: attachTo ?? newEntityId(),
         title: titleFromFilename(f.name),
+        ...(attachTo ? { attach: { fileId: `${attachTo}-f${seq}` } } : {}),
         corpus,
         typeId,
         offset: 0,
@@ -240,7 +271,10 @@ export const enqueueUploadsAtom = atom(
       say(set, `${plural(duplicates, "file")} left out`, `${duplicates === 1 ? "It has" : "They have"} the same name and size as a file already in the upload.`);
     // A file refused before sending gets no entity: there is nothing to keep.
     const sending = added.filter((i) => i.state === "queued");
-    if (sending.length)
+    if (attachTo) {
+      const roles = new Map(picked.map((p) => [p.file, p.role ?? (fileKindOf(p.file.name, p.file.type) === "pdf" ? "document" : "supporting")]));
+      attachToRecord(get, set, corpus, attachTo, sending.map((i) => ({ i, role: roles.get(files.get(i.key)!) ?? "supporting" })));
+    } else if (sending.length)
       set(addUploadedDocumentsAtom, {
         corpus,
         typeId,
@@ -261,6 +295,47 @@ export const enqueueUploadsAtom = atom(
   },
 );
 
+/** Files joining an existing entity's record, after the files it holds:
+ *  documents as primary groups in the order given (the first one the
+ *  Document tab opens), supporting files after them. A document gives the
+ *  entity a document preview. */
+function attachToRecord(get: Getter, set: Setter, corpus: Corpus, entityId: string, list: { i: UploadItem; role: DraftFile["role"] }[]) {
+  if (!list.length) return;
+  const record = overlayRecord(entityId);
+  if (!record) return;
+  const groups = [...(record.documentGroups ?? [])];
+  const entries = [...(record.files ?? [])];
+  const ordered = [...list.filter((x) => x.role === "document"), ...list.filter((x) => x.role === "supporting")];
+  let order = groups.reduce((m, g) => Math.max(m, g.order + 1), 0);
+  for (const { i, role } of ordered) {
+    const fileId = i.attach!.fileId;
+    const { group, entry } = recordFileOf({
+      fileId,
+      groupId: `${fileId}-g`,
+      file: { name: i.name, size: i.size, kind: i.kind, url: URL.createObjectURL(files.get(i.key)!), primary: role === "document" },
+      order: order++,
+    });
+    groups.push(group);
+    entries.push(entry);
+  }
+  const document = ordered.some((x) => x.role === "document");
+  set(patchEntitiesAtom, {
+    corpus,
+    ...(document ? { patches: { [entityId]: { preview: "document" as const } } } : {}),
+    records: { [entityId]: { ...record, documentGroups: groups, files: entries } },
+  });
+  reseedIfFocused(get, set, entityId, groups, entries);
+}
+
+/** The viewer and the Files tab read the focused entity's files from atoms
+ *  seeded when it was focused; a saved draft is focused before its files
+ *  join it, so they are seeded again. */
+function reseedIfFocused(get: Getter, set: Setter, entityId: string, groups: DocumentGroup[], entries: FileEntry[]) {
+  if (get(focusedEntityIdAtom) !== entityId) return;
+  set(filesAtom, entries);
+  set(documentGroupsAtom, groups);
+}
+
 /** A resumed file's entity gets its file back; its metadata stays as it is
  *  (the reader may have edited it while the upload waited). */
 function attachUrl(set: Setter, i: UploadItem, url: string | undefined) {
@@ -268,6 +343,13 @@ function attachUrl(set: Setter, i: UploadItem, url: string | undefined) {
   const was = overlayRecord(i.entityId);
   set(patchEntitiesAtom, { corpus: i.corpus, records: { [i.entityId]: was ? { ...built, metadata: was.metadata } : built } });
 }
+
+/** A saved draft's files: queued for `entityId`, which already exists, in
+ *  the order its form listed them. */
+export const attachUploadsAtom = atom(null, (_get, set, { corpus, entityId, files: list }: { corpus: Corpus; entityId: string; files: DraftFile[] }) => {
+  if (!list.length) return;
+  set(enqueueUploadsAtom, { corpus, attachTo: entityId, picked: list.map(({ file, handle, role }) => ({ file, handle, role })) });
+});
 
 /** Queue files into the collection shown. */
 export const uploadFilesAtom = atom(null, (get, set, picked: PickedFile[]) =>
@@ -319,7 +401,7 @@ export const cancelUploadsAtom = atom(null, (get, set, keys?: string[]) => {
   const q = get(uploadQueueAtom);
   if (!q) return;
   const drop = q.items.filter((i) => [...UNFINISHED, "failed"].includes(i.state) && (!keys || keys.includes(i.key)));
-  removeEntities(set, drop);
+  removeEntities(get, set, drop);
   const gone = new Set(drop.map((i) => i.key));
   // Cancel all with nothing finished: the task goes with the queue, with no
   // notification of an upload that did not happen.
@@ -336,19 +418,39 @@ export const dismissFailedAtom = atom(null, (get, set, keys?: string[]) => {
   const q = get(uploadQueueAtom);
   if (!q) return;
   const drop = q.items.filter((i) => i.state === "failed" && (!keys || keys.includes(i.key)));
-  removeEntities(set, drop);
+  removeEntities(get, set, drop);
   const gone = new Set(drop.map((i) => i.key));
   set(uploadQueueAtom, { ...q, items: q.items.filter((i) => !gone.has(i.key)) });
 });
 
-function removeEntities(set: Setter, items: UploadItem[]) {
+/** The entities of files that made their own; an attached file leaves only
+ *  its entity's record, and the entity stays. */
+function removeEntities(get: Getter, set: Setter, items: UploadItem[]) {
   const byCorpus = new Map<Corpus, string[]>();
   for (const i of items) {
-    byCorpus.set(i.corpus, [...(byCorpus.get(i.corpus) ?? []), i.entityId]);
     files.delete(i.key);
     handles.delete(i.key);
+    if (i.attach) {
+      detachFromRecord(get, set, i);
+      continue;
+    }
+    byCorpus.set(i.corpus, [...(byCorpus.get(i.corpus) ?? []), i.entityId]);
   }
   for (const [corpus, ids] of byCorpus) set(deleteEntitiesAtom, { corpus, ids });
+}
+
+function detachFromRecord(get: Getter, set: Setter, i: UploadItem) {
+  const record = overlayRecord(i.entityId);
+  if (!record) return;
+  const fileId = i.attach!.fileId;
+  const entries = (record.files ?? []).filter((f) => f.id !== fileId);
+  const groups = (record.documentGroups ?? []).filter((g) => entries.some((f) => f.groupId === g.id));
+  set(patchEntitiesAtom, {
+    corpus: i.corpus,
+    ...(groups.some((g) => g.isPrimary) ? {} : { patches: { [i.entityId]: { preview: undefined } } }),
+    records: { [i.entityId]: { ...record, documentGroups: groups, files: entries } },
+  });
+  reseedIfFocused(get, set, i.entityId, groups, entries);
 }
 
 /** Send failed files again (all of them without `keys`), from their offsets.
@@ -516,9 +618,10 @@ export function useFileUploadRunner() {
       if (cancelled || !m || store.get(uploadQueueAtom)) return;
       // The change layer is not stored, so the ready files' entities are
       // gone with the reload. The server keeps what it had: uploaded and
-      // processing files finish; unfinished ones wait for their files.
+      // processing files finish; unfinished ones wait for their files. A
+      // created entity's own files go with it: the entity is not rebuilt.
       const items = m.items
-        .filter((i) => i.state !== "ready" && i.state !== "cancelled")
+        .filter((i) => i.state !== "ready" && i.state !== "cancelled" && !i.attach)
         .map((i): UploadItem =>
           i.state === "uploaded" || i.state === "processing"
             ? { ...i, until: Date.now() + UPLOADED_MS }

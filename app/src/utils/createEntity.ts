@@ -14,6 +14,19 @@ const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 export interface EditResult {
   titles: Record<Language, string>;
   fieldsByLang: Record<Language, MetadataField[]>;
+  /** A draft's files, held by the form and uploaded only after the entity
+   *  is saved (`attachUploadsAtom`). */
+  files?: DraftFile[];
+}
+
+/** A file chosen on a draft's form. `role` is the list it sits in: a
+ *  document (a PDF; the first is the primary document) or a supporting
+ *  file (any type). */
+export interface DraftFile {
+  key: string;
+  file: File;
+  handle?: FileSystemFileHandle;
+  role: "document" | "supporting";
 }
 
 /** A template's fields, empty and in template order, per language — for the
@@ -101,13 +114,27 @@ export function buildRecord({
   file?: AttachedFile;
 }): EntityRecord {
   if (!file) return { typeId, metadata: fieldsByLang };
-  const groupId = `${id}-g`;
-  const groups: DocumentGroup[] = [
-    { id: groupId, title: titleFromFilename(file.name), isPrimary: file.primary !== false, order: 0 },
-  ];
-  const files: FileEntry[] = [
-    {
-      id: `${id}-f`,
+  const { group, entry } = recordFileOf({ fileId: `${id}-f`, groupId: `${id}-g`, file, order: 0 });
+  return { typeId, metadata: fieldsByLang, documentGroups: [group], files: [entry] };
+}
+
+/** One attached file as the record holds it: a document group of its own
+ *  (primary for a document, supporting otherwise) and its one file. */
+export function recordFileOf({
+  fileId,
+  groupId,
+  file,
+  order,
+}: {
+  fileId: string;
+  groupId: string;
+  file: AttachedFile;
+  order: number;
+}): { group: DocumentGroup; entry: FileEntry } {
+  return {
+    group: { id: groupId, title: titleFromFilename(file.name), isPrimary: file.primary !== false, order },
+    entry: {
+      id: fileId,
       groupId,
       name: file.name,
       language: "EN",
@@ -116,8 +143,7 @@ export function buildRecord({
       modified: today(),
       url: file.url,
     },
-  ];
-  return { typeId, metadata: fieldsByLang, documentGroups: groups, files };
+  };
 }
 
 /** The label/value pairs an ADAPTER entity's card and search index read

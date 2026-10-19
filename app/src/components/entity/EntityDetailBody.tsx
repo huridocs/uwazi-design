@@ -7,6 +7,7 @@ import { focusMetadataFieldAtom, libraryEditRequestAtom, libraryOpenEntityIdAtom
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
 import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom, startDraftAtom } from "../../atoms/entityChanges";
+import { attachUploadsAtom } from "../../atoms/fileUploads";
 import { useNotify } from "../../hooks/useNotify";
 import type { EditResult } from "../../utils/createEntity";
 import type { MetadataField } from "../../data/metadata";
@@ -120,6 +121,7 @@ export function EntityDetailBody({
   // Re-read when the draft is rewritten in place (its template changed).
   useAtomValue(draftVersionAtom);
   const commitDraft = useSetAtom(commitDraftAtom);
+  const attachUploads = useSetAtom(attachUploadsAtom);
   const startDraft = useSetAtom(startDraftAtom);
   const store = useStore();
   const notify = useNotify();
@@ -254,6 +256,7 @@ export function EntityDetailBody({
     const corpus = entityCorpusOf(entityId);
     const saved = result.titles[language]?.trim() || "Untitled";
     commitDraft({ id: entityId, result, language });
+    attachUploads({ corpus, entityId, files: result.files ?? [] });
     const next = startDraft({ typeId, corpus, carry: result.fieldsByLang, only: pinned });
     store.set(libraryOpenEntityIdAtom, next);
     notify(
@@ -385,8 +388,12 @@ export function EntityDetailBody({
                   }, 0);
                 }}
                 onSave={(result) => {
-                  if (isDraft) commitDraft({ id: entityId, result, language });
-                  else saveEdit({ id: entityId, result, language });
+                  if (isDraft) {
+                    commitDraft({ id: entityId, result, language });
+                    // The entity exists now: its files join the upload queue
+                    // as its own, not as entities of their own.
+                    attachUploads({ corpus: entityCorpusOf(entityId), entityId, files: result.files ?? [] });
+                  } else saveEdit({ id: entityId, result, language });
                   setEditing(false);
                 }}
                 draft={isDraft ? { onSaveAndNew: saveAndNew } : undefined}

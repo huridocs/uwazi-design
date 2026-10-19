@@ -12,7 +12,8 @@ import { dragHasFiles, droppedFiles } from "../../utils/pickFiles";
  *  Upload does (Uwazi's dropzone takes only the first).
  *
  *  The handlers go on the pane's root, which must be `relative`; the overlay
- *  is drawn inside it. Drags that carry no files (text, a card) pass. */
+ *  is drawn inside it. Drags that carry no files (text, a card) pass, and so
+ *  do drags over a `data-drop-owner` box, which handles its own drop. */
 export function useLibraryDrop() {
   const [over, setOver] = useState(false);
   // enter/leave fire for every child crossed; the pane is left when the
@@ -28,6 +29,13 @@ export function useLibraryDrop() {
     },
     onDragOver: (e: DragEvent) => {
       if (!dragHasFiles(e.dataTransfer)) return;
+      // A box that takes files for itself (a new entity's Files section in a
+      // rail panel): the pane's overlay steps aside while the pointer is on it.
+      if ((e.target as Element).closest?.("[data-drop-owner]")) {
+        setOver(false);
+        return;
+      }
+      setOver(true);
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
     },
