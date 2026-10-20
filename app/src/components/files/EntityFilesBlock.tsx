@@ -84,7 +84,7 @@ function factsOf(file: FileEntry): string {
     .join(" · ");
 }
 
-/** An entity's files, each with Open and Download, and Download all when it
+/** An entity's files, each with View and Download, and Download all when it
  *  holds more than one. One component for the record (the Metadata tab, the
  *  Library drawer preview, the entity view's Metadata drawer) and the
  *  Document tab's Files menu (`bare`), so the reader can take a file from any
@@ -209,11 +209,11 @@ function FileRow({ file, labelled, onOpen }: { file: FileEntry; labelled: boolea
           </Hint>
         ) : (
           <>
-            <Hint text="Open" describe={false} muted={labelled}>
+            <Hint text="View" describe={false} muted={labelled}>
               {(hint) => (
-                <button {...hint} type="button" onClick={onOpen} aria-label={`Open ${file.name}`} className={action}>
+                <button {...hint} type="button" onClick={onOpen} aria-label={`View ${file.name}`} className={action}>
                   <Eye size={13} className="text-ink-tertiary" aria-hidden />
-                  {labelled && "Open"}
+                  {labelled && "View"}
                 </button>
               )}
             </Hint>
