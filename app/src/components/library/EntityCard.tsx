@@ -74,8 +74,8 @@ const ROW_SPAN: Record<number, string> = {
 };
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
- *  title → metadata field label/value pairs → footer (template pill · View).
- *  Clicking the surface opens the entity in the drawer; "View" navigates in.
+ *  title → metadata field label/value pairs → footer (template pill · Open).
+ *  Clicking the surface opens the entity in the drawer; "Open" navigates in.
  *  Selected (previewed) = bg-parchment; no left-border accent. */
 export const EntityCard = memo(function EntityCard({
   entity,
@@ -151,9 +151,10 @@ export const EntityCard = memo(function EntityCard({
         e.stopPropagation();
         onView(entity.id);
       }}
+      aria-label={`Open ${entity.title}`}
       className="shrink-0 inline-flex items-center px-2.5 h-6 text-meta font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
     >
-      View
+      Open
     </button>
   );
 
@@ -165,7 +166,7 @@ export const EntityCard = memo(function EntityCard({
     ${SELECTED_LOOK}`;
   const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 
-  // The card container is NOT a button — it hosts nested controls (View,
+  // The card container is NOT a button — it hosts nested controls (Open,
   // connection badge), so a stretched invisible primary-action button carries
   // the keyboard/AT path instead, and the content sits above it. Clicks on
   // content bubble to the container's plain onClick (mouse path unchanged).

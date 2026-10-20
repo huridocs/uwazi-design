@@ -92,7 +92,7 @@ export function PxParagraphsView({
         title="Entity"
         footer={
           <SettingsButton variant="secondary" size="sm" icon={<ExternalLink size={13} aria-hidden />} onClick={() => openEntity(entityId)}>
-            View entity
+            Open entity
           </SettingsButton>
         }
       >

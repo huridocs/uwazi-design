@@ -12,7 +12,7 @@ import { useDirtyGuard } from "../../hooks/useDirtyGuard";
  *  {@link focusEntityForPreviewAtom}) and renders the shared entity detail body
  *  — the same main-tab navigation (Document / Metadata / Relationships / Files)
  *  as the full entity view, with the drawer-flavoured body for each tab, which
- *  the connection overlay renders too. "View entity" navigates into the
+ *  the connection overlay renders too. "Open entity" navigates into the
  *  full-screen entity; Close returns the drawer to Filters. */
 export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   const setSelected = useSetAtom(librarySelectedEntityIdAtom);
@@ -41,7 +41,7 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       onClose={close}
       closeLabel="Back to filters"
       onOpen={() => openEntity(entityId)}
-      openLabel="View entity"
+      openLabel="Open entity"
       overlay={<EntityOverlay />}
       covered={{ on: stackDepth > 0, onBack: closeAll }}
     />

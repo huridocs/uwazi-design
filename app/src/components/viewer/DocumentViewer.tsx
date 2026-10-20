@@ -35,7 +35,7 @@ interface DocumentViewerProps {
    *  to display any file the user "View"s without disturbing global state. */
   fileOverride?: { url?: string; language: string } | null;
   /** Drop the bottom pager action bar — for hosts that supply their own
-   *  footer (the library preview's Close / View entity bar). */
+   *  footer (the library preview's Close / Open entity bar). */
   hideActionBar?: boolean;
 }
 
