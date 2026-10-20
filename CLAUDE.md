@@ -352,6 +352,11 @@ and the files ported with it; other surfaces have not had the pass yet.
 ### Other surfaces
 - Files view: `focusedId` (the open file) is separate from `selectedIds` (checkboxes). The drawer
   has no tab strip; it shows the open file when nothing is ticked.
+- An entity's files show outside the Files tab through `components/files/EntityFilesBlock.tsx`:
+  at the record's top (so the Metadata tab, the Library preview and the entity view's drawer have
+  it), and as the Document tab's Files menu (DocMeta; the preview's action bar). Each row has Open
+  (the file in a `Modal`, PDFs in `DocumentViewer`) and Download (`<a download>`, named for its
+  file); Download all says it needs the server. The record folds past five files; no files, no block.
 - A file's role is set at upload and never changed (Uwazi does not re-rank files).
   `DocumentGroup.isPrimary` is data written by `AddFileModal`; the rendered primary document is
   the first primary group by `order`. `AddFileModal`'s "Add as" is a radio group with a readback

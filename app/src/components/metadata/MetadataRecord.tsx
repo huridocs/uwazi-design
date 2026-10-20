@@ -9,6 +9,7 @@ import type { RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RecordFooter } from "./RecordFooter";
+import { EntityFilesBlock, useEntityFiles } from "../files/EntityFilesBlock";
 import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
@@ -170,6 +171,11 @@ export function MetadataRecord({
     }
   }
 
+  // The files come back as one list at the record's top, so every host of the
+  // record (Metadata tab, Library preview, the entity view's drawer) offers
+  // them for download without a trip to the Files tab.
+  const hasFiles = useEntityFiles(profile).files.length > 0;
+
   // The document and the picture left this view — metadata is metadata, and
   // Files owns the renditions — so a file- or image-bearing entity no longer has
   // anything of its own down here. Emptiness is now decided by the fields alone;
@@ -178,9 +184,12 @@ export function MetadataRecord({
   const empty = entries.length === 0;
   if (empty) {
     return (
-      <div className="flex items-center justify-center py-10 text-center">
-        <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
-      </div>
+      <>
+        {hasFiles && <EntityFilesBlock profile={profile} />}
+        <div className="flex items-center justify-center py-10 text-center">
+          <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
+        </div>
+      </>
     );
   }
 
@@ -196,6 +205,11 @@ export function MetadataRecord({
           tableBreakpoint.ts), and a masonry column is ~345px, so left in a
           column every table would fold on a record with room for three
           columns. Full width keeps the table while the record can carry one. */}
+      {hasFiles && (
+        <MasonryItem key="files" full>
+          <EntityFilesBlock profile={profile} />
+        </MasonryItem>
+      )}
       {entries.map((entry) =>
         entry.kind === "item" ? (
           <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"} full={entry.item.fullWidth}>

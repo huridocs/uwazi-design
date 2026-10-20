@@ -22,6 +22,7 @@ import { FiltersHostProvider } from "../shared/FiltersDrawer";
 import { ModalHostProvider } from "../shared/Modal";
 import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
+import { EntityFilesMenu } from "../files/EntityFilesBlock";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { EntityBarActions } from "./EntityBarActions";
@@ -377,6 +378,9 @@ export function EntityDetailBody({
                 implementation. It sits before the `flex-1` spacer, so Close and
                 the open button never move when it mounts. */}
             {activeTab === "relationships" && <RelationshipsCollapseControls />}
+            {/* The document's files, to download without leaving the page;
+                the Metadata tab lists them at the record's top. */}
+            {activeTab === "document" && <EntityFilesMenu profile={profile} inBar />}
             {focused && activeTab === "metadata" && (
               <button
                 onClick={() => setEditing(true)}

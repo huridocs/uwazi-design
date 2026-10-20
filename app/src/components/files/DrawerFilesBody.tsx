@@ -389,6 +389,17 @@ function DrawerFileRow({
               <Pencil size={12} />
             </button>
             <ViewButton onClick={onView} />
+            {/* Download without opening the file first. */}
+            {file.type !== "link" && resolveFileUrl(file) && (
+              <a
+                href={resolveFileUrl(file)}
+                download={file.name}
+                aria-label={`Download ${file.name}`}
+                className="flex items-center justify-center w-7 h-7 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+              >
+                <Download size={12} aria-hidden />
+              </a>
+            )}
           </>
         )}
       </div>
