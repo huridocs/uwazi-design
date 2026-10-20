@@ -237,7 +237,7 @@ export function MetadataRecord({
      card is keyed on its property, which is the target of the filename link the
      Library card prints. */
   const images = profile.images ?? [];
-  // The files come back as one list at the record's top, so every host of the
+  // The files close the record, after its metadata, so every host of the
   // record (Metadata tab, Library preview, the entity view's drawer) offers
   // them for download without a trip to the Files tab.
   const hasFiles = useEntityFiles(profile).files.length > 0;
@@ -247,10 +247,10 @@ export function MetadataRecord({
   if (empty) {
     return (
       <>
-        {hasFiles && <EntityFilesBlock profile={profile} />}
         <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
           <p className="text-xs text-ink-tertiary">No metadata for this entity yet.</p>
         </div>
+        {hasFiles && <EntityFilesBlock profile={profile} />}
       </>
     );
   }
@@ -259,11 +259,6 @@ export function MetadataRecord({
     <>
     <EvidenceEntityContext.Provider value={profile.id}>
     <MasonryGrid containerRef={rootRef} component="MetadataRecord">
-      {hasFiles && (
-        <MasonryItem key="files" full>
-          <EntityFilesBlock profile={profile} />
-        </MasonryItem>
-      )}
       {profile.mediaItem && (
         // Full width, so nothing sits in a hole beside it; the card caps its
         // own content (see MediaItemCard).
@@ -346,6 +341,14 @@ export function MetadataRecord({
             </div>
           </MasonryItem>
         ))}
+      {/* Last, full width: sparse placement puts a full-width item below
+          every column, so the files follow the whole record, one gutter
+          after its last card, as any card follows another. */}
+      {hasFiles && (
+        <MasonryItem key="files" full>
+          <EntityFilesBlock profile={profile} />
+        </MasonryItem>
+      )}
     </MasonryGrid>
     </EvidenceEntityContext.Provider>
     {/* Outside the grid on purpose — see RecordFooter. */}
