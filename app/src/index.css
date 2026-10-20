@@ -641,6 +641,32 @@ button:not(:disabled):not([aria-disabled="true"]) {
   inset: -10px 0;
 }
 
+/* Phone touch targets: at least 44px each way, centred on the control, below
+   md only, so desktop targets stay as drawn. Like `hit-area` it never changes
+   layout. `touch-target-lean` anchors the box 4px past the inline end
+   instead, for an icon at a bar's start whose neighbour sits closer than a
+   centred box allows (the preview footer's Edit beside More actions). */
+@media (width < 48rem) {
+  .touch-target:not(.absolute, .fixed, .sticky) {
+    position: relative;
+  }
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
+  .touch-target-lean::after {
+    left: auto;
+    inset-inline-end: -0.25rem;
+    transform: translateY(-50%);
+  }
+}
+
 /* Login fields under browser autofill. Chrome and Safari paint their own
    fill and text colour on an autofilled input, which clashes with paper in
    both themes. The text colour is set back; the background change is held off

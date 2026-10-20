@@ -35,7 +35,7 @@ export function CollapseControls({
         data-part="collapse-all"
         onClick={onCollapseAll}
         disabled={collapseDisabled}
-        className={`hit-area-y text-meta font-medium transition-colors px-1 ${
+        className={`hit-area-y touch-target text-meta font-medium transition-colors px-1 ${
           collapseDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"
@@ -48,7 +48,7 @@ export function CollapseControls({
         data-part="expand-all"
         onClick={onExpandAll}
         disabled={expandDisabled}
-        className={`hit-area-y text-meta font-medium transition-colors px-1 ${
+        className={`hit-area-y touch-target text-meta font-medium transition-colors px-1 ${
           expandDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"

@@ -398,6 +398,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - "Open entity" is hidden (`invisible`) while any edit form is open (`editSessionOpenAtom`).
 - On phones the preview footer keeps the commit on one line: Edit folds to its icon with a Hint,
   Share and Permissions (and Duplicate) go to a "More actions" menu, Delete stays after the divider.
+  Every target in that footer has a 44px hit box on phones (`touch-target` in `index.css`, an
+  invisible ::after that changes neither the drawing nor the bar); Edit's leans to its inline
+  start (`touch-target-lean`), because More actions sits closer than a centred box allows.
 - Copy From: `CopyFromPicker` chooses the source, then the properties to copy. The form receives
   only the ticked `CopyUnit`s and does not save.
 
