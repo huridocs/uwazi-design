@@ -10,6 +10,7 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { getEntityProfile, type DocumentProvenance } from "../../data/entityProfiles";
 import { EntityIdentity } from "../shared/EntityIdentity";
+import { EntityFilesMenu } from "../files/EntityFilesBlock";
 import { PinToggle } from "../shared/PinToggle";
 
 interface DocMetaProps {
@@ -101,6 +102,9 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           {docName}
         </span>
       )}
+
+      {/* The document's files, to download from the tab that shows it. */}
+      {showPdfSelector && <EntityFilesMenu profile={getEntityProfile(focusedId)} />}
 
       {showPdfSelector && (
         <div ref={pickerRef} data-part="format-picker" className="relative shrink-0">

@@ -18,6 +18,7 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { imageFocusKey, type EntityImage } from "../../data/entities";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RecordFooter } from "./RecordFooter";
+import { EntityFilesBlock, useEntityFiles } from "../files/EntityFilesBlock";
 import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
@@ -236,14 +237,21 @@ export function MetadataRecord({
      card is keyed on its property, which is the target of the filename link the
      Library card prints. */
   const images = profile.images ?? [];
+  // The files come back as one list at the record's top, so every host of the
+  // record (Metadata tab, Library preview, the entity view's drawer) offers
+  // them for download without a trip to the Files tab.
+  const hasFiles = useEntityFiles(profile).files.length > 0;
   const hasImages = images.length > 1;
 
   const empty = entries.length === 0 && !hasImages && !profile.mediaItem;
   if (empty) {
     return (
-      <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
-        <p className="text-xs text-ink-tertiary">No metadata for this entity yet.</p>
-      </div>
+      <>
+        {hasFiles && <EntityFilesBlock profile={profile} />}
+        <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
+          <p className="text-xs text-ink-tertiary">No metadata for this entity yet.</p>
+        </div>
+      </>
     );
   }
 
@@ -251,6 +259,11 @@ export function MetadataRecord({
     <>
     <EvidenceEntityContext.Provider value={profile.id}>
     <MasonryGrid containerRef={rootRef} component="MetadataRecord">
+      {hasFiles && (
+        <MasonryItem key="files" full>
+          <EntityFilesBlock profile={profile} />
+        </MasonryItem>
+      )}
       {profile.mediaItem && (
         // Full width, so nothing sits in a hole beside it; the card caps its
         // own content (see MediaItemCard).
