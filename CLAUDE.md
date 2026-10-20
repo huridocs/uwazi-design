@@ -299,6 +299,8 @@ and the files ported with it; other surfaces have not had the pass yet.
 - The slide-over shows Metadata and Relationships only. Document, Files and Edit read the focused
   entity's file atoms and would be wrong for another entity; "Open entity" leads to them.
 - "Open entity" is hidden (`invisible`) while any edit form is open (`editSessionOpenAtom`).
+- On phones the preview footer keeps the commit on one line: Edit folds to its icon with a Hint,
+  Share and Permissions go to a "More actions" menu, Delete stays after the divider.
 - Copy From: `CopyFromPicker` chooses the source, then the properties to copy. The form receives
   only the ticked `CopyUnit`s and does not save.
 
@@ -365,7 +367,8 @@ and the files ported with it; other surfaces have not had the pass yet.
   next row's icon. On phones every target in the block, the Files menu and its dialog is 44px; the
   row's icon grows into the row's padding, so rows keep their height. Download all, in the heading from two
   downloadable files, says it needs the server. Nothing in the block or its dialog is solid ink. The
-  record folds past five files; no files, no block.
+  record folds past five files; no files, no block. A section label is one line on desktops; on
+  phones it wraps to two and clamps (full text in `title`), bound by `noStrayWords`.
 - A file's role is set at upload and never changed (Uwazi does not re-rank files).
   `DocumentGroup.isPrimary` is data written by `AddFileModal`; the rendered primary document is
   the first primary group by `order`. `AddFileModal`'s "Add as" is a radio group with a readback

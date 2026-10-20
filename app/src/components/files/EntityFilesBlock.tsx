@@ -11,6 +11,7 @@ import { Hint } from "../shared/Hint";
 import { ListCardRow } from "../shared/ListCardRow";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
 import { SectionLabel } from "../shared/SectionLabel";
+import { noStrayWords } from "../../utils/typography";
 import { BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
@@ -140,8 +141,13 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
       {visible.map((s) => (
         <div key={s.key}>
           {labelled && (
-            <SectionLabel as="h4" className={`block truncate pt-2 pb-1 ${edge}`}>
-              {s.label}
+            <SectionLabel as="h4" className={`pt-2 pb-1 ${edge}`}>
+              {/* One line on a desktop; on a phone a record's long name wraps to
+                  two lines before it clamps, the whole name in the tooltip and
+                  in the heading's text. */}
+              <span title={s.label} className="min-w-0 md:truncate max-md:line-clamp-2">
+                {noStrayWords(s.label)}
+              </span>
             </SectionLabel>
           )}
           <ul>

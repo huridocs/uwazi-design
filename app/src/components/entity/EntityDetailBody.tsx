@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { X, ArrowRight, ChevronLeft } from "lucide-react";
+import { X, ArrowRight, ChevronLeft, PenLine } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
@@ -27,6 +27,8 @@ import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { EntityBarActions } from "./EntityBarActions";
 import { BAR_GHOST } from "../shared/warmButton";
+import { Hint } from "../shared/Hint";
+import { breakpointAtom } from "../../atoms/viewport";
 import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
@@ -204,6 +206,7 @@ export function EntityDetailBody({
   const [editing, setEditing] = useState(isDraft);
   // Any edit session anywhere, this panel's own included — see the footer.
   const editSessionOpen = useAtomValue(editSessionOpenAtom);
+  const phone = useAtomValue(breakpointAtom) === "mobile";
 
   // A different entity is a different record: end the session rather than carry
   // one entity's unsaved edits into another's form. The registration tears down
@@ -381,19 +384,27 @@ export function EntityDetailBody({
             {/* The document's files, to download without leaving the page;
                 the Metadata tab lists them at the record's top. */}
             {activeTab === "document" && <EntityFilesMenu profile={profile} inBar />}
+            {/* On a phone the commit keeps its label on one line: Edit folds to
+                its icon and the ghosts go to "More actions". */}
             {focused && activeTab === "metadata" && (
-              <button
-                onClick={() => setEditing(true)}
-                data-gutter-align="box"
-                className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-              >
-                Edit
-              </button>
+              <Hint text="Edit" describe={false} muted={!phone}>
+                {(hint) => (
+                  <button
+                    {...hint}
+                    onClick={() => setEditing(true)}
+                    aria-label={phone ? "Edit" : undefined}
+                    data-gutter-align="box"
+                    className={`shrink-0 ${phone ? "px-2" : "px-3"} py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                  >
+                    {phone ? <PenLine size={13} className="text-ink-tertiary" aria-hidden /> : "Edit"}
+                  </button>
+                )}
+              </Hint>
             )}
             {/* Share, Permissions | Delete for this entity — icons here, the
                 footer also carries Close and the open-entity commit. */}
             {focused && !isDraft && activeTab === "metadata" && (
-              <EntityBarActions entityId={entityId} onDeleted={onClose} compact />
+              <EntityBarActions entityId={entityId} onDeleted={onClose} compact overflow={phone} />
             )}
             <div className="flex-1" />
             {/* Ghost: the ink "Open entity" beside it is this bar's one filled
@@ -411,7 +422,7 @@ export function EntityDetailBody({
             ) : (
               <button
                 onClick={onClose}
-                className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 Close
               </button>
@@ -427,7 +438,7 @@ export function EntityDetailBody({
               aria-hidden={editSessionOpen || undefined}
               tabIndex={editSessionOpen ? -1 : undefined}
               data-part="open-entity"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
                 editSessionOpen ? "invisible" : ""
               }`}
               style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}
