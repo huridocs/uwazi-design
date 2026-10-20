@@ -12,7 +12,7 @@ export function CloseAllButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       data-part="close-all"
       data-gutter-align="box"
-      className={`relative after:absolute after:-inset-y-2 after:-inset-x-1 after:content-[''] shrink-0 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md ${BAR_GHOST} transition-colors cursor-pointer`}
+      className={`relative after:absolute after:-inset-y-2.5 after:-inset-x-1 after:content-[''] shrink-0 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md ${BAR_GHOST} transition-colors cursor-pointer`}
     >
       <X size={14} aria-hidden />
       Close all

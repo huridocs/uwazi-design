@@ -74,6 +74,11 @@ function factsOf(file: FileEntry): string {
     .join(" · ");
 }
 
+/** Phones get 44px targets: the heading's and footer's buttons grow (their
+ *  line grows with them, on phones only); the row's Download grows into the
+ *  row's padding, so the row keeps its height and the icon its place. */
+const TOUCH_TALL = "max-md:h-11";
+
 const linkHref = (file: FileEntry) => (file.name.startsWith("http") ? file.name : `https://${file.name}`);
 
 /** An entity's files. The row is the View target; Download is the one control
@@ -115,7 +120,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
       aria-label="Files"
       className={bare ? "" : "bg-paper border border-border/40 rounded-md overflow-hidden"}
     >
-      <div className={`flex items-center gap-2 min-h-8 ${bare ? "pb-1" : "px-4 pt-2"}`}>
+      <div className={`flex items-center gap-2 min-h-8 max-md:min-h-11 ${bare ? "pb-1" : "px-4 pt-2"}`}>
         <h3 className="flex-1 min-w-0 text-meta font-semibold uppercase tracking-wider text-ink-secondary">Files</h3>
         {downloadable.length > 1 && (
           <button
@@ -126,7 +131,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
                 "info",
               )
             }
-            className={`h-8 px-2.5 -me-2.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+            className={`h-8 ${TOUCH_TALL} px-2.5 -me-2.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
           >
             Download all
           </button>
@@ -153,7 +158,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className={`h-8 px-2.5 -ms-2.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer tabular-nums`}
+            className={`h-8 ${TOUCH_TALL} max-md:-my-1.5 px-2.5 -ms-2.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer tabular-nums`}
           >
             Show all {shown.length} files
           </button>
@@ -185,7 +190,9 @@ function FileRow({ file, bare, onView }: { file: FileEntry; bare: boolean; onVie
           <p className="text-xs text-ink-tertiary truncate">{factsOf(file)}</p>
         </div>
         {!isLink && url && (
-          <Hint text="Download" describe={false}>
+          // Beside the icon: above it is the heading's Download all (or the
+          // row before's icon), below it the next row's.
+          <Hint text="Download" describe={false} placement="start">
             {(hint) => (
               <a
                 {...hint}
@@ -193,7 +200,7 @@ function FileRow({ file, bare, onView }: { file: FileEntry; bare: boolean; onVie
                 download={file.name}
                 aria-label={`Download ${file.name}`}
                 onClick={(e) => e.stopPropagation()}
-                className={`flex items-center justify-center w-8 h-8 shrink-0 ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                className={`flex items-center justify-center w-8 h-8 max-md:w-11 max-md:h-11 max-md:-my-1.5 max-md:-me-1.5 shrink-0 ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 <Download size={14} aria-hidden />
               </a>
@@ -296,7 +303,9 @@ export function EntityFilesMenu({ profile, inBar = false }: { profile: EntityPro
         aria-expanded={open}
         aria-label={`Files, ${files.length}`}
         // In a bar, on the bar ladder; in the strip, the format picker's look.
-        className={`flex items-center gap-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+        // On phones a 44px box centred on it is the target, without making the
+        // strip or the bar taller.
+        className={`relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:top-1/2 max-md:after:h-11 max-md:after:-translate-y-1/2 max-md:after:content-[''] max-md:min-w-11 max-md:justify-center flex items-center gap-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
           inBar ? `px-3 py-1.5 ${BAR_GHOST} aria-expanded:bg-warm` : "px-2 py-1 text-ink-secondary bg-warm hover:bg-parchment"
         }`}
       >

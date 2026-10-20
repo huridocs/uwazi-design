@@ -286,7 +286,8 @@ export function Modal({
                 data-gutter-align="box"
                 onClick={onClose}
                 aria-label={closeLabel}
-                className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+                // On phones the × takes Back's 44px target.
+                className="relative max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-[''] shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
               >
                 <X size={16} aria-hidden />
               </button>

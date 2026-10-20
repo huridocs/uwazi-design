@@ -360,7 +360,10 @@ and the files ported with it; other surfaces have not had the pass yet.
   at the record's top (so the Metadata tab, the Library preview and the entity view's drawer have
   it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View
   target (the file in a `Modal`, PDFs in `DocumentViewer`); Download (`<a download>`, named for its
-  file) is its one drawn control, an icon with a Hint. Download all, in the heading from two
+  file) is its one drawn control, an icon with a Hint
+  placed beside it (`placement="start"`), since above or below would cover Download all or the
+  next row's icon. On phones every target in the block, the Files menu and its dialog is 44px; the
+  row's icon grows into the row's padding, so rows keep their height. Download all, in the heading from two
   downloadable files, says it needs the server. Nothing in the block or its dialog is solid ink. The
   record folds past five files; no files, no block.
 - A file's role is set at upload and never changed (Uwazi does not re-rank files).
