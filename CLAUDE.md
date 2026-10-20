@@ -357,8 +357,8 @@ and the files ported with it; other surfaces have not had the pass yet.
   count; without it (phones, a Split pane too narrow for a drawer) the bar carries them. Below
   30rem of its own width the bar folds to icons with a Hint, one select toggle and "2 of 2".
 - An entity's files show outside the Files tab through `components/files/EntityFilesBlock.tsx`:
-  at the record's top (so the Metadata tab, the Library preview and the entity view's drawer have
-  it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View
+  at the record's end, after its metadata, as the masonry's last full-width item (so the Metadata
+  tab, the Library preview and the entity view's drawer have it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View
   target (the file in a `Modal`, PDFs in `DocumentViewer`); Download (`<a download>`, named for its
   file) is its one drawn control, an icon with a Hint
   placed beside it (`placement="start"`), since above or below would cover Download all or the

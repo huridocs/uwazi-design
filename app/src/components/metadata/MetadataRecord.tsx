@@ -171,7 +171,7 @@ export function MetadataRecord({
     }
   }
 
-  // The files come back as one list at the record's top, so every host of the
+  // The files close the record, after its metadata, so every host of the
   // record (Metadata tab, Library preview, the entity view's drawer) offers
   // them for download without a trip to the Files tab.
   const hasFiles = useEntityFiles(profile).files.length > 0;
@@ -185,10 +185,10 @@ export function MetadataRecord({
   if (empty) {
     return (
       <>
-        {hasFiles && <EntityFilesBlock profile={profile} />}
         <div className="flex items-center justify-center py-10 text-center">
           <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
         </div>
+        {hasFiles && <EntityFilesBlock profile={profile} />}
       </>
     );
   }
@@ -205,11 +205,6 @@ export function MetadataRecord({
           tableBreakpoint.ts), and a masonry column is ~345px, so left in a
           column every table would fold on a record with room for three
           columns. Full width keeps the table while the record can carry one. */}
-      {hasFiles && (
-        <MasonryItem key="files" full>
-          <EntityFilesBlock profile={profile} />
-        </MasonryItem>
-      )}
       {entries.map((entry) =>
         entry.kind === "item" ? (
           <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"} full={entry.item.fullWidth}>
@@ -228,6 +223,14 @@ export function MetadataRecord({
             </div>
           </MasonryItem>
         ),
+      )}
+      {/* Last, full width: sparse placement puts a full-width item below
+          every column, so the files follow the whole record, one gutter
+          after its last card, as any card follows another. */}
+      {hasFiles && (
+        <MasonryItem key="files" full>
+          <EntityFilesBlock profile={profile} />
+        </MasonryItem>
       )}
     </MasonryGrid>
     {/* Outside the grid on purpose — see RecordFooter. */}
