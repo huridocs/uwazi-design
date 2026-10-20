@@ -821,6 +821,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 ### Other surfaces
 - Files view: `focusedId` (the open file) is separate from `selectedIds` (checkboxes). The drawer
   shows the open file when nothing is ticked.
+- The Files tab's bar: with the drawer drawn (`useDrawerDrawn`, set by `SplitView`), a selection's
+  Download and Delete are the drawer's and the bar keeps Add file, the select controls and the
+  count; without it (phones, a Split pane too narrow for a drawer) the bar carries them. Below
+  30rem of its own width the bar folds to icons with a Hint, one select toggle and "2 of 2".
 - An entity's files show outside the Files tab through `components/files/EntityFilesBlock.tsx`:
   at the record's top (so the Metadata tab, the Library preview and the entity view's drawer have
   it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View

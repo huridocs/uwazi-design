@@ -1,3 +1,4 @@
+import { DrawerDrawnContext } from "./drawerDrawn";
 import { ReactNode, useState, useCallback, useRef } from "react";
 import {
   DrawerWidthProvider,
@@ -137,7 +138,7 @@ export function SplitView({
       {/* Without the drawer, the view hosts what the drawer hosted that has no
           tab of its own (the connected-entity slide-over). */}
       <div data-part="content" className={`flex-1 overflow-hidden${fits ? "" : " relative"}`}>
-        {measured && left}
+        {measured && <DrawerDrawnContext.Provider value={fits && !drawerHidden}>{left}</DrawerDrawnContext.Provider>}
         {measured && !fits && paneOverlay}
       </div>
       {fits && !drawerHidden && (<>

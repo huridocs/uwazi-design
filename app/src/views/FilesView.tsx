@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { SectionLabel } from "../components/shared/SectionLabel";
 import { useAtom, useSetAtom } from "jotai";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -20,6 +20,10 @@ import { SelectControls } from "../components/shared/SelectControls";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { useNotify } from "../hooks/useNotify";
+import { useDrawerDrawn } from "../components/layout/drawerDrawn";
+import { useResizeWidth } from "../hooks/useResizeWidth";
+import { Hint } from "../components/shared/Hint";
+import { Download, Plus, Trash2 } from "lucide-react";
 import { BarDivider } from "../components/shared/BarDivider";
 
 interface FilesViewProps {
@@ -270,6 +274,11 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
   );
 }
 
+/** Below this bar width the labels fold: Add file and the selection's actions
+ *  to icons with a Hint, the select pair to one toggle, the count to "2 of 2".
+ *  Measured on the bar, not the viewport, so a narrow Split pane folds too. */
+const BAR_FOLD_BELOW = 480;
+
 function FilesActionBar({
   selectedCount,
   totalCount,
@@ -290,53 +299,112 @@ function FilesActionBar({
   /** Mobile sheet trigger, pinned to the right of the bar. */
   menuSlot?: ReactNode;
 }) {
+  const drawerDrawn = useDrawerDrawn();
   const hasSelection = selectedCount > 0;
   const allSelected = totalCount > 0 && selectedCount === totalCount;
+  const [folded, setFolded] = useState(false);
+  const onWidth = useCallback((w: number) => setFolded(w < BAR_FOLD_BELOW), []);
+  const measureRef = useResizeWidth(onWidth);
+  const icon = `flex items-center justify-center w-8 h-8 shrink-0 rounded-md transition-colors cursor-pointer`;
 
   return (
     <div
+      ref={measureRef}
+      data-component="FilesActionBar"
+      data-folded={folded || undefined}
       /* No selection tint: the count and the Delete beside it are the
          signal, as on the Library bar. */
-      className="flex items-center justify-between h-12 bleed shrink-0 bg-paper"
+      className="flex items-center justify-between gap-2 h-12 bleed shrink-0 bg-paper whitespace-nowrap"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onAddFile}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
-        >
-          <span className="text-ink-tertiary">+</span> Add file
-        </button>
-        <SelectControls
-          allSelected={allSelected}
-          hasSelection={hasSelection}
-          totalCount={totalCount}
-          onSelectAll={onSelectAll}
-          onDeselectAll={onDeselectAll}
-        />
+      <div className="flex items-center gap-3 min-w-0">
+        {folded ? (
+          <Hint text="Add file" describe={false}>
+            {(hint) => (
+              <button {...hint} type="button" onClick={onAddFile} aria-label="Add file" className={`${icon} ${BAR_LEAD}`}>
+                <Plus size={15} aria-hidden />
+              </button>
+            )}
+          </Hint>
+        ) : (
+          <button
+            onClick={onAddFile}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
+          >
+            <span className="text-ink-tertiary">+</span> Add file
+          </button>
+        )}
+        {folded ? (
+          // One toggle: it selects all until all are, then clears them.
+          <button
+            type="button"
+            onClick={allSelected ? onDeselectAll : onSelectAll}
+            disabled={totalCount === 0}
+            className="text-meta font-medium px-1 text-ink hover:text-ink-secondary disabled:text-ink-muted transition-colors cursor-pointer disabled:cursor-default"
+          >
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+        ) : (
+          <SelectControls
+            allSelected={allSelected}
+            hasSelection={hasSelection}
+            totalCount={totalCount}
+            onSelectAll={onSelectAll}
+            onDeselectAll={onDeselectAll}
+          />
+        )}
+        {/* The count's place is after the select controls, whatever the bar
+            shows at its end, so it holds still when the drawer opens or
+            closes. */}
+        {hasSelection && (
+          <span
+            data-part="selection-count"
+            aria-label={`Selected ${selectedCount} of ${totalCount}`}
+            className="text-xs text-ink-secondary tabular-nums"
+          >
+            {folded ? `${selectedCount} of ${totalCount}` : `Selected ${selectedCount} of ${totalCount}`}
+          </span>
+        )}
       </div>
 
-      <div className="flex items-center gap-4">
-        {hasSelection && (
-          <>
-            <span className="text-xs text-ink-secondary">
-              Selected {selectedCount} of {totalCount}
-            </span>
-            <BarDivider className="-mx-1.5" />
-            <button
-              onClick={onDownload}
-              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer tabular-nums`}
-            >
-              Download {selectedCount}
-            </button>
-            <button
-              onClick={onDelete}
-              data-gutter-align="box"
-              className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
-            >
-              Delete
-            </button>
-          </>
+      <div className={`flex items-center ${folded ? "gap-1" : "gap-4"} shrink-0`}>
+        {/* With the drawer drawn, the selection's actions are the drawer's
+            (its own bar beside this one); without it, here. */}
+        {hasSelection && !drawerDrawn && (
+          folded ? (
+            <>
+              <Hint text={`Download ${selectedCount}`} describe={false}>
+                {(hint) => (
+                  <button {...hint} type="button" onClick={onDownload} aria-label={`Download ${selectedCount} files`} className={`${icon} ${BAR_GHOST}`}>
+                    <Download size={15} aria-hidden />
+                  </button>
+                )}
+              </Hint>
+              <Hint text={`Delete ${selectedCount}`} describe={false}>
+                {(hint) => (
+                  <button {...hint} type="button" onClick={onDelete} aria-label={`Delete ${selectedCount} files`} className={`${icon} ${BAR_DANGER}`}>
+                    <Trash2 size={15} aria-hidden />
+                  </button>
+                )}
+              </Hint>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onDownload}
+                className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer tabular-nums`}
+              >
+                Download {selectedCount}
+              </button>
+              <button
+                onClick={onDelete}
+                data-gutter-align="box"
+                className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
+              >
+                Delete
+              </button>
+            </>
+          )
         )}
         {menuSlot}
       </div>

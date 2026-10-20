@@ -255,15 +255,12 @@ export function FileTable({
                   <span data-part="title" className="text-sm font-medium text-ink truncate">{file.name}</span>
                   {renderBadge(file)}
                 </div>
-                <div data-part="meta" className="flex items-center gap-3 text-meta text-ink-tertiary">
-                  <span>{typeLabels[file.type]}</span>
-                  <span aria-hidden>•</span>
-                  <span dir="ltr">{file.size}</span>
-                  <span aria-hidden>•</span>
-                  <span>{languageName(file.language)}</span>
-                </div>
-                <div data-part="modified" className="text-meta text-ink-tertiary mt-0.5">
-                  {formatFileDate(file.modified)}
+                {/* Only the facts the file has, one separator between them: a
+                    CEJIL file has no size or date. */}
+                <div data-part="meta" className="text-meta text-ink-tertiary truncate">
+                  {[typeLabels[file.type], file.size && file.size !== "—" ? file.size : "", languageName(file.language), formatFileDate(file.modified)]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
               </div>
               <div data-part="actions" className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
