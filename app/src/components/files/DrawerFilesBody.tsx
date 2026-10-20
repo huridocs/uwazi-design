@@ -10,7 +10,7 @@ import {
   addFileTargetAtom,
   viewerFileIdAtom,
 } from "../../atoms/files";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, languageName } from "../../atoms/language";
 import { SectionLabel } from "../shared/SectionLabel";
 import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
@@ -238,9 +238,22 @@ interface DrawerFileRowProps {
   onCommit?: (patch: Partial<FileEntry>) => void;
 }
 
+/** "213 KB · English"; "Audio · 18.7 MB · Español" where the tile is a
+ *  play mark, not a word. Unknown size or language ("", "—") is left out. */
+function rowFacts(file: FileEntry): string {
+  const kind = file.type === "audio" ? "Audio" : file.type === "video" ? "Video" : "";
+  const size = file.size && file.size !== "—" ? file.size : "";
+  const lang = file.language && file.language !== "—" ? languageName(file.language) : "";
+  return [kind, size, lang].filter(Boolean).join(" · ");
+}
+
 function FileThumbnail({ type }: { type: FileEntry["type"] }) {
+  // Inset by the same 8px on its start, top and bottom; the text's own px-3
+  // is the 12px gap to the title. It was a 64px tray flush with the row's
+  // edge, its card centred in it: 15px from the edge, 7px from the top and
+  // bottom, 26px from the title.
   const wrap =
-    "w-16 self-stretch flex items-center justify-center rounded-l-md shrink-0";
+    "w-12 ms-2 my-2 self-stretch flex items-center justify-center rounded-md shrink-0";
   if (type === "link") {
     return (
       <div data-component="FileThumbnail" data-kind={type} aria-hidden className={`${wrap} bg-seal`}>
@@ -253,24 +266,16 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
   if (type === "audio" || type === "video") {
     return (
       <div data-component="FileThumbnail" data-kind={type} aria-hidden className={`${wrap} bg-warm`}>
-        <div className="w-8 h-8 rounded-md bg-parchment flex items-center justify-center shadow-sm">
-          <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[7px] border-l-ink ml-0.5" />
-        </div>
+        <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[7px] border-l-ink ml-0.5" />
       </div>
     );
   }
-  // PDF, document, and image all share the same chrome — a warm tray with
-  // a small white "paper" card inside. Only the label changes.
+  // PDF, document, and image share one tray; only the label changes.
   const label =
     type === "pdf" ? "PDF" : type === "image" ? "IMG" : "DOC";
   return (
     <div data-component="FileThumbnail" data-kind={type} aria-hidden className={`${wrap} bg-warm`}>
-      <div
-        className="bg-paper rounded shadow-sm flex items-center justify-center"
-        style={{ width: "2.25rem", height: "2.75rem" }}
-      >
-        <span className="text-meta text-ink-tertiary">{label}</span>
-      </div>
+      <span className="text-meta font-medium text-ink-tertiary">{label}</span>
     </div>
   );
 }
@@ -371,16 +376,10 @@ function DrawerFileRow({
         </div>
       ) : (
         <div data-part="content" className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
-          <div className="flex items-center gap-1.5">
-            <p data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</p>
-            <span data-part="language" className="text-meta font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
-              {file.language}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-meta text-ink-tertiary">{file.type.toUpperCase()}</span>
-            <span className="text-meta text-ink-tertiary">{file.size}</span>
-          </div>
+          <p data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</p>
+          {/* Language spelled out beside the size, as the files block reads.
+              The kind is said only where the tile does not say it in text. */}
+          <p className="text-meta text-ink-tertiary truncate">{rowFacts(file) || "\u00a0"}</p>
         </div>
       )}
 
