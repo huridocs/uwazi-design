@@ -5,7 +5,10 @@
  *  timezone (the Americas). Pinning the format to UTC keeps the shown day
  *  equal to the literal string. */
 export function formatFileDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  // A file with no date (CEJIL's carry none) reads blank, never "Invalid Date".
+  const d = iso ? new Date(iso) : null;
+  if (!d || Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

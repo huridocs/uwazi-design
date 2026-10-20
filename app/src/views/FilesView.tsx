@@ -17,7 +17,8 @@ import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { SelectControls } from "../components/shared/SelectControls";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
-import { BAR_DANGER, BAR_LEAD } from "../components/shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
+import { useNotify } from "../hooks/useNotify";
 import { BarDivider } from "../components/shared/BarDivider";
 
 interface FilesViewProps {
@@ -34,6 +35,7 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
   const setAddFileTarget = useSetAtom(addFileTargetAtom);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const notify = useNotify();
   const [focusedId, setFocusedId] = useState<string | null>(() => {
     const firstPrimary = [...groups]
       .filter((g) => g.isPrimary)
@@ -174,6 +176,12 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
         onSelectAll={() => setSelectedIds(new Set(files.map((f) => f.id)))}
         onDeselectAll={() => setSelectedIds(new Set())}
         onDelete={() => setPendingDelete(Array.from(selectedIds))}
+        onDownload={() =>
+          notify(
+            `Downloading ${selectedIds.size} files puts them in one .zip on the server. This\u00a0prototype has no server: download each file from its menu.`,
+            "info",
+          )
+        }
         menuSlot={menuTrigger}
       />
     </div>
@@ -252,6 +260,7 @@ function FilesActionBar({
   onSelectAll,
   onDeselectAll,
   onDelete,
+  onDownload,
   menuSlot,
 }: {
   selectedCount: number;
@@ -260,6 +269,7 @@ function FilesActionBar({
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onDelete: () => void;
+  onDownload: () => void;
   /** Mobile sheet trigger, pinned to the right of the bar. */
   menuSlot?: ReactNode;
 }) {
@@ -296,6 +306,12 @@ function FilesActionBar({
               Selected {selectedCount} of {totalCount}
             </span>
             <BarDivider className="-mx-1.5" />
+            <button
+              onClick={onDownload}
+              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer tabular-nums`}
+            >
+              Download {selectedCount}
+            </button>
             <button
               onClick={onDelete}
               data-gutter-align="box"
