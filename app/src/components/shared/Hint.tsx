@@ -23,8 +23,11 @@ export interface HintTriggerProps {
   onBlur: () => void;
 }
 
-/** A one-line hint above an element (or below, `placement="below"`), on hover
- *  AND keyboard focus.
+/** A one-line hint above an element (or below, `placement="below"`, or beside
+ *  it on the inline-start side, `placement="start"`), on hover AND keyboard
+ *  focus. Beside is for a trigger with controls right above and below it (a
+ *  column of row icons under a heading button), where above or below would
+ *  cover one of them.
  *
  *  Not a `title` attribute: a title never shows on focus, shows late on hover,
  *  and can't be styled or dismissed. Portalled to `body` and positioned from the
@@ -52,7 +55,7 @@ export function Hint({
   describe?: boolean;
   muted?: boolean;
   /** Where the hint prefers to sit; it flips when the viewport has no room. */
-  placement?: "above" | "below";
+  placement?: "above" | "below" | "start";
   children: (props: HintTriggerProps) => ReactNode;
 }) {
   const id = useId();
@@ -68,6 +71,18 @@ export function Hint({
     if (!rect || !tip) return setPos(null);
     const w = tip.offsetWidth;
     const h = tip.offsetHeight;
+    if (placement === "start") {
+      // Inline-start of the trigger, centred on it; the other side when the
+      // viewport has no room.
+      const rtl = document.documentElement.dir === "rtl";
+      const before = rect.left - GAP - w;
+      const after = rect.right + GAP;
+      const fitsBefore = before >= EDGE;
+      const fitsAfter = after + w <= window.innerWidth - EDGE;
+      const left = rtl ? (fitsAfter || !fitsBefore ? after : before) : fitsBefore || !fitsAfter ? before : after;
+      const top = Math.max(EDGE, Math.min(rect.top + rect.height / 2 - h / 2, window.innerHeight - h - EDGE));
+      return setPos({ left, top });
+    }
     const left = Math.max(EDGE, Math.min(rect.left + rect.width / 2 - w / 2, window.innerWidth - w - EDGE));
     const above = rect.top - GAP - h;
     const below = rect.bottom + GAP;
