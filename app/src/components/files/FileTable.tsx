@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { languageName } from "../../atoms/language";
+import { resolveFileUrl } from "./FileViewerModal";
 import { createPortal } from "react-dom";
 import {
   FileText,
@@ -8,6 +9,7 @@ import {
   Image,
   Link2,
   Eye,
+  Download,
   MoreVertical,
   Pencil,
   Languages,
@@ -132,6 +134,11 @@ export function FileTable({
               setViewerFileId(file.id);
             },
           },
+          // Straight to the file, without opening it first. A link has
+          // nothing to download.
+          ...(file.type !== "link" && resolveFileUrl(file)
+            ? [{ id: "download", label: "Download", icon: Download, href: resolveFileUrl(file), download: file.name, onClick: () => {} }]
+            : []),
           {
             id: "rename",
             label: "Rename",
@@ -366,6 +373,10 @@ interface KebabItemAction {
   label: string;
   icon: typeof Pencil;
   onClick: () => void;
+  /** A link item (Download): rendered as `<a download>` to this URL. */
+  href?: string;
+  /** The saved file's name, and the item's accessible name with the label. */
+  download?: string;
   danger?: boolean;
   separator?: never;
 }
@@ -477,6 +488,23 @@ function RowKebab({ items }: { items: KebabItem[] }) {
                 role="separator"
                 data-part="separator"
               />
+            ) : item.href ? (
+              <a
+                key={item.id}
+                role="menuitem"
+                href={item.href}
+                download={item.download}
+                aria-label={`${item.label} ${item.download}`}
+                data-part="menu-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors cursor-pointer text-ink-secondary hover:bg-warm"
+              >
+                <item.icon size={12} className="shrink-0" aria-hidden />
+                {item.label}
+              </a>
             ) : (
               <button
                 key={item.id}
