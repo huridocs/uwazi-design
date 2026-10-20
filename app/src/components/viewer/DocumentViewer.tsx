@@ -43,6 +43,8 @@ const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
 const ZOOM_PHONE_DEFAULT = 2;
 const ZOOM_STEPS = [1, 1.25, 1.5, 2, 2.5, 3, 4];
+/** A jump holds its page until the scroll has been still this long. */
+const JUMP_SETTLE_MS = 150;
 
 export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride, hideActionBar = false }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
@@ -268,38 +270,91 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     setActiveRefId(null);
   }, [setSelection, setActiveRefId]);
 
-  // Track current page on scroll
+  // ── Current page ─────────────────────────────────────────────────────────
+  // The page holding most of the viewport. It used to be the page whose top
+  // lay nearest a line a third of the way down, which named the next page
+  // while most of the view still showed the one before. It is read on scroll
+  // and again whenever the document or the page width changes: the atom is
+  // shared, and until a scroll it kept the page of the last document
+  // scrolled. A viewer of a file of its own (`fileOverride`) has no pager and
+  // leaves the atom alone.
+  //
+  // A jump names its page at once and holds it until the scroll settles
+  // (`jumpHold`), so the pages a smooth scroll passes are not counted, and a
+  // target too short to reach the top (the last page) keeps its number.
+  const jumpHold = useRef<{ page: number; timer: number } | null>(null);
+  const pageInView = useCallback((): number | null => {
+    const el = containerRef.current;
+    if (!el || el.clientHeight === 0) return null;
+    const view = el.getBoundingClientRect();
+    let best: number | null = null;
+    let bestShown = 0;
+    for (let page = 1; page <= numPages; page++) {
+      const r = pageRefs.current.get(page)?.getBoundingClientRect();
+      if (!r) continue;
+      if (r.top >= view.bottom) break;
+      const shown = Math.min(r.bottom, view.bottom) - Math.max(r.top, view.top);
+      if (shown > bestShown) {
+        bestShown = shown;
+        best = page;
+      }
+    }
+    return best;
+  }, [numPages]);
+  const settleJump = useCallback(() => {
+    const hold = jumpHold.current;
+    jumpHold.current = null;
+    const el = containerRef.current;
+    const page = pageInView();
+    if (!hold || !el || page === null) return;
+    const target = pageRefs.current.get(hold.page)?.getBoundingClientRect();
+    const view = el.getBoundingClientRect();
+    const atEnd = el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
+    const targetShown = !!target && target.bottom > view.top && target.top < view.bottom;
+    setCurrentPage(atEnd && targetShown && hold.page > page ? hold.page : page);
+  }, [pageInView, setCurrentPage]);
+  const holdJump = useCallback(
+    (page: number) => {
+      if (fileOverride) return;
+      if (jumpHold.current) clearTimeout(jumpHold.current.timer);
+      jumpHold.current = { page, timer: window.setTimeout(settleJump, JUMP_SETTLE_MS) };
+      setCurrentPage(page);
+    },
+    [fileOverride, settleJump, setCurrentPage],
+  );
+  useEffect(() => () => clearTimeout(jumpHold.current?.timer), []);
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || numPages === 0) return;
-
-    const handleScroll = () => {
-      const containerTop = container.scrollTop + container.clientHeight / 3;
-      let closestPage = 1;
-      let closestDist = Infinity;
-
-      pageRefs.current.forEach((el, pageNum) => {
-        const dist = Math.abs(el.offsetTop - containerTop);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestPage = pageNum;
-        }
-      });
-
-      setCurrentPage(closestPage);
+    const el = containerRef.current;
+    if (!el || numPages === 0 || fileOverride || renditionMode) return;
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      const page = pageInView();
+      if (page !== null) setCurrentPage(page);
     };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [numPages, setCurrentPage]);
+    const onScroll = () => {
+      const hold = jumpHold.current;
+      if (hold) {
+        clearTimeout(hold.timer);
+        hold.timer = window.setTimeout(settleJump, JUMP_SETTLE_MS);
+      } else if (!raf) raf = requestAnimationFrame(read);
+    };
+    if (!jumpHold.current) read();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [numPages, filePath, pageWidth, fileOverride, renditionMode, pageInView, settleJump, setCurrentPage]);
 
   // Scroll to a specific page
   const scrollToPage = useCallback((page: number) => {
     const pageEl = pageRefs.current.get(page);
     if (pageEl) {
+      holdJump(page);
       pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, []);
+  }, [holdJump]);
 
   // Scroll-to-page signal (from ToC clicks, Search-tab / Results snippet jumps).
   //
@@ -392,13 +447,13 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
         // A match step aims at the MARK, not the top of its page — a hit near
         // the bottom would otherwise land off-screen and look like a miss. Same
         // signal, finer target: one scroll, so nothing fights it.
+        holdJump(target); // pager reflects the jump immediately
         const hit = activeHitRef.current;
         if (hit?.isConnected && pageEl.contains(hit)) {
           hit.scrollIntoView({ behavior: "smooth", block: "center" });
         } else {
           pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-        setCurrentPage(target); // pager reflects the jump immediately
         setPageJump(null); // serviced — now it's safe to consume
       } else if (attempts++ < MAX_ATTEMPTS) {
         raf = requestAnimationFrame(tryScroll);
@@ -413,7 +468,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
-  }, [pageJump, setPageJump, renditionMode, setCurrentPage]);
+  }, [pageJump, setPageJump, renditionMode, holdJump]);
 
   /** Move to the next (`1`) / previous (`-1`) match, wrapping at the ends. */
   const stepMatch = useCallback(
