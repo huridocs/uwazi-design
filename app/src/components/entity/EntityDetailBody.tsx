@@ -394,7 +394,7 @@ export function EntityDetailBody({
                     onClick={() => setEditing(true)}
                     aria-label={phone ? "Edit" : undefined}
                     data-gutter-align="box"
-                    className={`shrink-0 ${phone ? "px-2" : "px-3"} py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                    className={`touch-target touch-target-lean shrink-0 ${phone ? "px-2" : "px-3"} py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
                   >
                     {phone ? <PenLine size={13} className="text-ink-tertiary" aria-hidden /> : "Edit"}
                   </button>
@@ -414,7 +414,7 @@ export function EntityDetailBody({
                 onClick={stackedBack.onBack}
                 data-part="back-footer"
                 aria-label={stackedBack.label ? `Back to ${stackedBack.label}` : "Back"}
-                className={`inline-flex items-center gap-1 ps-2 pe-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                className={`touch-target inline-flex items-center gap-1 ps-2 pe-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 <ChevronLeft size={14} aria-hidden className="rtl:rotate-180" />
                 Back
@@ -422,7 +422,7 @@ export function EntityDetailBody({
             ) : (
               <button
                 onClick={onClose}
-                className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+                className={`touch-target shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 Close
               </button>
@@ -438,7 +438,7 @@ export function EntityDetailBody({
               aria-hidden={editSessionOpen || undefined}
               tabIndex={editSessionOpen ? -1 : undefined}
               data-part="open-entity"
-              className={`shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+              className={`touch-target shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
                 editSessionOpen ? "invisible" : ""
               }`}
               style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}

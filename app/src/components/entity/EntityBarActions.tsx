@@ -74,7 +74,7 @@ export function EntityBarActions({
           onClick={onClick}
           aria-label={label}
           data-part={part}
-          className={`shrink-0 inline-flex items-center gap-1.5 ${compact ? "px-2" : "px-3"} py-1.5 text-xs font-medium ${tone} rounded-md transition-colors cursor-pointer`}
+          className={`${overflow ? "touch-target " : ""}shrink-0 inline-flex items-center gap-1.5 ${compact ? "px-2" : "px-3"} py-1.5 text-xs font-medium ${tone} rounded-md transition-colors cursor-pointer`}
         >
           <span className={tone === BAR_DANGER ? "" : "text-ink-tertiary"} aria-hidden>
             {icon}
@@ -90,6 +90,7 @@ export function EntityBarActions({
       {overflow ? (
         <MobileActionMenu
           label="More actions"
+          touchTarget
           items={[
             { id: "share", label: "Share", icon: <Share2 size={13} />, onSelect: () => setDialog("share") },
             { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onSelect: () => setDialog("permissions") },
