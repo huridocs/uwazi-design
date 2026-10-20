@@ -182,15 +182,12 @@ export function FileTable({
                   <span className="text-sm font-medium text-ink truncate">{file.name}</span>
                   {renderBadge(file)}
                 </div>
-                <div className="flex items-center gap-3 text-meta text-ink-tertiary">
-                  <span>{typeLabels[file.type]}</span>
-                  <span>•</span>
-                  <span dir="ltr">{file.size}</span>
-                  <span>•</span>
-                  <span>{languageName(file.language)}</span>
-                </div>
-                <div className="text-meta text-ink-muted mt-0.5">
-                  {formatFileDate(file.modified)}
+                {/* Only the facts the file has, one separator between them: a
+                    CEJIL file has no size or date. */}
+                <div className="text-meta text-ink-tertiary truncate">
+                  {[typeLabels[file.type], file.size && file.size !== "—" ? file.size : "", languageName(file.language), formatFileDate(file.modified)]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
               </div>
               <div className="flex items-center" onClick={(e) => e.stopPropagation()}>

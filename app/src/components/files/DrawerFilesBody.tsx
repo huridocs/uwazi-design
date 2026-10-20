@@ -361,7 +361,7 @@ function DrawerFileRow({
         </div>
       ) : (
         <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
-          <p className="text-xs font-medium text-ink truncate">{file.name}</p>
+          <p className="text-xs font-medium text-ink truncate" title={file.name}>{file.type === "link" ? file.name : file.name.replace(/\.[A-Za-z0-9]{1,5}$/, "")}</p>
           {/* Language spelled out beside the size, as the files block reads.
               The kind is said only where the tile does not say it in text. */}
           <p className="text-meta text-ink-tertiary truncate">{rowFacts(file) || "\u00a0"}</p>

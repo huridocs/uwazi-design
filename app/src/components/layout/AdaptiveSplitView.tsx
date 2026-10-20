@@ -1,3 +1,4 @@
+import { DrawerDrawnContext } from "./drawerDrawn";
 import { ReactNode, useState } from "react";
 import { useAtom } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -65,7 +66,9 @@ export function AdaptiveSplitView({
       <>
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 overflow-hidden">
-            {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
+            <DrawerDrawnContext.Provider value={false}>
+              {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
+            </DrawerDrawnContext.Provider>
           </div>
         </div>
         {/* Floating menu trigger when no embedded slot — sits above any action bar */}

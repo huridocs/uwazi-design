@@ -1,3 +1,4 @@
+import { DrawerDrawnContext } from "./drawerDrawn";
 import { ReactNode, useState, useCallback, useRef, useEffect } from "react";
 import { SplitWidthProvider } from "../../hooks/useSplitWidth";
 
@@ -89,7 +90,7 @@ export function SplitView({
     // (the tab strips' fold) re-renders and measures again when it changes.
     <SplitWidthProvider value={rightWidth}>
     <div ref={containerRef} className="flex flex-1 overflow-hidden">
-      <div className="flex-1 overflow-hidden">{left}</div>
+      <div className="flex-1 overflow-hidden"><DrawerDrawnContext.Provider value={true}>{left}</DrawerDrawnContext.Provider></div>
       <div
         className={`w-1 cursor-col-resize hover:bg-carbon/30 transition-colors shrink-0 ${
           isDragging ? "bg-carbon/30" : "bg-transparent"

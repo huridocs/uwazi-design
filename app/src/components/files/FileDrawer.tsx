@@ -171,10 +171,15 @@ export function FileDrawer({
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
               <button
-                onClick={() => notify(`Downloading ${selectedFiles.length} files`, "success")}
+                onClick={() =>
+                  notify(
+                    `Downloading ${selectedFiles.length} files puts them in one .zip on the server. This\u00a0prototype has no server: download each file from its row.`,
+                    "info",
+                  )
+                }
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
               >
-                <Download size={12} className="text-ink-tertiary" /> Download all
+                <Download size={12} className="text-ink-tertiary" aria-hidden /> Download {selectedFiles.length}
               </button>
               <button
                 onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
@@ -194,14 +199,12 @@ function FileCompactCard({ file }: { file: FileEntry }) {
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
       <Icon size={14} className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-meta text-ink-muted">
-            {file.type.toUpperCase()}
-          </span>
-          <span className="text-meta text-ink-muted">{file.size}</span>
-          <span className="text-meta text-ink-muted">{languageName(file.language)}</span>
-        </div>
+        <p className="text-xs font-medium text-ink truncate" title={file.name}>{file.type === "link" ? file.name : file.name.replace(/\.[A-Za-z0-9]{1,5}$/, "")}</p>
+        <p className="text-meta text-ink-tertiary truncate mt-0.5">
+          {[file.type.toUpperCase(), file.size && file.size !== "—" ? file.size : "", file.language && file.language !== "—" ? languageName(file.language) : ""]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
     </div>
   );
