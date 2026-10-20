@@ -13,7 +13,7 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
-import { ViewButton } from "../shared/ViewButton";
+import { Hint } from "../shared/Hint";
 import { BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
@@ -298,12 +298,23 @@ function DrawerFileRow({
 
   return (
     <div
-      className={`flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[3.625rem] ${
+      className={`relative flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[3.625rem] ${
         active
           ? "border-ink/30 bg-parchment hover:bg-parchment"
           : "border-border/50 bg-paper hover:bg-warm/50"
       }`}
     >
+      {/* The row is the View target, as in the record's Files block; the
+          controls sit above it. */}
+      {!editing && (
+        <button
+          type="button"
+          onClick={onView}
+          aria-label={`View ${file.name}`}
+          data-part="view"
+          className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+        />
+      )}
       {thumbnail}
 
       {editing ? (
@@ -358,7 +369,7 @@ function DrawerFileRow({
         </div>
       )}
 
-      <div className="flex items-center gap-1 pr-2 shrink-0">
+      <div className="relative flex items-center gap-1 pr-2 shrink-0">
         {editing ? (
           <>
             <button
@@ -388,17 +399,21 @@ function DrawerFileRow({
             >
               <Pencil size={12} />
             </button>
-            <ViewButton onClick={onView} />
             {/* Download without opening the file first. */}
             {file.type !== "link" && resolveFileUrl(file) && (
-              <a
-                href={resolveFileUrl(file)}
-                download={file.name}
-                aria-label={`Download ${file.name}`}
-                className="flex items-center justify-center w-7 h-7 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-              >
-                <Download size={12} aria-hidden />
-              </a>
+              <Hint text="Download" describe={false}>
+                {(hint) => (
+                  <a
+                    {...hint}
+                    href={resolveFileUrl(file)}
+                    download={file.name}
+                    aria-label={`Download ${file.name}`}
+                    className="flex items-center justify-center w-7 h-7 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+                  >
+                    <Download size={12} aria-hidden />
+                  </a>
+                )}
+              </Hint>
             )}
           </>
         )}

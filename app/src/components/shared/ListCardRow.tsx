@@ -9,6 +9,9 @@ interface BaseProps {
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   ariaLabel?: string;
+  /** False for a row whose click is an action (View a file), not a choice:
+   *  its stretched button then carries no `aria-pressed`. */
+  toggle?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -22,7 +25,7 @@ const baseClasses =
 
 export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
   function ListCardRow(props, ref) {
-    const { selected, onClick, onKeyDown, ariaLabel, className, children, as } =
+    const { selected, onClick, onKeyDown, ariaLabel, toggle = true, className, children, as } =
       props;
     const selectedClass = selected ? "bg-parchment" : "";
     const cursorClass = onClick ? "cursor-pointer" : "";
@@ -66,7 +69,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
         {onClick && (
           <button
             type="button"
-            aria-pressed={selected}
+            aria-pressed={toggle ? selected : undefined}
             aria-label={ariaLabel ?? "Open row"}
             onClick={(e) => {
               e.stopPropagation();
