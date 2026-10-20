@@ -9,6 +9,9 @@ interface BaseProps {
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   ariaLabel?: string;
+  /** False for a row whose click is an action (View a file), not a choice:
+   *  its stretched button then carries no `aria-pressed`. */
+  toggle?: boolean;
   className?: string;
   /** The `data-component` name, for a row kind that renders through this shell
    *  (`ReferenceRow`, `AggregateRow`, `HubRow`). Defaults to "ListCardRow". */
@@ -29,6 +32,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
   function ListCardRow(props, ref) {
     const {
       selected,
+      toggle = true,
       onClick,
       onKeyDown,
       ariaLabel,
@@ -82,7 +86,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
         {onClick && (
           <button
             type="button"
-            aria-pressed={selected}
+            aria-pressed={toggle ? selected : undefined}
             aria-label={ariaLabel ?? "Open row"}
             onClick={(e) => {
               e.stopPropagation();

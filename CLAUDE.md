@@ -823,10 +823,12 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   shows the open file when nothing is ticked.
 - An entity's files show outside the Files tab through `components/files/EntityFilesBlock.tsx`:
   at the record's top (so the Metadata tab, the Library preview and the entity view's drawer have
-  it), and as the Document tab's Files menu (DocMeta; the preview's action bar). Each row has View
-  (the file in a `Modal`, PDFs in `DocumentViewer`) and Download (`<a download>`, named for its
-  file); Download all says it needs the server. The head carries the entity's `UploadStateMark`
-  while its files upload. The record folds past five files; no files, no block.
+  it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View
+  target (the file in a `Modal`, PDFs in `DocumentViewer`); Download (`<a download>`, named for its
+  file) is its one drawn control, an icon with a Hint. Download all, in the heading from two
+  downloadable files, says it needs the server. Nothing in the block or its dialog is solid ink.
+  The head carries the entity's `UploadStateMark` while its files upload.
+  The record folds past five files; no files, no block.
 - Import CSV: imports are a per-corpus store (`atoms/csvImports.ts`, seed in `data/imports.ts`,
   Sample only) with Uwazi's stages and copy. `useCsvImportRunner` (mounted by `App`) moves every
   unfinished import and keeps one Beacon task each, whatever view is open. The list is a
