@@ -396,6 +396,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - The slide-over shows Metadata and Relationships only. Document, Files and Edit read the focused
   entity's file atoms and would be wrong for another entity; "Open entity" leads to them.
 - "Open entity" is hidden (`invisible`) while any edit form is open (`editSessionOpenAtom`).
+- On phones the preview footer keeps the commit on one line: Edit folds to its icon with a Hint,
+  Share and Permissions (and Duplicate) go to a "More actions" menu, Delete stays after the divider.
 - Copy From: `CopyFromPicker` chooses the source, then the properties to copy. The form receives
   only the ticked `CopyUnit`s and does not save.
 
@@ -835,7 +837,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   row's icon grows into the row's padding, so rows keep their height. Download all, in the heading from two
   downloadable files, says it needs the server. Nothing in the block or its dialog is solid ink.
   The head carries the entity's `UploadStateMark` while its files upload.
-  The record folds past five files; no files, no block.
+  The record folds past five files; no files, no block. A section label is one line on desktops;
+  on phones it wraps to two and clamps (full text in `title`), bound by `noStrayWords`.
 - Import CSV: imports are a per-corpus store (`atoms/csvImports.ts`, seed in `data/imports.ts`,
   Sample only) with Uwazi's stages and copy. `useCsvImportRunner` (mounted by `App`) moves every
   unfinished import and keeps one Beacon task each, whatever view is open. The list is a
