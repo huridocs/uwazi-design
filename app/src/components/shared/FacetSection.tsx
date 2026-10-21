@@ -67,6 +67,14 @@ interface FacetSectionProps {
   searchPlaceholder?: string;
   /** Shown instead of the rows when there are none at all (not "no matches"). */
   emptyState?: ReactNode;
+  /** Drawn at the end of the search row (the picker's All / Selected switch).
+   *  Only where the search row is drawn. */
+  searchAside?: ReactNode;
+  /** Narrows the rows to these ids, after the search and with no "N more":
+   *  the picker's Selected view. */
+  showOnly?: ReadonlySet<string>;
+  /** One line shown when `showOnly` leaves no rows and nothing is searched. */
+  showOnlyEmpty?: ReactNode;
 }
 
 /** A native checkbox that can also be MIXED — `indeterminate` is a DOM
@@ -126,6 +134,9 @@ export function FacetSection({
   renderBadge,
   searchPlaceholder,
   emptyState,
+  searchAside,
+  showOnly,
+  showOnlyEmpty,
 }: FacetSectionProps) {
   const radioName = useId();
   const [open, setOpen] = useState(defaultExpanded || bare);
@@ -146,13 +157,10 @@ export function FacetSection({
 
   const showSearch = searchable && allRegular.length > searchThreshold;
   const q = query.trim().toLowerCase();
-  const matched = useMemo(
-    () =>
-      q
-        ? allRegular.filter(([id]) => label(id).toLowerCase().includes(q))
-        : allRegular,
-    [allRegular, q, label],
-  );
+  const matched = useMemo(() => {
+    const inView = showOnly ? allRegular.filter(([id]) => showOnly.has(id)) : allRegular;
+    return q ? inView.filter(([id]) => label(id).toLowerCase().includes(q)) : inView;
+  }, [allRegular, q, label, showOnly]);
 
   // Group-aware ordering: children gather under their group (first-seen group
   // order), ungrouped entries keep their position ahead of the groups. Without
@@ -176,7 +184,7 @@ export function FacetSection({
   }, [matched, groupOf]);
 
   // Searching reveals everything that matches; otherwise cap to collapsedCount.
-  const cap = q || showAll ? Infinity : collapsedCount;
+  const cap = q || showAll || showOnly ? Infinity : collapsedCount;
   const regularRows = ordered.slice(0, cap);
   const hiddenCount = ordered.length - regularRows.length;
 
@@ -248,9 +256,10 @@ export function FacetSection({
                 <MatchModeToggle mode={mode} onChange={onModeChange} label="Match" />
               )}
               {showSearch && (
+                <div className="flex items-center gap-2">
                 <div
                   data-part="search"
-                  className="relative flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
+                  className="relative flex-1 min-w-0 flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
                   <input
                     type="text"
                     value={query}
@@ -271,11 +280,15 @@ export function FacetSection({
                     <Search size={12} className="text-ink-muted shrink-0" />
                   )}
                 </div>
+                {searchAside}
+                </div>
               )}
             </div>
           )}
           {allRegular.length === 0 && emptyState ? (
             emptyState
+          ) : showOnly && !q && matched.length === 0 && showOnlyEmpty ? (
+            showOnlyEmpty
           ) : (
             matched.length === 0 && (
               <p data-part="empty" className={`${bare ? "px-2 " : ""}py-1.5 text-xs text-ink-tertiary`}>
@@ -376,7 +389,7 @@ export function FacetSection({
               Load {hiddenCount} more
             </button>
           )}
-          {showAll && !q && matched.length > collapsedCount && (
+          {showAll && !q && !showOnly && matched.length > collapsedCount && (
             <button
               type="button"
               data-part="show-less"

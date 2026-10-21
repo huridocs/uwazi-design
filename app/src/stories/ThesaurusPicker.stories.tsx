@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../components/metadata/ThesaurusPicker";
 import { seedThesaurusValues } from "../data/settings";
@@ -76,5 +76,42 @@ export const AddValueModal: Story = {
       onSave={() => {}}
       onClose={() => {}}
     />
+  ),
+};
+
+function Stateful(props: ComponentProps<typeof ThesaurusPicker>) {
+  const [chosen, setChosen] = useState(props.chosen);
+  return (
+    <ThesaurusPicker
+      {...props}
+      chosen={chosen}
+      onToggle={(l) => setChosen((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]))}
+    />
+  );
+}
+
+/** A long multiselect folds behind "N more"; the All / Selected switch at the
+ *  end of the search row lists only what is ticked. */
+export const LongList: Story = {
+  args: { label: "Countries", values: seedThesaurusValues.t6, chosen: ["t6-chile", "t6-peru"] },
+  render: (args) => <Stateful {...args} />,
+};
+
+/** Short list (no switch), long list, long list with nothing ticked, and bulk. */
+export const AllStates: Story = {
+  render: (args) => (
+    <div className="space-y-6">
+      <Stateful {...args} label="Violations" values={seedThesaurusValues.t1} chosen={["t1-3"]} />
+      <Stateful {...args} label="Countries" values={seedThesaurusValues.t6} chosen={["t6-chile", "t6-peru"]} />
+      <Stateful {...args} label="Countries (none ticked)" values={seedThesaurusValues.t6} chosen={[]} />
+      <Stateful
+        {...args}
+        label="Countries (bulk)"
+        values={seedThesaurusValues.t6}
+        chosen={["t6-chile"]}
+        mixed={["t6-peru", "t6-haiti"]}
+        coverage={{ counts: { "t6-chile": 12, "t6-peru": 4, "t6-haiti": 1 }, of: 12 }}
+      />
+    </div>
   ),
 };

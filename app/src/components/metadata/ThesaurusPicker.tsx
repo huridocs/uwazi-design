@@ -67,6 +67,9 @@ export function ThesaurusPicker({
   // opened: re-sorting on every click moved the row just ticked to the top,
   // out from under the pointer. Values created while it is open join the top.
   const [pinned] = useState(() => new Set([...chosen, ...mixed]));
+  // The Selected view lists what was held when it opened, plus what is held
+  // now: a row unticked there stays in place until the view changes.
+  const [viewKeys, setViewKeys] = useState<ReadonlySet<string> | null>(null);
 
   // Rows keyed by VALUE ID (a pseudo-key for a label the thesaurus doesn't
   // hold — see atoms/thesauri), so two values that share a label stay two.
@@ -113,6 +116,15 @@ export function ThesaurusPicker({
   const mixedMap = useMemo(
     () => (mixed.length || coverage ? Object.fromEntries(mixed.map((l) => [l, true])) : undefined),
     [mixed, coverage],
+  );
+
+  // A long list (one that folds, and so has a search box) of a multiselect
+  // can show only what is ticked. Short lists stay as they are.
+  const heldCount = chosen.length + mixed.length;
+  const switchable = multiple && entries.length > COLLAPSED;
+  const showOnly = useMemo(
+    () => (switchable && viewKeys ? new Set([...viewKeys, ...chosen, ...mixed]) : undefined),
+    [switchable, viewKeys, chosen, mixed],
   );
 
   if (values === null && creating && onCreateThesaurus) {
@@ -177,6 +189,18 @@ export function ThesaurusPicker({
         searchPlaceholder="Search values"
         groupOf={groupOf}
         emptyState={emptyState}
+        searchAside={
+          switchable ? (
+            <ViewSwitch
+              label={label}
+              selectedView={!!viewKeys}
+              count={heldCount}
+              onChange={(sel) => setViewKeys(sel ? new Set([...chosen, ...mixed]) : null)}
+            />
+          ) : undefined
+        }
+        showOnly={showOnly}
+        showOnlyEmpty={<p className="px-2 py-1.5 text-xs text-ink-tertiary">No values selected.</p>}
         renderCount={(l) => (coverage ? `${coverage.counts[l] ?? 0} of ${coverage.of}` : null)}
         ariaLabelOf={(l) =>
           coverage ? `${display(l)}, on ${coverage.counts[l] ?? 0} of ${coverage.of}` : display(l)
@@ -191,6 +215,44 @@ export function ThesaurusPicker({
         }
       />
       )}
+    </div>
+  );
+}
+
+/** All / Selected: a quiet text pair at the end of the search row, in the
+ *  caption type. The count is announced politely as it changes. */
+function ViewSwitch({
+  label,
+  selectedView,
+  count,
+  onChange,
+}: {
+  label: string;
+  selectedView: boolean;
+  count: number;
+  onChange: (selected: boolean) => void;
+}) {
+  const option = (on: boolean) =>
+    // One weight in both states, so the pair never changes width.
+    `px-2 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+      on ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
+    }`;
+  return (
+    <div
+      role="group"
+      aria-label={`Show values of ${label}`}
+      data-part="view-switch"
+      className="shrink-0 flex items-center"
+    >
+      <button type="button" aria-pressed={!selectedView} onClick={() => onChange(false)} className={option(!selectedView)}>
+        All
+      </button>
+      <button type="button" aria-pressed={selectedView} onClick={() => onChange(true)} className={option(selectedView)}>
+        Selected <span className="tabular-nums">({count})</span>
+      </button>
+      <span role="status" className="sr-only">
+        {`${count} selected in ${label}`}
+      </span>
     </div>
   );
 }
