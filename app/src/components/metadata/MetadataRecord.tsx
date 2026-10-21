@@ -63,7 +63,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
          card, and one field can answer to several property names. */
       data-field-keys={item.keyAliases?.join(" ")}
     >
-      <MetadataCard title={item.label} hideTitle={item.noLabel} component="MetadataFieldBlock" fieldId={item.id}>
+      <MetadataCard title={item.label} icon={item.icon} hideTitle={item.noLabel} component="MetadataFieldBlock" fieldId={item.id}>
         <FillableValue item={item} />
       </MetadataCard>
     </div>

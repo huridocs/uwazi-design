@@ -8,6 +8,8 @@ import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { FILTER_RAIL, FilterListCard, SegmentRow } from "../../components/shared/FilterCard";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
+import { TemplateDot, ValueChips, type ChipValue } from "../../components/metadata/ValueChips";
+import { MetadataCard } from "../../components/metadata/MetadataCard";
 import { BulkFieldRow } from "../../components/metadata/BulkFieldRow";
 import { SelectionActionsMenu } from "../../components/library/SelectionActionsMenu";
 import { ChangeTemplateDialog } from "../../components/library/ChangeTemplateDialog";
@@ -950,6 +952,22 @@ export function CopyFromPickerDemo({ step = "source" }: { step?: "source" | "pro
         onCopy={() => {}}
         onClose={() => {}}
       />
+    </div>
+  );
+}
+
+/** ValueChips, live: 120 recommendation codes of one template, stored out of
+ *  order, folded past three lines. */
+export function ValueChipsDemo() {
+  const values: ChipValue[] = Array.from({ length: 120 }, (_, i) => {
+    const n = ((i * 37) % 120) + 1;
+    return { key: `rec-${i}`, text: n % 15 === 0 ? `131.${n / 15}.1` : `131.${n + (n > 60 ? 61 : 0)}`, typeId: "violation", onOpen: () => {} };
+  });
+  return (
+    <div className="max-w-sm">
+      <MetadataCard title="Related Recommendations" icon={<TemplateDot typeId="violation" />}>
+        <ValueChips label="Related Recommendations" values={values} unit="records" />
+      </MetadataCard>
     </div>
   );
 }

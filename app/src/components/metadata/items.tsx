@@ -12,6 +12,7 @@ import { formatDateText } from "../../utils/dateFormat";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
+import { ValueChips, TemplateDot, sharedTemplate, type ChipValue } from "./ValueChips";
 
 /** One row of an entity's record: a label and whatever renders as its value.
  *
@@ -37,6 +38,9 @@ export interface MetadataItem {
    *  already recorded on a connected entity as it is buried in the document,
    *  and this record is where they read it. */
   fillValue?: string;
+  /** Drawn before the label: a relationship field's template dot, when every
+   *  record it holds shares one template. */
+  icon?: ReactNode;
   /** The template property's display flags: Hide label, Full width. */
   noLabel?: boolean;
   fullWidth?: boolean;
@@ -78,6 +82,7 @@ export function fieldKind(f: MetadataField): FieldKind {
   // a multidate is no longer one string).
   if ((f.displayValues?.length ?? 0) > 1) return "chips";
   if (f.items && f.items.length > 0) return "chips";
+  if (f.type === "multiselect" && (f.values?.length ?? 0) > 1) return "chips";
   return (f.value?.length ?? 0) > LONG_CHARS ? "long" : "scalar";
 }
 
@@ -97,9 +102,14 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
     long,
     // Only short, plain values: a paragraph or a pill is not what a one-line
     // field is asking for.
-    fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
+    fillValue: kind === "scalar" && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
-      (f.displayValues?.length ?? 0) > 1 ? (
+      f.type === "multiselect" && kind === "chips" ? (
+        <ValueChips
+          label={f.label}
+          values={f.values!.map((v) => ({ key: v, text: v, render: <ThesaurusValueLabel value={v} /> }))}
+        />
+      ) : (f.displayValues?.length ?? 0) > 1 ? (
         <ul data-part="value-list" className="space-y-0.5">
           {f.displayValues!.map((v, i) => (
             <li key={i} className="text-sm font-medium text-ink leading-relaxed tabular-nums">
@@ -173,34 +183,45 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
   };
 }
 
-/** The entities a link-only connection points at, as pills. */
-function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
+/** The records a link-only connection points at, as chips (`ValueChips`). */
+function useConnectionValues(field: RelationshipMetadataField): ChipValue[] {
   const lang = useAtomValue(languageAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const setOverlay = useSetAtom(previewEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
+  return resolved.values.map((v) => ({
+    key: v.entityId,
+    text: v.entityTitle,
+    typeId: v.entityTypeId,
+    onOpen: () => setOverlay(v.entityId),
+  }));
+}
 
+function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
+  const values = useConnectionValues(field);
+  const more = field.totalConnected != null ? field.totalConnected - values.length : 0;
   return (
-    <div data-component="ConnectionPills" className="flex flex-wrap items-center gap-1.5">
-      {resolved.values.map((v) => (
-        <button
-          type="button"
-          data-part="entity-open"
-          key={v.entityId}
-          onClick={() => setOverlay(v.entityId)}
-          className="min-w-0 rounded-md hover:opacity-80 transition-opacity cursor-pointer"
-          title="Preview source entity"
-        >
-          <EntityPill typeId={v.entityTypeId} label={v.entityTitle} />
-        </button>
-      ))}
-      {field.totalConnected != null && field.totalConnected > resolved.values.length && (
-        <span data-part="more" className="text-meta text-ink-tertiary">
-          +{field.totalConnected - resolved.values.length} more
-        </span>
-      )}
+    <div data-component="ConnectionPills" className="contents">
+      <ValueChips
+        label={field.label}
+        values={values}
+        unit={values.length === 1 ? "record" : "records"}
+        after={
+          more > 0 ? (
+            <span data-part="more" className="h-6 flex items-center text-meta text-ink-tertiary">
+              +{more} more
+            </span>
+          ) : undefined
+        }
+      />
     </div>
   );
+}
+
+/** The template's dot by the label, when every connected record shares it. */
+function ConnectionDot({ field }: { field: RelationshipMetadataField }) {
+  const typeId = sharedTemplate(useConnectionValues(field));
+  return typeId ? <TemplateDot typeId={typeId} /> : null;
 }
 
 /** A link-only connection as a record row.
@@ -220,6 +241,7 @@ export function connectionItem(field: RelationshipMetadataField): MetadataItem {
     kind: "chips",
     long: false,
     keyAliases: field.keyAliases,
+    icon: <ConnectionDot field={field} />,
     content: <ConnectionPills field={field} />,
   };
 }
