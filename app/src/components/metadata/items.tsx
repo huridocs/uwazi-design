@@ -12,7 +12,7 @@ import { formatDateText } from "../../utils/dateFormat";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
-import { ValueChips, TemplateDot, sharedTemplate, type ChipValue } from "./ValueChips";
+import { ValueChips, TemplateDot, sharedTemplate, sortNatural, type ChipValue } from "./ValueChips";
 
 /** One row of an entity's record: a label and whatever renders as its value.
  *
@@ -102,7 +102,15 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
     long,
     // Only short, plain values: a paragraph or a pill is not what a one-line
     // field is asking for.
-    fillValue: kind === "scalar" && f.type !== "link" ? f.value?.trim() || undefined : undefined,
+    // A multiselect drawn as chips fills its whole set, in the order the
+    // chips print: the armed field is a text box, and a row fills its field's
+    // value, which for a multiselect is the set.
+    fillValue:
+      f.type === "multiselect" && kind === "chips"
+        ? sortNatural(f.values!.map((v) => ({ text: v }))).map((v) => v.text).join(", ")
+        : kind === "scalar" && f.type !== "link"
+          ? f.value?.trim() || undefined
+          : undefined,
     content:
       f.type === "multiselect" && kind === "chips" ? (
         <ValueChips

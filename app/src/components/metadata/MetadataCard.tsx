@@ -19,6 +19,10 @@ interface MetadataCardProps {
   /** The template property the card draws. Where the collection records
    *  per-property evidence, the head carries "Why we believe this". */
   fieldId?: string;
+  /** Drawn at the head's end (a chip list's "Fill <Field>" while a field is
+   *  armed). It must not be taller than the label line, so the head keeps its
+   *  height whether it is drawn or not. */
+  action?: ReactNode;
 }
 
 /** The card head NAMES the thing in the card — a metadata field, a connection,
@@ -50,6 +54,7 @@ export function MetadataCard({
   headingLevel = 3,
   component = "MetadataCard",
   fieldId,
+  action,
 }: MetadataCardProps) {
   const Heading = headingLevel === 4 ? "h4" : "h3";
   const titleId = useId();
@@ -71,6 +76,7 @@ export function MetadataCard({
             {title}
           </Heading>
           {fieldId && <FieldEvidence fieldId={fieldId} label={title} />}
+          {action && <div className="ms-auto flex min-w-0 max-w-[50%]">{action}</div>}
         </header>
         {children}
       </div>
