@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Search, X } from "lucide-react";
+import { usePrinting } from "../../hooks/usePrinting";
 import { getEntityType } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 
@@ -63,7 +64,8 @@ const CHIP =
  *  "Show all N"; the lines are measured, not a count, so the fold is the same
  *  height in a narrow column and a wide one. Expanded, a filter field narrows
  *  the chips and "Show fewer" folds them again. Chips past the fold are not
- *  rendered, so Tab never reaches a hidden one. */
+ *  rendered, so Tab never reaches a hidden one. A printed page has no "Show
+ *  all", so while printing every chip is rendered and the fold is not drawn. */
 export function ValueChips({
   label,
   values,
@@ -87,6 +89,7 @@ export function ValueChips({
   const [fit, setFit] = useState<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const [width, setWidth] = useState(0);
+  const printing = usePrinting();
 
   useLayoutEffect(() => {
     const el = listRef.current;
@@ -123,7 +126,9 @@ export function ValueChips({
   // re-measures.
   const folds = expanded || (fit !== null && fit < sorted.length);
   const q = query.trim().toLowerCase();
-  const shown = expanded
+  const shown = printing
+    ? sorted
+    : expanded
     ? q
       ? sorted.filter((v) => v.text.toLowerCase().includes(q))
       : sorted
@@ -133,7 +138,7 @@ export function ValueChips({
 
   return (
     <div data-component="ValueChips" data-folded={folds && !expanded ? "" : undefined} className="flex flex-col gap-2 min-w-0">
-      {expanded && (
+      {expanded && !printing && (
         <div
           data-part="filter"
           className="flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all"
@@ -162,7 +167,7 @@ export function ValueChips({
         className="flex flex-wrap items-center gap-1.5 min-w-0"
         // While measuring, the box is held to the folded lines, so the
         // re-measure never shows the whole list for a frame.
-        style={fit === null && !expanded ? { maxHeight: `calc(${FOLD_LINES} * 1.5rem + ${FOLD_LINES - 1} * 0.375rem)`, overflow: "hidden" } : undefined}
+        style={fit === null && !expanded && !printing ? { maxHeight: `calc(${FOLD_LINES} * 1.5rem + ${FOLD_LINES - 1} * 0.375rem)`, overflow: "hidden" } : undefined}
       >
         {shown.map((v) => (
           <li key={v.key} data-part="chip" className="min-w-0 max-w-full flex">
@@ -189,14 +194,14 @@ export function ValueChips({
             )}
           </li>
         ))}
-        {expanded && q && shown.length === 0 && (
+        {expanded && !printing && q && shown.length === 0 && (
           <li data-part="empty" className="h-6 flex items-center text-xs text-ink-tertiary">
             No matches.
           </li>
         )}
         {after && <li className="flex">{after}</li>}
       </ul>
-      {folds && (
+      {folds && !printing && (
         <button
           type="button"
           data-part={expanded ? "show-fewer" : "show-all"}

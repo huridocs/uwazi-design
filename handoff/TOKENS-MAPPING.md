@@ -157,6 +157,10 @@ and rows carry none: see the rule below.
   `dark:` variant. (`dark:` variants should be rare to nonexistent.)
 - Native form controls need `color-scheme: dark` on the mode root (included in
   the tokens file).
+- **Dark is a screen theme.** The prototype scopes its dark block (and
+  `color-scheme`, and the map tiles' dark filter) to `@media screen`, so a dark
+  session prints and saves to PDF on paper colours. Do the same wherever the
+  mode class is wired.
 
 ## Migration phases
 

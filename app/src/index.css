@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./print.css";
 
 @theme {
   --color-parchment: var(--bg-primary);
@@ -360,14 +361,17 @@ button:not(:disabled):not([aria-disabled="true"]) {
   filter: invert(1);
 }
 
-/* Dark mode: make native form controls render dark (unchecked boxes, etc.) */
-:root.dark {
-  color-scheme: dark;
-}
+/* Dark mode: make native form controls render dark (unchecked boxes, etc.),
+   and tone down checkboxes. Screen only, as the dark tokens are: print is
+   paper. */
+@media screen {
+  :root.dark {
+    color-scheme: dark;
+  }
 
-/* Dark mode: tone down checkboxes */
-:root.dark input[type="checkbox"] {
-  accent-color: var(--text-tertiary);
+  :root.dark input[type="checkbox"] {
+    accent-color: var(--text-tertiary);
+  }
 }
 
 /* Opt-out of scrollbars for compact scroll regions (e.g. the mobile

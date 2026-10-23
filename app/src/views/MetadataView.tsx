@@ -177,7 +177,8 @@ function MetadataReadBody({
     <>
       <DocMeta showPdfSelector={false} />
 
-      <div className="bleed flex-1 overflow-auto body-top pb-8">
+      {/* `data-print-root`: what a printed page holds, with DocMeta (print.css). */}
+      <div data-print-root className="bleed flex-1 overflow-auto body-top pb-8">
         {/* Full width, no max-width cap: the label column sizes to the labels,
             so a wide pane only gives the values more room. */}
         <div className="w-full space-y-3">

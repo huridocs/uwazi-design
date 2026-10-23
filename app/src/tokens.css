@@ -107,70 +107,74 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-:root.dark {
-  /* Stronger in dark: at 30% the ring disappeared on the dark fill. */
-  --selected-ring: color-mix(in oklab, var(--accent-blue) 60%, transparent);
-  --bg-primary: #1A1A1A;
-  --bg-surface: #242424;
-  --bg-warm: #2A2A2A;
-  --bg-muted: #333333;
-  /* The light pair's shape: one small lift over the card's #242424, and an
-     edge slightly lighter than that ground. */
-  --bg-placeholder: #282826;
-  --border-placeholder: #2C2C2B;
-  --bg-overlay: #000000AA;
-  --bg-selected: #333333;
+/* Dark is a screen theme. A printed page is paper whatever the theme, so the
+   light values above are the ones print reads. */
+@media screen {
+  :root.dark {
+    /* Stronger in dark: at 30% the ring disappeared on the dark fill. */
+    --selected-ring: color-mix(in oklab, var(--accent-blue) 60%, transparent);
+    --bg-primary: #1A1A1A;
+    --bg-surface: #242424;
+    --bg-warm: #2A2A2A;
+    --bg-muted: #333333;
+    /* The light pair's shape: one small lift over the card's #242424, and an
+       edge slightly lighter than that ground. */
+    --bg-placeholder: #282826;
+    --border-placeholder: #2C2C2B;
+    --bg-overlay: #000000AA;
+    --bg-selected: #333333;
 
-  --text-primary: #F5F0E8;
-  --text-secondary: #D4CDB8;
-  /* Tertiary and muted are WARM greys, not neutral ones, and they are set by
-     the LIGHTEST dark surface, not the darkest. Measured against all five
-     (`--bg-primary` #1A1A1A → `--bg-muted`/`--bg-selected` #333333), the old
-     neutral pair only ever cleared on the base background: #9A9A9A read 6.19:1
-     on #1A1A1A but 4.49:1 on #333333 — under AA on every vellum panel and every
-     selected row — and #6B6B6B fell to 2.37:1, under the 3:1 floor a muted
-     token needs to stay legible at all. The new values clear 4.5:1 (tertiary)
-     and 3:1 (muted) on ALL FIVE surfaces with headroom: 5.29:1 and 3.45:1 worst
-     case. Pick any replacement against #333333; #1A1A1A flatters everything. */
-  --text-tertiary: #ADA79E;
-  --text-muted: #8A857C;
+    --text-primary: #F5F0E8;
+    --text-secondary: #D4CDB8;
+    /* Tertiary and muted are WARM greys, not neutral ones, and they are set by
+       the LIGHTEST dark surface, not the darkest. Measured against all five
+       (`--bg-primary` #1A1A1A → `--bg-muted`/`--bg-selected` #333333), the old
+       neutral pair only ever cleared on the base background: #9A9A9A read 6.19:1
+       on #1A1A1A but 4.49:1 on #333333 — under AA on every vellum panel and every
+       selected row — and #6B6B6B fell to 2.37:1, under the 3:1 floor a muted
+       token needs to stay legible at all. The new values clear 4.5:1 (tertiary)
+       and 3:1 (muted) on ALL FIVE surfaces with headroom: 5.29:1 and 3.45:1 worst
+       case. Pick any replacement against #333333; #1A1A1A flatters everything. */
+    --text-tertiary: #ADA79E;
+    --text-muted: #8A857C;
 
-  /* Borders — same story, worse. At #343434 the primary rule was 1.01:1 on a
-     vellum or selected ground: not a faint line, NO line. It only ever showed
-     against the darkest background (1.40:1), which is why panels looked bounded
-     in the Library and dissolved in the drawers.
+    /* Borders — same story, worse. At #343434 the primary rule was 1.01:1 on a
+       vellum or selected ground: not a faint line, NO line. It only ever showed
+       against the darkest background (1.40:1), which is why panels looked bounded
+       in the Library and dissolved in the drawers.
 
-     These are the SECOND pass. The first fix took primary to 2.06:1 worst case
-     and soft to 2.39:1, which read as rules rather than hairlines — chrome you
-     notice instead of chrome you feel. The band that works is narrow: below
-     ~1.4:1 a line vanishes on #333333, above ~2:1 it boxes the pane in. These
-     sit at 1.52:1 (primary) and 1.84:1 (soft) against #333333, 2.10:1 and
-     2.46:1 against #1A1A1A. Warm-tinted to match the text ladder above.
+       These are the SECOND pass. The first fix took primary to 2.06:1 worst case
+       and soft to 2.39:1, which read as rules rather than hairlines — chrome you
+       notice instead of chrome you feel. The band that works is narrow: below
+       ~1.4:1 a line vanishes on #333333, above ~2:1 it boxes the pane in. These
+       sit at 1.52:1 (primary) and 1.84:1 (soft) against #333333, 2.10:1 and
+       2.46:1 against #1A1A1A. Warm-tinted to match the text ladder above.
 
-     Soft is the STRONGER of the two in both themes (light: #E2DBC9 over
-     #EDE7DB) — the names read backwards but the roles are consistent, so keep
-     soft above primary if these move again. */
-  --border-primary: #514E48;
-  --border-soft: #5E5A53;
-  /* 64% variants of the two above (`A3` = 163/255). Unused in the app today;
-     kept for the handoff layer. A deliberately quieter line still. */
-  --border-primary-64: #514E48A3;
-  --border-soft-64: #5E5A53A3;
+       Soft is the STRONGER of the two in both themes (light: #E2DBC9 over
+       #EDE7DB) — the names read backwards but the roles are consistent, so keep
+       soft above primary if these move again. */
+    --border-primary: #514E48;
+    --border-soft: #5E5A53;
+    /* 64% variants of the two above (`A3` = 163/255). Unused in the app today;
+       kept for the handoff layer. A deliberately quieter line still. */
+    --border-primary-64: #514E48A3;
+    --border-soft-64: #5E5A53A3;
 
-  --accent-primary: #F5F0E8;
-  --accent-blue-tint: #0C3A4D;
-  --accent-seal-tint: #4A1A1A;
+    --accent-primary: #F5F0E8;
+    --accent-blue-tint: #0C3A4D;
+    --accent-seal-tint: #4A1A1A;
 
-  --success-light: #064C3A;
-  --warning-light: #78350F;
-  --danger-light: #4A1A1A;
+    --success-light: #064C3A;
+    --warning-light: #78350F;
+    --danger-light: #4A1A1A;
 
-  --highlight-yellow: #78350F;
-  --highlight-yellow-active: #92400E;
-  --highlight-blue: #1E3A5F;
+    --highlight-yellow: #78350F;
+    --highlight-yellow-active: #92400E;
+    --highlight-blue: #1E3A5F;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+  }
 }

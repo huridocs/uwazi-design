@@ -74,7 +74,8 @@
 /* Dark mode. The prototype toggles :root.dark; in Uwazi, wire this to the V2
  * ThemeProvider's mode instead — keep the selector in ONE place. Whichever
  * element carries the mode class must also flip color-scheme so native form
- * controls follow. */
+ * controls follow. The prototype scopes this block to `@media screen`: a
+ * printed page is paper whatever the theme. */
 .tw-content.dark,
 .tw-content .dark {
   color-scheme: dark;

@@ -246,6 +246,13 @@ repo; update them when tokens or style rules change.
   chip row) stays mounted at a fixed height and only its contents change.
 - Radii are overridden in `index.css` (`xs 2 … 4xl 16`). Entity dots are `rounded-[2px]`, track
   dots `rounded-full`, pills and badges `rounded-md`.
+- Print (`print.css`): a view marks what a printed page holds with `data-print-root` (the Metadata
+  tab's record, the published view's article). Its ancestors lose their screen layout, their
+  other children are hidden (DocMeta stays, for the title), and the record prints one column on
+  white, breaking between cards. Dark rules are `@media screen`, so dark prints light. A list
+  that folds renders everything while `usePrinting()` is true (ValueChips, published
+  relationship groups). Leaflet cannot fetch tiles between the print event and layout, so
+  `PublishedMap` keeps a hidden paper copy at 19 × 8 cm, light, with no controls.
 
 ### Type roles
 One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
