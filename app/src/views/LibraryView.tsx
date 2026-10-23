@@ -1707,7 +1707,7 @@ export function LibraryView() {
                   name="Select"
                   items={[
                     {
-                      label: "Select records",
+                      label: "Cherrypick",
                       help: `Click records to add them. ${MOD_KEY}\u00a0+ click works anytime.`,
                       onClick: () => enterSelectMode(),
                     },
@@ -2225,7 +2225,7 @@ export function LibraryView() {
             // The visible way into bulk selection on a touch screen (a long
             // press on an item still works): the selection bar shows and a
             // tap toggles, until Clear.
-            { label: "Select records", icon: <CheckSquare size={14} />, onClick: () => enterSelectMode() },
+            { label: "Cherrypick", icon: <CheckSquare size={14} />, onClick: () => enterSelectMode() },
             ...(canSelect && drawnIds.length > 0
               ? [
                   {

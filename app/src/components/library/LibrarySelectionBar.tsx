@@ -124,7 +124,7 @@ export function LibrarySelectionBar({
   const pageCount = fmt(loadedIds.length);
   const scopes: ScopeItem[] = [
     ...(!selectMode
-      ? [{ label: "Select records", icon: <MousePointerClick size={14} />, help: `Click records to add them. ${MOD_KEY} + click works anytime.`, onClick: () => enterSelectMode() }]
+      ? [{ label: "Cherrypick", icon: <MousePointerClick size={14} />, help: `Click records to add them. ${MOD_KEY} + click works anytime.`, onClick: () => enterSelectMode() }]
       : []),
     ...(loadedIds.length > 0
       ? [

@@ -657,8 +657,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
     can span pages; Shift+Arrow stops at the page edge.
   - Selecting several starts from the footer, never from a card: the idle bar's "Select ▾"
-    (`SelectionScopeMenu`, before the page group; on phones the Actions sheet) offers "Select
-    records", "Select this page (30)" ("Select all shown" where the view does not page) and
+    (`SelectionScopeMenu`, before the page group; on phones the Actions sheet) offers "Cherrypick",
+    "Select this page (30)" ("Select all shown" where the view does not page) and
     "Select all N results". Each turns on `librarySelectModeAtom`, where a plain click on a
     record, a snippet or a matched property toggles it, and a ground click does not end it.
     Cmd/Ctrl and Shift + click and the long press still start one from the view. No checkbox
@@ -670,7 +670,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     middle, only when something needs saying ("3,746 hidden by filters"), so neither moves
     the other. Its menu
     opens with where the selection sits, as text ("30 on this page", "622 on other pages",
-    "3,746 hidden by filters"), then the scopes: Select records (when select mode is off),
+    "3,746 hidden by filters"), then the scopes: Cherrypick (when select mode is off),
     Select / Deselect this page, Select all N [filtered] results / All N selected (text
     and a check, not a button), Drop N
     hidden by filters, Show the selected records, Clear selection. "All" is always the
