@@ -8,7 +8,6 @@ import { getEntity, type Entity, type EntityType } from "../../data/entities";
 import { isOverlayDeleted, type Corpus } from "../../data/entityOverlay";
 import { planTemplateChange, templateChangeRecords, type TemplateChangePlan } from "../../utils/changeTemplate";
 import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
-import { typeLabelColor } from "../../utils/typeColor";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
 import { ModalList, ModalListRow, ModalSectionLabel, ModalTypeDot } from "../shared/ModalParts";
@@ -146,11 +145,10 @@ export function ChangeTemplateDialog({
               )}
               {plan.sources.map((s) => {
                 const type = types.find((t) => t.id === s.typeId);
-                const color = type?.color ?? "#6B7280";
                 return (
                   <section key={s.typeId} data-part="source" className="space-y-1.5">
                     <h3 className="flex items-center gap-1.5 font-semibold">
-                      <span style={{ color: typeLabelColor(color) }}>{type?.name ?? s.typeId}</span>
+                      <span className="text-ink">{type?.name ?? s.typeId}</span>
                       <span className="text-ink-tertiary font-normal">→ {targetName}</span>
                       <span className="text-meta text-ink-tertiary font-normal tabular-nums">{s.count.toLocaleString()}</span>
                     </h3>

@@ -2,7 +2,6 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type Keyb
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 import type { EntityType } from "../../data/entities";
-import { typeLabelColor } from "../../utils/typeColor";
 
 /** Case- and accent-insensitive: "resolucion" finds "Resolución". */
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -174,7 +173,7 @@ export function TemplateSelect({
           className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
           style={{ backgroundColor: t.color }}
         />
-        <span className="min-w-0 truncate text-sm" style={{ color: typeLabelColor(t.color) }}>
+        <span className="min-w-0 truncate text-sm text-ink">
           {t.name}
         </span>
         {selected && <Check size={13} aria-hidden className="ms-auto shrink-0 text-ink-tertiary" />}
@@ -213,7 +212,7 @@ export function TemplateSelect({
               className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
               style={{ backgroundColor: current.color }}
             />
-            <span className="text-sm font-medium" style={{ color: typeLabelColor(current.color) }}>
+            <span className="text-sm font-medium text-ink">
               {current.name}
             </span>
           </>

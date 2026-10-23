@@ -1026,12 +1026,8 @@ function EntityEditBody({
           </EditSection>
         )}
 
-        {/* Template — the entity's own type, and the one field on this form that
-            IS a type. It reads with the type's own square dot and the label
-            colour every other type label uses, so the answer to "which template
-            is this?" looks the same here as it does on a card, a pill or a row.
-            (`typeLabelColor`, not the raw colour: small text on the tint has to
-            clear AA in dark — see `utils/typeColor`.) */}
+        {/* Template: the type's square dot carries its colour; the name is ink,
+            as in every template picker. */}
         {!isDraft && templateSection}
 
         {/* Description */}
@@ -1557,19 +1553,6 @@ const countries = [
   { flag: "🇻🇪", name: "Venezuela" },
 ];
 
-/** The template field's control: the current template, and the list of the
- *  others, each carrying its own type dot.
- *
- *  Both halves get the SAME treatment as every other type label in the app —
- *  the true colour in a `rounded-[2px]` square, the name in `typeLabelColor`
- *  (never the raw colour: 12-14px text on the tint has to clear AA in dark).
- *  Issue #42's note was "no template coloring?" — the field named the template
- *  in plain ink, so the one place you SET the type was the one place it didn't
- *  look like a type.
- *
- *  Presentational, like the icon picker beside it: the prototype keys an
- *  entity's profile off its seeded type, so choosing another shows the choice
- *  but doesn't re-shape the entity. */
 /** The form's Template field: `TemplateSelect` over the edited entity's
  *  corpus, with the templates this session created in listed first. */
 function TemplatePicker({
