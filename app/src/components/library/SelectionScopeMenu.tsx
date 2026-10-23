@@ -117,7 +117,7 @@ export function SelectionScopeMenu({
     );
   } else {
     trigger = (
-      <Hint text="Select records, this page or every result" describe={false} muted>
+      <Hint text="Cherrypick records, select this page or every result" describe={false} muted>
         {(hint) => (
           <button
             {...hint}
