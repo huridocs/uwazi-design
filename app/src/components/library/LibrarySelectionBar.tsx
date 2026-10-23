@@ -1,7 +1,7 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { CheckSquare, ListChecks, MoreHorizontal, SquareMinus, X } from "lucide-react";
+import { CheckSquare, ListChecks, SquareMinus, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
@@ -35,6 +35,7 @@ export function LibrarySelectionBar({
   filteredIds,
   loadedIds,
   paged = true,
+  filtersActive = false,
   corpus,
   filtersSlot,
 }: {
@@ -44,6 +45,9 @@ export function LibrarySelectionBar({
   loadedIds: readonly string[];
   /** The view pages its results, so "shown" is "this page". */
   paged?: boolean;
+  /** A search, facet, date or map area narrows the results: "all" means the
+   *  filtered results, and a selected record may be hidden by them. */
+  filtersActive?: boolean;
   corpus: Corpus;
   /** The active-filters readout, placed after the actions and before the
    *  end group. */
@@ -63,14 +67,23 @@ export function LibrarySelectionBar({
   const n = selection.size;
   const deselect = useSetAtom(deselectIdsAtom);
   const pageAllPicked = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
-  const inView = new Set(filteredIds);
-  let notInView = 0;
-  for (const id of selection) if (!inView.has(id)) notInView++;
-  // Selected but not DRAWN — filtered out, or on another page. After "Select all 4,398" and the box unticked, 4,278 stay
-  // selected; this is where that is said, not left silent.
+  // Where each selected record is: drawn here, in the results on another
+  // page (or, in a view that draws a subset, not drawn), or hidden by the
+  // filters. Ids, never a count kept aside, so a filter change moves them
+  // between the three and drops none: clearing the filters brings the hidden
+  // ones back as selected.
+  const inResults = new Set(filteredIds);
   const drawn = new Set(loadedIds);
-  let notShown = 0;
-  for (const id of selection) if (!drawn.has(id)) notShown++;
+  let onPage = 0;
+  let offPage = 0;
+  const hiddenIds: string[] = [];
+  for (const id of selection) {
+    if (drawn.has(id)) onPage++;
+    else if (inResults.has(id)) offPage++;
+    else hiddenIds.push(id);
+  }
+  const hidden = hiddenIds.length;
+  const notInView = hidden;
   const total = filteredIds.length;
   // More results than the view draws: the whole-library scope exists. It
   // depends on the results, not the selection, so its slot comes and goes
@@ -78,26 +91,32 @@ export function LibrarySelectionBar({
   const acrossPages = total > loadedIds.length;
   const moreToSelect = acrossPages && filteredIds.some((id) => !selection.has(id));
   const where = paged ? "on this page" : "shown";
-  // The readout's second line: always whether any of the selection is off
-  // this page (another page, or filtered out).
+  const fmt = (x: number) => x.toLocaleString();
+  // The readout's second line: where the selection sits in the results.
   const placement =
     n === 0
       ? "Click records to add them"
-      : notShown === 0
-        ? paged
-          ? `All ${n.toLocaleString()} on this page`
-          : `All ${n.toLocaleString()} shown`
-        : notShown === n
-          ? paged
-            ? "None on this page"
-            : "None shown"
-          : `${notShown.toLocaleString()} not ${where}`;
+      : onPage + offPage === 0
+        ? "None match the filters"
+        : offPage === 0 && hidden === 0
+          ? `All ${fmt(n)} ${where}`
+          : offPage === 0
+            ? `${fmt(onPage)} ${where}`
+            : paged
+              ? `${fmt(onPage)} on this page, ${fmt(offPage)} on other pages`
+              : `${fmt(onPage)} shown, ${fmt(offPage)} not shown`;
+  // Its third line, while filters are on: what they hide.
+  const hiddenLine =
+    n === 0 ? "" : hidden === 0 ? "None hidden by filters" : hidden === n ? `All ${fmt(n)} hidden by filters` : `${fmt(hidden)} hidden by filters`;
+  const readout = [placement, filtersActive ? hiddenLine : ""].filter(Boolean).join(", ");
   const selectEvery = () => selectIds(filteredIds);
   const pageCount = loadedIds.length.toLocaleString();
   const totalText = total.toLocaleString();
   const pageLabels = paged
     ? { select: `Select page (${pageCount})`, deselect: "Deselect page" }
     : { select: `Select all shown (${pageCount})`, deselect: "Deselect shown" };
+  const filtered = filtersActive ? " filtered" : "";
+  const allSlot = filtersActive ? "w-[11rem]" : "w-[9rem]";
   const pageSlot = paged ? "w-[8rem]" : "w-[10.75rem]";
 
   const showList = () => {
@@ -105,7 +124,7 @@ export function LibrarySelectionBar({
     setPreview(null);
     openDrawer(true);
   };
-  const actions = useSelectionActions({ order: filteredIds, corpus, isMobile });
+  const actions = useSelectionActions({ order: filteredIds, corpus, isMobile, visibleIds: filteredIds });
 
   return (
     <>
@@ -124,7 +143,8 @@ export function LibrarySelectionBar({
           />
         </Fragment>
       ))}
-      {filtersSlot}
+      {/* Phones carry Filters as a button of their own, at the bar's end. */}
+      <span className="hidden sm:contents">{filtersSlot}</span>
       {/* The selection itself at the bar's logical END (it flips under RTL):
           its two scopes as text buttons, this page and every result, then
           the count and Clear. `ms-auto` pins the group to the end, so nothing
@@ -148,12 +168,16 @@ export function LibrarySelectionBar({
           />
         </span>
         {acrossPages && (
-          <span data-part="select-every" className="shrink-0 inline-flex w-[9rem]">
+          <span data-part="select-every" className={`shrink-0 inline-flex ${allSlot}`}>
             {moreToSelect ? (
               <ScopeButton
-                label={`Select all ${totalText}`}
-                name={`Select all ${totalText} results, across every page`}
-                hint={`Select every result of this search and its filters: ${totalText} records on every page.`}
+                label={`Select all ${totalText}${filtered}`}
+                name={`Select all ${totalText}${filtered} results, across every page`}
+                hint={
+                  filtersActive
+                    ? `Select every result the current search and filters give: ${totalText} records on every page.`
+                    : `Select every record in the collection: ${totalText} on every page.`
+                }
                 onClick={selectEvery}
               />
             ) : (
@@ -163,20 +187,40 @@ export function LibrarySelectionBar({
             )}
           </span>
         )}
-        <span className="shrink-0 w-[9rem] ms-1 flex flex-col justify-center text-xs tabular-nums leading-tight">
+        <span className="shrink-0 w-[13rem] ms-1 flex flex-col justify-center text-xs tabular-nums leading-tight">
           <span role="status" aria-live="polite" className="flex flex-col min-w-0">
             <button
               type="button"
               onClick={showList}
-              aria-label={`${n.toLocaleString()} selected, ${placement.toLowerCase()}. Show the selection`}
+              aria-label={`${n.toLocaleString()} selected, ${readout.toLowerCase()}. Show the selection`}
               className="self-start max-w-full font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
                 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
             >
               {n.toLocaleString()} selected
             </button>
-            <span aria-hidden data-part="placement" className="text-meta text-ink-tertiary truncate">
+            <span aria-hidden data-part="placement" className="text-meta leading-tight text-ink-tertiary truncate">
               {placement}
             </span>
+            {/* While filters are on the third line is always there, so a
+                filter change never adds or removes a line. */}
+            {filtersActive && (
+              <span data-part="hidden" className="flex items-baseline gap-1.5 min-w-0 text-meta leading-tight text-ink-tertiary">
+                <span aria-hidden className="truncate">{hiddenLine || "\u00a0"}</span>
+                {/* One click takes the hidden ones out; the rest stay. */}
+                {hidden > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => deselect(hiddenIds)}
+                    aria-label={`Drop the ${fmt(hidden)} hidden records from the selection`}
+                    title="Deselect the records the filters hide"
+                    className="shrink-0 font-medium text-ink-secondary hover:text-ink underline underline-offset-2 decoration-border cursor-pointer rounded-sm
+                      focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+                  >
+                    Drop
+                  </button>
+                )}
+              </span>
+            )}
           </span>
         </span>
         <BarButton icon={<X size={13} />} label="Clear" name={n === 0 ? "Stop selecting" : "Clear the selection"} onClick={() => clear()} />
@@ -184,8 +228,10 @@ export function LibrarySelectionBar({
       {/* Phone: the count and its second line; the scopes are in the Actions
           sheet, which has the room to name them. */}
       <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto flex flex-col leading-tight tabular-nums">
-        <span className="text-xs font-semibold text-ink">{n.toLocaleString()} selected</span>
-        <span className="text-meta text-ink-tertiary">{placement}</span>
+        <span className="text-xs font-semibold text-ink whitespace-nowrap">{n.toLocaleString()} selected</span>
+        {/* One line here: what the filters hide when they hide any (the
+            sheet's head says the rest), else where the selection sits. */}
+        <span className="text-meta leading-tight text-ink-tertiary truncate">{hidden > 0 ? `${fmt(hidden)} hidden` : placement}</span>
       </span>
       {/* Phone: the same actions, reachable. */}
       <button
@@ -193,20 +239,24 @@ export function LibrarySelectionBar({
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={sheetOpen}
-        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
+        aria-label="Actions on the selection"
+        className={`sm:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 ${BAR_LEAD} rounded-md cursor-pointer`}
       >
-        <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+        {/* An icon of its own: the count needs the room, and the bar's end
+            already has a "more" button. */}
+        <ListChecks size={15} className="text-ink-secondary" aria-hidden />
       </button>
       <button
         type="button"
         onClick={() => clear()}
-        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
+        aria-label={n === 0 ? "Stop selecting" : "Clear the selection"}
+        className={`sm:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 ${BAR_GHOST} rounded-md cursor-pointer`}
       >
-        <X size={13} className="text-ink-tertiary" aria-hidden /> Clear
+        <X size={15} className="text-ink-tertiary" aria-hidden />
       </button>
       {sheetOpen && (
         <ActionsSheet
-          heading={`${n.toLocaleString()} selected · ${placement}`}
+          heading={`${n.toLocaleString()} selected · ${readout}`}
           onClose={() => setSheetOpen(false)}
           scopes={[
             pageAllPicked
@@ -224,13 +274,16 @@ export function LibrarySelectionBar({
             ...(acrossPages
               ? [
                   moreToSelect
-                    ? { label: `Select all ${totalText}`, icon: <ListChecks size={14} />, onClick: selectEvery }
+                    ? { label: `Select all ${totalText}${filtered}`, icon: <ListChecks size={14} />, onClick: selectEvery }
                     : {
                         label: `All ${totalText} selected`,
                         icon: <ListChecks size={14} />,
                         done: true,
                       },
                 ]
+              : []),
+            ...(hidden > 0
+              ? [{ label: `Drop ${fmt(hidden)} hidden by filters`, icon: <SquareMinus size={14} />, onClick: () => deselect(hiddenIds) }]
               : []),
           ]}
           actions={actions}
