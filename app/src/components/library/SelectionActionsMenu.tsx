@@ -3,13 +3,22 @@ import { ChevronDown } from "lucide-react";
 import { BAR_GHOST } from "../shared/warmButton";
 import type { SelectionAction } from "./selectionActions";
 
-/** The selection drawer's "Actions" — the footer bar's actions that don't fit
- *  a 24rem footer, as a menu: Change template, Export CSV, Share, Permissions,
- *  and Delete last, after a separator, in seal. They fire the same handlers as
- *  the bar's buttons. A real `role="menu"`: arrow keys move, Enter / Space
+/** "Actions" — the selection's actions that are not kept in view, as a menu:
+ *  on the Library footer, Change template, Share and Permissions; in the
+ *  selection drawer's 24rem footer every action but Edit, with Delete last,
+ *  after a separator, in seal. They fire the same handlers as the bar's
+ *  buttons. A real `role="menu"`: arrow keys move, Enter / Space
  *  choose, Escape closes and returns focus to the button. Opens upward — it
  *  sits in a footer. Disabled items stay listed, saying why. */
-export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }) {
+export function SelectionActionsMenu({
+  actions,
+  align = "end",
+}: {
+  actions: SelectionAction[];
+  /** The menu's edge on the button: "start" where the button sits near the
+   *  bar's start, so the menu opens into the bar. */
+  align?: "start" | "end";
+}) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -108,7 +117,7 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
             if (to && (menuRef.current?.contains(to) || buttonRef.current?.contains(to))) return;
             setOpen(false);
           }}
-          className="absolute bottom-full end-0 mb-1.5 z-20 w-56 p-1 bg-paper rounded-md border border-border shadow-lg"
+          className={`absolute bottom-full ${align === "start" ? "start-0" : "end-0"} mb-1.5 z-20 w-56 p-1 bg-paper rounded-md border border-border shadow-lg`}
         >
           {regular.map(item)}
           {danger.length > 0 && <div role="separator" className="my-1 h-px bg-border" />}

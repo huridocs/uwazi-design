@@ -101,7 +101,7 @@ import {
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
-import { SelectMenuButton } from "../components/library/SelectMenuButton";
+import { MOD_KEY, SelectionScopeMenu } from "../components/library/SelectionScopeMenu";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -1390,20 +1390,39 @@ export function LibraryView() {
           </>
         )}
         {/* The way into picking several records, at the bar's end where the
-            selection's own end group (all shown, every result, the count)
-            takes its place once it is on. Cmd/Ctrl and Shift + click still
+            selection's count and its menu (the same control) take its place
+            once it is on. Cmd/Ctrl and Shift + click still
             start one from the view. */}
         {!selectionActive && !menuTrigger && canSelect && (
           <div className="ms-auto shrink-0 flex items-center gap-1">
-            <SelectMenuButton
-              pageCount={drawnIds.length}
-              total={filteredIds.length}
-              paged={false}
-              filtersActive={filtersActive}
-              onRecords={() => setSelectMode(true)}
-              onPage={() => startSelection(drawnIds)}
-              onAll={() => startSelection(filteredIds)}
-            />
+            <span className="hidden sm:flex">
+              <SelectionScopeMenu
+                name="Select"
+                items={[
+                  {
+                    label: "Select records",
+                    help: `Click records to add them. ${MOD_KEY}\u00a0+ click works anytime.`,
+                    onClick: () => setSelectMode(true),
+                  },
+                  ...(drawnIds.length > 0
+                    ? [
+                        {
+                          label: `Select all shown (${drawnIds.length.toLocaleString()})`,
+                          onClick: () => startSelection(drawnIds),
+                        },
+                      ]
+                    : []),
+                  ...(filteredIds.length > drawnIds.length
+                    ? [
+                        {
+                          label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
+                          onClick: () => startSelection(filteredIds),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            </span>
           </div>
         )}
         {/* Not rendered: the file input Upload PDF opens. */}
