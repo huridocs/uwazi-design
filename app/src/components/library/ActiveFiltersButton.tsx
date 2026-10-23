@@ -71,7 +71,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
           className="w-1.5 h-1.5 rounded-full"
           style={{ backgroundColor: "var(--accent-blue)" }}
         />
-        {count} {count === 1 ? "filter" : "filters"}
+        <bdi>{`${count} ${count === 1 ? "filter" : "filters"}`}</bdi>
       </button>
 
       {open && (

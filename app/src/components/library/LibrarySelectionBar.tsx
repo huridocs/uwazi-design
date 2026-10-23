@@ -200,10 +200,10 @@ export function LibrarySelectionBar({
         className={`sm:hidden shrink-0 me-auto flex flex-col items-start px-2 py-1 leading-tight tabular-nums ${BAR_GHOST} rounded-md cursor-pointer`}
       >
         <span className="flex items-center gap-1 text-xs font-semibold text-ink whitespace-nowrap">
-          {fmt(n)} selected
+          <span><bdi>{fmt(n)} selected</bdi></span>
           <ChevronUp size={12} className="text-ink-tertiary" aria-hidden />
         </span>
-        <span className="text-meta text-ink-tertiary truncate">{note || " "}</span>
+        <span className="text-meta text-ink-tertiary truncate"><bdi>{note || "\u00a0"}</bdi></span>
       </button>
       <span role="status" aria-live="polite" className="sr-only sm:hidden">
         {`${fmt(n)} selected${note ? `, ${note}` : ""}`}
@@ -319,10 +319,10 @@ export function ActionsSheet({
         className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
       >
         <div className="px-3 py-2 tabular-nums">
-          <p className={lines ? "text-xs font-semibold text-ink" : "text-meta text-ink-tertiary"}>{title}</p>
+          <p className={lines ? "text-xs font-semibold text-ink" : "text-meta text-ink-tertiary"}><bdi>{title}</bdi></p>
           {lines?.map((l) => (
             <p key={l} className="text-meta text-ink-tertiary">
-              {l}
+              <bdi>{l}</bdi>
             </p>
           ))}
         </div>
