@@ -178,7 +178,7 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
         title={`Delete ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}?`}
         message={
           notInView > 0
-            ? `${notInView.toLocaleString()} of them are hidden by the current filters. Undo restores them until your next delete or bulk change.`
+            ? `${notInView.toLocaleString()} of them are hidden by the current filters. Undo\u00a0restores them until your next delete or bulk change.`
             : "Undo restores them until your next delete or bulk change."
         }
         confirmLabel="Delete"

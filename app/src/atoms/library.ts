@@ -303,11 +303,24 @@ export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
 /** Show the selection list in the drawer — by dropping the preview, unless
  *  the preview is holding an open form (a draft, an edit): ticking a box
  *  must not unmount it and lose what was typed. The list shows once the form
- *  is closed. */
+ *  is closed.
+ *  In select mode a tick leaves the drawer as it is: the reader may be picking
+ *  from its Results tab, which the list would replace. The list opens with
+ *  select mode, and the bar's menu reopens it once closed. */
 function showSelectionList(get: Getter, set: Setter) {
+  if (get(librarySelectModeAtom)) return;
   if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 }
+
+/** Turn on select mode (the footer's Select menu), with the selection list
+ *  in the drawer, then add `ids` if given (all shown, every result). */
+export const enterSelectModeAtom = atom(null, (get, set, ids?: readonly string[]) => {
+  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+  set(librarySelectModeAtom, true);
+  if (ids?.length) set(selectIdsAtom, ids);
+});
 
 /** Toggle one id. Sets the anchor, ends any range, and — like every selection
  *  gesture — drops the preview so the drawer shows the selection being built. */

@@ -1,11 +1,12 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { CheckSquare, ChevronUp, ListChecks, MousePointerClick, PanelRight, SquareMinus, X } from "lucide-react";
+import { Check, CheckSquare, ChevronUp, ListChecks, MousePointerClick, PanelRight, SquareMinus, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
+  enterSelectModeAtom,
   deselectIdsAtom,
   librarySelectedEntityIdAtom,
   librarySelectionAtom,
@@ -61,7 +62,7 @@ export function LibrarySelectionBar({
 }) {
   const selection = useAtomValue(librarySelectionAtom);
   const selectMode = useAtomValue(librarySelectModeAtom);
-  const setSelectMode = useSetAtom(librarySelectModeAtom);
+  const enterSelectMode = useSetAtom(enterSelectModeAtom);
   const clear = useSetAtom(clearSelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
   const deselect = useSetAtom(deselectIdsAtom);
@@ -120,7 +121,7 @@ export function LibrarySelectionBar({
   const pageCount = fmt(loadedIds.length);
   const scopes: ScopeItem[] = [
     ...(!selectMode
-      ? [{ label: "Select records", icon: <MousePointerClick size={14} />, help: `Click records to add them. ${MOD_KEY} + click works anytime.`, onClick: () => setSelectMode(true) }]
+      ? [{ label: "Select records", icon: <MousePointerClick size={14} />, help: `Click records to add them. ${MOD_KEY} + click works anytime.`, onClick: () => enterSelectMode() }]
       : []),
     ...(loadedIds.length > 0
       ? [
@@ -224,6 +225,7 @@ export function LibrarySelectionBar({
             .filter((s) => !s.apart)
             .map((s) => ({ label: s.label, icon: s.icon, onClick: s.onClick, done: s.done }))}
           actions={actions}
+          end={[{ label: n === 0 ? "Stop selecting" : "Clear selection", icon: <X size={14} />, onClick: () => clear() }]}
         />
       )}
       <SelectionDialogs corpus={corpus} notInView={hidden} />
@@ -281,6 +283,7 @@ export function ActionsSheet({
   lines,
   scopes,
   actions,
+  end,
   onClose,
 }: {
   count?: number;
@@ -292,6 +295,8 @@ export function ActionsSheet({
    *  actions and apart from them. */
   scopes?: SheetItem[];
   actions: SheetItem[];
+  /** Listed last, apart (Clear selection). */
+  end?: SheetItem[];
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
@@ -328,6 +333,12 @@ export function ActionsSheet({
           </>
         )}
         <SheetList items={actions} onClose={onClose} />
+        {end && end.length > 0 && (
+          <>
+            <div role="separator" className="mx-3 my-1 h-px bg-border-soft" />
+            <SheetList items={end} onClose={onClose} />
+          </>
+        )}
       </div>
     </div>,
     document.body,
@@ -354,7 +365,8 @@ function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void
               <span className="text-ink-tertiary" aria-hidden>
                 {a.icon}
               </span>
-              {a.label}
+              <span className="flex-1">{a.label}</span>
+              <Check size={14} className="text-ink" aria-hidden />
             </p>
           ) : (
             <button
