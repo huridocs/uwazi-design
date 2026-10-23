@@ -9,6 +9,7 @@ import {
   FileDown,
   MoreHorizontal,
   CheckSquare,
+  ListChecks,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
@@ -52,6 +53,7 @@ import {
   libraryCardInfoAtom,
   thumbSlotsPerRow,
   librarySelectModeAtom,
+  selectIdsAtom,
   libraryThumbFrameAtom,
   libraryThumbSizeAtom,
   libraryListColumnsAtom,
@@ -99,6 +101,7 @@ import {
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
+import { SelectMenuButton } from "../components/library/SelectMenuButton";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -290,6 +293,16 @@ export function LibraryView() {
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
   const [selectMode, setSelectMode] = useAtom(librarySelectModeAtom);
+  const selectIds = useSetAtom(selectIdsAtom);
+  /** The Select menu's page and every-result items: the set, in select mode,
+   *  so the next click on a record refines it rather than replacing it. */
+  const startSelection = useCallback(
+    (ids: readonly string[]) => {
+      setSelectMode(true);
+      selectIds(ids);
+    },
+    [setSelectMode, selectIds],
+  );
   const discardDraft = useSetAtom(discardDraftAtom);
   const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -1378,10 +1391,13 @@ export function LibraryView() {
             start one from the view. */}
         {!selectionActive && !menuTrigger && canSelect && (
           <div className="ms-auto shrink-0 flex items-center gap-1">
-            <FooterButton
-              icon={<CheckSquare size={13} className="text-ink-tertiary" />}
-              label="Select"
-              onClick={() => setSelectMode(true)}
+            <SelectMenuButton
+              pageCount={drawnIds.length}
+              total={filteredIds.length}
+              paged={false}
+              onRecords={() => setSelectMode(true)}
+              onPage={() => startSelection(drawnIds)}
+              onAll={() => startSelection(filteredIds)}
             />
           </div>
         )}
@@ -1424,7 +1440,25 @@ export function LibraryView() {
               // The visible way into bulk selection on a touch screen (a long
               // press on an item still works): the selection bar shows and a
               // tap toggles, until Clear.
-              { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+              { label: "Select records", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
+              ...(canSelect && drawnIds.length > 0
+                ? [
+                    {
+                      label: `Select all shown (${drawnIds.length.toLocaleString()})`,
+                      icon: <CheckSquare size={14} />,
+                      onClick: () => startSelection(drawnIds),
+                    },
+                  ]
+                : []),
+              ...(canSelect && filteredIds.length > drawnIds.length
+                ? [
+                    {
+                      label: `Select all ${filteredIds.length.toLocaleString()} results`,
+                      icon: <ListChecks size={14} />,
+                      onClick: () => startSelection(filteredIds),
+                    },
+                  ]
+                : []),
               { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
               { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
               ...(canImport
