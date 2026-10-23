@@ -92,6 +92,7 @@ import {
   IsolatedRelationshipFieldEditor,
   IsolatedRadioGroup,
   IsolatedDataTable,
+  ValueChipsDemo,
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
@@ -865,6 +866,18 @@ sendFill(selection.text);                                    // commits, then di
 />`}
                 >
                   <IsolatedRelationshipFieldEditor />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-value-chips" ref={reg("ev-value-chips")}>
+                <CatalogEntry
+                  name="ValueChips · long value lists"
+                  description="A relationship field's records or a multiselect's labels in the record, in natural order (131.1.1 < 131.2 < 131.47 < 131.181). When every record shares one template its dot is drawn once by the field label (TemplateDot) and the chips are quiet: no dot, no tint. Mixed templates keep the entity pill. Past three measured lines the list folds to the chips that fit and 'Show all N'; expanded, a filter field and 'Show fewer'. Chips past the fold are not rendered, so Tab never reaches them. The list is named with its count for screen readers."
+                  code={`<MetadataCard title={label} icon={typeId ? <TemplateDot typeId={typeId} /> : undefined}>
+  <ValueChips label={label} values={values} unit="records" />
+</MetadataCard>`}
+                >
+                  <ValueChipsDemo />
                 </CatalogEntry>
               </div>
             </div>

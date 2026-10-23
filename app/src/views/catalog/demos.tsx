@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
+import { TemplateDot, ValueChips, type ChipValue } from "../../components/metadata/ValueChips";
+import { MetadataCard } from "../../components/metadata/MetadataCard";
 
 // Components
 import { SegmentedTabs } from "../../components/layout/SegmentedTabs";
@@ -899,6 +901,22 @@ export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | 
         onCopy={() => {}}
         onClose={() => {}}
       />
+    </div>
+  );
+}
+
+/** ValueChips, live: 120 recommendation codes of one template, stored out of
+ *  order, folded past three lines. */
+export function ValueChipsDemo() {
+  const values: ChipValue[] = Array.from({ length: 120 }, (_, i) => {
+    const n = ((i * 37) % 120) + 1;
+    return { key: `rec-${i}`, text: n % 15 === 0 ? `131.${n / 15}.1` : `131.${n + (n > 60 ? 61 : 0)}`, typeId: "violation", onOpen: () => {} };
+  });
+  return (
+    <div className="max-w-sm">
+      <MetadataCard title="Related Recommendations" icon={<TemplateDot typeId="violation" />}>
+        <ValueChips label="Related Recommendations" values={values} unit="records" />
+      </MetadataCard>
     </div>
   );
 }

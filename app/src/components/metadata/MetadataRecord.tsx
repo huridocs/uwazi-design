@@ -46,7 +46,7 @@ type RecordEntry =
 export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
     <div data-field-key={item.id}>
-      <MetadataCard title={item.label} hideTitle={item.noLabel}>
+      <MetadataCard title={item.label} icon={item.icon} hideTitle={item.noLabel}>
         <FillableValue item={item} />
       </MetadataCard>
     </div>
