@@ -124,6 +124,7 @@ export function EntityFilesBlock({ profile }: { profile: EntityProfile }) {
         {downloadable.length > 1 && (
           <button
             type="button"
+            data-part="download-all"
             onClick={() =>
               notify(
                 `Download all puts the ${downloadable.length} files in one .zip on the server. This prototype has no server: download each file from its row.`,

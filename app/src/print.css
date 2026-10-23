@@ -1,0 +1,224 @@
+/* Printing an entity (Uwazi issue 9884): the record on paper, without the
+   app around it.
+
+   A view marks what a printed page holds with `data-print-root`: the Metadata
+   tab's record (with DocMeta above it, for the title) and the published view's
+   article. Every ancestor of that root gives up its screen layout (fixed
+   heights, scrollers, clipping, flex and grid rows), so the record flows over
+   as many pages as it needs. Every sibling along that path is hidden: the
+   navbar and Beacon, the tab strip, the drawer, action bars and footers,
+   slide-overs, the published-view toggle, Bert and any portalled layer. A page
+   with no root (Library, Settings) prints as it did.
+
+   Dark mode is a screen theme (`tokens.css`), so a dark session prints light.
+   Folded lists unfold through `usePrinting`; the published map prints its
+   paper copy (`PublishedMap`). */
+
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* Paper: white grounds, no warm or vellum fills, no shadows. */
+  :root:has([data-print-root]) {
+    --bg-primary: #fff;
+    --bg-surface: #fff;
+    --bg-warm: #fff;
+    --bg-muted: #fff;
+    --bg-selected: #fff;
+    --bg-placeholder: #fff;
+  }
+
+  html:has([data-print-root]),
+  body:has([data-print-root]) {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff;
+    color: var(--text-primary);
+  }
+
+  /* The path from the page to the root: no screen layout. */
+  body:has([data-print-root]) :has([data-print-root]) {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Everything beside that path, except the record's title block. */
+  body:has([data-print-root]) > :not([data-print-root], :has([data-print-root])),
+  body:has([data-print-root]) :has([data-print-root]) > :not([data-print-root], :has([data-print-root]), [data-component="DocMeta"]) {
+    display: none !important;
+  }
+
+  [data-print-root] {
+    overflow: visible !important;
+    height: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  [data-print-root],
+  [data-print-root] * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* DocMeta: the title and type, no controls, no rule under it. */
+  body:has([data-print-root]) [data-component="DocMeta"] {
+    margin: 0 0 1rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  [data-component="DocMeta"] button {
+    display: none !important;
+  }
+
+  [data-component="DocMeta"] [data-part="title"] {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    font-size: var(--text-xl);
+    line-height: 1.25;
+  }
+
+  /* One column. The masonry's grid of 1px rows becomes a stack of cards, each
+     keeping its own bottom padding as the gap; the published view's columns
+     stack in source order. */
+  [data-print-root] [data-component="MetadataRecord"] > [data-part="grid"],
+  [data-print-root] [data-part="body"],
+  [data-print-root] [data-part="main"] {
+    display: block !important;
+  }
+
+  [data-print-root] [data-part="body"] > * + *,
+  [data-print-root] [data-part="main"] > * + * {
+    margin-top: 2rem;
+  }
+
+  [data-print-root] [data-part="facts"] dl {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Pages break between cards, never inside one. */
+  [data-print-root] :is(
+      [data-component="MetadataFieldBlock"],
+      [data-part="facts"] dl > div,
+      [data-part="place"],
+      [data-part="relationship-group"] li,
+      [data-part="files"] li,
+      [data-part="masthead"]
+    ) {
+    break-inside: avoid;
+  }
+
+  [data-print-root] :is(h1, h2, h3, [data-component="EntityTypeTag"]) {
+    break-after: avoid;
+  }
+
+  [data-print-root] [data-component="MetadataFieldBlock"] {
+    border-color: var(--border-soft) !important;
+  }
+
+  /* Type dots keep their colour without "Background graphics". */
+  [data-print-root] :is([data-component="EntityTypeTag"] [data-part="dot"], [data-part="template-dot"]) {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Chips and relationship pills print as text: no fill, edge or dot, the
+     whole name on as many lines as it takes. Records (a relationship's pills)
+     take a line each; plain values run on as a line of text with " · "
+     between them. */
+  [data-print-root] button {
+    text-align: start;
+  }
+
+  [data-print-root] [data-component="EntityPill"],
+  [data-print-root] [data-component="ValueChips"] [data-part="chip"] > :is(span, button) {
+    display: inline !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    color: var(--text-primary) !important;
+  }
+
+  [data-print-root] [data-component="EntityPill"] [data-part="dot"] {
+    display: none;
+  }
+
+  [data-print-root] :is([data-component="EntityPill"], [data-component="ValueChips"]) .truncate {
+    display: inline;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  [data-print-root] [data-component="ValueChips"] ul {
+    display: block !important;
+  }
+
+  [data-print-root] [data-component="ValueChips"] li {
+    display: inline !important;
+  }
+
+  [data-print-root] [data-component="ValueChips"] li[data-part="chip"] + li[data-part="chip"]::before {
+    content: " · ";
+    color: var(--text-tertiary);
+  }
+
+  [data-print-root] [data-component="ValueChips"] ul:has(> li > :is([data-part="entity-open"], [data-component="EntityPill"])) > li {
+    display: block !important;
+  }
+
+  [data-print-root] [data-component="ValueChips"] ul:has(> li > :is([data-part="entity-open"], [data-component="EntityPill"])) > li + li {
+    margin-top: 0.25rem;
+  }
+
+  [data-print-root] [data-component="ValueChips"] ul:has(> li > :is([data-part="entity-open"], [data-component="EntityPill"])) > li::before {
+    content: none !important;
+  }
+
+  /* Controls with nothing to do on paper. A covered recording stays covered:
+     its notice prints, its reveal does not. */
+  [data-print-root] :is(
+      [data-component="PinToggle"],
+      [data-part="show-all"],
+      [data-part="show-fewer"],
+      [data-part="reveal"],
+      [data-part="download-all"],
+      a[download]
+    ) {
+    display: none !important;
+  }
+
+  /* The map: inside its card, full width, 8cm tall. The screen map steps
+     aside for the paper copy, which was laid out and tiled at this size while
+     hidden. Zoom and attribution controls do not print; the tile credit prints
+     as a line under the card. */
+  [data-print-root] [data-component="PublishedMap"] {
+    height: 8cm;
+  }
+
+  [data-print-root] [data-component="PublishedMap"] > [role="group"] {
+    visibility: hidden;
+  }
+
+  [data-print-root] [data-component="PublishedMap"] > [data-part="print-map"] {
+    visibility: visible;
+  }
+
+  [data-print-root] .leaflet-control-container {
+    display: none;
+  }
+}

@@ -113,6 +113,9 @@
   filter: grayscale(0.85) brightness(1.04) contrast(0.92);
 }
 
-:root.dark .map-tiles-osm {
-  filter: grayscale(0.85) invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.85);
+/* Screen only: a printed map is light whatever the theme. */
+@media screen {
+  :root.dark .map-tiles-osm {
+    filter: grayscale(0.85) invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.85);
+  }
 }

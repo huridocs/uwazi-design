@@ -87,6 +87,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
+      data-component="DocMeta"
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
       className="bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"

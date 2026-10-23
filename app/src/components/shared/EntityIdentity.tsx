@@ -48,7 +48,7 @@ export function EntityIdentity({
       // it, not a caption beside a tag.
       <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
         <EntityTypeTag typeId={tid} className="shrink-0 max-w-[12rem]" />
-        <h2 title={label} className="text-sm font-semibold text-ink truncate min-w-0">
+        <h2 data-part="title" title={label} className="text-sm font-semibold text-ink truncate min-w-0">
           {label}
         </h2>
       </div>
@@ -59,6 +59,7 @@ export function EntityIdentity({
     <div className="min-w-0 flex-1">
       <EntityTypeTag typeId={tid} className="flex" />
       <h2
+        data-part="title"
         title={label}
         className={`mt-0.5 font-semibold text-ink leading-snug line-clamp-2 ${
           size === "sm" ? "text-tab" : "text-sm"

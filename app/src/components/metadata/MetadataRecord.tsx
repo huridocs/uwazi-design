@@ -52,6 +52,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
         title={item.label}
         icon={item.icon}
         hideTitle={item.noLabel}
+        component="MetadataFieldBlock"
         action={item.kind === "chips" && item.fillValue ? <FillChipsAction item={item} /> : undefined}
       >
         <FillableValue item={item} />
@@ -232,7 +233,7 @@ export function MetadataRecord({
 
   return (
     <>
-    <MasonryGrid containerRef={rootRef}>
+    <MasonryGrid containerRef={rootRef} component="MetadataRecord">
       {/* Template sequence. The only thing kind decides here is `wide`: prose
           takes two columns of three, because a paragraph set in a third of a
           wide pane is a column of six-word lines. Chips and scalars take one.

@@ -30,10 +30,12 @@ export function EntityTypeTag({
 
   return (
     <span
+      data-component="EntityTypeTag"
       title={name}
       className={`inline-flex items-center gap-1.5 min-w-0 max-w-full ${className}`}
     >
       <span
+        data-part="dot"
         className="w-2 h-2 rounded-[2px] shrink-0"
         style={{ backgroundColor: color }}
         aria-hidden

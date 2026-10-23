@@ -8,6 +8,7 @@ import { overlayEntityIdAtom, scopedReferencesAtom } from "../../atoms/reference
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { entityDisplayModeAtom, entityTabRequestAtom, focusedHasPublishedViewAtom } from "../../atoms/publishedView";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
+import { usePrinting } from "../../hooks/usePrinting";
 import { layerStackAtom } from "../../atoms/layerStack";
 import { getEntityProfile, type EntityProfile } from "../../data/entityProfiles";
 import { getEntity, getEntityType, type EntityImage } from "../../data/entities";
@@ -152,6 +153,7 @@ export function PublishedEntityView() {
       <div ref={scrollRef} data-part="published-scroll" className="flex-1 min-h-0 overflow-y-auto">
         <article
           data-gutter-host
+          data-print-root
           aria-labelledby="published-title"
           className="gutter-host-main mx-auto w-full max-w-[72rem] pt-14 pb-20"
         >
@@ -414,7 +416,9 @@ function relationshipGroups(references: Reference[], shown: Set<string>) {
 function RelationshipGroup({ typeId, rows }: { typeId: string; rows: RelRow[] }) {
   const [all, setAll] = useState(false);
   const preview = useSetAtom(overlayEntityIdAtom);
-  const shown = all ? rows : rows.slice(0, GROUP_PREVIEW);
+  // Paper has no "Show all": a printed group lists every entity.
+  const printing = usePrinting();
+  const shown = all || printing ? rows : rows.slice(0, GROUP_PREVIEW);
   const name = getEntityType(typeId)?.name;
   return (
     <section data-part="relationship-group" aria-label={name} className="flex flex-col gap-2.5 min-w-0">
@@ -440,7 +444,7 @@ function RelationshipGroup({ typeId, rows }: { typeId: string; rows: RelRow[] })
           );
         })}
       </ul>
-      {rows.length > GROUP_PREVIEW && (
+      {rows.length > GROUP_PREVIEW && !printing && (
         <button
           type="button"
           onClick={() => setAll((v) => !v)}
@@ -507,10 +511,59 @@ function SupportingFiles({ profile, language }: { profile: EntityProfile; langua
 }
 
 /** The entity's place, on OpenStreetMap tiles. Wheel zoom is off: the map
- *  sits in a scrolling page, and a wheel over it should scroll the page. */
+ *  sits in a scrolling page, and a wheel over it should scroll the page.
+ *
+ *  A second map, hidden on screen, is the printed one: paper is wider and
+ *  taller than the card, and Leaflet cannot fetch the tiles for a new size
+ *  between the print event and the page's layout, so a resized screen map
+ *  prints grey. The paper map is laid out at its printed size from the start,
+ *  in light tiles whatever the theme, with no controls; its tile credit
+ *  prints as a line under it (`print.css`). */
 function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: string }) {
+  const [credit, setCredit] = useState("");
+  return (
+    <>
+      <div data-component="PublishedMap" className="relative isolate h-64 rounded-md overflow-hidden border border-border-soft">
+        <MapPane lat={lat} lon={lon} label={label} />
+        <div data-part="print-map" aria-hidden className="absolute inset-0 overflow-hidden invisible">
+          <MapPane lat={lat} lon={lon} label={label} paper onCredit={setCredit} />
+        </div>
+      </div>
+      {credit && (
+        <p data-part="map-credit" className="hidden print:block text-meta text-ink-tertiary">
+          {credit}
+        </p>
+      )}
+    </>
+  );
+}
+
+/** The printed map's box: 8cm tall, and wider than A4 or Letter's text width
+ *  so it fills either, centred in the card, which clips it. */
+const PAPER_MAP = "absolute top-0 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 w-[19cm] h-[8cm]";
+
+function MapPane({
+  lat,
+  lon,
+  label,
+  paper = false,
+  onCredit,
+}: {
+  lat: number;
+  lon: number;
+  label: string;
+  paper?: boolean;
+  onCredit?: (text: string) => void;
+}) {
   const host = useRef<HTMLDivElement>(null);
-  const map = useLeafletMap(host, { center: [lat, lon], zoom: 5, minZoom: 1, maxZoom: 18, scrollWheelZoom: false });
+  const map = useLeafletMap(host, {
+    center: [lat, lon],
+    zoom: 5,
+    minZoom: 1,
+    maxZoom: 18,
+    scrollWheelZoom: false,
+    ...(paper ? { controls: false, light: true, dragging: false, keyboard: false, doubleClickZoom: false, touchZoom: false, boxZoom: false } : {}),
+  });
   useEffect(() => {
     if (!map) return;
     map.setView([lat, lon], map.getZoom());
@@ -528,10 +581,22 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
       marker.remove();
     };
   }, [map, lat, lon, label]);
-  return (
-    <div data-component="PublishedMap" className="relative isolate h-64 rounded-md overflow-hidden border border-border-soft">
-      <div ref={host} role="group" aria-label={`Map: ${label}`} className="absolute inset-0" />
-    </div>
+  // The tile layer's credit as plain text, for the printed line.
+  useEffect(() => {
+    if (!map || !onCredit) return;
+    const read = (e: L.LayerEvent) => {
+      const html = (e.layer as L.Layer & { getAttribution?: () => string | undefined }).getAttribution?.();
+      if (html) onCredit(new DOMParser().parseFromString(html, "text/html").body.textContent?.trim() ?? "");
+    };
+    map.on("layeradd", read);
+    return () => {
+      map.off("layeradd", read);
+    };
+  }, [map, onCredit]);
+  return paper ? (
+    <div ref={host} className={PAPER_MAP} />
+  ) : (
+    <div ref={host} role="group" aria-label={`Map: ${label}`} className="absolute inset-0" />
   );
 }
 

@@ -104,17 +104,18 @@ async function loadBaseLayers(provider: MapProvider, apiKey: string, wanted: Map
 }
 
 /** A Leaflet map in `host`, with the collection's tiles, an attribution line
- *  and (with `controls`) zoom and layer controls at the bottom right. Returns
+ *  and (with `controls`) zoom and layer controls at the bottom right. `light`
+ *  keeps the light layer in dark mode (a map drawn for paper). Returns
  *  the map once it exists, so callers add their own layers in an effect keyed
  *  on it. The host must have a definite size; the map follows it as it resizes. */
 export function useLeafletMap(
   host: RefObject<HTMLDivElement | null>,
-  options: L.MapOptions & { controls?: boolean },
+  options: L.MapOptions & { controls?: boolean; light?: boolean },
 ): L.Map | null {
   const [map, setMap] = useState<L.Map | null>(null);
   const settings = useAtomValue(collectionSettings.valueAtom);
-  const dark = resolveTheme(useAtomValue(themeAtom)) === "dark";
-  const { controls = true, ...mapOptions } = options;
+  const { controls = true, light = false, ...mapOptions } = options;
+  const dark = resolveTheme(useAtomValue(themeAtom)) === "dark" && !light;
 
   useEffect(() => {
     const el = host.current;
