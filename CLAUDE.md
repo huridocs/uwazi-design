@@ -263,7 +263,9 @@ and the files ported with it; other surfaces have not had the pass yet.
 - Type labels never use the raw type colour. `typeLabelColor` (`utils/typeColor.ts`, the only
   implementation) mixes saturated colours toward ink by `--label-mix` (55%, `tokens.css`). Check a
   new colour against the 22-colour palette in `data/cejil/typesAdapter.ts`, in dark mode, which
-  is the stricter case.
+  is the stricter case. Where a template is chosen (`TemplateSelect`, Change template, the bulk
+  edit drawer's summary) the name is ink and the square dot carries the colour. A CEJIL template
+  with no colour in the dump takes one from the adapter's palette, so every dot is filled.
 - Live updates use `aria-live="polite"`, `role="status"` or `role="log"`.
 
 ## Surfaces
@@ -316,6 +318,18 @@ and the files ported with it; other surfaces have not had the pass yet.
   never a callback owned by the form. `MetadataEditBody` clears `fillTargetAtom` on unmount.
 - Arming ends on fill, Escape (ignored inside a dialog), the chip's ×, or Save/Cancel. Date
   inputs do not arm. A filled field scrolls into view and flashes.
+- Relationship fields and multiselects with two or more values draw through `ValueChips`
+  (`components/metadata/ValueChips.tsx`): natural numeric order (131.2 before 131.47), one
+  template dot by the label (`TemplateDot`, `MetadataCard`'s `icon`) with quiet chips when every
+  record shares a template (mixed templates keep the entity pill), and past three measured lines
+  a fold to "Show all N"; expanded, a filter field and "Show fewer". Chips past the fold are not
+  rendered. The list is named with its count.
+- While a field is armed, a multiselect drawn as chips shows "Fill <Field>" at the end of its
+  card head (`FillChipsAction`, `MetadataCard`'s `action`): one click fills the whole set as one
+  line, in the order the chips print. The chips keep their own buttons.
+- `ThesaurusPicker`: a multiselect whose list folds gets an All / Selected (N) switch at the end
+  of the search row (`FacetSection`'s `searchAside`, `showOnly`). Selected lists the ticked
+  values; search applies within it; a row unticked there stays until the view changes.
 
 ### Library
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
@@ -331,6 +345,29 @@ and the files ported with it; other surfaces have not had the pass yet.
   search box holds the only count and `ActiveSearchChip`.
 - Recent searches: `librarySearchHistoryAtom`, recorded on settle (1.2s, Enter, blur), deduped,
   capped at 8, in sessionStorage.
+- Selecting several starts from the footer, never from a card: the idle bar's "Select ▾"
+  (`SelectionScopeMenu`, at the bar's end; on phones the Actions sheet) offers "Cherrypick",
+  "Select all shown (N)" (what "Show more" has loaded) and "Select all N results". Each turns on
+  select mode (`enterSelectModeAtom`, `librarySelectModeAtom`), where a plain click on a record,
+  a snippet or a matched property toggles it, and a ground click does not end it. Cmd/Ctrl and
+  Shift + click and the long press still start one from the view. No checkbox is drawn.
+  - While selecting the bar holds the bulk actions at its start (Edit, Export and Delete as
+    icons with a Hint; Change template, Share and Permissions in Actions), and at its end the
+    same `SelectionScopeMenu` in a fixed 9rem slot ("652 selected ▾", at most one caption
+    below it, "3,746 hidden by filters") and Clear. Its menu opens with where the selection
+    sits ("120 shown", "4,278 not shown", "N hidden by filters"), then the scopes: Cherrypick
+    (when select mode is off), Select / Deselect all shown, Select all N [filtered] results /
+    All N selected (text and a check), Drop N hidden by filters, Show the selected records,
+    Clear selection. "All" is always the filtered results.
+  - The selection list opens in the drawer only when a selection starts from nothing or select
+    mode starts; later ticks leave the drawer as it is (`showSelectionList`), and "Show the
+    selected records" reopens it.
+  - The selection is ids and a filter change drops none; clearing the filters brings the hidden
+    ones back as selected. An action on a selection holding hidden records asks first
+    (`HiddenScopeDialog`; "Only the N in view" is the commit, "All N" the ghost); Delete's
+    confirm names them. The selection drawer lists every selected record, so its menu does not ask.
+  - Phones: the count is a button that opens a sheet with where the selection sits, the scopes,
+    every action and Clear selection last.
 - Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
   tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
 - Thumbnails: one treatment, set in `EntityCard`: a landscape band (`h-24`) with `auto` fit (an
