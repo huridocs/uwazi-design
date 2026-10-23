@@ -52,7 +52,8 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   ├── files/             # FileTable, FileDrawer, FileDetailEditor, FileViewerModal, DocumentGroupCard,
 │   │   │   │                      # DrawerFilesBody, AddFileModal, AddFileDropArea
 │   │   │   ├── metadata/          # MetadataCard, MetadataRecord, ConnectionGroupCard,
-│   │   │   │                      # RelationshipFieldCard/Editor, InheritedValue (InheritedValueChip, ProvenanceTrail)
+│   │   │   │                      # RelationshipFieldCard/Editor, InheritedValue (InheritedValueChip, ProvenanceTrail),
+│   │   │   │                      # ValueChips, ThesaurusPicker
 │   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
 │   │   │   │                      # EntitiesTable, IssuesTable, ImportEmptyState, NewImportModal
 │   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersSlideOver,
@@ -136,7 +137,7 @@ The collection switcher in the navbar toggles between two corpora:
   marks on layouts with no room for a snippet. Opening an entity leads to:
 - **Entity view** — four main tabs (**Document · Metadata · Relationships · Files**):
   - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
-  - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template). Includes **relationship & inherited properties**: fields whose values come from connected entities (single + multi-inheritance), shown with provenance (source entity + relation + inherited property) and a carbon "inherited" marker. Inherited values are read-only — you edit the **connection** (entity picker, syncs sibling fields) or jump to the **source entity** to change the native value.
+  - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template). Includes **relationship & inherited properties**: fields whose values come from connected entities (single + multi-inheritance), shown with provenance (source entity + relation + inherited property) and a carbon "inherited" marker. Inherited values are read-only — you edit the **connection** (entity picker, syncs sibling fields) or jump to the **source entity** to change the native value. Long value lists (relationship fields, multiselects) render as `ValueChips`: natural numeric order, one template dot on the label when every value shares a template, folded past three lines behind "Show all N" with a filter. While a form field is armed for click-to-fill, a chip list offers "Fill <Field>" in its head, which fills the whole set. In the edit form, a long multiselect's picker has an **All / Selected (N)** switch beside its search.
   - **Relationships** — The single surface for text references and entity-to-entity links (one `Reference` record, projected per-evidence or as derived aggregates). Three views: **List** (with grouping by target/source template, entity, relation type, direction, or page), **Tree** (collapsible relation-type → target → evidence, detail → compact → overview zoom), and radial **Graph** (pan/zoom, branch collapse). Boolean search (AND/OR/NOT/"exact"/wild\*); filters slide-over. Hosts AI (IX) suggestions and the Create-relationship flow.
   - **Files** — Primary + supporting files with multi-select; drawer shows focused file (default: the entity's primary file) with an inline edit mode
 
