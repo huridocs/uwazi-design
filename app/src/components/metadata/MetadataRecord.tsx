@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { TextCursorInput } from "lucide-react";
+import { t } from "../../utils/i18n";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
@@ -46,7 +48,12 @@ type RecordEntry =
 export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
     <div data-field-key={item.id}>
-      <MetadataCard title={item.label} icon={item.icon} hideTitle={item.noLabel}>
+      <MetadataCard
+        title={item.label}
+        icon={item.icon}
+        hideTitle={item.noLabel}
+        action={item.kind === "chips" && item.fillValue ? <FillChipsAction item={item} /> : undefined}
+      >
         <FillableValue item={item} />
       </MetadataCard>
     </div>
@@ -63,7 +70,8 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
 function FillableValue({ item }: { item: MetadataItem }) {
   const fillTarget = useAtomValue(fillTargetAtom);
   const sendFill = useSetAtom(fillRequestAtom);
-  if (!fillTarget || !item.fillValue) return <>{item.content}</>;
+  // Chips keep their own targets; their fill is `FillChipsAction`, in the head.
+  if (!fillTarget || !item.fillValue || item.kind === "chips") return <>{item.content}</>;
   return (
     <button
       type="button"
@@ -73,6 +81,35 @@ function FillableValue({ item }: { item: MetadataItem }) {
         cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
     >
       {item.content}
+    </button>
+  );
+}
+
+/** A chip list's click-to-fill: "Fill <Field>" at the end of the card head,
+ *  drawn only while a field is armed. It fills the whole set as one line, in
+ *  the order the chips print. A sibling of the chips, not a wrapper, so the
+ *  chips keep their own buttons. The negative margin keeps it inside the label
+ *  line, so the head is the same height armed or not. */
+function FillChipsAction({ item }: { item: MetadataItem }) {
+  const fillTarget = useAtomValue(fillTargetAtom);
+  const sendFill = useSetAtom(fillRequestAtom);
+  if (!fillTarget || !item.fillValue) return null;
+  return (
+    <button
+      type="button"
+      data-part="fill"
+      data-fillable
+      onClick={() => sendFill(item.fillValue!)}
+      aria-label={`${t("System", "Fill")} ${fillTarget.label} ${t("System", "with")} ${item.label}`}
+      title={`${t("System", "Fill")} ${fillTarget.label} ${t("System", "with")}: ${item.fillValue}`}
+      className="touch-target inline-flex items-center gap-1 max-w-full h-6 -my-1 px-1.5 rounded-md text-xs font-medium text-ink
+        whitespace-nowrap hover:bg-parchment transition-colors cursor-pointer
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
+    >
+      <TextCursorInput size={12} aria-hidden className="shrink-0 text-ink-tertiary" />
+      <span className="truncate">
+        {t("System", "Fill")} {fillTarget.label}
+      </span>
     </button>
   );
 }

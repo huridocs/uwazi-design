@@ -8,6 +8,10 @@ interface MetadataCardProps {
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Drawn at the head's end (a chip list's "Fill <Field>" while a field is
+   *  armed). It must not be taller than the label line, so the head keeps its
+   *  height whether it is drawn or not. */
+  action?: ReactNode;
 }
 
 /** The card head NAMES the thing in the card — a metadata field, a connection,
@@ -30,7 +34,7 @@ interface MetadataCardProps {
  *  would otherwise be the same text. One colour step, no second size.
  *
  *  Icons in this row belong at 11px to match; the callers pass them. */
-export function MetadataCard({ title, hideTitle = false, icon, children, className = "" }: MetadataCardProps) {
+export function MetadataCard({ title, hideTitle = false, icon, children, className = "", action }: MetadataCardProps) {
   return (
     <div className={`bg-paper border border-border/40 rounded-md overflow-hidden ${className}`}>
       <div className="flex flex-col gap-2 px-4 py-3">
@@ -39,6 +43,7 @@ export function MetadataCard({ title, hideTitle = false, icon, children, classNa
           <h4 className="text-meta font-semibold uppercase tracking-wider text-ink-secondary">
             {title}
           </h4>
+          {action && <div className="ms-auto flex min-w-0 max-w-[50%]">{action}</div>}
         </div>
         {children}
       </div>

@@ -1,4 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Provider, createStore } from "jotai";
+import { fillTargetAtom } from "../atoms/fillTarget";
+import { MetadataFieldBlock } from "../components/metadata/MetadataRecord";
+import { fieldItem } from "../components/metadata/items";
 import { MetadataCard } from "../components/metadata/MetadataCard";
 import { TemplateDot, ValueChips, sharedTemplate, type ChipValue } from "../components/metadata/ValueChips";
 
@@ -67,5 +71,38 @@ export const Multiselect: Story = {
   args: {
     label: "Tipo de audiencia",
     values: ["Fondo", "Excepciones Preliminares", "Reparaciones", "Costas"].map((t) => ({ key: t, text: t })),
+  },
+};
+
+const DESCRIPTORES = [
+  "Torture and cruel, inhuman or degrading treatment",
+  "Reproductive rights",
+  "Discrimination",
+  "Gender violence",
+  "Health",
+  "Medical secret",
+  "Pretrial detention",
+  "Stereotypes",
+];
+
+/** A multiselect in the record while a form field is armed for click-to-fill:
+ *  "Fill <Field>" at the card head's end fills the whole set, in the
+ *  order the chips print. The chips stay as they are. */
+export const FillArmed: Story = {
+  render: () => {
+    const store = createStore();
+    store.set(fillTargetAtom, { sessionId: "story", fieldId: "objeto", label: "Objeto de la audiencia" });
+    const item = fieldItem({
+      id: "descriptores",
+      label: "Descriptores",
+      type: "multiselect",
+      values: DESCRIPTORES,
+      value: DESCRIPTORES.join(", "),
+    });
+    return (
+      <Provider store={store}>
+        <MetadataFieldBlock item={item} />
+      </Provider>
+    );
   },
 };
