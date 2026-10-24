@@ -9,7 +9,6 @@ import {
   FileDown,
   MoreHorizontal,
   CheckSquare,
-  ListChecks,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
@@ -800,9 +799,6 @@ export function LibraryView() {
   const canSelect = viewMode === "cards" || viewMode === "list" || viewMode === "results" || viewMode === "map";
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
-  /** A search, facet, date or map area narrows the results: the selection's
-   *  "all" is the filtered results, and a selected record may be hidden. */
-  const filtersActive = hasQuery || filtered.length !== entities.length;
   // The grid's and the table's order — Results registers its own, so this one
   // stands down while it draws (see `useSelectionOrder`).
   useSelectionOrder(viewMode === "results" ? null : shownIds);
@@ -1334,7 +1330,6 @@ export function LibraryView() {
             loadedIds={drawnIds}
             // No pages here: "Show more" loads the next results into the view.
             paged={false}
-            filtersActive={filtersActive}
             corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
@@ -1406,14 +1401,6 @@ export function LibraryView() {
                         },
                       ]
                     : []),
-                  ...(filteredIds.length > drawnIds.length
-                    ? [
-                        {
-                          label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
-                          onClick: () => startSelection(filteredIds),
-                        },
-                      ]
-                    : []),
                 ]}
               />
             </span>
@@ -1465,15 +1452,6 @@ export function LibraryView() {
                       label: `Select all shown (${drawnIds.length.toLocaleString()})`,
                       icon: <CheckSquare size={14} />,
                       onClick: () => startSelection(drawnIds),
-                    },
-                  ]
-                : []),
-              ...(canSelect && filteredIds.length > drawnIds.length
-                ? [
-                    {
-                      label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
-                      icon: <ListChecks size={14} />,
-                      onClick: () => startSelection(filteredIds),
                     },
                   ]
                 : []),
