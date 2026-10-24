@@ -21,7 +21,7 @@ export interface ScopeItem {
 /** The Library footer's one selection control, in the same place idle and
  *  selecting: "Select ▾" with nothing picked, "652 selected ▾" once there is
  *  a selection or select mode is on. Its menu holds every scope action
- *  (Cherrypick, what is shown, dropping the hidden ones, Clear) and,
+ *  (Cherrypick, this page, dropping the hidden ones, Clear) and,
  *  at its top, where the selection sits as text. The bar shows at most one
  *  short line under the count (`note`), in a slot that keeps its two lines,
  *  so the bar never grows and nothing moves when the note comes or goes.
@@ -115,7 +115,7 @@ export function SelectionScopeMenu({
     );
   } else {
     trigger = (
-      <Hint text="Cherrypick records or select all shown" describe={false} muted>
+      <Hint text="Cherrypick records or select this page" describe={false} muted>
         {(hint) => (
           <button
             {...hint}

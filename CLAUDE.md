@@ -353,7 +353,7 @@ and the files ported with it; other surfaces have not had the pass yet.
   capped at 8, in sessionStorage.
 - Selecting several starts from the footer, never from a card: the idle bar's "Select ▾"
   (`SelectionScopeMenu`, at the bar's end; on phones the Actions sheet) offers "Cherrypick" and
-  "Select all shown (N)" (what "Show more" has loaded); there is no select-all of the whole
+  "Select this page (N)" (this page is what "Show more" has loaded); there is no select-all of the whole
   filtered library. Each turns on
   select mode (`enterSelectModeAtom`, `librarySelectModeAtom`), where a plain click on a record,
   a snippet or a matched property toggles it, and a ground click does not end it. Cmd/Ctrl and
@@ -362,8 +362,8 @@ and the files ported with it; other surfaces have not had the pass yet.
     icons with a Hint; Change template, Share and Permissions in Actions), and at its end the
     same `SelectionScopeMenu` in a fixed 9rem slot ("652 selected ▾", at most one caption
     below it, "3,746 hidden by filters") and Clear. Its menu opens with where the selection
-    sits ("120 shown", "4,278 not shown", "N hidden by filters"), then the scopes: Cherrypick
-    (when select mode is off), Select / Deselect all shown, Drop N hidden by filters, Show the selected
+    sits ("120 on this page", "4,278 not loaded", "N hidden by filters"), then the scopes: Cherrypick
+    (when select mode is off), Select / Deselect this page, Drop N hidden by filters, Show the selected
     records, Clear selection. A selection still spans filters by cherrypicking.
   - The selection list opens in the drawer only when a selection starts from nothing or select
     mode starts; later ticks leave the drawer as it is (`showSelectionList`), and "Show the

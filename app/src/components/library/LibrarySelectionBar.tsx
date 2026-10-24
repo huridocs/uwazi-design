@@ -49,7 +49,9 @@ export function LibrarySelectionBar({
   filteredIds: readonly string[];
   /** The ids the view in front draws (a page of Cards or List). */
   loadedIds: readonly string[];
-  /** The view pages its results, so "shown" is "this page". */
+  /** The view pages its results: records it does not draw are "on other
+   *  pages". Without pages ("Show more") they are "not loaded"; either way
+   *  what it draws is "this page". */
   paged?: boolean;
   corpus: Corpus;
   /** The active-filters readout, placed after the actions and before the
@@ -88,8 +90,8 @@ export function LibrarySelectionBar({
     else hiddenIds.push(id);
   }
   const hidden = hiddenIds.length;
-  const where = paged ? "on this page" : "shown";
-  const elsewhere = paged ? "on other pages" : "not shown";
+  const where = "on this page";
+  const elsewhere = paged ? "on other pages" : "not loaded";
   const fmt = (x: number) => x.toLocaleString();
 
   // Where the selection sits, for the menu's top and the accessible names.
@@ -117,8 +119,8 @@ export function LibrarySelectionBar({
     ...(loadedIds.length > 0
       ? [
           pageAllPicked
-            ? { label: paged ? "Deselect this page" : "Deselect all shown", icon: <SquareMinus size={14} />, onClick: () => deselect(loadedIds) }
-            : { label: paged ? `Select this page (${pageCount})` : `Select all shown (${pageCount})`, icon: <CheckSquare size={14} />, onClick: () => selectIds(loadedIds) },
+            ? { label: "Deselect this page", icon: <SquareMinus size={14} />, onClick: () => deselect(loadedIds) }
+            : { label: `Select this page (${pageCount})`, icon: <CheckSquare size={14} />, onClick: () => selectIds(loadedIds) },
         ]
       : []),
     ...(hidden > 0 ? [{ label: `Drop ${fmt(hidden)} hidden by filters`, icon: <SquareMinus size={14} />, onClick: () => deselect(hiddenIds) }] : []),
@@ -275,7 +277,7 @@ export function ActionsSheet({
   heading?: string;
   /** Text under the heading (where the selection sits). */
   lines?: string[];
-  /** What the selection covers (what is shown, records hidden by filters), listed above the
+  /** What the selection covers (this page, records hidden by filters), listed above the
    *  actions and apart from them. */
   scopes?: SheetItem[];
   actions: SheetItem[];

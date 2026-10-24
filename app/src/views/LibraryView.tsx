@@ -1396,7 +1396,7 @@ export function LibraryView() {
                   ...(drawnIds.length > 0
                     ? [
                         {
-                          label: `Select all shown (${drawnIds.length.toLocaleString()})`,
+                          label: `Select this page (${drawnIds.length.toLocaleString()})`,
                           onClick: () => startSelection(drawnIds),
                         },
                       ]
@@ -1449,7 +1449,7 @@ export function LibraryView() {
               ...(canSelect && drawnIds.length > 0
                 ? [
                     {
-                      label: `Select all shown (${drawnIds.length.toLocaleString()})`,
+                      label: `Select this page (${drawnIds.length.toLocaleString()})`,
                       icon: <CheckSquare size={14} />,
                       onClick: () => startSelection(drawnIds),
                     },

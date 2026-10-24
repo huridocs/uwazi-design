@@ -134,7 +134,7 @@ The collection switcher in the navbar toggles between two corpora:
   **passages** (one flat ranked sheet), and **spine** (best passage on the shared chronology) — with
   hits marked in place, in the PDF itself (with an n/total match stepper), and via **MatchOrigin**
   marks on layouts with no room for a snippet. Selecting several starts from the footer's
-  **Select ▾**: **Cherrypick** (click records to add them) or **Select all shown**; there is no
+  **Select ▾**: **Cherrypick** (click records to add them) or **Select this page** (what **Show more** has loaded); there is no
   select-all of the whole library. The bar then holds the bulk actions and a count menu that says
   where the selection sits, including records the filters hide. Opening an entity leads to:
 - **Entity view** — four main tabs (**Document · Metadata · Relationships · Files**):
