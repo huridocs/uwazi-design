@@ -664,9 +664,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   - Shift-range runs over the whole result order (`useSelectionOrder(filteredIds)`), so a range
     can span pages; Shift+Arrow stops at the page edge.
   - Selecting several starts from the footer, never from a card: the idle bar's "Select ▾"
-    (`SelectionScopeMenu`, before the page group; on phones the Actions sheet) offers "Cherrypick",
-    "Select this page (30)" ("Select all shown" where the view does not page) and
-    "Select all N results". Each turns on `librarySelectModeAtom`, where a plain click on a
+    (`SelectionScopeMenu`, before the page group; on phones the Actions sheet) offers "Cherrypick" and
+    "Select this page (30)" ("Select all shown" where the view does not page); there is no
+    select-all of the whole filtered library. Each turns on `librarySelectModeAtom`, where a plain click on a
     record, a snippet or a matched property toggles it, and a ground click does not end it.
     Cmd/Ctrl and Shift + click and the long press still start one from the view. No checkbox
     is drawn on cards or in the bar.
@@ -678,10 +678,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     the other. Its menu
     opens with where the selection sits, as text ("30 on this page", "622 on other pages",
     "3,746 hidden by filters"), then the scopes: Cherrypick (when select mode is off),
-    Select / Deselect this page, Select all N [filtered] results / All N selected (text
-    and a check, not a button), Drop N
-    hidden by filters, Show the selected records, Clear selection. "All" is always the
-    filtered results, N the masthead's count. The pager after the group shares a grid cell
+    Select / Deselect this page, Drop N hidden by filters, Show the selected records,
+    Clear selection. A selection still spans pages and filters by cherrypicking. The pager after the group shares a grid cell
     with an unseen copy of the unfiltered collection's pager (`FooterHold`), so a filter
     turned on or off never moves the group. The selection list opens in the drawer only
     when a selection starts from nothing (a modifier click or long press) or select mode
