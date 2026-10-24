@@ -207,20 +207,15 @@ function useConnectionValues(field: RelationshipMetadataField): ChipValue[] {
 
 function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
   const values = useConnectionValues(field);
-  const more = field.totalConnected != null ? field.totalConnected - values.length : 0;
+  const unresolved = field.totalConnected != null ? Math.max(0, field.totalConnected - values.length) : 0;
+  const total = values.length + unresolved;
   return (
     <div data-component="ConnectionPills" className="contents">
       <ValueChips
         label={field.label}
         values={values}
-        unit={values.length === 1 ? "record" : "records"}
-        after={
-          more > 0 ? (
-            <span data-part="more" className="h-6 flex items-center text-meta text-ink-tertiary">
-              +{more} more
-            </span>
-          ) : undefined
-        }
+        unit={total === 1 ? "record" : "records"}
+        unresolved={unresolved}
       />
     </div>
   );
