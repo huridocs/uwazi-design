@@ -324,6 +324,12 @@ and the files ported with it; other surfaces have not had the pass yet.
   record shares a template (mixed templates keep the entity pill), and past three measured lines
   a fold to "Show all N"; expanded, a filter field and "Show fewer". Chips past the fold are not
   rendered. The list is named with its count.
+- CEJIL's link-only relationship groups hold their first 15 records (`REL_CONN_CAP`,
+  `data/cejil/profile.ts`) and carry the full count in `totalConnected`. The chips count every
+  record once: the fold reads "Show 15 of 29", the open or unfolded list ends with "15 of 29
+  listed", and there is no "+N more". The cap stays because the fold's measure lays out every
+  chip once: uncapped, Corte IDH's record (1,459 Mecanismo) took 461 ms to paint against 77 ms
+  (dev server, 2026-10-23).
 - While a field is armed, a multiselect drawn as chips shows "Fill <Field>" at the end of its
   card head (`FillChipsAction`, `MetadataCard`'s `action`): one click fills the whole set as one
   line, in the order the chips print. The chips keep their own buttons.

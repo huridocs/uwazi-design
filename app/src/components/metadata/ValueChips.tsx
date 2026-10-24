@@ -68,15 +68,17 @@ export function ValueChips({
   label,
   values,
   unit = "values",
-  after,
+  total: connected = 0,
 }: {
   /** The field's label, for the list's accessible name. */
   label: string;
   values: ChipValue[];
   /** What a value is, in the accessible name ("29 records"). */
   unit?: string;
-  /** Drawn after the last chip (a capped field's "+N more"). */
-  after?: ReactNode;
+  /** Every connected record, when `values` holds only the first of them (a
+   *  capped field). The fold counts them all ("Show 15 of 29"), and the list,
+   *  where it is complete, says how many it holds. */
+  total?: number;
 }) {
   const sorted = useMemo(() => sortNatural(values), [values]);
   const quiet = !!sharedTemplate(values);
@@ -122,6 +124,12 @@ export function ValueChips({
   // Expanded is only reachable from a fold, and stays one while a resize
   // re-measures.
   const folds = expanded || (fit !== null && fit < sorted.length);
+  const total = Math.max(connected, sorted.length);
+  const capped = total > sorted.length;
+  // The list is complete when it is open or does not fold; read only once
+  // measured, so a folding list never shows the caption for a frame.
+  const complete = expanded || (fit !== null && !folds);
+  const listed = `${sorted.length.toLocaleString()} of ${total.toLocaleString()} listed`;
   const q = query.trim().toLowerCase();
   const shown = expanded
     ? q
@@ -142,7 +150,9 @@ export function ValueChips({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Filter ${sorted.length.toLocaleString()} ${unit}`}
+            // No count: the fold gives the field's one total, and the filter
+            // reaches only the records drawn as chips.
+            placeholder={`Filter ${unit}`}
             aria-label={`Filter ${label}`}
             className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-ink-muted focus:outline-none"
           />
@@ -158,7 +168,7 @@ export function ValueChips({
       <ul
         ref={listRef}
         role="list"
-        aria-label={`${label}, ${sorted.length.toLocaleString()} ${unit}`}
+        aria-label={`${label}, ${total.toLocaleString()} ${unit}${capped ? `, ${sorted.length.toLocaleString()} listed` : ""}`}
         className="flex flex-wrap items-center gap-1.5 min-w-0"
         // While measuring, the box is held to the folded lines, so the
         // re-measure never shows the whole list for a frame.
@@ -194,8 +204,12 @@ export function ValueChips({
             No matches.
           </li>
         )}
-        {after && <li className="flex">{after}</li>}
       </ul>
+      {capped && complete && (
+        <p data-part="listed" className="text-xs text-ink-tertiary">
+          {listed}
+        </p>
+      )}
       {folds && (
         <button
           type="button"
@@ -207,7 +221,11 @@ export function ValueChips({
           }}
           className="self-start text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
         >
-          {expanded ? "Show fewer" : `Show all ${sorted.length.toLocaleString()}`}
+          {expanded
+            ? "Show fewer"
+            : capped
+              ? `Show ${sorted.length.toLocaleString()} of ${total.toLocaleString()}`
+              : `Show all ${total.toLocaleString()}`}
         </button>
       )}
     </div>
