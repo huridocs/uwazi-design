@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { ChevronDown, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { languageName } from "../../atoms/language";
@@ -27,7 +27,7 @@ const KIND_LABEL: Record<FileKind, string> = {
 
 /** The record lists this many files before "Show all": a record holding a
  *  dozen translations and recordings would otherwise push its metadata a
- *  screen down. The Files menu lists every file. */
+ *  screen down. */
 const FOLD_AFTER = 5;
 
 /** The files an entity holds, read the way `DocumentCard` reads them: the live
@@ -85,13 +85,12 @@ const linkHref = (file: FileEntry) => (file.name.startsWith("http") ? file.name 
 /** An entity's files. The row is the View target; Download is the one control
  *  drawn on it. Download all sits in the heading when two or more files can be
  *  downloaded. One component for the record (the Metadata tab, the Library
- *  drawer preview, the entity view's Metadata drawer) and the Document tab's
- *  Files menu (`bare`), so the reader can take a file from any of them without
- *  going to the Files tab. Nothing here is solid ink: no action in it is a
- *  commit.
+ *  drawer preview, the entity view's Metadata drawer), so the reader can take
+ *  a file without going to the Files tab. Nothing here is solid ink: no action
+ *  in it is a commit.
  *
  *  Renders nothing for an entity with no files. */
-export function EntityFilesBlock({ profile, bare = false }: { profile: EntityProfile; bare?: boolean }) {
+export function EntityFilesBlock({ profile }: { profile: EntityProfile }) {
   const { files, groups } = useEntityFiles(profile);
   const notify = useNotify();
   const [previewing, setPreviewing] = useState<FileEntry | null>(null);
@@ -103,7 +102,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
   const downloadable = shown.filter((f) => f.type !== "link" && !!resolveFileUrl(f));
   // A sub-label only where it tells sections apart.
   const labelled = sections.length > 1;
-  const folds = !bare && !expanded && shown.length > FOLD_AFTER + 1;
+  const folds = !expanded && shown.length > FOLD_AFTER + 1;
   // The sections cut at the fold, in order: the first FOLD_AFTER rows.
   let room = folds ? FOLD_AFTER : Infinity;
   const visible = sections
@@ -113,15 +112,14 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
       return { ...sec, files: list };
     })
     .filter((sec) => sec.files.length > 0);
-  const edge = bare ? "" : "px-4";
 
   return (
     <section
       data-component="EntityFilesBlock"
       aria-label="Files"
-      className={bare ? "" : "bg-paper border border-border/40 rounded-md overflow-hidden"}
+      className="bg-paper border border-border/40 rounded-md overflow-hidden"
     >
-      <div className={`flex items-center gap-2 min-h-8 max-md:min-h-11 ${bare ? "pb-1" : "px-4 pt-2"}`}>
+      <div className="flex items-center gap-2 min-h-8 max-md:min-h-11 px-4 pt-2">
         <h3 className="flex-1 min-w-0 text-meta font-semibold uppercase tracking-wider text-ink-secondary">Files</h3>
         {downloadable.length > 1 && (
           <button
@@ -141,7 +139,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
       {visible.map((s) => (
         <div key={s.key}>
           {labelled && (
-            <SectionLabel as="h4" className={`pt-2 pb-1 ${edge}`}>
+            <SectionLabel as="h4" className="pt-2 pb-1 px-4">
               {/* One line on a desktop; on a phone a record's long name wraps to
                   two lines before it clamps, the whole name in the tooltip and
                   in the heading's text. */}
@@ -153,7 +151,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
           <ul>
             {s.files.map((f) => (
               <li key={f.id}>
-                <FileRow file={f} bare={bare} onView={() => setPreviewing(f)} />
+                <FileRow file={f} onView={() => setPreviewing(f)} />
               </li>
             ))}
           </ul>
@@ -177,7 +175,7 @@ export function EntityFilesBlock({ profile, bare = false }: { profile: EntityPro
 
 /** One file: name and facts, the row a stretched View button (a link opens
  *  where it lives, in a new tab), Download its only drawn control. */
-function FileRow({ file, bare, onView }: { file: FileEntry; bare: boolean; onView: () => void }) {
+function FileRow({ file, onView }: { file: FileEntry; onView: () => void }) {
   const url = resolveFileUrl(file);
   const isLink = file.type === "link";
   return (
@@ -186,7 +184,7 @@ function FileRow({ file, bare, onView }: { file: FileEntry; bare: boolean; onVie
       toggle={false}
       onClick={isLink ? () => window.open(linkHref(file), "_blank", "noopener,noreferrer") : onView}
       ariaLabel={isLink ? `Open ${file.name} in a new tab` : `View ${file.name}`}
-      className={`${bare ? "px-0!" : "px-4!"} hover:bg-warm/50`}
+      className="px-4! hover:bg-warm/50"
     >
       <div className="flex items-center gap-3 min-w-0 min-h-8">
         <div className="flex-1 min-w-0">
@@ -256,79 +254,5 @@ function FilePreview({ file, onClose }: { file: FileEntry; onClose: () => void }
         </div>
       )}
     </Modal>
-  );
-}
-
-/** The Document tab's way to the same list: the tab's strip (or, in the
- *  Library preview, its action bar, `inBar`) has room for one button, and the
- *  page under it is the document. Hidden when the entity has no files. */
-export function EntityFilesMenu({ profile, inBar = false }: { profile: EntityProfile; inBar?: boolean }) {
-  const { files } = useEntityFiles(profile);
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  // On a phone the strip's button is not at the screen's edge, so a panel
-  // aligned to it runs off the other side: there it spans the screen, on the
-  // 12px gutter, under the button.
-  const [phoneTop, setPhoneTop] = useState<number | null>(null);
-  const toggle = () => {
-    const r = triggerRef.current?.getBoundingClientRect();
-    setPhoneTop(!inBar && r && window.innerWidth < 768 ? r.bottom + 4 : null);
-    setOpen((o) => !o);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Element;
-      // The file preview is a dialog portalled out of the popover; a click in
-      // it is not a click away.
-      if (wrapRef.current?.contains(t) || t.closest?.('[role="dialog"]')) return;
-      setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
-      setOpen(false);
-      triggerRef.current?.focus();
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  if (files.length === 0) return null;
-  return (
-    <div ref={wrapRef} className="relative shrink-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-label={`Files, ${files.length}`}
-        // In a bar, on the bar ladder; in the strip, the format picker's look.
-        // On phones a 44px box centred on it is the target, without making the
-        // strip or the bar taller.
-        className={`relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:top-1/2 max-md:after:h-11 max-md:after:-translate-y-1/2 max-md:after:content-[''] max-md:min-w-11 max-md:justify-center flex items-center gap-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-          inBar ? `px-3 py-1.5 ${BAR_GHOST} aria-expanded:bg-warm` : "px-2 py-1 text-ink-secondary bg-warm hover:bg-parchment"
-        }`}
-      >
-        <Download size={12} className="text-ink-tertiary" aria-hidden />
-        <span className={inBar ? "" : "hidden md:inline"}>Files</span>
-        <span className="tabular-nums text-ink-tertiary">{files.length}</span>
-        <ChevronDown size={12} className={`text-ink-tertiary transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
-      </button>
-      {open && (
-        <div
-          data-gutter-host
-          style={phoneTop !== null ? { position: "fixed", top: phoneTop, left: "0.75rem", right: "0.75rem", width: "auto" } : undefined}
-          className={`gutter-host absolute z-30 ${inBar ? "start-0 bottom-full mb-1.5" : "end-0 top-full mt-1"} w-[min(26rem,calc(100vw-1.5rem))] max-h-[min(32rem,70vh)] overflow-auto rounded-md bg-paper border border-border shadow-xl py-2 animate-fade-in-up`}
-        >
-          <EntityFilesBlock profile={profile} bare />
-        </div>
-      )}
-    </div>
   );
 }

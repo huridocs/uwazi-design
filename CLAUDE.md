@@ -406,11 +406,12 @@ and the files ported with it; other surfaces have not had the pass yet.
   30rem of its own width the bar folds to icons with a Hint, one select toggle and "2 of 2".
 - An entity's files show outside the Files tab through `components/files/EntityFilesBlock.tsx`:
   at the record's end, after its metadata, as the masonry's last full-width item (so the Metadata
-  tab, the Library preview and the entity view's drawer have it), and as the Document tab's Files menu (DocMeta; the preview's action bar). The row is the View
+  tab, the Library preview and the entity view's drawer have it). The Document tab has no files
+  menu: its strip and the preview's action bar carry none. The row is the View
   target (the file in a `Modal`, PDFs in `DocumentViewer`); Download (`<a download>`, named for its
   file) is its one drawn control, an icon with a Hint
   placed beside it (`placement="start"`), since above or below would cover Download all or the
-  next row's icon. On phones every target in the block, the Files menu and its dialog is 44px; the
+  next row's icon. On phones every target in the block and its dialog is 44px; the
   row's icon grows into the row's padding, so rows keep their height. Download all, in the heading from two
   downloadable files, says it needs the server. Nothing in the block or its dialog is solid ink. The
   record folds past five files; no files, no block. A section label is one line on desktops; on
