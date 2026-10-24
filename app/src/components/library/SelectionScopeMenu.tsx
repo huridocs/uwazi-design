@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Check, CheckSquare, ChevronDown } from "lucide-react";
+import { CheckSquare, ChevronDown } from "lucide-react";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Hint } from "../shared/Hint";
 import { useFooterFold } from "./footerFold";
@@ -15,16 +15,14 @@ export interface ScopeItem {
   /** A second line under the label. */
   help?: string;
   onClick?: () => void;
-  /** A state already reached ("All 652 selected"): listed, not pressed. */
-  done?: boolean;
   /** Drawn after a separator (Clear selection). */
   apart?: boolean;
 }
 
 /** The Library footer's one selection control, in the same place idle and
  *  selecting: "Select ▾" with nothing picked, "652 selected ▾" once there is
- *  a selection or select mode is on. Its menu holds every scope action (the
- *  records, this page, every result, dropping the hidden ones, Clear) and,
+ *  a selection or select mode is on. Its menu holds every scope action
+ *  (Cherrypick, this page, dropping the hidden ones, Clear) and,
  *  at its top, where the selection sits as text. The bar shows at most one
  *  short line under the count (`note`), in a slot that keeps its two lines,
  *  so the bar never grows and nothing moves when the note comes or goes.
@@ -121,7 +119,7 @@ export function SelectionScopeMenu({
     );
   } else {
     trigger = (
-      <Hint text="Cherrypick records, select this page or every result" describe={false} muted={!iconOnly}>
+      <Hint text="Cherrypick records or select this page" describe={false} muted={!iconOnly}>
         {(hint) => (
           <button
             {...hint}
@@ -177,32 +175,18 @@ export function SelectionScopeMenu({
           {items.map((it) => (
             <div key={it.label}>
               {it.apart && <div role="separator" className="my-1 h-px bg-border" />}
-              {it.done ? (
-                // A state reached, not an action: the words in ink with a
-                // check at the row's end, so the text keeps the column.
-                <p
-                  role="menuitem"
-                  aria-disabled
-                  tabIndex={-1}
-                  className={`${row} flex items-center gap-2 text-ink-secondary focus:outline-none focus-visible:bg-warm`}
-                >
-                  <span className="flex-1 min-w-0"><bdi>{it.label}</bdi></span>
-                  <Check size={13} className="shrink-0 text-ink" aria-hidden />
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    close();
-                    it.onClick?.();
-                  }}
-                  className={`${row} flex flex-col items-start text-ink hover:bg-warm focus:outline-none focus-visible:bg-warm cursor-pointer`}
-                >
-                  <span><bdi>{it.label}</bdi></span>
-                  {it.help && <span className="text-meta text-ink-tertiary"><bdi>{it.help}</bdi></span>}
-                </button>
-              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  close();
+                  it.onClick?.();
+                }}
+                className={`${row} flex flex-col items-start text-ink hover:bg-warm focus:outline-none focus-visible:bg-warm cursor-pointer`}
+              >
+                <span><bdi>{it.label}</bdi></span>
+                {it.help && <span className="text-meta text-ink-tertiary"><bdi>{it.help}</bdi></span>}
+              </button>
             </div>
           ))}
         </div>

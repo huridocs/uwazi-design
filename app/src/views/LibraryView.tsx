@@ -3,7 +3,7 @@ import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
 import { contentSelectionOf } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckSquare, ChevronDown, ListChecks, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
+import { CheckSquare, ChevronDown, Clock, FileDown, FileUp, Filter, MessageSquare, MoreHorizontal, Plus, Search, TextSearch, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
 import { appViewAtom } from "../atoms/navigation";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom, vegasReadyAtom } from "../atoms/dataSource";
@@ -1303,9 +1303,6 @@ export function LibraryView() {
   }, [selectionListAsked, selectionActive, selectionDrawerOpen, setSelectionListAsked]);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
-  /** A search, facet, date or map area narrows the results: the selection's
-   *  "all" is the filtered results, and a selected record may be hidden. */
-  const filtersActive = hasQuery || filtered.length !== entities.length;
   // The grid's and the table's order — Timeline and Results register their own,
   // so this one stands down while they draw (see `useSelectionOrder`).
   // The whole result order, not the page: a Shift+click on another page of
@@ -1600,7 +1597,6 @@ export function LibraryView() {
             filteredIds={filteredIds}
             loadedIds={drawnIds}
             paged={paged}
-            filtersActive={filtersActive}
             corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
@@ -1718,14 +1714,6 @@ export function LibraryView() {
                               ? `Select this page (${drawnIds.length.toLocaleString()})`
                               : `Select all shown (${drawnIds.length.toLocaleString()})`,
                             onClick: () => startSelection(drawnIds),
-                          },
-                        ]
-                      : []),
-                    ...(filteredIds.length > drawnIds.length
-                      ? [
-                          {
-                            label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
-                            onClick: () => startSelection(filteredIds),
                           },
                         ]
                       : []),
@@ -2234,15 +2222,6 @@ export function LibraryView() {
                       : `Select all shown (${drawnIds.length.toLocaleString()})`,
                     icon: <CheckSquare size={14} />,
                     onClick: () => startSelection(drawnIds),
-                  },
-                ]
-              : []),
-            ...(canSelect && filteredIds.length > drawnIds.length
-              ? [
-                  {
-                    label: `Select all ${filteredIds.length.toLocaleString()}${filtersActive ? " filtered" : ""} results`,
-                    icon: <ListChecks size={14} />,
-                    onClick: () => startSelection(filteredIds),
                   },
                 ]
               : []),

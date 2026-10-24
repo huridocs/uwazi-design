@@ -1,7 +1,7 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Check, CheckSquare, ChevronUp, ListChecks, MousePointerClick, PanelRight, SquareMinus, X } from "lucide-react";
+import { CheckSquare, ChevronUp, MousePointerClick, PanelRight, SquareMinus, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
@@ -43,7 +43,6 @@ export function LibrarySelectionBar({
   filteredIds,
   loadedIds,
   paged = true,
-  filtersActive = false,
   corpus,
   filtersSlot,
 }: {
@@ -53,9 +52,6 @@ export function LibrarySelectionBar({
   loadedIds: readonly string[];
   /** The view pages its results, so "shown" is "this page". */
   paged?: boolean;
-  /** A search, facet, date or map area narrows the results: "all" means the
-   *  filtered results, and a selected record may be hidden by them. */
-  filtersActive?: boolean;
   corpus: Corpus;
   /** The active-filters readout, placed after the actions and before the
    *  end group. */
@@ -94,14 +90,9 @@ export function LibrarySelectionBar({
     else hiddenIds.push(id);
   }
   const hidden = hiddenIds.length;
-  const total = filteredIds.length;
-  // More results than the view draws: the every-result scope exists.
-  const acrossPages = total > loadedIds.length;
-  const moreToSelect = filteredIds.some((id) => !selection.has(id));
   const where = paged ? "on this page" : "shown";
   const elsewhere = paged ? "on other pages" : "not shown";
   const fmt = (x: number) => x.toLocaleString();
-  const filtered = filtersActive ? " filtered" : "";
 
   // Where the selection sits, for the menu's top and the accessible names.
   const lines =
@@ -131,13 +122,6 @@ export function LibrarySelectionBar({
           pageAllPicked
             ? { label: paged ? "Deselect this page" : "Deselect all shown", icon: <SquareMinus size={14} />, onClick: () => deselect(loadedIds) }
             : { label: paged ? `Select this page (${pageCount})` : `Select all shown (${pageCount})`, icon: <CheckSquare size={14} />, onClick: () => selectIds(loadedIds) },
-        ]
-      : []),
-    ...(acrossPages
-      ? [
-          moreToSelect
-            ? { label: `Select all ${fmt(total)}${filtered} results`, icon: <ListChecks size={14} />, onClick: () => selectIds(filteredIds) }
-            : { label: `All ${fmt(total)}${filtered} results selected`, icon: <ListChecks size={14} />, done: true },
         ]
       : []),
     ...(hidden > 0 ? [{ label: `Drop ${fmt(hidden)} hidden by filters`, icon: <SquareMinus size={14} />, onClick: () => deselect(hiddenIds) }] : []),
@@ -226,7 +210,7 @@ export function LibrarySelectionBar({
           onClose={() => setSheetOpen(false)}
           scopes={scopes
             .filter((s) => !s.apart)
-            .map((s) => ({ label: s.label, icon: s.icon, onClick: s.onClick, done: s.done }))}
+            .map((s) => ({ label: s.label, icon: s.icon, onClick: s.onClick }))}
           actions={actions}
           end={[{ label: n === 0 ? "Stop selecting" : "Clear selection", icon: <X size={14} />, onClick: () => clear() }]}
         />
@@ -294,7 +278,7 @@ export function ActionsSheet({
   heading?: string;
   /** Text under the heading (where the selection sits). */
   lines?: string[];
-  /** What the selection covers (this page, every result), listed above the
+  /** What the selection covers (this page, records hidden by filters), listed above the
    *  actions and apart from them. */
   scopes?: SheetItem[];
   actions: SheetItem[];
@@ -354,8 +338,6 @@ interface SheetItem {
   onClick?: () => void;
   disabledReason?: string;
   danger?: boolean;
-  /** A state already reached ("All 4,398 results selected"): read, not pressed. */
-  done?: boolean;
 }
 
 function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void }) {
@@ -363,34 +345,24 @@ function SheetList({ items, onClose }: { items: SheetItem[]; onClose: () => void
     <ul className="flex flex-col">
       {items.map((a) => (
         <li key={a.label}>
-          {a.done ? (
-            <p className="w-full flex items-center gap-3 px-3 py-3 text-sm text-ink-secondary tabular-nums">
-              <span className="text-ink-tertiary" aria-hidden>
-                {a.icon}
-              </span>
-              <span className="flex-1">{a.label}</span>
-              <Check size={14} className="text-ink" aria-hidden />
-            </p>
-          ) : (
-            <button
-              type="button"
-              aria-disabled={a.disabledReason ? true : undefined}
-              onClick={() => {
-                if (a.disabledReason) return;
-                onClose();
-                a.onClick?.();
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm tabular-nums rounded-md ${
-                a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
-              }`}
-            >
-              <span className="text-ink-tertiary" aria-hidden>
-                {a.icon}
-              </span>
-              <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
-              {a.disabledReason && <span className="text-meta text-ink-tertiary">{a.disabledReason}</span>}
-            </button>
-          )}
+          <button
+            type="button"
+            aria-disabled={a.disabledReason ? true : undefined}
+            onClick={() => {
+              if (a.disabledReason) return;
+              onClose();
+              a.onClick?.();
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm tabular-nums rounded-md ${
+              a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
+            }`}
+          >
+            <span className="text-ink-tertiary" aria-hidden>
+              {a.icon}
+            </span>
+            <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
+            {a.disabledReason && <span className="text-meta text-ink-tertiary">{a.disabledReason}</span>}
+          </button>
         </li>
       ))}
     </ul>

@@ -434,7 +434,7 @@ function showSelectionList(get: Getter, set: Setter, wasEmpty: boolean) {
 }
 
 /** Turn on select mode (the footer's Select menu), with the selection list
- *  in the drawer, then add `ids` if given (this page, every result). */
+ *  in the drawer, then add `ids` if given (this page). */
 export const enterSelectModeAtom = atom(null, (get, set, ids?: readonly string[]) => {
   if (!get(editSessionOpenAtom)) set(libraryOpenEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
@@ -498,7 +498,7 @@ function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: str
   showSelectionList(get, set, wasEmpty);
 }
 
-/** Add ids (select all loaded, select all results, a map cluster). */
+/** Add ids (this page, a map cluster). */
 export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) =>
   selectionWrite(get, set, () => {
     const wasEmpty = get(librarySelectionAtom).size === 0;

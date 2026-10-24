@@ -134,7 +134,11 @@ The collection switcher in the navbar toggles between two corpora:
   **grouped** (per-entity card, properties beside passages), **tree** (entity → field → snippets),
   **passages** (one flat ranked sheet), and **spine** (best passage on the shared chronology) — with
   hits marked in place, in the PDF itself (with an n/total match stepper), and via **MatchOrigin**
-  marks on layouts with no room for a snippet. Opening an entity leads to:
+  marks on layouts with no room for a snippet. Selecting several starts from the footer's
+  **Select ▾**: **Cherrypick** (click records to add them) or **Select this page**; there is no
+  select-all of the whole library. The bar then holds the bulk actions and a count menu that says
+  where the selection sits, including records on other pages or hidden by the filters. Opening an
+  entity leads to:
 - **Entity view** — four main tabs (**Document · Metadata · Relationships · Files**):
   - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
   - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template). Includes **relationship & inherited properties**: fields whose values come from connected entities (single + multi-inheritance), shown with provenance (source entity + relation + inherited property) and a carbon "inherited" marker. Inherited values are read-only — you edit the **connection** (entity picker, syncs sibling fields) or jump to the **source entity** to change the native value. Long value lists (relationship fields, multiselects) render as `ValueChips`: natural numeric order, one template dot on the label when every value shares a template, folded past three lines behind "Show all N" with a filter. While a form field is armed for click-to-fill, a chip list offers "Fill <Field>" in its head, which fills the whole set. In the edit form, a long multiselect's picker has an **All / Selected (N)** switch beside its search.
