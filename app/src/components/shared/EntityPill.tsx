@@ -30,6 +30,7 @@ export function EntityPill({ typeId, label, size = "sm", highlight = "" }: Entit
 
   return (
     <span
+      data-component="EntityPill"
       title={name}
       className={`inline-flex items-center gap-1.5 rounded-md min-w-0 max-w-full align-middle ${
         isMissing ? "italic font-normal" : "font-medium"
@@ -41,6 +42,8 @@ export function EntityPill({ typeId, label, size = "sm", highlight = "" }: Entit
       }}
     >
       <span
+        data-part="dot"
+        aria-hidden
         className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20"
         style={{
           backgroundColor: color,
