@@ -61,7 +61,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       component="RelationshipFieldCard"
       className={spanClass(span)}
     >
-      <RelationCaption relationLabel={resolved.relationLabel} />
+      <RelationCaption relationLabel={resolved.relationLabel} fieldLabel={field.label} />
 
       {inherits ? (
         // Container query, not a viewport breakpoint — see ConnectionGroupCard.

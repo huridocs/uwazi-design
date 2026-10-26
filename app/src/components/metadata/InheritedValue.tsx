@@ -70,8 +70,13 @@ export function MissingValue({ propLabel }: { propLabel?: string }) {
  *  depending on where a value is inherited from it is one record or twenty.
  *  Rows carry no trail either: each shows its entity and the values.
  *  The type is plain text; the icon is the only mark, hidden from screen
- *  readers, which hear "Relationship: Firmantes". */
-export function RelationCaption({ relationLabel }: { relationLabel: string }) {
+ *  readers, which hear "Relationship: Firmantes".
+ *
+ *  Left out (nothing drawn, no line reserved) when the type says what the
+ *  title already says ("PAÍS" / "País"): compared trimmed, ignoring case and
+ *  accents, so the field reads as title and value like any other. */
+export function RelationCaption({ relationLabel, fieldLabel }: { relationLabel: string; fieldLabel?: string }) {
+  if (fieldLabel !== undefined && sameLabel(relationLabel, fieldLabel)) return null;
   return (
     <p data-component="RelationCaption" className="flex items-center gap-1 min-w-0 text-meta text-ink-tertiary -mt-1">
       <Link2 size={11} className="shrink-0 text-carbon" aria-hidden />
@@ -124,4 +129,12 @@ export function InheritedValueChip({
       )}
     </div>
   );
+}
+
+/** Two labels that read as the same word: trimmed, case- and accent-blind
+ *  (`País`, `PAÍS` and `Pais` match). The title is drawn uppercase, so case
+ *  never tells them apart on screen, and an accent alone does not make a
+ *  different relationship. */
+function sameLabel(a: string, b: string): boolean {
+  return a.trim().localeCompare(b.trim(), undefined, { sensitivity: "base" }) === 0;
 }

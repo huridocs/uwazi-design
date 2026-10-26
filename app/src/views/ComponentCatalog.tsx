@@ -923,7 +923,7 @@ sendFill(selection.text);                                    // commits, then di
                 <CatalogEntry
                   name="InheritedValueChip + RelationCaption"
                   description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the line under every relationship field's title: the link icon and the relationship type."
-                  code={`<RelationCaption relationLabel="Cites" />
+                  code={`<RelationCaption relationLabel="Cites" fieldLabel="Related cases" />
 <InheritedValueChip value={v} inherits relationLabel="Cites" />`}
                 >
                   <InheritedValueChipDemo />
