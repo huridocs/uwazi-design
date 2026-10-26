@@ -393,6 +393,35 @@ and the files ported with it; other surfaces have not had the pass yet.
   page. `PdfPageThumb` rasterises at the live box width (`data-thumb-w`). PDF thumbnails do not
   render in a background tab; use `scripts/check-thumbs.ts`.
 
+### Login and account
+- Behaviour follows Research's inventory of Uwazi (`dev/results/uwazi-auth-flows.md` in the main
+  checkout). Mock state is `atoms/auth.ts` (sessionStorage, cleared by Reset demo data): a password
+  per user (seed accounts `uwazi`; an invited user without one has none), the failed-login count,
+  recovery keys (24 h, spent on use; the key `expired` never works), unlock codes and the outbox.
+  The one 2FA code is `MOCK_2FA_CODE` (246810), for setup and for the login's second step.
+- `sessionStateAtom` (`atoms/users.ts`) is signed in or out. The prototype opens signed in as
+  `signedInUserIdAtom`. Log out (`logOutAtom`, the navbar's Settings menu and Account's footer)
+  goes to the Library: a public collection (Settings › Collection, Public instance) shows it to the
+  anonymous visitor with Log in in the navbar and no Settings or Tools (`settingsAccessAtom` allows
+  nothing); a private one (the default) shows only the login screen (`App`). `endSessionAtom` (Dev
+  panel › End session) is an ended session: the login screen with a note, then back to the last
+  work view (`returnToAtom`, a prototype addition).
+- Screens without the navbar, on `AuthLayout` (`components/auth/AuthLayout.tsx`): `LoginView`
+  (appView `login`: Log in, Two-step verification, Forgot password as modes of one page),
+  `SetPasswordView` (`set-password`) and `UnlockAccountView` (`unlock-account`), opened from
+  `authLinkAtom`. What a finished flow did shows in the login screen's message line
+  (`loginNoticeAtom`); Uwazi uses toasts and these screens have no Beacon.
+- Kept from Uwazi: username only; one "Login failed" for an unknown user, a wrong password and a
+  locked account, after a random 500–1000 ms; six failed passwords or codes lock the account and
+  send Account locked; forgot password answers the same for any email; a saved password clears the
+  lock and returns to log in without signing in; the unlock link does the same; the welcome email is
+  always sent and an admin's password on a new user is optional; every user Save, Reset 2FA and
+  Unlock asks for the admin's password (`PasswordConfirmModal` checks it); no self-service 2FA
+  disable.
+- Emails do not leave the prototype: `SentEmailsModal` lists them (Welcome, Password recovery,
+  Account locked, Uwazi's subjects and bodies) and their link opens the page. It opens from the
+  auth screens' `DemoAccounts` note, Users & Groups and the Dev panel.
+
 ### Notifications and Bert
 - `Beacon` (navbar right cluster) is the indicator; `NotificationsDrawer` is the log.
   - Beacon: a `rounded-md bg-warm` button with no edge, showing the `UwaziLoader` mark coloured by
