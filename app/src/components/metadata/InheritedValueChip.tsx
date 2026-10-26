@@ -52,13 +52,13 @@ export function InheritedValueTag({
  *  Causa by). Each hop is a clickable link that opens that entity's preview, so
  *  the "how" of a derived value is inspectable rather than hidden. Renders
  *  nothing when there are no intermediaries (a plain single-hop inheritance). */
-export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[]; sharedLabel?: string }) {
+export function ProvenanceTrail({ steps }: { steps: ProvenanceStep[] }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   if (!steps.length) return null;
   return (
     // The shared `↳ …` line — the library's borrowed-document attribution rides
     // the same one, so the two provenance statements can't drift apart.
-    <ProvenanceLine label={sharedLabel ? `${sharedLabel} via` : "via"}>
+    <ProvenanceLine label="via">
       {steps.map((s, i) => (
         <Fragment key={s.entityId}>
           {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}
@@ -90,30 +90,64 @@ export function MissingValue({ propLabel }: { propLabel?: string }) {
   );
 }
 
-/** Shared caption under every relationship card title: where the value comes
- *  from. Multi-inheritance lists the inherited property names (`inherits
- *  Country, Role`); single-inheritance → `inherits X`; a bare relation →
- *  `linked`. One caption for all three tiers keeps the provenance line identical. */
+/** Shared caption under every relationship card title: where the values come
+ *  from, on one line. The relationship, then (when every row was reached
+ *  through the same records, `through`) "of" those records, then what is
+ *  inherited: `via Firmantes of Salvador Chiriboga. Sentencia… · inherits
+ *  País`. Multi-inheritance lists the inherited property names (`inherits
+ *  Country, Role`); a bare relation reads `linked`. The records are the only
+ *  links (each opens its preview and is the only part that truncates, its full
+ *  name in the title); the relationship's name is plain text. When rows reach
+ *  their values through different records, `through` is left out and each row
+ *  keeps its own `↳ via` trail. */
 export function RelationCaption({
   relationLabel,
   inheritLabel,
   inheritLabels,
+  through,
 }: {
   relationLabel: string;
   inheritLabel?: string;
   /** For multi-inheritance: every inherited property's label. */
   inheritLabels?: string[];
+  /** The records every row's value was reached through, hoisted from the rows. */
+  through?: ProvenanceStep[];
 }) {
+  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const inherits = inheritLabels && inheritLabels.length > 0 ? inheritLabels.join(", ") : inheritLabel;
   return (
-    <p className="text-meta text-ink-tertiary -mt-1">
-      via <span className="text-carbon font-medium">{relationLabel}</span>
-      {inheritLabels && inheritLabels.length > 0 ? (
-        <> · inherits {inheritLabels.join(", ")}</>
-      ) : inheritLabel ? (
-        <> · inherits {inheritLabel}</>
-      ) : (
-        <> · linked</>
+    <p className="flex items-baseline gap-1 min-w-0 text-meta text-ink-tertiary -mt-1">
+      <span className="shrink-0">
+        via <span className="font-medium text-ink-secondary">{relationLabel}</span>
+      </span>
+      {/* The {" "} are the text's own spaces (copy, screen readers); the flex
+          gap draws them. */}
+      {through && through.length > 0 && (
+        <>
+          {" "}
+          <span className="shrink-0">of</span>
+          {through.map((s, i) => (
+            <Fragment key={s.entityId}>
+              {" "}
+              {i > 0 && (
+                <>
+                  <span className="shrink-0 text-ink-muted" aria-hidden>→</span>{" "}
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setOverlay(s.entityId)}
+                title={`${s.title} — open`}
+                className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer"
+              >
+                {s.title}
+              </button>
+            </Fragment>
+          ))}
+        </>
       )}
+      {" "}
+      <span className="shrink-0">{inherits ? `· inherits ${inherits}` : "· linked"}</span>
     </p>
   );
 }

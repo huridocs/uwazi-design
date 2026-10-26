@@ -75,8 +75,11 @@ Known gaps, kept on purpose:
   Values resolve at render; nothing is stored.
 - Fields sharing a `connectionKey` are one connection with several inherited columns, edited
   together. `groupConnections` returns groups and singles.
-- `steps` render as a `↳ via …` trail (`ProvenanceTrail`), hoisted to one line when every row
-  shares it. `reduce` (`list|distinct|count|min|max|first`) renders a `Σ` `RollupChip`.
+- `steps` render as a `↳ via …` trail (`ProvenanceTrail`) on each row. When every row shares it,
+  it moves into the field's caption, one line (`RelationCaption` `through`): "via Firmantes of
+  <record> · inherits País". The record is the caption's only link and the only part that truncates;
+  the relationship's name is plain text. `reduce` (`list|distinct|count|min|max|first`) renders a
+  `Σ` `RollupChip`.
 - Record and edit form place relationship fields at their template position; there is no
   "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
   are put in template order by `orderByTemplate`; fields the template does not declare go last.
