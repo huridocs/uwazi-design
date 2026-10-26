@@ -41,6 +41,8 @@ export const seedUsers: SettingsUser[] = [
   { id: "u3", username: "jnkemba", email: "j.nkemba@example.org", role: "editor", groupIds: ["g2", "g3"], using2fa: false },
   { id: "u4", username: "afarah", email: "a.farah@example.org", role: "collaborator", groupIds: ["g3"], using2fa: false },
   { id: "u5", username: "tbuergenthal", email: "t.buergenthal@example.org", role: "collaborator", groupIds: [], using2fa: false, locked: true },
+  // Invited and has not yet set a password (`atoms/auth.ts` seeds the welcome email).
+  { id: "u6", username: "kmensah", email: "k.mensah@example.org", role: "editor", groupIds: ["g3"], using2fa: false },
 ];
 
 /** A group's members are the users that list its id; the count is derived
