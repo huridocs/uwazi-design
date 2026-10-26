@@ -1,7 +1,6 @@
 import { useSetAtom } from "jotai";
 import { EntityPill } from "../shared/EntityPill";
-import { InheritedValueTag, MissingValue, ProvenanceTrail } from "./InheritedValue";
-import type { ProvenanceStep } from "../../utils/inheritance";
+import { InheritedValueTag, MissingValue } from "./InheritedValue";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** One connected entity, flattened — no merged cells, no shared rows. */
@@ -15,7 +14,6 @@ export interface StackEntity {
     value?: string;
     /** The property this was inherited FROM, for the value's own tooltip. */
     propLabel?: string;
-    provenance?: ProvenanceStep[];
   }[];
 }
 
@@ -35,13 +33,9 @@ export interface StackEntity {
 export function ConnectionCardStack({
   entities,
   relationLabel,
-  sharedProvenance,
 }: {
   entities: StackEntity[];
   relationLabel: string;
-  /** True when every row's provenance is identical and hoisted by the caller —
-   *  the cards then leave their own trails off, as the table does. */
-  sharedProvenance?: boolean;
 }) {
   const setOverlay = useSetAtom(previewEntityIdAtom);
   return (
@@ -78,11 +72,6 @@ export function ConnectionCardStack({
                       />
                     ) : (
                       <MissingValue propLabel={c.propLabel ?? c.label} />
-                    )}
-                    {!sharedProvenance && c.provenance && (
-                      <span className="block mt-0.5 normal-case">
-                        <ProvenanceTrail steps={c.provenance} />
-                      </span>
                     )}
                   </dd>
                 </div>

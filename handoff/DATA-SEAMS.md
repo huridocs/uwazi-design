@@ -159,9 +159,10 @@ Design decisions that ARE spec:
   resolver stays data-source-agnostic. In the real repo the provider wraps
   the v2 relationships API instead of the mock graph.
 - **Provenance travels with the value.** Multi-hop values carry the
-  intermediary nodes they were reached through, rendered as a clickable
-  `↳ via …` trail (hoisted to one line when every row shares it). Users must
-  be able to see *why* an inherited value appears.
+  intermediary nodes they were reached through (`steps`). The record does not
+  draw them (issue 9891): the field's head names the relationship, the
+  inherited properties are the columns, and each row is the entity and its
+  values. The steps stay in the model for a surface that needs to say *why*.
 - **`connectionKey` siblings edit as one connection** — several inherited
   columns off one entity picker, kept in sync.
 - **`ChainSegment.toTypeId` is required in practice** for overloaded relation

@@ -38,13 +38,9 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
     <MetadataCard
       title={group.label}
       component="ConnectionGroupCard"
-      icon={<Link2 size={11} className="text-carbon" aria-hidden />}
       className={spanClass(span)}
     >
-      <RelationCaption
-        relationLabel={group.relationLabel}
-        inheritLabels={group.columns.map((c) => c.label)}
-      />
+      <RelationCaption relationLabel={group.relationLabel} />
 
       {/* Container query, not a viewport breakpoint: this same card renders in
           the main Metadata view, the Library drawer preview and the entity

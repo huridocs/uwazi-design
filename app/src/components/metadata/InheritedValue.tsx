@@ -1,11 +1,9 @@
-import { Fragment } from "react";
 import { useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { EntityPill } from "../shared/EntityPill";
-import { ProvenanceLine } from "../shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { countryFlag } from "../../utils/countryFlag";
-import type { InheritedValue, ProvenanceStep } from "../../utils/inheritance";
+import type { InheritedValue } from "../../utils/inheritance";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** A single INHERITED value — visually distinct from a native value so it reads
@@ -48,36 +46,6 @@ export function InheritedValueTag({
   );
 }
 
-/** The provenance trail under an inherited value: the intermediary nodes the
- *  value was reached through (e.g. the Sentencia a signing judge reached this
- *  Causa by). Each hop is a clickable link that opens that entity's preview, so
- *  the "how" of a derived value is inspectable rather than hidden. Renders
- *  nothing when there are no intermediaries (a plain single-hop inheritance). */
-export function ProvenanceTrail({ steps }: { steps: ProvenanceStep[] }) {
-  const setOverlay = useSetAtom(previewEntityIdAtom);
-  if (!steps.length) return null;
-  return (
-    // The shared `↳ …` line, the one every provenance statement rides, so they
-    // can't drift apart.
-    <ProvenanceLine label="via">
-      {steps.map((s, i) => (
-        <Fragment key={s.entityId}>
-          {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}
-          <button
-            type="button"
-            data-part="step"
-            onClick={() => setOverlay(s.entityId)}
-            title={`${s.relationLabel ? `${s.relationLabel}: ` : ""}${s.title} — open`}
-            className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer"
-          >
-            {s.title}
-          </button>
-        </Fragment>
-      ))}
-    </ProvenanceLine>
-  );
-}
-
 /** Empty inherited value — the connected entity carries no value for the
  *  inherited property. A quiet em-dash (the editorial convention for "no value"
  *  in a table) rather than words; provenance stays on hover. */
@@ -94,65 +62,23 @@ export function MissingValue({ propLabel }: { propLabel?: string }) {
   );
 }
 
-/** Shared caption under every relationship card title: where the values come
- *  from, on one line. The relationship, then (when every row was reached
- *  through the same records, `through`) "of" those records, then what is
- *  inherited: `via Firmantes of Salvador Chiriboga. Sentencia… · inherits
- *  País`. Multi-inheritance lists the inherited property names (`inherits
- *  Country, Role`); a bare relation reads `linked`. The records are the only
- *  links (each opens its preview and is the only part that truncates, its full
- *  name in the title); the relationship's name is plain text. When rows reach
- *  their values through different records, `through` is left out and each row
- *  keeps its own `↳ via` trail. */
-export function RelationCaption({
-  relationLabel,
-  inheritLabel,
-  inheritLabels,
-  through,
-}: {
-  relationLabel: string;
-  inheritLabel?: string;
-  /** For multi-inheritance: every inherited property's label. */
-  inheritLabels?: string[];
-  /** The records every row's value was reached through, hoisted from the rows. */
-  through?: ProvenanceStep[];
-}) {
-  const setOverlay = useSetAtom(previewEntityIdAtom);
-  const inherits = inheritLabels && inheritLabels.length > 0 ? inheritLabels.join(", ") : inheritLabel;
+/** The line under every relationship field's title: the link icon and the
+ *  relationship type ("🔗 Firmantes"). The title above it sits where every
+ *  other field's title sits, with nothing before it. The inherited property
+ *  names are not repeated here (they are the table's column headers and the
+ *  narrow cards' labels), and a trail every row shares is not hoisted here:
+ *  depending on where a value is inherited from it is one record or twenty.
+ *  Rows carry no trail either: each shows its entity and the values.
+ *  The type is plain text; the icon is the only mark, hidden from screen
+ *  readers, which hear "Relationship: Firmantes". */
+export function RelationCaption({ relationLabel }: { relationLabel: string }) {
   return (
-    <p data-component="RelationCaption" className="flex items-baseline gap-1 min-w-0 text-meta text-ink-tertiary -mt-1">
-      <span className="shrink-0">
-        via <span data-part="relation" className="font-medium text-ink-secondary">{relationLabel}</span>
+    <p data-component="RelationCaption" className="flex items-center gap-1 min-w-0 text-meta text-ink-tertiary -mt-1">
+      <Link2 size={11} className="shrink-0 text-carbon" aria-hidden />
+      <span className="sr-only">Relationship: </span>
+      <span data-part="relation" title={relationLabel} className="min-w-0 truncate">
+        {relationLabel}
       </span>
-      {/* The {" "} are the text's own spaces (copy, screen readers); the flex
-          gap draws them. */}
-      {through && through.length > 0 && (
-        <>
-          {" "}
-          <span className="shrink-0">of</span>
-          {through.map((s, i) => (
-            <Fragment key={s.entityId}>
-              {" "}
-              {i > 0 && (
-                <>
-                  <span className="shrink-0 text-ink-muted" aria-hidden>→</span>{" "}
-                </>
-              )}
-              <button
-                type="button"
-                data-part="step"
-                onClick={() => setOverlay(s.entityId)}
-                title={`${s.title} — open`}
-                className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer"
-              >
-                {s.title}
-              </button>
-            </Fragment>
-          ))}
-        </>
-      )}
-      {" "}
-      <span className="shrink-0">{inherits ? `· inherits ${inherits}` : "· linked"}</span>
     </p>
   );
 }

@@ -55,8 +55,7 @@ type Place = { lat: number; lon: number; label?: string; fieldLabel: string };
  *
  *  Fed by the template, as the entity view's record is: the same fields in the
  *  same order (`deriveTemplateStructure`), drawn by the same value renderers
- *  (`fieldItem`, `connectionItem`, the inheritance tables with their `↳ via`
- *  trails). What changes is the arrangement, which follows a partner's profile
+ *  (`fieldItem`, `connectionItem`, the inheritance tables). What changes is the arrangement, which follows a partner's profile
  *  page and is decided by what the entity has:
  *
  *  - Masthead: the first image (when there is one) beside the template, the
@@ -337,7 +336,7 @@ function arrange(
         reading.push({ kind: "table", field: f });
         continue;
       }
-      facts.push(connectionItem(f));
+      facts.push(connectionItem(f, { relationLine: false }));
       if (f.connectedEntityIds.length === 1) {
         const e = getEntity(f.connectedEntityIds[0]);
         const label = e?.title ?? f.connectedLabels?.[f.connectedEntityIds[0]];

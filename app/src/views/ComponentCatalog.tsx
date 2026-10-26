@@ -922,8 +922,8 @@ sendFill(selection.text);                                    // commits, then di
               <div id="ev-inherited-value-chip" ref={reg("ev-inherited-value-chip")}>
                 <CatalogEntry
                   name="InheritedValueChip + RelationCaption"
-                  description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the shared provenance line used by every relationship card."
-                  code={`<RelationCaption relationLabel="Cites" inheritLabel="Region" />
+                  description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the line under every relationship field's title: the link icon and the relationship type."
+                  code={`<RelationCaption relationLabel="Cites" />
 <InheritedValueChip value={v} inherits relationLabel="Cites" />`}
                 >
                   <InheritedValueChipDemo />
@@ -1739,18 +1739,12 @@ sendFill(selection.text);                                    // commits, then di
               <div id="sh-provenance-line" ref={reg("sh-provenance-line")}>
                 <CatalogEntry
                   name="ProvenanceLine"
-                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. Search results name the other records a passage also appears under (↳ also under), metadata names the hops an inherited value was reached through (↳ via, clickable), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
+                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. Search results name the other records a passage also appears under (↳ also under), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
                   code={`<ProvenanceLine inline label="also under">Caso Gelman vs. Uruguay</ProvenanceLine>
-<ProvenanceLine label="via">{hops.map(...)}</ProvenanceLine>
 <ProvenanceLine label="copied from"><EntityPill typeId="country" label="Argentina" /></ProvenanceLine>`}
                 >
                   <div className="w-full max-w-md space-y-3">
                     <ProvenanceLine label="also under">Bámaca-Velásquez v. Guatemala</ProvenanceLine>
-                    <ProvenanceLine label="via">
-                      <button className="min-w-0 truncate text-carbon hover:underline cursor-pointer">
-                        Sentencia de 25 de noviembre de 2000
-                      </button>
-                    </ProvenanceLine>
                     <ProvenanceLine label="copied from">
                       <EntityPill typeId="country" label="Argentina" />
                     </ProvenanceLine>

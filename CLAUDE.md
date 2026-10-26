@@ -101,11 +101,14 @@ Known gaps, kept on purpose:
   Values resolve at render; nothing is stored.
 - Fields sharing a `connectionKey` are one connection with several inherited columns, edited
   together. `groupConnections` returns groups and singles.
-- `steps` render as a `↳ via …` trail (`ProvenanceTrail`) on each row. When every row shares it,
-  it moves into the field's caption, one line (`RelationCaption` `through`): "via Firmantes of
-  <record> · inherits País". The record is the caption's only link and the only part that truncates;
-  the relationship's name is plain text. `reduce` (`list|distinct|count|min|max|first`) is not drawn on the record: the rows
-  already show the values. `reduceInherited` and `utils/rollupNoun.ts` ("3 countries") stay for
+- `steps` stay in the model and are not drawn on the record: an inherited field shows no
+  provenance trail, hoisted or per row; each row is its entity pill and its values. A relationship
+  field's head is its title, aligned as any field's (nothing before it), then one line,
+  `RelationCaption`: the carbon link icon and the relationship type as plain text ("🔗 Firmantes"),
+  for inherited and link-only fields alike. The inherited property names are not on that line:
+  they are the table's column headers.
+  `reduce` (`list|distinct|count|min|max|first`) is not drawn on the record: the rows already show
+  the values. `reduceInherited` and `utils/rollupNoun.ts` ("3 countries") stay for
   a surface that shows a column without its rows.
 - Record and edit form place relationship fields at their template position; there is no
   "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
@@ -124,7 +127,7 @@ Known gaps, kept on purpose:
 - A CEJIL record shows a document only when it owns the file. One with none whose connected
   records hold one (a Causa and its Sentencias) keeps a Document tab whose `NoDocumentPane` names
   those records (`EntityProfile.documentElsewhere`, `cejilDocumentHolders`), each opening its own
-  Document tab; ToC and Search are left out. `↳ via`, `↳ also under` and `↳ copied from` render
+  Document tab; ToC and Search are left out. `↳ also under` and `↳ copied from` render
   through `shared/ProvenanceLine.tsx`.
 - Document tab renditions: `documentFormatAtom` = `pdf | text | html` switches the rendition of the
   default primary document. `DocumentViewer` keeps the PDF mounted and hidden, because remounting

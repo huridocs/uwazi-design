@@ -56,8 +56,8 @@ const CHIP =
 
 /** A field's values as a wrapping list of chips, in natural order.
  *
- *  Every value of one template: quiet chips with no dot or tint (the host draws
- *  the template's dot by the label, `TemplateDot`). Mixed templates keep the
+ *  Every value of one template: quiet chips with no dot or tint (a host may
+ *  draw the template's dot by the label, `TemplateDot`). Mixed templates keep the
  *  entity pill, whose dot is what tells them apart.
  *
  *  Past `FOLD_LINES` lines the list folds to the chips that fit them and a
