@@ -11,7 +11,8 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { formatDateText } from "../../utils/dateFormat";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
-import { ValueChips, TemplateDot, sharedTemplate, sortNatural, type ChipValue } from "./ValueChips";
+import { ValueChips, sortNatural, type ChipValue } from "./ValueChips";
+import { RelationCaption } from "./InheritedValueChip";
 
 /** One row of an entity's record: a label and whatever renders as its value.
  *
@@ -180,25 +181,29 @@ export function fieldItem(f: MetadataField, style?: "cover" | "contain"): Metada
   };
 }
 
-/** The records a link-only connection points at, as chips (`ValueChips`). */
-function useConnectionValues(field: RelationshipMetadataField): ChipValue[] {
+/** The records a link-only connection points at, as chips (`ValueChips`),
+ *  and its relationship type for the line under the title. */
+function useConnectionValues(field: RelationshipMetadataField): { values: ChipValue[]; relationLabel: string } {
   const lang = useAtomValue(languageAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
-  return resolved.values.map((v) => ({
+  const values = resolved.values.map((v) => ({
     key: v.entityId,
     text: v.entityTitle,
     typeId: v.entityTypeId,
     onOpen: () => setOverlay(v.entityId),
   }));
+  return { values, relationLabel: resolved.relationLabel };
 }
 
-function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
-  const values = useConnectionValues(field);
+function ConnectionPills({ field, relationLine }: { field: RelationshipMetadataField; relationLine: boolean }) {
+  const { values, relationLabel } = useConnectionValues(field);
   const total = Math.max(field.totalConnected ?? 0, values.length);
   return (
     <div data-component="ConnectionPills" className="contents">
+      {/* The head every relationship field has: the title alone, then this line. */}
+      {relationLine && <RelationCaption relationLabel={relationLabel} />}
       <ValueChips
         label={field.label}
         values={values}
@@ -209,21 +214,21 @@ function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
   );
 }
 
-/** The template's dot by the label, when every connected record shares it. */
-function ConnectionDot({ field }: { field: RelationshipMetadataField }) {
-  const typeId = sharedTemplate(useConnectionValues(field));
-  return typeId ? <TemplateDot typeId={typeId} /> : null;
-}
-
 /** A link-only connection as a record row.
  *
  *  It used to be a whole bordered card: a title, a caption reading "via Mecanismo
  *  · linked" under a heading already saying Mecanismo, and one pill. An entity
- *  with two dates and four links rendered as four near-empty boxes.
+ *  with two dates and four links rendered as four near-empty boxes. It now has
+ *  the head every relationship field has: the title, then "🔗 <type>".
  *
  *  Connections that DO inherit keep their card — they carry a table (entities ×
- *  inherited columns), and provenance trails, which is real content. */
-export function connectionItem(field: RelationshipMetadataField): MetadataItem {
+ *  inherited columns). */
+export function connectionItem(
+  field: RelationshipMetadataField,
+  /** The record's "🔗 <relationship type>" line under the title; the
+   *  published view's key facts leave it out. */
+  { relationLine = true }: { relationLine?: boolean } = {},
+): MetadataItem {
   return {
     id: field.id,
     label: field.label,
@@ -231,7 +236,6 @@ export function connectionItem(field: RelationshipMetadataField): MetadataItem {
     // value is a set of entities, and it wraps.
     kind: "chips",
     long: false,
-    icon: <ConnectionDot field={field} />,
-    content: <ConnectionPills field={field} />,
+    content: <ConnectionPills field={field} relationLine={relationLine} />,
   };
 }

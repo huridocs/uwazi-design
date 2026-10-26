@@ -850,7 +850,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="ev-inherited-value-chip" ref={reg("ev-inherited-value-chip")}>
                 <CatalogEntry
                   name="InheritedValueChip + RelationCaption"
-                  description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the shared provenance line used by every relationship card."
+                  description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the line under every relationship field's title: the link icon and the relationship type."
                   code={`<RelationCaption relationLabel="Cites" inheritLabel="Region" />
 <InheritedValueChip value={v} inherits relationLabel="Cites" />`}
                 >
@@ -1467,15 +1467,13 @@ sendFill(selection.text);                                    // commits, then di
               <div id="sh-provenance-line" ref={reg("sh-provenance-line")}>
                 <CatalogEntry
                   name="ProvenanceLine"
-                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. Metadata names the hops an inherited value was reached through (↳ via, clickable), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
-                  code={`<ProvenanceLine label="via">{hops.map(...)}</ProvenanceLine>
+                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. A snippet read from a connected record's document names it (↳ from), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
+                  code={`<ProvenanceLine label="from">{title}</ProvenanceLine>
 <ProvenanceLine label="copied from"><EntityPill typeId="country" label="Argentina" /></ProvenanceLine>`}
                 >
                   <div className="w-full max-w-md space-y-3">
-                    <ProvenanceLine label="via">
-                      <button className="min-w-0 truncate text-carbon hover:underline cursor-pointer">
-                        Sentencia de 25 de noviembre de 2000
-                      </button>
+                    <ProvenanceLine label="from">
+                      <span className="min-w-0 truncate text-ink-secondary">Velásquez Rodríguez. Sentencia de 29 de julio de 1988</span>
                     </ProvenanceLine>
                     <ProvenanceLine label="copied from">
                       <EntityPill typeId="country" label="Argentina" />

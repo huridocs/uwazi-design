@@ -5,15 +5,14 @@ import { EntityPill } from "../components/shared/EntityPill";
 /** The `↳ …` line — the app's ONE way of saying "what you are reading did not
  *  originate here".
  *
- *  Two surfaces make that statement about different things and must make it the
- *  same way, which is the whole reason this component exists: metadata names the
- *  hops an inherited value was reached through, and Copy From names the entity
- *  a staged value came off. Same corner glyph, same quiet 11px tertiary type, so a
- *  reader learns the mark once and it means the same thing everywhere.
+ *  Every surface that makes that statement makes it the same way, which is the
+ *  whole reason this component exists: a snippet read from a connected record's document (`↳ from`), and Copy From names the
+ *  entity a staged value came off. Same corner glyph, same quiet 11px tertiary
+ *  type, so a reader learns the mark once and it means the same thing
+ *  everywhere. (Inherited metadata no longer draws a `↳ via` trail.)
  *
  *  Purely presentational: `label` is the verb, the children are whatever the
- *  surface points at — plain text where nothing is clickable, links where the
- *  overlay is mounted to receive the click. */
+ *  surface points at. */
 const meta = {
   title: "Shared/ProvenanceLine",
   component: ProvenanceLine,
@@ -24,43 +23,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { label: "via", children: "Velásquez-Rodríguez v. Honduras" },
+  args: { label: "from", children: "Velásquez Rodríguez. Sentencia de 29 de julio de 1988" },
 };
 
-/** Every flavour in use, so drift between them is visible at a glance.
- *
- *  · `via` — metadata's inherited value, naming each intermediary. Clickable,
- *    because that surface CAN open them. The hop is ink with a carbon underline
- *    rather than carbon text: the accent is #00B4F0, which is ~1.9:1 on the warm
- *    backgrounds these sit on. The colour stays as the affordance, in the
- *    underline, where it is decoration rather than something to read.
- *  · `copied from` — Copy From's stamp, carrying an entity pill.
- *  · a shared prefix (`País via`) — used when one trail is hoisted above a
- *    table whose rows all share it. */
+/** Every flavour in use, so drift between them is visible at a glance:
+ *  `from` with a plain title, and `copied from` carrying an entity pill. */
 export const AllStates: Story = {
-  args: { label: "via", children: null },
+  args: { label: "from", children: null },
   render: () => (
     <div className="space-y-3 max-w-md">
-      <ProvenanceLine label="via">
-        <button className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer">
-          Sentencia de 25 de noviembre de 2000
-        </button>
-        <span className="shrink-0 text-ink-muted" aria-hidden>
-          →
-        </span>
-        <button className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer">
-          Corte Interamericana
-        </button>
+      <ProvenanceLine label="from">
+        <span className="min-w-0 truncate text-ink-secondary">Velásquez Rodríguez. Sentencia de 29 de julio de 1988</span>
       </ProvenanceLine>
 
       <ProvenanceLine label="copied from">
         <EntityPill typeId="country" label="Argentina" />
-      </ProvenanceLine>
-
-      <ProvenanceLine label="País via">
-        <button className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer">
-          Juez Ferrer Mac-Gregor
-        </button>
       </ProvenanceLine>
     </div>
   ),

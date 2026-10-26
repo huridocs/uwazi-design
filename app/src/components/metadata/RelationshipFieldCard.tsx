@@ -5,7 +5,7 @@ import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMeta
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, RelationCaption } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
 import { resolveRelationshipField, specInherits } from "../../utils/inheritance";
@@ -16,7 +16,7 @@ import { TABLE_MIN } from "./tableBreakpoint";
 /** A standalone relationship field (no shared connection). Two shapes:
  *  - inherits a value → a compact bordered table (entity · inherited value), same
  *    styling as the multi-inheritance grouped card, so the columns are tied by
- *    rules instead of floating apart. Shared provenance is hoisted into the caption.
+ *    rules instead of floating apart. Rows show the entity and its values; no provenance trail.
  *  - link-only → a compact wrapping list of entity pills.
  *  Resolves against the live entity-metadata atom so edit-at-source cascades here. */
 export function RelationshipFieldCard({ field, span = "wide" }: { field: RelationshipMetadataField; span?: CardSpan }) {
@@ -26,16 +26,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const resolved = resolveRelationshipField(field, lang, getProp);
   const inherits = specInherits(field);
   const entityHeader = field.entityLabel ?? getEntityType(resolved.values[0]?.entityTypeId)?.name ?? "Entity";
-
-  // When every value shares the SAME provenance (e.g. all judges signed one
-  // Sentencia), hoist that trail into the caption rather than repeating it on
-  // every row. Per-row trails only when they actually differ.
-  const provSig = (v: (typeof resolved.values)[number]) => (v.provenance ?? []).map((s) => s.entityId).join(">");
-  const sigs = resolved.values.map(provSig);
-  const sharedProvenance =
-    inherits && resolved.values.length > 1 && sigs[0] !== "" && sigs.every((s) => s === sigs[0])
-      ? resolved.values[0].provenance
-      : undefined;
 
   const stackEntities: StackEntity[] = resolved.values.map((v) => ({
     entityId: v.entityId,
@@ -47,7 +37,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
         label: field.inheritLabel ?? "Inherited",
         value: v.inheritedValue,
         propLabel: v.sourcePropLabel,
-        provenance: v.provenance,
       },
     ],
   }));
@@ -66,11 +55,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   return (
     <MetadataCard
       title={field.label}
-      icon={<Link2 size={11} className="text-carbon" />}
       className={spanClass(span)}
     >
-      {/* A trail every row shares rides the caption ("… of Sentencia X"). */}
-      <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} through={sharedProvenance} />
+      <RelationCaption relationLabel={resolved.relationLabel} />
 
       {inherits ? (
         // Container query, not a viewport breakpoint — see ConnectionGroupCard.
@@ -103,11 +90,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
                     ) : (
                       <MissingValue propLabel={v.sourcePropLabel} />
                     )}
-                    {!sharedProvenance && v.provenance && (
-                      <div className="mt-0.5 normal-case">
-                        <ProvenanceTrail steps={v.provenance} />
-                      </div>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -119,7 +101,6 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
           <ConnectionCardStack
             entities={stackEntities}
             relationLabel={resolved.relationLabel}
-            sharedProvenance={!!sharedProvenance}
           />
         </div>
         </div>

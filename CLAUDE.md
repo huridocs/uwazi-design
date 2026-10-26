@@ -75,10 +75,12 @@ Known gaps, kept on purpose:
   Values resolve at render; nothing is stored.
 - Fields sharing a `connectionKey` are one connection with several inherited columns, edited
   together. `groupConnections` returns groups and singles.
-- `steps` render as a `↳ via …` trail (`ProvenanceTrail`) on each row. When every row shares it,
-  it moves into the field's caption, one line (`RelationCaption` `through`): "via Firmantes of
-  <record> · inherits País". The record is the caption's only link and the only part that truncates;
-  the relationship's name is plain text. `reduce` (`list|distinct|count|min|max|first`) renders a
+- `steps` stay in the model and are not drawn on the record: an inherited field shows no
+  provenance trail, hoisted or per row; each row is its entity pill and its values. A relationship
+  field's head is its title, aligned as any field's (nothing before it), then one line,
+  `RelationCaption`: the carbon link icon and the relationship type as plain text ("🔗 Firmantes"),
+  for inherited and link-only fields alike. The inherited property names are not on that line:
+  they are the table's column headers. `reduce` (`list|distinct|count|min|max|first`) renders a
   `Σ` `RollupChip`.
 - Record and edit form place relationship fields at their template position; there is no
   "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
@@ -97,7 +99,7 @@ Known gaps, kept on purpose:
   429/5xx. Do not parallelise it or raise the caps.
 - A CEJIL entity without a PDF reads a connected one's (`cejilRenderedDoc`). The snippet path
   carries that as `borrowedFrom`, printed as `↳ from <document>` by `BorrowedDocLine`, on a line
-  that is already mounted. `↳ via` and `↳ from` both render through `shared/ProvenanceLine.tsx`.
+  that is already mounted. `↳ from` and `↳ copied from` render through `shared/ProvenanceLine.tsx`.
 - Document tab renditions: `documentFormatAtom` = `pdf | text | html` switches the rendition of the
   default primary document. `DocumentViewer` keeps the PDF mounted and hidden, because remounting
   leaves the canvases blank. Rendition text is `data/velasquez-judgment-{en,es,fr,ar}.txt`, parsed
@@ -329,9 +331,9 @@ and the files ported with it; other surfaces have not had the pass yet.
 - Arming ends on fill, Escape (ignored inside a dialog), the chip's ×, or Save/Cancel. Date
   inputs do not arm. A filled field scrolls into view and flashes.
 - Relationship fields and multiselects with two or more values draw through `ValueChips`
-  (`components/metadata/ValueChips.tsx`): natural numeric order (131.2 before 131.47), one
-  template dot by the label (`TemplateDot`, `MetadataCard`'s `icon`) with quiet chips when every
-  record shares a template (mixed templates keep the entity pill), and past three measured lines
+  (`components/metadata/ValueChips.tsx`): natural numeric order (131.2 before 131.47), quiet chips
+  when every record shares a template (mixed templates keep the entity pill; a relationship field
+  draws nothing before its title), and past three measured lines
   a fold to "Show all N"; expanded, a filter field and "Show fewer". Chips past the fold are not
   rendered. The list is named with its count.
 - CEJIL's link-only relationship groups hold their first 15 records (`REL_CONN_CAP`,

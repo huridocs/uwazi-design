@@ -4,15 +4,14 @@ import { CornerDownRight } from "lucide-react";
 /** The `↳ …` provenance line — the app's one way of saying "what you are reading
  *  did not originate here".
  *
- *  Two surfaces make that statement about different things and must make it the
- *  same way: metadata's inherited values name the hops a value was reached
- *  through (`↳ via Sentencia X`, {@link ProvenanceTrail}), and Copy From names
- *  where a staged value came from (`↳ copied from`). Same corner glyph, same
- *  quiet 11px tertiary type, so a reader learns the mark once.
+ *  Every surface that makes that statement makes it the same way: a snippet
+ *  read from a connected record's document names it (`↳ from`), and Copy From
+ *  names where a staged value came from (`↳ copied from`). Same corner glyph,
+ *  same quiet 11px tertiary type, so a reader learns the mark once.
  *
  *  Purely presentational — the `label` is the verb and the children are whatever
- *  the surface points at (clickable hops in metadata, a plain title in the
- *  library, where the entity overlay isn't mounted to receive a click). */
+ *  the surface points at (a plain title in the library, where the entity
+ *  overlay isn't mounted to receive a click). */
 export function ProvenanceLine({
   label,
   children,
