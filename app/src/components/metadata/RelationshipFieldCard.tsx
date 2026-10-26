@@ -16,7 +16,7 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
 /** A standalone relationship field (no shared connection). Two shapes:
  *  - inherits a value → a compact bordered table (entity · inherited value), same
  *    styling as the multi-inheritance grouped card, so the columns are tied by
- *    rules instead of floating apart. Shared provenance is hoisted to one line.
+ *    rules instead of floating apart. Shared provenance is hoisted into the caption.
  *  - link-only → a compact wrapping list of entity pills.
  *  Resolves against the live entity-metadata atom so edit-at-source cascades here. */
 export function RelationshipFieldCard({ field, span = "wide" }: { field: RelationshipMetadataField; span?: CardSpan }) {
@@ -28,8 +28,8 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const entityHeader = field.entityLabel ?? getEntityType(resolved.values[0]?.entityTypeId)?.name ?? "Entity";
 
   // When every value shares the SAME provenance (e.g. all judges signed one
-  // Sentencia), hoist that trail to a single shared line rather than repeating it
-  // on every row. Per-row trails only when they actually differ.
+  // Sentencia), hoist that trail into the caption rather than repeating it on
+  // every row. Per-row trails only when they actually differ.
   const provSig = (v: (typeof resolved.values)[number]) => (v.provenance ?? []).map((s) => s.entityId).join(">");
   const sigs = resolved.values.map(provSig);
   const sharedProvenance =
@@ -73,12 +73,8 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       icon={<Link2 size={11} className="text-carbon" aria-hidden />}
       className={spanClass(span)}
     >
-      <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
-      {sharedProvenance && (
-        <div data-part="shared-provenance" className="mt-0.5">
-          <ProvenanceTrail steps={sharedProvenance} sharedLabel="all inherited" />
-        </div>
-      )}
+      {/* A trail every row shares rides the caption ("… of Sentencia X"). */}
+      <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} through={sharedProvenance} />
 
       {inherits ? (
         // Container query, not a viewport breakpoint — see ConnectionGroupCard.
