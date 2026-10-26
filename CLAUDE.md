@@ -107,6 +107,8 @@ Known gaps, kept on purpose:
   `RelationCaption`: the carbon link icon and the relationship type as plain text ("🔗 Firmantes"),
   for inherited and link-only fields alike. The inherited property names are not on that line:
   they are the table's column headers.
+  The line is left out (no space kept) when the relationship type reads as the field's title,
+  compared trimmed and case- and accent-blind (`sameLabel`): CEJIL's País is title and value.
   `reduce` (`list|distinct|count|min|max|first`) is not drawn on the record: the rows already show
   the values. `reduceInherited` and `utils/rollupNoun.ts` ("3 countries") stay for
   a surface that shows a column without its rows.
