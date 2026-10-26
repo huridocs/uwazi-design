@@ -39,7 +39,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       title={group.label}
       className={spanClass(span)}
     >
-      <RelationCaption relationLabel={group.relationLabel} />
+      <RelationCaption relationLabel={group.relationLabel} fieldLabel={group.label} />
 
       {/* Container query, not a viewport breakpoint: this same card renders in
           the main Metadata view, the Library drawer preview and the entity

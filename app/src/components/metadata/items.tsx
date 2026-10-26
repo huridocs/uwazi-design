@@ -203,7 +203,7 @@ function ConnectionPills({ field, relationLine }: { field: RelationshipMetadataF
   return (
     <div data-component="ConnectionPills" className="contents">
       {/* The head every relationship field has: the title alone, then this line. */}
-      {relationLine && <RelationCaption relationLabel={relationLabel} />}
+      {relationLine && <RelationCaption relationLabel={relationLabel} fieldLabel={field.label} />}
       <ValueChips
         label={field.label}
         values={values}

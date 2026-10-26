@@ -308,7 +308,7 @@ export function IsolatedInheritedValueChip() {
   return (
     <Provider store={store}>
       <div className="flex flex-col gap-2 max-w-sm">
-        <RelationCaption relationLabel={resolved.relationLabel} />
+        <RelationCaption relationLabel={resolved.relationLabel} fieldLabel={field.label} />
         {resolved.values.map((v) => (
           <InheritedValueChip key={v.entityId} value={v} inherits relationLabel={resolved.relationLabel} />
         ))}
