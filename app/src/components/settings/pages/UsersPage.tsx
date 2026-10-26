@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Lock, Shield, Trash2, UserPlus, Users } from "lucide-react";
+import { KeyRound, Lock, Mail, Shield, Trash2, UserPlus, Users } from "lucide-react";
 import { Hint } from "../../shared/Hint";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
@@ -14,6 +14,11 @@ import { BulkPickModal } from "../BulkPickModal";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { removeAccessMemberAtom } from "../../../atoms/entityChanges";
 import { UserEditor } from "./UserEditor";
+import { SentEmailsModal } from "../../auth/SentEmailsModal";
+import { TOOL_BUTTON, TOOL_SHAPE } from "../../shared/toolButton";
+import { adminResetPasswordAtom } from "../../../atoms/auth";
+import { useNotify } from "../../../hooks/useNotify";
+import { SETTINGS_NOTICES } from "../../../data/settingsNotices";
 import { GroupEditor } from "./GroupEditor";
 import type { SettingsUser, UserRole } from "../../../data/settings";
 import {
@@ -64,6 +69,9 @@ export function UsersPage() {
   const ticked = new Set([...tickedRaw].filter((id) => users.some((u) => u.id === id)));
   const tickedIds = [...ticked];
   const [bulk, setBulk] = useState<"group" | "role" | "delete" | null>(null);
+  const resetPassword = useSetAtom(adminResetPasswordAtom);
+  const notify = useNotify();
+  const [emailsOpen, setEmailsOpen] = useState(false);
   const addToGroup = useSetAtom(bulkAddToGroupAtom);
   const setRole = useSetAtom(bulkSetRoleAtom);
   const deleteUsers = useSetAtom(bulkDeleteUsersAtom);
@@ -203,6 +211,15 @@ export function UsersPage() {
               disabledReason: groups.length ? undefined : "There are no groups yet",
             },
             { id: "role", label: "Change role", icon: <Shield size={13} />, onClick: () => setBulk("role" as const) },
+            {
+              id: "reset-password",
+              label: "Reset password",
+              icon: <KeyRound size={13} />,
+              onClick: () => {
+                for (const id of tickedIds) resetPassword(id);
+                notify(SETTINGS_NOTICES.passwordResetSent, "success");
+              },
+            },
             { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => setBulk("delete" as const), danger: true },
           ],
         }
@@ -238,25 +255,38 @@ export function UsersPage() {
       }}
       filters={
         tab === "users" && (
-          <div className="w-36">
-            <Select
-              value={roleFilter}
-              onChange={(v) => setRoleFilter(v as UserRole | "")}
-              ariaLabel="Filter by role"
-              options={[
-                { value: "", label: "All roles" },
-                { value: "admin", label: "Admin" },
-                { value: "editor", label: "Editor" },
-                { value: "collaborator", label: "Collaborator" },
-              ]}
-            />
-          </div>
+          <>
+            {/* Prototype-only: the welcome and recovery emails this page sends. */}
+            <button
+              type="button"
+              data-part="sent-emails"
+              onClick={() => setEmailsOpen(true)}
+              aria-haspopup="dialog"
+              className={`${TOOL_SHAPE} ${TOOL_BUTTON} h-8 gap-1.5 px-3 text-xs font-medium`}
+            >
+              <Mail size={13} aria-hidden /> Sent emails
+            </button>
+            <div className="w-36">
+              <Select
+                value={roleFilter}
+                onChange={(v) => setRoleFilter(v as UserRole | "")}
+                ariaLabel="Filter by role"
+                options={[
+                  { value: "", label: "All roles" },
+                  { value: "admin", label: "Admin" },
+                  { value: "editor", label: "Editor" },
+                  { value: "collaborator", label: "Collaborator" },
+                ]}
+              />
+            </div>
+          </>
         )
       }
       lead={{ label: tab === "users" ? "Add user" : "Add group", onClick: addNew }}
       selection={selection}
       overlays={
         <>
+          <SentEmailsModal open={emailsOpen} onClose={() => setEmailsOpen(false)} />
           {bulk === "group" && (
             <BulkPickModal
               title="Add to group"

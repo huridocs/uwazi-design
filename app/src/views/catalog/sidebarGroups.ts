@@ -179,7 +179,11 @@ export const sidebarGroups: SidebarGroup[] = [
   },
   {
     label: "Screens",
-    items: [{ id: "sc-login", label: "Log in" }],
+    items: [
+      { id: "sc-login", label: "Log in" },
+      { id: "sc-set-password", label: "Set password" },
+      { id: "sc-sent-emails", label: "Sent emails" },
+    ],
   },
   // Dev builds only, like the section it indexes.
   ...(import.meta.env.DEV ? [{ label: "Dev", items: [{ id: "dev-panel", label: "Dev panel" }] }] : []),

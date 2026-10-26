@@ -13,8 +13,11 @@ import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MissingRecord } from "../../shared/MissingRecord";
 import { PasswordConfirmModal } from "../../shared/PasswordConfirmModal";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useNotify } from "../../../hooks/useNotify";
+import { SETTINGS_NOTICES } from "../../../data/settingsNotices";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { adminResetPasswordAtom, clearFailedLoginsAtom, inviteUserAtom, setOwnPasswordAtom } from "../../../atoms/auth";
 
 const ROLE_OPTIONS = [
   { id: "admin", label: "Admin", hint: "Full access to settings and content." },
@@ -22,9 +25,14 @@ const ROLE_OPTIONS = [
   { id: "collaborator", label: "Collaborator", hint: "Comment and suggest only." },
 ];
 
-type UserDraft = Omit<SettingsUser, "id">;
+/** The record's fields, and a password to set: optional, empty keeps the
+ *  current one (a new user without one gets a password nobody knows, and sets
+ *  their own from the welcome email). */
+type UserDraft = Omit<SettingsUser, "id"> & { password: string };
+/** Uwazi's limit ("Password is too long"). */
+const MAX_PASSWORD = 50;
 
-const NEW_USER: UserDraft = { username: "", email: "", role: "collaborator", groupIds: [], using2fa: false };
+const NEW_USER: Omit<SettingsUser, "id"> = { username: "", email: "", role: "collaborator", groupIds: [], using2fa: false };
 
 /** User detail/editor — opened from the Users list (list → detail). Saves to
  *  the users store (`atoms/users.ts`). */
@@ -36,6 +44,7 @@ export function UserEditor({
   onClose: () => void;
 }) {
   const { record } = useSettingsNotify();
+  const notify = useNotify();
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const saveUser = useSetAtom(saveUserAtom);
@@ -47,16 +56,17 @@ export function UserEditor({
   const { draft, update, dirty } = useSettingsDraft<UserDraft>({
     id: `user:${userId}`,
     label: "User edits",
-    saved: { ...saved, groupIds: [...saved.groupIds].sort() },
+    saved: { ...saved, groupIds: [...saved.groupIds].sort(), password: "" },
   });
   /** The user was deleted (or the demo data reset) while this was open. */
   const missing = !isNew && !base;
-  const { username, email, role, groupIds } = draft;
+  const { username, email, role, groupIds, password } = draft;
+  const passwordIssue = password.length > MAX_PASSWORD ? ({ severity: "error", message: "Password is too long" } as const) : null;
   const roleNote = base ? roleChangeBlock(users, base.id, "editor") : null;
   // Uwazi rejects a username or email another account has; login matches
   // case-insensitively, so this does too.
   const taken = userIdentityBlock(users, isNew ? null : userId, { username, email });
-  const valid = !!username.trim() && !!email.trim() && !taken && !missing;
+  const valid = !!username.trim() && !!email.trim() && !taken && !missing && !passwordIssue;
 
   const toggleGroup = (id: string) =>
     update({ groupIds: (groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id]).sort() });
@@ -67,13 +77,19 @@ export function UserEditor({
   const unlockUser = useSetAtom(unlockUserAtom);
   const demotesSelf = !!base && base.id === me?.id && base.role === "admin" && role !== "admin";
   const [askDemote, setAskDemote] = useState(false);
-  const trySave = () => (demotesSelf ? setAskDemote(true) : save());
+  // Every Save asks for the admin's own password first, as Uwazi does.
+  const [askSave, setAskSave] = useState(false);
+  const trySave = () => (demotesSelf ? setAskDemote(true) : setAskSave(true));
+  const invite = useSetAtom(inviteUserAtom);
+  const setPassword = useSetAtom(setOwnPasswordAtom);
+  const resetPassword = useSetAtom(adminResetPasswordAtom);
+  const clearFailedLogins = useSetAtom(clearFailedLoginsAtom);
 
   const save = () => {
-    setAskDemote(false);
+    setAskSave(false);
     // 2FA and the lock are not edited here: Reset 2FA and Unlock account write
     // them at once, so the draft's copies may be stale.
-    const { locked: _locked, ...fields } = draft;
+    const { locked: _locked, password: _password, ...fields } = draft;
     const id = saveUser({
       id: isNew ? null : userId,
       value: {
@@ -85,6 +101,9 @@ export function UserEditor({
       },
     });
     if (!id) return;
+    // Uwazi always sends a new account the welcome email.
+    if (isNew) invite({ userId: id, password });
+    else if (password) setPassword({ userId: id, password });
     record({
       method: isNew ? "CREATE" : "UPDATE",
       domain: "user",
@@ -105,7 +124,16 @@ export function UserEditor({
     setAskUnlock(false);
     if (!base) return;
     unlockUser(base.id);
+    clearFailedLogins(base.id);
     record({ method: "UPDATE", domain: "user", noun: "user", id: base.id, name: base.username, summary: `Unlocked user “${base.username}”`, notice: "userUnlocked" });
+  };
+  /** "Reset Password": no confirmation, the Password recovery email to the
+   *  user, and the editor stays open. */
+  const sendReset = () => {
+    if (!base) return;
+    resetPassword(base.id);
+    // Changes no record, so a notification only, not an Activity log entry.
+    notify(SETTINGS_NOTICES.passwordResetSent, "success");
   };
   const reset2fa = () => {
     setAskReset2fa(false);
@@ -136,6 +164,7 @@ export function UserEditor({
       footerStart={<LastSavedLine domain="user" id={base?.id} />}
       overlays={
         <>
+          <PasswordConfirmModal open={askSave} onAccept={save} onCancel={() => setAskSave(false)} />
           <PasswordConfirmModal open={askReset2fa} onAccept={reset2fa} onCancel={() => setAskReset2fa(false)} />
           <PasswordConfirmModal open={askUnlock} onAccept={unlock} onCancel={() => setAskUnlock(false)} />
           <ConfirmDelete
@@ -144,7 +173,10 @@ export function UserEditor({
             message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
             impact={null}
             confirmLabel="Change my role"
-            onConfirm={save}
+            onConfirm={() => {
+              setAskDemote(false);
+              setAskSave(true);
+            }}
             onCancel={() => setAskDemote(false)}
           />
         </>
@@ -160,6 +192,32 @@ export function UserEditor({
             <TextInput type="email" value={email} onChange={(e) => update({ email: e.target.value })} placeholder="name@org.example" />
           </SettingsField>
         </SettingsFieldRow>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Security"
+        description={
+          isNew
+            ? "Optional. Without one, the user creates a password from the welcome email, which is always sent."
+            : "Leave empty to keep the current password."
+        }
+      >
+        <SettingsField label="Password" issue={passwordIssue}>
+          <TextInput
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => update({ password: e.target.value })}
+          />
+        </SettingsField>
+        {!isNew && (
+          <div>
+            <SettingsButton variant="secondary" size="sm" onClick={sendReset}>
+              Reset password
+            </SettingsButton>
+            <p className="mt-1.5 text-xs text-ink-tertiary">Emails the user a link to set a new password.</p>
+          </div>
+        )}
       </SettingsSection>
 
       <SettingsSection title="Role" description="What this user can do in the collection.">

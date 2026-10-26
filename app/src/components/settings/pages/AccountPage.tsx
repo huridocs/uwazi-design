@@ -10,7 +10,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { signedInUserAtom, userIdentityBlock, users, usersAtom } from "../../../atoms/users";
 import { apiKeys, maskKey, myApiKeysAtom, newApiKey, type ApiKeyRecord } from "../../../atoms/apiKeys";
-import { appViewAtom } from "../../../atoms/navigation";
+import { logOutAtom, setOwnPasswordAtom } from "../../../atoms/auth";
 import type { UserRole } from "../../../data/settings";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -40,7 +40,8 @@ export function AccountPage() {
   const me = useAtomValue(signedInUserAtom);
   const allUsers = useAtomValue(usersAtom);
   const patchUser = useSetAtom(users.patchAtom);
-  const setAppView = useSetAtom(appViewAtom);
+  const logOut = useSetAtom(logOutAtom);
+  const setOwnPassword = useSetAtom(setOwnPasswordAtom);
   const guard = useDirtyGuard();
 
   const form = useSettingsDraft<AccountDraft>({
@@ -69,7 +70,7 @@ export function AccountPage() {
     setAsking(true);
   };
 
-  /** Accept in the password modal. The mock takes any password. */
+  /** Accept in the password modal, which has checked the current password. */
   const save = () => {
     setAsking(false);
     if (!me) return;
@@ -83,7 +84,10 @@ export function AccountPage() {
     }
     const changes = next !== me.email ? [{ field: "Email", before: me.email, after: next }] : [];
     patchUser({ id: me.id, patch: { email: next } });
-    if (password) changes.push({ field: "Password", before: "••••", after: "changed" });
+    if (password) {
+      setOwnPassword({ userId: me.id, password });
+      changes.push({ field: "Password", before: "••••", after: "changed" });
+    }
     form.markSaved({ email: next, password: "", confirm: "" });
     setAttempted(false);
     record({
@@ -196,7 +200,7 @@ export function AccountPage() {
         <button
           type="button"
           data-part="logout"
-          onClick={() => guard(() => setAppView("login"))}
+          onClick={() => guard(() => logOut())}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-seal-label/60 text-seal-label hover:bg-seal-tint cursor-pointer"
         >
           <LogOut size={14} aria-hidden className="rtl:-scale-x-100" />

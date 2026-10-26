@@ -15,6 +15,8 @@ import { useFileUploadRunner } from "./atoms/fileUploads";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
 import { LoginView } from "./views/LoginView";
+import { SetPasswordRoute } from "./views/auth/SetPasswordView";
+import { UnlockAccountRoute } from "./views/auth/UnlockAccountView";
 import { ToastContainer } from "./views/ToastContainer";
 import { AgentModal } from "./components/agent/AgentModal";
 import { MobileOverlayStack } from "./components/relationships/MobileOverlayStack";
@@ -23,7 +25,8 @@ import { languageAtom } from "./atoms/language";
 import { libraryLayoutAtom } from "./atoms/session";
 import { breakpointAtom } from "./atoms/viewport";
 import { appViewAtom, type AppView } from "./atoms/navigation";
-import { signedInUserIdAtom, usersAtom } from "./atoms/users";
+import { sessionStateAtom } from "./atoms/users";
+import { isWorkView, lastWorkViewAtom } from "./atoms/auth";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
 import { useKeyboardInset } from "./hooks/useKeyboardInset";
 import { useDirtyGuard } from "./hooks/useDirtyGuard";
@@ -37,8 +40,11 @@ export function App() {
   useViewLink();
   const [appView, setAppView] = useAtom(appViewAtom);
   const guard = useDirtyGuard();
-  const users = useAtomValue(usersAtom);
-  const setSignedIn = useSetAtom(signedInUserIdAtom);
+  const signedOut = useAtomValue(sessionStateAtom) === "signed-out";
+  const setLastWorkView = useSetAtom(lastWorkViewAtom);
+  useEffect(() => {
+    if (isWorkView(appView)) setLastWorkView(appView);
+  }, [appView, setLastWorkView]);
   const [language, setLanguage] = useAtom(languageAtom);
   // Split is desktop only; below 1024px the Library is one pane with its drawer.
   const libraryLayout = useAtomValue(libraryLayoutAtom);
@@ -66,6 +72,13 @@ export function App() {
 
   // The window title is the collection's name (Settings › Collection).
   const collection = useAtomValue(collectionSettings.valueAtom);
+  // Not signed in: a public collection shows its library to anonymous
+  // visitors, without Settings; a private one (Settings › Collection, "Public
+  // instance" off) shows only the login screen, as Uwazi's
+  // `privateInstanceMiddleware` does. Links from emails work either way.
+  useEffect(() => {
+    if (signedOut && appView === "settings") setAppView(collection.publicInstance ? "library" : "login");
+  }, [signedOut, appView, collection.publicInstance, setAppView]);
   const collectionName = collection.name;
   useEffect(() => {
     document.title = collectionName ? `${collectionName} · Uwazi` : "Uwazi";
@@ -111,17 +124,19 @@ export function App() {
   // two surfaces from fighting over height propagation through a common
   // ancestor. The uwazi-app shell renders Navbar + main flex column for
   // EntityView / ImportCSVView.
-  // Logged out: the login screen alone, without the app's navbar.
-  if (appView === "login") {
+  // The account screens stand alone, without the app's navbar: log in, and
+  // the pages an email link opens. A private collection gives a visitor who
+  // is not signed in only the login screen.
+  const authView =
+    appView === "set-password" || appView === "unlock-account"
+      ? appView
+      : appView === "login" || (signedOut && !collection.publicInstance && appView !== "catalog")
+        ? "login"
+        : null;
+  if (authView) {
     return (
-      <main data-part="view" data-view="login" className="app-shell flex flex-col">
-        <LoginView
-          onLoggedIn={(username) => {
-            const user = users.find((u) => u.username === username);
-            if (user) setSignedIn(user.id);
-            setAppView("library");
-          }}
-        />
+      <main data-part="view" data-view={authView} className="app-shell flex flex-col">
+        {authView === "set-password" ? <SetPasswordRoute /> : authView === "unlock-account" ? <UnlockAccountRoute /> : <LoginView />}
       </main>
     );
   }

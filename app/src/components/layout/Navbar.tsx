@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Check,
   ExternalLink,
+  LogIn,
   LogOut,
   Database,
   Columns2,
@@ -41,6 +42,8 @@ import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { libraryLayoutAtom, type LibraryLayout } from "../../atoms/session";
 import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
+import { logOutAtom } from "../../atoms/auth";
+import { sessionStateAtom } from "../../atoms/users";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
 import { NotebookButton } from "../notebook/NotebookButton";
@@ -84,6 +87,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // t() strings when the switcher below changes it.
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
   const guard = useDirtyGuard();
+  // Signed out: no Settings or Log out, a Log in button in their place.
+  const signedOut = useAtomValue(sessionStateAtom) === "signed-out";
+  const logOut = useSetAtom(logOutAtom);
 
 
   useEffect(() => {
@@ -451,6 +457,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           >
             <ArrowLeft size={14} /> Return to app
           </button>
+        ) : signedOut ? (
+          <button
+            type="button"
+            onClick={() => onNavigate?.("login")}
+            data-part="log-in"
+            className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
+          >
+            <LogIn size={14} className="rtl:-scale-x-100" aria-hidden /> {t("System", "Log in")}
+          </button>
         ) : !isMobile ? (
           <div className="relative" ref={settingsRef} data-part="settings">
             <button
@@ -573,7 +588,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   <button
                     onClick={() => {
                       setSettingsOpen(false);
-                      onNavigate?.("login");
+                      guard(() => logOut());
                     }}
                     data-part="log-out"
                     className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
@@ -725,13 +740,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 steady
               />
             </div>
-            <button
-              onClick={() => { openSettingsList("user"); setMobileMenuOpen(false); }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-            >
-              <User size={16} className="text-ink-tertiary" />
-              {t("System", "User settings")}
-            </button>
+            {!signedOut && (
+              <button
+                onClick={() => { openSettingsList("user"); setMobileMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+              >
+                <User size={16} className="text-ink-tertiary" />
+                {t("System", "User settings")}
+              </button>
+            )}
             {systemAllowed && (
               <button
                 onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
@@ -741,15 +758,17 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 {t("System", "System settings")}
               </button>
             )}
-            <button
-              onClick={() => { setMobileMenuOpen(false); onNavigate?.("login"); }}
-              data-part="log-out"
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-              style={{ borderTop: "1px solid var(--border-soft)" }}
-            >
-              <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
-              {t("System", "Log out")}
-            </button>
+            {!signedOut && (
+              <button
+                onClick={() => { setMobileMenuOpen(false); guard(() => logOut()); }}
+                data-part="log-out"
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+                style={{ borderTop: "1px solid var(--border-soft)" }}
+              >
+                <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
+                {t("System", "Log out")}
+              </button>
+            )}
           </nav>
         </MobileBottomSheet>
       )}

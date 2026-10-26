@@ -1,12 +1,17 @@
 import { useId, useState } from "react";
+import { useAtomValue } from "jotai";
+import { passwordCheckAtom } from "../../atoms/auth";
+import { signedInUserAtom } from "../../atoms/users";
+import { FieldMessage } from "./FieldMessage";
 import { BAR_GHOST } from "./warmButton";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT, MODAL_COMMIT_DISABLED } from "./Modal";
 import { MODAL_INPUT, MODAL_LABEL } from "./ModalParts";
 
 /** Uwazi's current-password check before a change to an account (G15): title
  *  "Confirm", body "Confirm action", one password field, Cancel and Accept.
- *  Accept is off until something is typed. The prototype has no server, so any
- *  non-empty password is accepted: the caller decides what happens next. */
+ *  Accept is off until something is typed. The password is checked against the
+ *  signed-in account's (`atoms/auth.ts`); a wrong one says so under the field
+ *  and the dialog stays (Uwazi answers 403 "Password error"). */
 export function PasswordConfirmModal({
   open,
   onAccept,
@@ -23,12 +28,22 @@ export function PasswordConfirmModal({
 
 function PasswordConfirmBody({ onAccept, onCancel }: { onAccept: (password: string) => void; onCancel: () => void }) {
   const [password, setPassword] = useState("");
+  const [wrong, setWrong] = useState(false);
+  const me = useAtomValue(signedInUserAtom);
+  const matches = useAtomValue(passwordCheckAtom);
   const inputId = useId();
   const bodyId = useId();
+  const errorId = useId();
   const ready = password.length > 0;
   const accept = () => {
-    if (ready) onAccept(password);
+    if (!ready) return;
+    if (!matches(me?.id, password)) {
+      setWrong(true);
+      return;
+    }
+    onAccept(password);
   };
+  const issue = wrong ? ({ severity: "error", message: "That isn’t your current password." } as const) : null;
   return (
     <Modal
       component="PasswordConfirmModal"
@@ -67,7 +82,12 @@ function PasswordConfirmBody({ onAccept, onCancel }: { onAccept: (password: stri
           autoFocus
           autoComplete="current-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setWrong(false);
+          }}
+          aria-invalid={wrong || undefined}
+          aria-describedby={errorId}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -76,6 +96,9 @@ function PasswordConfirmBody({ onAccept, onCancel }: { onAccept: (password: stri
           }}
           className={`${MODAL_INPUT} w-full`}
         />
+        <div role="alert">
+          <FieldMessage id={errorId} reserve issue={issue} />
+        </div>
       </div>
     </Modal>
   );

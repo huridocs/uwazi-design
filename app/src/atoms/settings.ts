@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import type { AppView } from "./navigation";
 import type { UserRole } from "../data/settings";
-import { signedInUserAtom } from "./users";
+import { sessionStateAtom, signedInUserAtom } from "./users";
 import { collectionSettings } from "./settingsSingletons";
 
 /** A single settings destination. Mirrors Uwazi's V2 SettingsNavigation IA
@@ -153,6 +153,8 @@ export const settingsSectionAllowed = (role: UserRole | undefined, id: string): 
 /** Whether the signed-in user may open a settings section: their role
  *  reaches it, and no feature switch hides it. */
 export const settingsAccessAtom = atom((get) => {
+  // A visitor who is not signed in reaches no settings and no Tools.
+  if (get(sessionStateAtom) !== "signed-in") return () => false;
   const role = get(signedInUserAtom)?.role;
   const flagOff = get(sectionFlagOffAtom);
   return (id: string) => settingsSectionAllowed(role, id) && !flagOff(id);
