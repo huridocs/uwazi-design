@@ -129,8 +129,9 @@
     border-color: var(--border-soft) !important;
   }
 
-  /* Type dots keep their colour without "Background graphics". */
-  [data-print-root] :is([data-component="EntityTypeTag"] [data-part="dot"], [data-part="template-dot"]) {
+  /* Type dots keep their colour without "Background graphics". DocMeta sits
+     beside the root, not inside it, so its tag is named here too. */
+  :is([data-print-root], [data-component="DocMeta"]) :is([data-component="EntityTypeTag"] [data-part="dot"], [data-part="template-dot"]) {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
@@ -220,5 +221,15 @@
 
   [data-print-root] .leaflet-control-container {
     display: none;
+  }
+
+  /* The pin is a background on screen, which a print without "Background
+     graphics" drops, leaving a white dot. On paper it is a border as thick as
+     its radius, and its halo an outline: both always print. */
+  [data-print-root] [data-component="PublishedMap"] .map-pin {
+    box-sizing: border-box;
+    background: none;
+    border: 8px solid var(--pin-color);
+    outline: 1.5px solid #fff;
   }
 }
