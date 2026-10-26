@@ -1,6 +1,7 @@
 interface UwaziLoaderProps {
   size?: "xs" | "sm" | "md" | "lg";
-  color?: "default" | "white" | "muted" | "carbon" | "seal" | "warning";
+  /** `paper` sits on an ink fill (a commit button) and inverts with it in dark mode. */
+  color?: "default" | "white" | "paper" | "muted" | "carbon" | "seal" | "warning";
   /** When false, renders the static brand mark (no sweep). Default true. */
   animate?: boolean;
 }
@@ -15,6 +16,7 @@ const sizes = {
 const colors: Record<NonNullable<UwaziLoaderProps["color"]>, string> = {
   default: "var(--text-primary)",
   white: "#FFFFFF",
+  paper: "var(--bg-surface)",
   muted: "var(--text-muted)",
   carbon: "var(--accent-blue)",
   seal: "var(--accent-seal)",
@@ -26,7 +28,11 @@ export function UwaziLoader({ size = "md", color = "default", animate = true }: 
   const bg = colors[color];
 
   return (
-    <div
+    // Spans, not divs: the mark rides inside buttons (the Beacon, Bert's send
+    // button), where only phrasing content is valid. Grid items blockify, so
+    // the cells lay out exactly as they did.
+    <span
+      data-component="UwaziLoader"
       className="inline-grid align-middle"
       style={{
         gridTemplateColumns: `repeat(3, ${cell}px)`,
@@ -37,8 +43,9 @@ export function UwaziLoader({ size = "md", color = "default", animate = true }: 
       aria-label={animate ? "Loading" : undefined}
     >
       {Array.from({ length: 6 }).map((_, i) => (
-        <div
+        <span
           key={i}
+          data-part="cell"
           // The sweep lives on `uwazi-loader-cell`; without it the cells rest
           // at full opacity — the static brand mark.
           className={animate ? "uwazi-loader-cell rounded-[1px]" : "rounded-[1px]"}
@@ -49,6 +56,6 @@ export function UwaziLoader({ size = "md", color = "default", animate = true }: 
           }}
         />
       ))}
-    </div>
+    </span>
   );
 }

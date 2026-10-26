@@ -4,11 +4,12 @@ import { Modal, MODAL_BUTTON, MODAL_COMMIT, MODAL_COMMIT_DISABLED } from "../../
 import { MODAL_INPUT } from "../../../shared/ModalParts";
 import { BAR_GHOST } from "../../../shared/warmButton";
 import { issueBorderClass } from "../../../shared/FieldMessage";
+import { MOCK_2FA_CODE } from "../../../../atoms/auth";
 
-/** The one code the mock accepts. There is no authenticator behind the
- *  prototype, so a real TOTP cannot be checked; any other 6 digits is
- *  rejected with Uwazi's message. */
-export const MOCK_2FA_CODE = "246810";
+/** The one code the mock accepts, the same one the login's second step
+ *  takes. There is no authenticator behind the prototype, so a real TOTP
+ *  cannot be checked; any other 6 digits is rejected with Uwazi's message. */
+export { MOCK_2FA_CODE };
 
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 /** A fresh mock secret per open (Uwazi stores it before any code is checked;

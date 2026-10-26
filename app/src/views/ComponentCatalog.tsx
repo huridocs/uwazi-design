@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
+import { useSetAtom } from "jotai";
+import { appViewAtom } from "../atoms/navigation";
+import { LoginView } from "./LoginView";
+import { SetPasswordView } from "./auth/SetPasswordView";
+import { SentEmailsModal } from "../components/auth/SentEmailsModal";
 
 // Components rendered directly inside the catalog body (not wrapped in an
 // Isolated* demo helper). Everything that needs scoped atom state or stateful
@@ -175,6 +180,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const setAppView = useSetAtom(appViewAtom);
 
   useEffect(() => {
     if (!mounted) return;
@@ -2184,6 +2190,52 @@ const textColor = typeLabelColor(type.color);`}
             </div>
           </section>
 
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Screens</h2>
+            <div className="space-y-10">
+              <div id="sc-login" ref={reg("sc-login")}>
+                <CatalogEntry
+                  name="LoginView"
+                  description="The login screen (appView “login”: Log out in the navbar, Log in for a signed-out visitor, a private collection, an ended session). Three modes of one page, as in Uwazi: Log in (username only; a wrong username, a wrong password and a locked account read the same, after a random 500–1000 ms; six failures lock the account), Two-step verification for an account with 2FA, and Forgot password (the same confirmation whatever the email). Mock auth in atoms/auth.ts: every seed password is uwazi, the code is 246810; the demo accounts and Sent emails sit under the form."
+                  code={`<LoginView />`}
+                >
+                  <div className="w-full space-y-3">
+                    <div className="relative w-full h-[36rem] overflow-hidden rounded-lg border border-border">
+                      <LoginView onLoggedIn={() => {}} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAppView("login")}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-paper hover:bg-ink/90"
+                    >
+                      Open full screen
+                    </button>
+                  </div>
+                </CatalogEntry>
+              </div>
+              <div id="sc-set-password" ref={reg("sc-set-password")}>
+                <CatalogEntry
+                  name="SetPasswordView"
+                  description="Set or reset a password from an emailed link (appView “set-password”, Uwazi /setpassword/:key; ?createAccount=true from the welcome email adds the note). Password and Repeat password must match and not be empty; Save spends the link, clears a lock and returns to log in. A used or expired link (key “expired” always is) says so on its own page with Request a new link, a prototype addition: Uwazi shows a toast."
+                  code={`<SetPasswordView linkKey={key} createAccount />`}
+                >
+                  <div className="relative w-full h-[36rem] overflow-hidden rounded-lg border border-border">
+                    <SetPasswordView linkKey="expired" createAccount />
+                  </div>
+                </CatalogEntry>
+              </div>
+              <div id="sc-sent-emails" ref={reg("sc-sent-emails")}>
+                <CatalogEntry
+                  name="SentEmailsModal"
+                  description="Prototype-only: what Uwazi would have emailed in this session, newest first. Welcome (a new user), Password recovery (forgot password, an admin's Reset password) and Account locked (the sixth failed attempt), with Uwazi's subjects and plain-text bodies. The link line opens the page it names. Opened from the auth screens' demo note, Users & Groups and the Dev panel."
+                  code={`<SentEmailsModal open={open} onClose={() => setOpen(false)} />`}
+                >
+                  <SentEmailsDemo />
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
           {import.meta.env.DEV && (
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Dev</h2>
@@ -2344,6 +2396,22 @@ function LightboxDemo() {
         image={open ? { url: "artwork-images/1601708883168xwrh429c67.jpg", width: 800, height: 1000, aspect: "portrait", alt: "A painting from the Best Artworks collection", filename: "1601708883168xwrh429c67.jpg" } : null}
         onClose={() => setOpen(false)}
       />
+    </>
+  );
+}
+
+function SentEmailsDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-paper hover:bg-ink/90"
+      >
+        Open Sent emails
+      </button>
+      <SentEmailsModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

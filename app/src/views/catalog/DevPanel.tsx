@@ -4,6 +4,8 @@ import { signedInUserIdAtom, usersAtom } from "../../atoms/users";
 import { FEATURE_LABELS, featureFlagsAtom, type FeatureFlags } from "../../atoms/featureFlags";
 import type { UserRole } from "../../data/settings";
 import { appViewAtom } from "../../atoms/navigation";
+import { endSessionAtom, outboxAtom } from "../../atoms/auth";
+import { SentEmailsModal } from "../../components/auth/SentEmailsModal";
 import { settingsSectionAtom } from "../../atoms/settings";
 import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
@@ -42,6 +44,9 @@ export function DevPanel() {
   const openThesaurus = useSetAtom(openThesaurusRequestAtom);
   const setAppView = useSetAtom(appViewAtom);
   const setSection = useSetAtom(settingsSectionAtom);
+  const endSession = useSetAtom(endSessionAtom);
+  const emailCount = useAtomValue(outboxAtom).length;
+  const [emailsOpen, setEmailsOpen] = useState(false);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -62,6 +67,22 @@ export function DevPanel() {
             ariaLabel="Role"
           />
         </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Session</h3>
+        <p className="text-xs text-ink-tertiary text-pretty">
+          End the session as a closed browser or 14 idle days would: the login screen, then back to this view. Sent emails lists what Uwazi would have emailed.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" data-part="end-session" onClick={() => endSession()} className="h-8 px-3 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink cursor-pointer">
+            End session
+          </button>
+          <button type="button" data-part="sent-emails" onClick={() => setEmailsOpen(true)} aria-haspopup="dialog" className="h-8 px-3 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink cursor-pointer">
+            Sent emails ({emailCount})
+          </button>
+        </div>
+        <SentEmailsModal open={emailsOpen} onClose={() => setEmailsOpen(false)} />
       </section>
 
       <section className="flex flex-col gap-2">

@@ -83,6 +83,24 @@ registerSettingsReset((set, get) => {
   if (!get(usersAtom).some((u) => u.id === id)) set(signedInUserIdAtom, DEFAULT_SIGNED_IN_USER_ID);
 });
 
+/** Whether anyone is signed in. The prototype opens signed in (as
+ *  `signedInUserIdAtom`'s account); Log out and an ended session leave it
+ *  signed out, which is what a public collection shows its anonymous visitors
+ *  and a private one turns away (`App`). */
+export type SessionState = "signed-in" | "signed-out";
+export const sessionStateAtom = atomWithStorage<SessionState>(
+  "uwazi:session",
+  "signed-in",
+  createJSONStorage<SessionState>(() => {
+    try {
+      return sessionStorage;
+    } catch {
+      return undefined as unknown as Storage;
+    }
+  }),
+  { getOnInit: true },
+);
+
 /** The signed-in user's record. Falls back to the first admin if the stored id
  *  no longer exists (the store was reset under it). */
 export const signedInUserAtom = atom<SettingsUser | undefined>((get) => {

@@ -147,6 +147,13 @@ The collection switcher in the navbar toggles between two corpora:
   the passages with their pages, sharing the Library's snippet engine.
 - **Settings** — a clone of the Uwazi settings section: 18 pages grouped **User / System / Tools**, with
   live editors for templates and thesauri.
+- **Log in and account access** — Uwazi's flows without a server: log in by username, the two-step
+  verification step, forgot password, set or reset a password from an emailed link, the invitation of
+  a new user, the lock after six failed attempts and its unlock link, an admin's Reset password,
+  Reset 2FA and Unlock, 2FA setup and the password change in Account, log out, an ended session, and
+  a private collection that shows visitors only the login screen. Demo accounts (password `uwazi`,
+  2FA code `246810`) are listed under the form; **Sent emails** shows what Uwazi would have emailed,
+  with links that open the matching page.
 - **Tools > Import CSV** — Full import lifecycle with sidebar, list/detail screens, and upload simulation
 - **Ask Bert** — the agent assistant (navbar button or **⌘K / Ctrl K**): a centred modal with mocked
   streamed replies and a narrowing context chain (library › view › document, plus attachable entities

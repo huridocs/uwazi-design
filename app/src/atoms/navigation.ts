@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings";
+export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings" | "login" | "set-password" | "unlock-account";
 
 /** Which top-level surface is showing. Every load (fresh tab, reload, deploy
  *  URL) opens on the Library; a switch lasts until the next load and is not
