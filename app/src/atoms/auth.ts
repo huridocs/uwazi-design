@@ -68,12 +68,14 @@ const hex = (bytes: number) => {
   return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 };
 
-const origin = () => (typeof window !== "undefined" ? window.location.origin : "https://uwazi.example");
+// Origin plus Vite's base path (it ends in "/"), so a build served under a
+// subpath (GitHub Pages' /uwazi-design/) links inside it.
+const appRoot = () => `${typeof window !== "undefined" ? window.location.origin : "https://uwazi.example"}${import.meta.env.BASE_URL}`;
 
 function linkHref(link: AuthLink): string {
   return link.kind === "set-password"
-    ? `${origin()}/setpassword/${link.key}${link.createAccount ? "?createAccount=true" : ""}`
-    : `${origin()}/unlockaccount/${link.username}/${link.code}`;
+    ? `${appRoot()}setpassword/${link.key}${link.createAccount ? "?createAccount=true" : ""}`
+    : `${appRoot()}unlockaccount/${link.username}/${link.code}`;
 }
 
 /** The three emails, Uwazi's subjects and bodies (`domain/email/templates`). */
