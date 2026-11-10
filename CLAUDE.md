@@ -82,8 +82,9 @@ Known gaps, kept on purpose:
   for inherited and link-only fields alike. The inherited property names are not on that line:
   they are the table's column headers. The line is left out (no space kept) when the relationship
   type reads as the field's title, compared trimmed and case- and accent-blind (`sameLabel`):
-  CEJIL's País is title and value. `reduce` (`list|distinct|count|min|max|first`) renders a
-  `Σ` `RollupChip`.
+  CEJIL's País is title and value. `reduce` (`list|distinct|count|min|max|first`) is not drawn
+  on the record: the rows already show the values. `reduceInherited` stays for a surface that
+  shows a column without its rows; Bert's context names the mode.
 - Record and edit form place relationship fields at their template position; there is no
   "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
   are put in template order by `orderByTemplate`; fields the template does not declare go last.
