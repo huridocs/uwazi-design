@@ -1,0 +1,56 @@
+{
+ "UPL-11": {
+  "id": "UPL-11",
+  "result": "PASS",
+  "evidence": "dialog \"Delete Do you want to delete the following items? style-guide.pdf Nothing references these files. Nothing else changes. Cancel Delete\"; Cancel kept 4 rows; confirm -> [\"logo-iachr.svg\",\"cover-banner.jpg\",\"Inter-brand.woff2\"]; new Beacon [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"Deleted custom file just now\"]; after reload [\"logo-iachr.svg\",\"cover-banner.jpg\",\"Inter-brand.woff2\"]",
+  "shot": "acceptance-run-2-shots/UPL-11"
+ },
+ "X-04-delete": {
+  "id": "X-04-delete",
+  "result": "PASS",
+  "evidence": "delete adds exactly one \"Deleted custom file\" entry: [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"Deleted custom file just now\"]",
+  "shot": "acceptance-run-2-shots/UPL-11"
+ },
+ "X-01-delete": {
+  "id": "X-01-delete",
+  "result": "PASS",
+  "evidence": "deleted style-guide.pdf stays removed after reload: [\"logo-iachr.svg\",\"cover-banner.jpg\",\"Inter-brand.woff2\"]",
+  "shot": "acceptance-run-2-shots/UPL-11"
+ },
+ "UPL-12": {
+  "id": "UPL-12",
+  "result": "FAIL",
+  "evidence": "Methodology HTML saved with /assets/cover-banner.jpg and Global CSS with /assets/Inter-brand.woff2 (page \"Methodology\"). Delete cover-banner.jpg dialog: \"Delete Do you want to delete the following items? cover-banner.jpg Used in Methodology Those pages and styles keep their references, which will point to a missing file. Cancel Delete\"; Inter-brand.woff2: \"Delete Do you want to delete the following items? Inter-brand.woff2 Used in Global CSS Those pages and styles keep their references, which will point to a missing file. Cancel Delete\"; unreferenced logo-iachr.svg: \"Delete Do you want to delete the following items? logo-iachr.svg Nothing references these files. Nothing else changes. Cancel Delete\". After the allowed delete the Methodology preview images (src, naturalWidth, complete) [[\"/assets/cover-banner.jpg\",0,true]]; editor alive=true \\| CONSOLE during this check: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.",
+  "shot": "acceptance-run-2-shots/UPL-12"
+ },
+ "UPL-13": {
+  "id": "UPL-13",
+  "result": "PASS",
+  "evidence": "idle footer \"Import asset\"; Select all -> \"Selected 4 of 4 Delete Clear\"; two ticked: {\"text\":\"Selected 2 of 4\",\"w\":136,\"buttons\":[\"Delete\",\"Clear\"],\"h\":48,\"bg\":\"rgb(255, 255, 255)\"} (3 ticked slot width 136); after Clear footer \"Import asset\"; delete dialog \"Delete Do you want to delete the following items? logo-iachr.svg cover-banner.jpg Used in Methodology Those pages and styles keep their references, which will point to a missing file. Cancel Delete\"; remaining [\"style-guide.pdf\",\"Inter-brand.woff2\"]; Beacon [\"Deleted custom file just now\",\"Entity saved successfully. All fields were valid. 2 min ago\"]; footer after delete \"Import asset\"",
+  "shot": "acceptance-run-2-shots/UPL-13"
+ },
+ "X-12": {
+  "id": "X-12",
+  "result": "PASS",
+  "evidence": "selection slot \"Selected 2 of 4\" width 136px with 2 ticked and 136px with 3; footer height 48px; bg rgb(255, 255, 255); lead action \"Import asset\" restored after Clear: true",
+  "shot": "acceptance-run-2-shots/UPL-13"
+ },
+ "X-05": {
+  "id": "X-05",
+  "result": "PASS",
+  "evidence": "delete of a referenced file lists what uses it (\"Used in Methodology\") and states the effect: \"Delete Do you want to delete the following items? logo-iachr.svg cover-banner.jpg Used in Methodology Those pages and styles keep their references, which will point to a missing file. Cancel Delete\"; unreferenced files say \"Nothing references these files. Nothing else changes.\" (UPL-12)",
+  "shot": "acceptance-run-2-shots/UPL-13-dialog"
+ },
+ "UPL-14": {
+  "id": "UPL-14",
+  "result": "PASS",
+  "evidence": "empty: \"Uploads Assets you can reference from pages and custom CSS. A file's URL stays the same when you rename it. All types PREVIEW NAME URL ACTION No uploads yet Upload images, fonts or files to use in pages and custom CSS. Import asset Import asset\" (Import asset buttons 2); after adding a file rows [\"small.txt\"]; search \"zzz\": \"Uploads Assets you can reference from pages and custom CSS. A file's URL stays the same when you rename it. All types PREVIEW NAME URL ACTION No uploads match “zzz” Clear search Import asset\" with clear controls [\"\",\"Clear search\"]",
+  "shot": "acceptance-run-2-shots/UPL-14"
+ },
+ "X-10": {
+  "id": "X-10",
+  "result": "PASS",
+  "evidence": "all four files deleted: title \"No uploads yet\", hint present, \"Import asset\" action present (2); not the generic \"Nothing here yet.\"",
+  "shot": "acceptance-run-2-shots/UPL-14"
+ }
+}

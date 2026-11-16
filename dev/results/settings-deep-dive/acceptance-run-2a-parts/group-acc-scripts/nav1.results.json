@@ -1,0 +1,38 @@
+[
+ {
+  "id": "NAV-01",
+  "res": "PASS",
+  "ev": "Dev panel in the catalog: role control \"Admin\" with options [\"Admin\",\"Editor\",\"Collaborator\"]; feature switches [{\"n\":\"metadata-extraction\",\"on\":true},{\"n\":\"paragraphExtraction\",\"on\":true},{\"n\":\"preserve.host\",\"on\":true},{\"n\":\"custom JS\",\"on\":true}] (one per feature, duplicates=false); defaults admin + all on; switching preserve.host off and resuming Settings without reload: rail items include Preserve=false; Dev panel present inside Settings=false",
+  "shot": "NAV-01.png"
+ },
+ {
+  "id": "NAV-02",
+  "res": "PASS",
+  "ev": "Rail sequence (h2 groups, h3 shelves, items)=[\"[User]\",\"Account\",\"[System sr-only]\",\"<Collection>\",\"Dashboard\",\"Collection\",\"Menu\",\"Pages\",\"<Content model>\",\"Templates\",\"Thesauri\",\"Relationship types\",\"Filters\",\"<Languages>\",\"Languages\",\"Translations\",\"<People>\",\"Users & Groups\",\"[Tools]\",\"Preserve\",\"Activity log\",\"Global CSS & JS\",\"Uploads\",\"Import CSV\",\"<ML tools>\",\"Metadata extraction\",\"Paragraph extraction\"]; matches the amended order=true; duplicates=[]; \"System\" heading sr-only={\"sr\":true,\"w\":1,\"h\":1}; shelf headings visible=[{\"t\":\"Collection\",\"w\":true},{\"t\":\"Content model\",\"w\":true},{\"t\":\"Languages\",\"w\":true},{\"t\":\"People\",\"w\":true},{\"t\":\"ML tools\",\"w\":true}]; no Data visualizations / New Relationships Migration",
+  "shot": "NAV-02.png"
+ },
+ {
+  "id": "NAV-04",
+  "res": "FAIL",
+  "ev": "Active item \"Users & Groups\": background rgb(245, 238, 215) (bg-warm is rgb(252, 250, 248), bg-vellum is rgb(245, 238, 215)), font-weight 600, text rgb(26, 26, 26) (text-ink rgb(26, 26, 26)), icon rgb(85, 85, 85) vs inactive icon rgb(85, 85, 85); classes \"bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors bg-vellum text-ink font-semibold\"; active items=1; group headings that are buttons=0",
+  "shot": "NAV-02.png"
+ },
+ {
+  "id": "NAV-03",
+  "res": "PASS",
+  "ev": "Clicking an item in three groups keeps the rail whole (Pages: groups visible=3, items=19; Languages: groups visible=3, items=19; Activity log: groups visible=3, items=19); Account page also shows the full rail (3 groups, 19 items); navbar top buttons=[\"Library\",\"Collection: Sample\",\"Tools\",\"Notifications, 3 unread\",\"Mark all read\",\"Close notifications\",\"Ask Bert\",\"Settings\",\"Theme: Light\"]; Settings menu entries=[\"User settings\",\"System settings\",\"Log out\"] plus a separate \"Tools\" button (as built, accepted by A2); every rail item reachable in the rail",
+  "shot": "NAV-03.png"
+ },
+ {
+  "id": "NAV-14",
+  "res": "PASS",
+  "ev": "Metadata extraction and Paragraph extraction sit in the group headed \"Tools\" under the \"ML tools\" shelf (after it: indexes ML 6, Metadata 7, Paragraph 8), Templates is in a different group (System); pages open: [\"Metadata extraction: Metadata extraction\",\"Paragraph extraction: Paragraph extraction\"]; role/flag rules checked in NAV-09 and NAV-10",
+  "shot": "NAV-14.png"
+ },
+ {
+  "id": "NAV1-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

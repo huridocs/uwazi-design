@@ -1,0 +1,13 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const layout = process.argv[2] || "split";
+const { browser, page, logs } = await launch({ sync: false, layout });
+const L = layout === "split" ? page.locator('[data-library-pane=left]') : page.locator('body');
+if (layout === "split") await L.getByRole("button", { name: /^Open$/ }).first().click(); else await page.getByRole("button", { name: /^Open$/ }).first().click();
+await page.waitForTimeout(1800);
+await L.getByRole("tab", { name: /Relationships/ }).first().click(); await page.waitForTimeout(1000);
+await L.getByRole("button", { name: /^País/ }).first().click(); await page.waitForTimeout(500);
+await L.getByRole("button", { name: /^Open Chile|^Open [A-Z]/ }).first().click(); await page.waitForTimeout(2500);
+console.log(layout, JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('[role=dialog]')].map(d => ({ st: d.dataset.state, inert: d.hasAttribute("inert"), t: d.textContent.slice(0, 30), box: Math.round(d.getBoundingClientRect().left) + "," + Math.round(d.getBoundingClientRect().width), vis: getComputedStyle(d).visibility })))));
+await page.screenshot({ path: OUT + `/slideover-from-pill-${layout}.png` });
+console.log(logs);
+await browser.close();

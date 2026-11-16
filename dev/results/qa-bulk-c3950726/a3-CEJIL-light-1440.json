@@ -1,0 +1,44 @@
+[
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "Import CSV routes to the import page",
+  "ok": true,
+  "detail": "{\"url\":\"/\",\"h\":[\"Uwazi\",\"Notifications\",\"Tasks · 1\",\"New\"],\"txt\":\"Uwazi | Library | CEJIL | Tools | Uploading document batch | 88% | Notifications | 4 | Mark all read | All | 8 | Unread | 4 | TASKS · 1 | Uploading document batch… | Running | velasque"
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "Export CSV of results downloads a file",
+  "ok": true,
+  "detail": "uwazi-cejil-2026-09-21.csv, 4405 rows"
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "header starts Title,Template,Language,Date added",
+  "ok": false,
+  "detail": "﻿Title,Template,Language,Date added,Denuncia ante la CIDH,Description,Relacionado a,Sesión,CorteIDH,Tipo de audiencia,Pa"
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "multi-value cells are \"|\"-joined",
+  "ok": true,
+  "detail": "2698 rows contain \"|\""
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "formula-like cells neutralised",
+  "ok": true,
+  "detail": "'=1+1 QA formula,Causa,en,2026-09-21,\"'=HYPERLINK(\"\"http://x\"\")\",'@SUM(A1) +cmd -2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "no raw cell starts with = + - @",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "csv:CEJIL-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

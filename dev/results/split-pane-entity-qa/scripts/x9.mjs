@@ -1,0 +1,16 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const layout = process.argv[2], sync = process.argv[3] === "on";
+const { browser, page, logs } = await launch({ sync, layout });
+const root = layout === "split" ? page.locator('[data-library-pane=left]') : page.locator('main, body').first();
+if (layout === "split") await root.getByRole("button", { name: /^Open$/ }).first().click(); else await page.getByRole("button", { name: /^Open$/ }).first().click();
+await page.waitForTimeout(1800);
+if (layout !== "split") { await page.getByRole("tab", { name: /^Relationships/ }).first().click(); } else await root.getByRole("tab", { name: /Relationships/ }).first().click();
+await page.waitForTimeout(1500);
+const g = layout === "split" ? root : page;
+const hdr = await g.getByRole("button", { name: /^(País|Relacionado|Country)/ }).first().click().catch(e => console.log("no group btn")); await page.waitForTimeout(600);
+const pill = g.getByRole("button", { name: /^Open [A-ZÁÉÍÓÚ]/ }).first(); console.log("pill:", await pill.getAttribute("aria-label"));
+await pill.click(); await page.waitForTimeout(2500);
+console.log(layout, sync, JSON.stringify(await page.evaluate(() => ({ texts: [...document.querySelectorAll('button')].filter(b => /Open entity/.test(b.textContent)).map(b => ({ vis: b.getClientRects().length > 0, inert: !!b.closest('[inert]'), pane: b.closest('[data-library-pane]')?.dataset.libraryPane })), dialogs: [...document.querySelectorAll('[role=dialog]')].map(d => d.dataset.state + "|" + d.textContent.slice(0, 20)) }))));
+await page.screenshot({ path: OUT + `/slideover-pill-${layout}-${sync ? "on" : "off"}.png` });
+console.log(logs);
+await browser.close();

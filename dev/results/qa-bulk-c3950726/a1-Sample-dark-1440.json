@@ -1,0 +1,44 @@
+[
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "template picker lists templates",
+  "ok": true,
+  "detail": "Mark all read,All7,Unread3,Show details,Retry,Show details,Retry,Clear all,Person,Court Case,Country,Judgment"
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "after Save the drawer leaves the form and shows the new entity",
+  "ok": true,
+  "detail": "COURT CASE | QA Bulk Create 66555 | Metadata | Relationships | 0 | Files | 0 | CASE NUMBER | QA-777 | DESCRIPTION |  | qa description |  | Created"
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "new entity visible in views without a query (Cards/List/Timeline/Results)",
+  "ok": true,
+  "detail": "{\"Cards\":true,\"List\":true,\"Timeline\":true,\"Results\":true}"
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "search finds the new entity by title",
+  "ok": true,
+  "detail": "1 result for"
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "search finds the new entity by case number",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "session persistence after reload (info)",
+  "ok": true,
+  "detail": "after reload entity present: false"
+ },
+ {
+  "area": "create:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

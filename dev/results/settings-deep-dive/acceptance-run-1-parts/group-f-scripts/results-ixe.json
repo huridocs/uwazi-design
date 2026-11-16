@@ -1,0 +1,188 @@
+[
+ {
+  "id": "IXE-01",
+  "res": "FAIL",
+  "ev": "title \"Metadata extraction\" ok; no \"Extractors\" table header (text starts \"Metadata extraction Train extractors to suggest property val\"); columns [\"PROPERTY\",\"STATUS\",\"DOCUMENTS\",\"ACCURACY\",\"\"] (spec Extractor Name, Property, Source, Template(s), Review + status/documents/accuracy); \"Review\" buttons=0; the template shows as a sub-line under the property. Zero extractors (deleted 5): \"Metadata extraction Train extractors to suggest property values from document text automatically. PROPERTY STATUS DOCUMENTS ACCURACY No extractors yet An extractor learns to suggest one property's value from document tex\" (names the object, but action is \"Add extractor\" not \"Create Extractor\")",
+  "shot": "IXE-01-empty.png"
+ },
+ {
+  "id": "X-10",
+  "res": "FAIL",
+  "ev": "zero extractors: title \"No extractors yet\" with hint and action \"Add extractor\" (names object, hint, create action present); spec example uses a \"Create Extractor\" action label on the IXE page, so wording differs. Reading: empty state structure passes, label mismatch only; marked FAIL on label per IXE-01",
+  "shot": "IXE-01-empty.png"
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "no selection: rows have no checkboxes (0); no \"Selected n of total\" bar; footer keeps \"Add extractor\" always; delete only through the row action",
+  "shot": "IXE-01.png"
+ },
+ {
+  "id": "IXE-02",
+  "res": "FAIL",
+  "ev": "\"Create Extractor\" is \"Add extractor\" (a full-page editor, not a Modal xl with steps; open dialogs: \"\"); no name field \"Extractor name\" (fields: Template, Property, Property type); no step \"Next\"/\"Back\"; buttons [\"Back\",\"Metadata extraction\",\"Template: Person\",\"Property type: Text\",\"Cancel\",\"Create extractor\"]; page text: Metadata extraction / New extractor Template Person Property The metadata property to suggest values for. Property type Text Cancel Create extractor",
+  "shot": "IXE-02.png"
+ },
+ {
+  "id": "IXE-03",
+  "res": "FAIL",
+  "ev": "no \"Properties by template\" list or search; Property is a free text input, \"Property type\" select exists (spec: none; type follows the property); no step 2 with \"Input\", \"Selected templates\", \"Common sources\" (PDF/Title); properties are not read from the active data source's templates",
+  "shot": "IXE-02.png"
+ },
+ {
+  "id": "IXE-04",
+  "res": "FAIL",
+  "ev": "Create closed the editor; list row added=false (row text \"undefined\", no source or template pills); Beacon new entries [\"Extractor created just now\",\"Entity saved successfully. All fields were valid. just now\"] (spec \"Saved successfully.\"); after rail round trip row present=false; after reload present=false; Activity log []",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "created extractor \"Case summary\": present after rail round trip=false, after reload=false (extractors live in component useState; also the Suggestions edits and config edits do not persist)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Create added Beacon entries [\"Extractor created just now\",\"Entity saved successfully. All fields were valid. just now\"]; spec quoted text \"Saved successfully.\"",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity log after create: [] (record() uses log:false on this page)",
+  "shot": ""
+ },
+ {
+  "id": "IXE-05",
+  "res": "FAIL",
+  "ev": "no \"Edit Extractor\" footer action (row click opens the editor); editor buttons [\"Back\",\"Metadata extraction\",\"Template: Court Case\",\"Property type: Text\",\"Find suggestions\",\"Filter suggestions: All\",\"Accept all\",\"Cancel\",\"Save\"]; header \"Edit Extractor\"/\"Back\"/\"Update\" absent (shows title \"Date filed\", Cancel/Save); changing the property then Save: no dialog about discarded suggestions (dialog text \"\"); notifications [\"Date filed 2 saved just now\",\"Entity saved successfully. All fields were valid. just now\"]; list row now \"Date filedCourt CaseReady14294%\" (Save closed the editor)",
+  "shot": "IXE-05.png"
+ },
+ {
+  "id": "IXE-06",
+  "res": "FAIL",
+  "ev": "no row checkboxes, so no \"Selected n of total\" footer swap and no bulk \"Delete\". Single-row delete dialog: \"Delete extractor Delete the extractor for “Date filed”? Its suggestions are deleted with it; values already accepted stay on the entities. It covers 142 documents. Cancel Delete\" with buttons [\"\",\"Cancel\",\"Delete\"] (spec header \"Delete extractors\", \"Do you want to delete the following items?\", name list, suggestion count, accepted-values note, Cancel/Accept); result entries [\"Extractor deleted just now\",\"Entity saved successfully. All fields were valid. just now\"] (spec \"Extractor/s deleted\"); rows left 4; Activity log []",
+  "shot": "IXE-06.png"
+ },
+ {
+  "id": "IXE-07",
+  "res": "NOT DRIVEABLE",
+  "ev": "no dev panel with a failure switch exists in the app, and Save has no failing path",
+  "shot": ""
+ },
+ {
+  "id": "IXE-19",
+  "res": "NOT DRIVEABLE",
+  "ev": "no dev panel failure switch exists",
+  "shot": ""
+ },
+ {
+  "id": "IXE-08",
+  "res": "FAIL",
+  "ev": "list on phone: scrollWidth 390, text \"Metadata extraction Train extractors to suggest property values from document text automatically. Date filed Court Case Status Ready Documents 142 Accuracy 94% Respondent state Court Case Status Ready\" (rows show property, template, status, documents, accuracy; no template chips, no \"Review\" button: 0); tapping a row opens the editor (not \"Review\"); suggestions on phone: scroll {\"sw\":390,\"cw\":390}, table headers=0; rows show entity, current, suggested, score, state with Accept check icon and a Reject icon (spec: one row each with entity, current to suggested, state, Accept button; Reject must not exist)",
+  "shot": "IXE-08.png"
+ },
+ {
+  "id": "IXE-09",
+  "res": "FAIL",
+  "ev": "row click opens the extractor editor; header text \"Metadata extraction / Date filed Template Court Case Propert\" (breadcrumb \"Metadata extraction / Date filed\" ok); no table title with property icon, \"for\" and template pills; no \"Stats & Filters\" button (count 0); Back returns to list (Back button present)",
+  "shot": "IXE-09.png"
+ },
+ {
+  "id": "IXE-10",
+  "res": "FAIL",
+  "ev": "columns [\"ENTITY\",\"CURRENT VALUE\",\"SUGGESTED\",\"SCORE\",\"STATE\",\"\"] (spec \"Name\", \"Context\", \"Current Value/Suggestion\", \"Use for training\", Accept, Open); no Context column, no training toggle, no Open; one combined column absent (separate Current value / Suggested); no green/amber/red value colouring (all neutral text); state pills present: [\"Matches\",\"Empty\",\"Mismatch\"]",
+  "shot": "IXE-09.png"
+ },
+ {
+  "id": "IXE-11",
+  "res": "FAIL",
+  "ev": "no search field in the suggestions view (search inputs=0); only a \"Filter suggestions\" select; column headers do not sort (order changed after Entity click=false); 12 rows present",
+  "shot": "IXE-09.png"
+ },
+ {
+  "id": "IXE-12",
+  "res": "FAIL",
+  "ev": "no \"Stats & Filters\" slide-over (button count 0); a \"Training\" section shows Documents/Reviewed/Pending/Accuracy; quick filter is a select \"Filter suggestions\" (All, Pending, Mismatch, Empty, Accepted) rather than a segmented control; no \"Accuracy\" tooltip text",
+  "shot": "IXE-09.png"
+ },
+ {
+  "id": "IXE-13",
+  "res": "FAIL",
+  "ev": "Accept on a mismatch row: row becomes \"Masacre de El Mozote v. El Salvador 25/10/2012 25/10/2012 86% Accepted\" (state Accepted, current takes suggested value); Beacon entries [\"Entity saved successfully. All fields were valid. just now\"] (spec \"Suggestions sent\" then \"Suggestions updated\": none); Accept disabled after accept=true; Accept is not disabled for rows with no suggestion (n/a: every row has one); entity value not written (prototype note in the Accept-all dialog: \"Entity values are not written in the prototype\")",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-14",
+  "res": "FAIL",
+  "ev": "no row checkboxes (0) so no action bar and no \"Accept selected\"; \"Reject\" buttons exist (12, one per row) and \"Accept all\" button exists (1), both of which the spec says must not exist (G12)",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-15",
+  "res": "FAIL",
+  "ev": "no \"Use for training\" toggle on rows (switches=0)",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-16",
+  "res": "FAIL",
+  "ev": "no \"Train model\" button (0); a single \"Find suggestions\" button exists (1), which the spec says must not exist; clicking it only reseeds suggestions and notifies \"Finding suggestions — this runs in the background\" (no modal with Training sample radios, \"Amount :\" or the banner)",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-17",
+  "res": "FAIL",
+  "ev": "no \"Process extractor\" button (0) and no modal with \"Find suggestions for\", \"Amount :\", \"Auto-accept suggestions\" etc.",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-18",
+  "res": "FAIL",
+  "ev": "after \"Find suggestions\": Beacon [\"Finding suggestions — this runs in the background just now\",\"Entity saved successfully. All fields were valid. just now\"]; no footer status (\"Sending labeled data...\", \"Training model...\", \"Finding suggestions...\" with processed/total), no \"Cancel\"/\"Canceling...\" swap, no matching Beacon task (footer reads \"...a v. Nicaragua 23/06/2005 23/06/2005 95% Matches Cancel Save\")",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-20",
+  "res": "FAIL",
+  "ev": "accepted two rows, rail to Dashboard: dialog \"\" (accept-only edits are not dirty, ok); returning to the extractor: Accepted rows=0 (spec: still Accepted; rows reseed on reopen); config edit then Escape: dialog \"\"; rail click with config edit: dialog \"Discard unsaved changes? Extractor edits haven't been saved. Leaving now will discard them. Keep editing Discard\"",
+  "shot": "IXE-20.png"
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "config edit then rail click opens \"Discard unsaved changes? Extractor edits haven't been saved. Leaving now will discard them. Keep editing Discard\" (spec dialog: \"Discard changes?\" / \"You have unsaved changes. Do you want to continue?\" with Cancel and Discard changes; copy differs: \"Discard unsaved changes?\" ... Keep editing / Discard). Escape alone opened nothing (spec: the guard appears only on the config modal; the config here is a page, not a modal)",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "Save disabled when clean=true; enabled after edit=true; after Save the editor closes and a rail click shows no dialog (dialog \"\")",
+  "shot": ""
+ },
+ {
+  "id": "IXE-PO1",
+  "res": "FAIL",
+  "ev": "list row \"Date filedCourt CaseReady14294%\" shows Accuracy 94% (static seed), while the editor's Accuracy stat reads \"DOCUMENTS 142 REVIEWED 0 PENDING 5 ACCURACY 58%\" for the same extractor (computed from the suggestions); status pills are static (Ready/Training/Processing/Error) and not tied to a task state",
+  "shot": "IXE-13.png"
+ },
+ {
+  "id": "IXE-PO2",
+  "res": "PASS",
+  "ev": "Score column present=true; stats strip before \"DOCUMENTS 142 REVIEWED 0 PENDING 5 ACCURACY 58%\" -> after one Accept \"DOCUMENTS 142 REVIEWED 1 PENDING 4 ACCURACY 67%\" (Reviewed, Pending, Accuracy update)",
+  "shot": ""
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe list [\"color-contrast (serious) x4: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(5)\"]; axe with delete dialog [\"color-contrast (serious) x4: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(5)\",\"landmark-no-duplicate-banner (moderate) x1: header[data-testid=\\\"settings-content-header\\\"]\"]; focus after Escape \"Delete Date filed extractor\"; axe editor [\"color-contrast (serious) x8: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(6)\"]; duplicate row button names []; console []",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "status pill contrast light [\"Ready:3.32\",\"Ready:3.32\",\"Training:2.08\",\"Processing:1.93\",\"Error:17.16\"]; dark [\"Ready:2.58\",\"Ready:2.58\",\"Training:5.08\",\"Processing:4.22\",\"Error:1.45\"]; below 4.5: [\"Ready:3.32\",\"Ready:3.32\",\"Training:2.08\",\"Processing:1.93\",\"Ready:2.58\",\"Ready:2.58\",\"Processing:4.22\",\"Error:1.45\"]",
+  "shot": "X-08-ixe-dark.png"
+ }
+]

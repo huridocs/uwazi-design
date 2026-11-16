@@ -1,0 +1,140 @@
+[
+ {
+  "id": "CSS-01",
+  "res": "FAIL",
+  "ev": "With Global JS never enabled (the Collection page has no Global JS toggle): rail label \"Global CSS & JS\" (expected \"Global CSS\"); page title \"Global CSS & JS\" (expected \"Global CSS\"); tabs [\"CSS\",\"JS\"] visible (expected none); textareas 1; JS tab present",
+  "shot": "CSS-01"
+ },
+ {
+  "id": "CSS-02",
+  "res": "FAIL",
+  "ev": "Cannot turn \"Global JS\" on: Collection has no such toggle. The two-name states do not exist: the rail/title always read \"Global CSS & JS\" and tabs are always [\"CSS\",\"JS\"] (expected tab names \"Custom CSS\" and \"Custom JS\")",
+  "shot": ""
+ },
+ {
+  "id": "CSS-13",
+  "res": "FAIL",
+  "ev": "Cannot turn \"Global JS\" off or on: no toggle on Collection. JS tab is always shown (tabs [\"CSS\",\"JS\"]); rail label never changes to \"Global CSS\"",
+  "shot": ""
+ },
+ {
+  "id": "CSS-03",
+  "res": "FAIL",
+  "ev": "seed text \"/* Global CSS — applied across the public collection */ / .home-banner { / background: v\"; accessible-name \"Custom CSS\" textbox count 0 (aria-label null, <label> undefined, labelledby null); visible \"Custom CSS\" label count 0; font \"JetBrains Mono\", ui-monospace, monospac, dir ltr; \"a {\" accepted with 0 errors; counter \"1 line · 3 chars\"",
+  "shot": "CSS-03"
+ },
+ {
+  "id": "CSS-04",
+  "res": "FAIL",
+  "ev": "tab switches keep unsaved text: JS \"window.__x = 1;\", CSS \"p{margin:0}\" (OK); JS area accessible name \"Custom JS\" textboxes 0; warning text on page: 1 (\"Scripts run on every public page - use with care.\" is shown; Uwazi has none)",
+  "shot": "CSS-04"
+ },
+ {
+  "id": "CSS-05",
+  "res": "PASS",
+  "ev": "Save disabled: clean true, after 1 char false, after deleting it again true (reverts to clean), after Save true; JS text untouched after CSS-only Save: true",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "After Save a rail click shows no dialog (0); editing again re-enables Save",
+  "shot": ""
+ },
+ {
+  "id": "CSS-06",
+  "res": "PASS",
+  "ev": "after rail round trip \"a{color:red}\", after reload \"a{color:red}\", after Reset demo data \"/* Global CSS — applied across the public collection */ / .h\"",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "res": "PASS",
+  "ev": "CSS persisted across rail and reload; Reset demo data returned the seed",
+  "shot": ""
+ },
+ {
+  "id": "CSS-07",
+  "res": "PASS",
+  "ev": "dialogs open after Save then rail click: 0; after a new edit then rail click: 1",
+  "shot": ""
+ },
+ {
+  "id": "CSS-08",
+  "res": "FAIL",
+  "ev": "JS-only edit then rail click opens dialog \"Discard unsaved changes? CSS and JS edits haven't been saved. Leaving now will discard them. Keep editing Discard\" with buttons [\"\",\"Keep editing\",\"Discard\"]; keep-editing keeps text: true; second click reopens: true; Discard shows stored JS \"// Global JS — runs on every public page\"; CSS-only edit triggers dialog: true. Expected title \"Discard changes?\", body \"You have unsaved changes. Do you want to continue?\", buttons \"Cancel\" and \"Discard changes\"",
+  "shot": "CSS-08"
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "Guard works (dialog on rail click while dirty, keep keeps edit, discard navigates) but copy differs: \"Discard unsaved changes? CSS and JS edits haven't been saved. Leaving now will discard them. Keep editing Discard\", buttons [\"\",\"Keep editing\",\"Discard\"]",
+  "shot": "CSS-08"
+ },
+ {
+  "id": "CSS-09",
+  "res": "FAIL",
+  "ev": "Beacon entries after one Save: [\"Customisation saved CSS 1 lines, JS 2 lines. just now\"] (expected one entry titled \"Saved successfully.\")",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Beacon after Save: [\"Customisation saved CSS 1 lines, JS 2 lines. just now\"]",
+  "shot": ""
+ },
+ {
+  "id": "CSS-14",
+  "res": "FAIL",
+  "ev": "one Save of CSS (3 lines) + JS (2 lines): stored entries [\"UPDATE Updated settings “Global CSS & JS” [admin]\"]; Activity page text has \"Updated custom CSS\": false, \"Updated custom JS\": false; marker leaked into log: false; page text excerpt \"Activity log \\| Every change made to the collection, newest first. Open an entry to see the request behind it. \\| All actions \\| All users \\| UPDATE \\| Updated settings “Global CSS & JS” \\| admin \\| 2026-10-04 22:54 \\| UPDATE \\| Updated entity “Velásquez-Rodríguez v. H\"",
+  "shot": "CSS-14"
+ },
+ {
+  "id": "X-09",
+  "res": "PASS",
+  "ev": "Activity log after Save: [\"UPDATE Updated settings “Global CSS & JS” [admin]\"]",
+  "shot": ""
+ },
+ {
+  "id": "CSS-10",
+  "res": "FAIL",
+  "ev": "Saved body { background: rgb(255, 0, 0); }, opened Pages editor on \"About this collection\": preview iframe body background is rgb(251, 250, 247) (expected rgb(255, 0, 0)); the iframe srcdoc contains the saved CSS: false. Global CSS is not applied in the Pages editor preview. The public preview is not reachable (no such surface), so that half was not driven",
+  "shot": "CSS-10"
+ },
+ {
+  "id": "CSS-11",
+  "res": "PASS",
+  "ev": "after save+reload: style elements carrying the CSS in the admin shell 0, body background rgb(245, 240, 232); on Menu page 0 / rgb(245, 240, 232)",
+  "shot": ""
+ },
+ {
+  "id": "CSS-12",
+  "res": "PASS",
+  "ev": "after saving JS and reload: window.__ran undefined, document title unchanged (\"Inter-American Human Rights Archive · Uwazi\"), script elements with the text 0; JS text still shown on the page: true; Pages preview iframe: {\"ran\":\"undefined\",\"scripts\":0}. Public preview is not reachable, not driven",
+  "shot": ""
+ },
+ {
+  "id": "CSS-16",
+  "res": "PASS",
+  "ev": "scrollWidth 390 / 390; tab tops [161,161]; code area height 496px (20rem=320); Save at y=806.5. Global JS flag cannot be set so the JS tab is always present",
+  "shot": "CSS-16"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone: no horizontal scroll (390/390), tabs on one row, editor 496px high, Save reachable",
+  "shot": "CSS-16"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe on pane: label (critical) x1: textarea; with the Reset dialog open ([\"Reset CSS\"]): color-contrast (serious) x1: .bg-success ; label (critical) x1: textarea ; landmark-no-duplicate-banner (moderate) x1: header[data-testid=\"settings-content-header\"]; textarea accessible name: (none)",
+  "shot": ""
+ },
+ {
+  "id": "CSS-15",
+  "res": "FAIL",
+  "ev": "__gutter() pass=false; row starts [16,28] (the note \"Styles cascade over the public theme...\" sits at 28px, the rest at 16px) so the gutter is not uniform. Code font: Global CSS 14px \"JetBrains Mono\", ui-monospace, monospace, Pages code area 12px \"JetBrains Mono\", ui-monospace, monospace: size differs (14px vs 12px; expected equal)",
+  "shot": ""
+ }
+]

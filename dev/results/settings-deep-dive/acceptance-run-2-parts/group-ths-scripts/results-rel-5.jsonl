@@ -1,0 +1,2 @@
+{"id":"REL-17","res":"FAIL","ev":"in the panel's \"Manage types\" modal: added \"Colleague of\" (listed in Settings without reload=true); deleted the unused type (dialog \"Unused type 0 refs Delete Cancel\"; gone from Settings=true); rename controls in the modal=0 (the modal can only add and delete, so \"rename Mentors\" cannot be done there)","sh":"acceptance-run-2-shots/REL-17.png"}
+{"id":"CONSOLE@REL-5a","res":"PASS","ev":"","sh":""}

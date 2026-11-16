@@ -1,0 +1,4849 @@
+{
+ "topic": "media-audio: podcast episodes and radio reports on the Nepal protests, their background and aftermath (links only)",
+ "entities": [
+  {
+   "id": "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+   "template": "source",
+   "title": "The Take (Al Jazeera): Why is Gen Z protesting in Nepal?",
+   "properties": {
+    "publisher": "Al Jazeera (The Take)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-11",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasts.apple.com/us/podcast/why-is-gen-z-protesting-in-nepal/id1438817292?i=1000726004898",
+     "label": "Apple Podcasts episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "template": "media",
+   "title": "The Take (Al Jazeera): Why is Gen Z protesting in Nepal?",
+   "properties": {
+    "caption": "Podcast episode of Al Jazeera's The Take. The show notes describe curfews, soldiers in the streets and a prime minister's resignation after a social media blackout and years of corruption claims, state that security forces fired live rounds and killed at least 19, and ask what comes next given demands for mass resignations and new elections. Guest: Ramyata Limbu, journalist and filmmaker.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/why-is-gen-z-protesting-in-nepal/id1438817292?i=1000726004898",
+    "page_url": {
+     "url": "https://podcasts.apple.com/us/podcast/why-is-gen-z-protesting-in-nepal/id1438817292?i=1000726004898",
+     "label": "Apple Podcasts episode page"
+    },
+    "platform": "podcast",
+    "outlet": "Al Jazeera, The Take",
+    "rights": "link-only",
+    "published": "2025-09-11",
+    "duration_seconds": 1271,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Documentary Podcast); Himal Southasian (State of Southasia); The Daily Aus; The Hindu (In Focus)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-19-2025-09-08)."
+    }
+   ]
+  },
+  {
+   "id": "source:bbc-2025-09-15-what-in-the-world-nepokids",
+   "template": "source",
+   "title": "What in the World (BBC): Nepal's Gen Z don't want #NepoKids or corruption",
+   "properties": {
+    "publisher": "BBC World Service (What in the World)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-15",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct73pf",
+     "label": "BBC programme page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "template": "media",
+   "title": "What in the World (BBC): Nepal's Gen Z don't want #NepoKids or corruption",
+   "properties": {
+    "caption": "Podcast episode of BBC World Service's What in the World. The show notes say protesters were demonstrating against corruption, nepotism and a social media ban, that officials say 72 people died including three police personnel, and that Gen Z groups leading the protests distanced themselves from the destruction, saying they had been hijacked by opportunists. A BBC journalist explains the #NepoKids movement, a Gen Z protester gives her views, and a BBC Nepali journalist describes interim Prime Minister Sushila Karki.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepals-gen-z-dont-want-nepokids-or-corruption/id1696601121?i=1000726910346",
+    "page_url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct73pf",
+     "label": "BBC programme page"
+    },
+    "platform": "outlet",
+    "outlet": "BBC World Service, What in the World",
+    "rights": "link-only",
+    "published": "2025-09-15",
+    "duration_seconds": 744,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Devpolicy Talks"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:bbc-2025-09-15-what-in-the-world-nepokids"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:bbc-2025-09-15-what-in-the-world-nepokids"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:bbc-2025-09-15-what-in-the-world-nepokids",
+      "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-72-2025-09-14)."
+    }
+   ]
+  },
+  {
+   "id": "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+   "template": "source",
+   "title": "The Inquiry (BBC World Service): Can Gen Z shape a new Nepal?",
+   "properties": {
+    "publisher": "BBC World Service (The Inquiry)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-10-14",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct7236",
+     "label": "BBC programme page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "template": "media",
+   "title": "The Inquiry (BBC World Service): Can Gen Z shape a new Nepal?",
+   "properties": {
+    "caption": "Episode of BBC World Service's The Inquiry. The show notes say that within 48 hours at the start of September 2025 Nepal's government was toppled and more than 70 people killed, that the trigger was a ban on 26 social media platforms, and that the protesters approved a new interim prime minister and demanded new elections set for March 2026. The episode asks whether Gen Z can shape a new Nepal, and the notes add that few protests of this kind elsewhere in Asia have produced fundamental social change and that it remains to be seen whether trusting 73-year-old Sushila Karki reflects the protesters' political maturity.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/can-gen-z-shape-a-new-nepal/id932499233?i=1000730965961",
+    "page_url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct7236",
+     "label": "BBC programme page"
+    },
+    "platform": "outlet",
+    "outlet": "BBC World Service, The Inquiry",
+    "rights": "link-only",
+    "published": "2025-10-14",
+    "duration_seconds": 1380,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: This Is Not A Drill with Gavin Esler (Podmasters)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+      "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-72-to-74-by-21-september)."
+    }
+   ]
+  },
+  {
+   "id": "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+   "template": "source",
+   "title": "Hack (triple j): How social media protests turned deadly",
+   "properties": {
+    "publisher": "ABC triple j (Hack)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-09",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.abc.net.au/triplej/programs/hack/nepal-protests-social-media-ban-house-sitting/105728600",
+     "label": "ABC episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-09-triplej-hack-nepal-social-media-protests",
+   "template": "media",
+   "title": "Hack (triple j): How social media protests turned deadly",
+   "properties": {
+    "caption": "Episode of triple j's Hack. The Nepal item covers the social media ban and the resulting deadly protests, with an ABC correspondent on the ground in Kathmandu (South Asia correspondent Meghna Bali is listed as a guest). The rest of the episode covers unrelated stories.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/how-social-media-protests-turned-deadly-gaza-flotilla/id78995043?i=1000725678102",
+    "page_url": {
+     "url": "https://www.abc.net.au/triplej/programs/hack/nepal-protests-social-media-ban-house-sitting/105728600",
+     "label": "ABC episode page"
+    },
+    "platform": "outlet",
+    "outlet": "ABC triple j, Hack",
+    "rights": "link-only",
+    "published": "2025-09-09",
+    "duration_seconds": 1740,
+    "language": "en",
+    "segment_start": 82,
+    "segment_end": 510,
+    "location_method": "The show notes list '01:22 - Nepal's Gen Z social media protests' and the next item, Melbourne's knife crime killings, at 08:30, so the Nepal item runs 01:22 to 08:30 (82 to 510 seconds). Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Documentary Podcast); Himal Southasian (Himal Conversations); SBS Nepali (SBS Australia); The Daily Aus"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method",
+      "segment_start",
+      "segment_end"
+     ],
+     "sources": [
+      "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests"
+     ],
+     "verification": "single-source",
+     "note": "Segment times as stated in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+      "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies",
+      "source:himal-southasian-2026-02-28-nepal-elections-2026"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-09-08-gen-z-protests-kathmandu-and-other-cities)."
+    }
+   ]
+  },
+  {
+   "id": "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+   "template": "source",
+   "title": "The Daily Aus: Nepal's Gen Z protests, explained",
+   "properties": {
+    "publisher": "The Daily Aus",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-09",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://omny.fm/shows/the-daily-aus/nepals-gen-z-political-uprising",
+     "label": "Omny Studio episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "template": "media",
+   "title": "The Daily Aus: Nepal's Gen Z protests, explained",
+   "properties": {
+    "caption": "Episode of The Daily Aus. The show notes say Nepal's government lifted a social media ban after deadly protests that killed 19 people, that young demonstrators in Kathmandu demanded an end to corruption and a reversal of the restrictions on Facebook, Instagram, YouTube and other platforms, and that the episode explains the ban, the protests and the government's response.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepals-gen-z-protests-explained/id1552309889?i=1000725767924",
+    "page_url": {
+     "url": "https://omny.fm/shows/the-daily-aus/nepals-gen-z-political-uprising",
+     "label": "Omny Studio episode page"
+    },
+    "platform": "podcast",
+    "outlet": "The Daily Aus",
+    "rights": "link-only",
+    "published": "2025-09-09",
+    "duration_seconds": 735,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Al Jazeera (The Take); BBC World Service (The Documentary Podcast); Himal Southasian (State of Southasia); The Hindu (In Focus)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-19-2025-09-08)."
+    }
+   ]
+  },
+  {
+   "id": "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+   "template": "source",
+   "title": "In Focus by The Hindu: Nepal on the Brink: Will the old guard step aside?",
+   "properties": {
+    "publisher": "The Hindu (In Focus)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-10",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasts.apple.com/us/podcast/nepal-on-the-brink-will-the-old-guard-step-aside/id1494440867?i=1000725888749",
+     "label": "Apple Podcasts episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "template": "media",
+   "title": "In Focus by The Hindu: Nepal on the Brink: Will the old guard step aside?",
+   "properties": {
+    "caption": "Episode of The Hindu's In Focus podcast with Roman Gautam, editor of Himal Southasian. The show notes describe a ban on 26 social media platforms, anti-corruption rallies on 8 September in which 19 people including school children were shot, attacks the next day on party offices, ministers' homes and parliament, and Prime Minister Oli's resignation, and ask why young Nepalis are losing patience.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-on-the-brink-will-the-old-guard-step-aside/id1494440867?i=1000725888749",
+    "page_url": {
+     "url": "https://podcasts.apple.com/us/podcast/nepal-on-the-brink-will-the-old-guard-step-aside/id1494440867?i=1000725888749",
+     "label": "Apple Podcasts episode page"
+    },
+    "platform": "podcast",
+    "outlet": "The Hindu, In Focus",
+    "rights": "link-only",
+    "published": "2025-09-10",
+    "duration_seconds": 2229,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Al Jazeera (The Take); BBC World Service (The Documentary Podcast); Himal Southasian (State of Southasia); The Daily Aus"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. Apple lists a duration of 2229 s and a release date of 2025-09-10; the publisher feed lists 1857 s and 2025-09-11 for the same episode. The Apple values are recorded because the Apple page is the linked page."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-19-2025-09-08)."
+    }
+   ]
+  },
+  {
+   "id": "source:indian-express-2025-09-10-3-things-oli-resigns",
+   "template": "source",
+   "title": "3 Things (The Indian Express): Nepal PM KP Oli resigns, AAP MLA held in J&K, and GST's impact on cars",
+   "properties": {
+    "publisher": "The Indian Express (3 Things)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-10",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.spreaker.com/episode/nepal-pm-kp-oli-resigns-aap-mla-held-in-j-k-and-gst-s-impact-on-cars--67694214",
+     "label": "Spreaker episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-10-indian-express-3-things-nepal-oli-resigns",
+   "template": "media",
+   "title": "3 Things (The Indian Express): Nepal PM KP Oli resigns, AAP MLA held in J&K, and GST's impact on cars",
+   "properties": {
+    "caption": "Episode of The Indian Express's 3 Things. The first item, with The Indian Express's Yubaraj Ghimire, covers Nepal, where a social media ban triggered the country's most violent protests in years and Prime Minister KP Sharma Oli has resigned. The other two items cover Indian stories.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-pm-kp-oli-resigns-aap-mla-held-in-j-k-and-gsts/id1406730235?i=1000725807024",
+    "page_url": {
+     "url": "https://www.spreaker.com/episode/nepal-pm-kp-oli-resigns-aap-mla-held-in-j-k-and-gst-s-impact-on-cars--67694214",
+     "label": "Spreaker episode page"
+    },
+    "platform": "podcast",
+    "outlet": "The Indian Express, 3 Things",
+    "rights": "link-only",
+    "published": "2025-09-10",
+    "duration_seconds": 1429,
+    "language": "en",
+    "segment_start": 0,
+    "segment_end": 620,
+    "location_method": "The show notes say 'First, ... Nepal' and list the next item at (10:20), so the Nepal item ends at 10:20 (620 seconds). The start at 0 is inferred from 'First'; it is not given as a timestamp. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Al Jazeera (The Take); BBC World Service (The Inquiry); Himal Southasian (State of Southasia); The Hindu (In Focus); The Nordic Asia Podcast; The Times of India (The Times Of India Podcast)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:indian-express-2025-09-10-3-things-oli-resigns"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method",
+      "segment_start",
+      "segment_end"
+     ],
+     "sources": [
+      "source:indian-express-2025-09-10-3-things-oli-resigns"
+     ],
+     "verification": "single-source",
+     "note": "Segment times as stated in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:indian-express-2025-09-10-3-things-oli-resigns",
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-09-09-oli-resigns-as-prime-minister)."
+    }
+   ]
+  },
+  {
+   "id": "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+   "template": "source",
+   "title": "The Times Of India Podcast: 'Gen Z' forces out Nepal's political class, but what next?",
+   "properties": {
+    "publisher": "The Times of India (The Times Of India Podcast)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-12",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasters.spotify.com/pod/show/times-internet/episodes/Gen-Z-forces-out-Nepals-political-class--but-what-next-e384eor",
+     "label": "Episode page (Spotify for Podcasters) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "template": "media",
+   "title": "The Times Of India Podcast: 'Gen Z' forces out Nepal's political class, but what next?",
+   "properties": {
+    "caption": "Episode of The Times Of India Podcast. The show notes say the Prime Minister has resigned, political leaders were attacked in the streets and the Nepal Army is now in charge. Roman Gautam, editor of Himal Southasian and a resident of Kathmandu, explains why the protests erupted, why they brought down a government and what comes next.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/gen-z-forces-out-nepals-political-class-but-what-next/id1565551738?i=1000726457430",
+    "page_url": {
+     "url": "https://podcasters.spotify.com/pod/show/times-internet/episodes/Gen-Z-forces-out-Nepals-political-class--but-what-next-e384eor",
+     "label": "Episode page (Spotify for Podcasters)"
+    },
+    "platform": "podcast",
+    "outlet": "The Times of India, The Times Of India Podcast",
+    "rights": "link-only",
+    "published": "2025-09-12",
+    "duration_seconds": 2280,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Al Jazeera (The Take); BBC World Service (The Inquiry); Himal Southasian (State of Southasia); The Hindu (In Focus); The Indian Express (3 Things); The Nordic Asia Podcast"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:indian-express-2025-09-10-3-things-oli-resigns",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-09-09-oli-resigns-as-prime-minister)."
+    }
+   ]
+  },
+  {
+   "id": "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+   "template": "source",
+   "title": "State of Southasia #32 (Himal Southasian): GenZ hopes for an inclusive new Nepal",
+   "properties": {
+    "publisher": "Himal Southasian (State of Southasia)",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2025-09-15",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/GenZ-hopes-for-an-inclusive-new-Nepal-State-of-Southasia-32-e38797f",
+     "label": "Episode page (Spotify for Podcasters) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "template": "media",
+   "title": "State of Southasia #32 (Himal Southasian): GenZ hopes for an inclusive new Nepal",
+   "properties": {
+    "caption": "Episode of Himal Southasian's State of Southasia, hosted by Nayantara Narayanan, with three young people from Nepal. The show notes recount the 8 September march, the social media ban and the registration requirement behind it, the earlier circulation of videos of 'nepo babies', police fire in which at least 19 died on 8 September, widespread violence on 9 September including the burning of parliament, a reported death toll of 51 by the weekend, Prime Minister Oli's resignation, and a Discord vote for Sushila Karki to lead an interim government.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/genz-hopes-for-an-inclusive-new-nepal-state-of-southasia-32/id1464880116?i=1000726833500",
+    "page_url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/GenZ-hopes-for-an-inclusive-new-Nepal-State-of-Southasia-32-e38797f",
+     "label": "Episode page (Spotify for Podcasters)"
+    },
+    "platform": "podcast",
+    "outlet": "Himal Southasian, State of Southasia",
+    "rights": "link-only",
+    "published": "2025-09-15",
+    "duration_seconds": 3888,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Al Jazeera (The Take); BBC World Service (The Documentary Podcast); The Daily Aus; The Hindu (In Focus)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. The show notes place the Discord vote for Karki on 'Friday night'; the dataset's event for the Discord session is dated 10 September. The Discord claim is linked without a date for that reason."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+      "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+      "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+      "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-19-2025-09-08)."
+    }
+   ]
+  },
+  {
+   "id": "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+   "template": "source",
+   "title": "This Is Not A Drill: The Gen Z protests – Inside Nepal's 'Discord revolution'",
+   "properties": {
+    "publisher": "This Is Not A Drill with Gavin Esler (Podmasters)",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2025-09-18",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasts.apple.com/us/podcast/the-gen-z-protests-inside-nepals-discord-revolution/id1593634121?i=1000727217536",
+     "label": "Apple Podcasts episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "template": "media",
+   "title": "This Is Not A Drill: The Gen Z protests – Inside Nepal's 'Discord revolution'",
+   "properties": {
+    "caption": "Episode of This Is Not A Drill, presented by Oz Katerji with journalist and academic Dinesh Kafle joining from Kathmandu. The show notes describe the Discord-based mobilisation, the 8 September protest against a social media ban, more than 70 deaths after protests were infiltrated by violent groups and the government used lethal force, the fall of the government, and a new prime minister nominated via social media.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/the-gen-z-protests-inside-nepals-discord-revolution/id1593634121?i=1000727217536",
+    "page_url": {
+     "url": "https://podcasts.apple.com/us/podcast/the-gen-z-protests-inside-nepals-discord-revolution/id1593634121?i=1000727217536",
+     "label": "Apple Podcasts episode page"
+    },
+    "platform": "podcast",
+    "outlet": "This Is Not A Drill with Gavin Esler",
+    "rights": "link-only",
+    "published": "2025-09-18",
+    "duration_seconds": 2050,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Himal Southasian (State of Southasia)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+      "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:karki-was-chosen-through-a-discord-poll)."
+    }
+   ]
+  },
+  {
+   "id": "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+   "template": "source",
+   "title": "The Nordic Asia Podcast: Gen Z Uprising: Youth, Protest and Political Change in Nepal",
+   "properties": {
+    "publisher": "The Nordic Asia Podcast",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2025-09-26",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://the-nordic-asia-podcast.simplecast.com/episodes/gen-z-uprising-youth-protest-and-political-change-in-nepal-V3V0EkDL",
+     "label": "Simplecast episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "template": "media",
+   "title": "The Nordic Asia Podcast: Gen Z Uprising: Youth, Protest and Political Change in Nepal",
+   "properties": {
+    "caption": "Episode of The Nordic Asia Podcast in which host Hanna Geschewski talks with Jeevan Baniya, Deputy Director of Social Science Baha in Kathmandu. The show notes describe the early September 2025 week of upheaval in which the prime minister and government resigned, the army intervened, parliament was dissolved and the first female interim prime minister was sworn in, and discuss the grievances behind the protests and the diversity of Nepal's youth movement. The same episode is also listed on New Books in South Asian Studies and New Books in Political Science.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/gen-z-uprising-youth-protest-and-political-change-in-nepal/id1509921432?i=1000728531471",
+    "page_url": {
+     "url": "https://the-nordic-asia-podcast.simplecast.com/episodes/gen-z-uprising-youth-protest-and-political-change-in-nepal-V3V0EkDL",
+     "label": "Simplecast episode page"
+    },
+    "platform": "podcast",
+    "outlet": "The Nordic Asia Podcast",
+    "rights": "link-only",
+    "published": "2025-09-26",
+    "duration_seconds": 1871,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Devpolicy Talks"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+      "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-09-12-karki-sworn-in-as-interim-prime-minister)."
+    }
+   ]
+  },
+  {
+   "id": "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+   "template": "source",
+   "title": "Devpolicy Talks: Youth uprisings: understanding the protests in Indonesia and Nepal",
+   "properties": {
+    "publisher": "Devpolicy Talks",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2025-10-17",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://devpolicytalks.simplecast.com/episodes/youth-uprisings-understanding-the-protests-in-indonesia-and-nepal-aCNts9M1",
+     "label": "Simplecast episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "template": "media",
+   "title": "Devpolicy Talks: Youth uprisings: understanding the protests in Indonesia and Nepal",
+   "properties": {
+    "caption": "Episode of Devpolicy Talks, hosted by Amita Monterola, with Puspa Paudel of the Center for Investigative Journalism in Nepal and Garry Rosario da Gama of the Australian National University. The Nepal part of the show notes covers the social-media spread of videos of politicians' children, the peaceful gathering at Maitighar on 8 September, police fire when protesters tried to reach the parliament building, 19 young people killed, nationwide violence on 9 September, 72 deaths in total and the appointment of a first female caretaker prime minister.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/youth-uprisings-understanding-the-protests-in/id1824090053?i=1000732261136",
+    "page_url": {
+     "url": "https://devpolicytalks.simplecast.com/episodes/youth-uprisings-understanding-the-protests-in-indonesia-and-nepal-aCNts9M1",
+     "label": "Simplecast episode page"
+    },
+    "platform": "podcast",
+    "outlet": "Devpolicy Talks",
+    "rights": "link-only",
+    "published": "2025-10-17",
+    "duration_seconds": 2803,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (What in the World)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. The show notes give the protest dates as 'August and September 2024'; Indonesia's protests began on 25 August and Nepal's on 8 September 2025, so the year in the notes appears to be a typo. This item uses 2025."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+      "source:bbc-2025-09-15-what-in-the-world-nepokids"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (claim:death-toll-72-2025-09-14)."
+    }
+   ]
+  },
+  {
+   "id": "source:himal-southasian-2025-04-14-royalist-resurgence",
+   "template": "source",
+   "title": "State of Southasia #21 (Himal Southasian): Pranaya Rana on Nepal's royalist resurgence",
+   "properties": {
+    "publisher": "Himal Southasian (State of Southasia)",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2025-04-14",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Pranaya-Rana-on-Nepals-royalist-resurgence-State-of-Southasia-21-e31eqfi",
+     "label": "Episode page (Spotify for Podcasters) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-04-14-himal-state-of-southasia-21-royalist-resurgence",
+   "template": "media",
+   "title": "State of Southasia #21 (Himal Southasian): Pranaya Rana on Nepal's royalist resurgence",
+   "properties": {
+    "caption": "Episode of Himal Southasian's State of Southasia in which Nayantara Narayanan speaks to journalist Pranaya Rana. The show notes describe the early March 2025 gathering of some 10,000 royalist supporters greeting former king Gyanendra on his return to Kathmandu, the violence at the pro-royalist rally on 28 March in which two people were killed, and what young attendees said they wanted.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/pranaya-rana-on-nepals-royalist-resurgence-state-of/id1464880116?i=1000703405867",
+    "page_url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Pranaya-Rana-on-Nepals-royalist-resurgence-State-of-Southasia-21-e31eqfi",
+     "label": "Episode page (Spotify for Podcasters)"
+    },
+    "platform": "podcast",
+    "outlet": "Himal Southasian, State of Southasia",
+    "rights": "link-only",
+    "published": "2025-04-14",
+    "duration_seconds": 3157,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-04-14-royalist-resurgence"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-04-14-royalist-resurgence"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:himal-southasian-2025-04-14-royalist-resurgence"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-03-28-tinkune-pro-monarchy-protest-violence)."
+    }
+   ]
+  },
+  {
+   "id": "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+   "template": "source",
+   "title": "SBS Nepali: Nepal Update: Sushila Karki appointed as the new Nepali PM, elections to be held in March 2026",
+   "properties": {
+    "publisher": "SBS Nepali (SBS Australia)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-09-13",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/%E0%A4%A8-%E0%A4%AA-%E0%A4%B2-%E0%A4%85%E0%A4%AA%E0%A4%A1-%E0%A4%9F-%E0%A4%85%E0%A4%A8-%E0%A4%A4%E0%A4%B0-%E0%A4%AE-%E0%A4%AA-%E0%A4%B0%E0%A4%A7-%E0%A4%A8%E0%A4%AE%E0%A4%A8-%E0%A4%A4-%E0%A4%B0-%E0%A4%95-%E0%A4%B0-%E0%A4%AA%E0%A4%AE-%E0%A4%B8-%E0%A4%B6-%E0%A4%B2-%E0%A4%95-%E0%A4%B0-%E0%A4%95-%E0%A4%95-%E0%A4%A8-%E0%A4%AF-%E0%A4%95-%E0%A4%A4-%E0%A5%A8%E0%A5%A6%E0%A5%A8%E0%A5%AC-%E0%A4%95-%E0%A4%AE-%E0%A4%B0-%E0%A4%9A-%E0%A5%AB-%E0%A4%AE-%E0%A4%A8-%E0%A4%B0-%E0%A4%B5-%E0%A4%9A%E0%A4%A8/308vjr9ut",
+     "label": "SBS episode page (accessed 2026-10-05)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "template": "media",
+   "title": "SBS Nepali: Nepal Update: Sushila Karki appointed as the new Nepali PM, elections to be held in March 2026",
+   "properties": {
+    "caption": "Short Nepal news update from SBS Nepali (Australia), with show notes in English and Nepali. It reports that President Ram Chandra Poudel named former Chief Justice Sushila Karki interim Prime Minister, that on her recommendation the House of Representatives was dissolved, that the National Assembly continues, and that elections are scheduled for 5 March 2026.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-update-sushila-karki-appointed-as-the-new/id350450080?i=1000726587659",
+    "page_url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/%E0%A4%A8-%E0%A4%AA-%E0%A4%B2-%E0%A4%85%E0%A4%AA%E0%A4%A1-%E0%A4%9F-%E0%A4%85%E0%A4%A8-%E0%A4%A4%E0%A4%B0-%E0%A4%AE-%E0%A4%AA-%E0%A4%B0%E0%A4%A7-%E0%A4%A8%E0%A4%AE%E0%A4%A8-%E0%A4%A4-%E0%A4%B0-%E0%A4%95-%E0%A4%B0-%E0%A4%AA%E0%A4%AE-%E0%A4%B8-%E0%A4%B6-%E0%A4%B2-%E0%A4%95-%E0%A4%B0-%E0%A4%95-%E0%A4%95-%E0%A4%A8-%E0%A4%AF-%E0%A4%95-%E0%A4%A4-%E0%A5%A8%E0%A5%A6%E0%A5%A8%E0%A5%AC-%E0%A4%95-%E0%A4%AE-%E0%A4%B0-%E0%A4%9A-%E0%A5%AB-%E0%A4%AE-%E0%A4%A8-%E0%A4%B0-%E0%A4%B5-%E0%A4%9A%E0%A4%A8/308vjr9ut",
+     "label": "SBS episode page"
+    },
+    "platform": "radio",
+    "outlet": "SBS Nepali",
+    "rights": "link-only",
+    "published": "2025-09-13",
+    "duration_seconds": 331,
+    "language": "ne",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-09-12-sushila-karki-appointed-interim-prime-minister)."
+    }
+   ]
+  },
+  {
+   "id": "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+   "template": "source",
+   "title": "SBS Nepali: Nepal's Gen Z protest saw 'unnecessary and excessive force': Amnesty International",
+   "properties": {
+    "publisher": "SBS Nepali (SBS Australia)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2025-12-19",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nep-iv-amnesty-nirajan-191225/xus97bwz4",
+     "label": "SBS episode page (accessed 2026-10-05)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excessive-force",
+   "template": "media",
+   "title": "SBS Nepali: Nepal's Gen Z protest saw 'unnecessary and excessive force': Amnesty International",
+   "properties": {
+    "caption": "Interview from SBS Nepali (Australia), with show notes in English and Nepali. SBS Nepal correspondent Pratichya Dulal speaks with Amnesty International Nepal Director Nirajan Thapaliya about Amnesty's research briefing on the 8 September protest, which the show notes say concludes the protest involved a deadly crackdown on protesters. The show notes carry a warning that the story contains distressing content.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepals-gen-z-protest-saw-unnecessary-and-excessive/id350450080?i=1000741971872",
+    "page_url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nep-iv-amnesty-nirajan-191225/xus97bwz4",
+     "label": "SBS episode page"
+    },
+    "platform": "radio",
+    "outlet": "SBS Nepali",
+    "rights": "link-only",
+    "published": "2025-12-19",
+    "duration_seconds": 841,
+    "language": "ne",
+    "content_warning": "distressing",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2025-12-08-amnesty-report-unlawful-killings)."
+    }
+   ]
+  },
+  {
+   "id": "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+   "template": "source",
+   "title": "SBS Nepali: Nepal Election 2026: From protests to polls",
+   "properties": {
+    "publisher": "SBS Nepali (SBS Australia)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2026-03-06",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nepal-election-pkg-060326/rzxcj8uno",
+     "label": "SBS episode page (accessed 2026-10-05)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-03-06-sbs-nepali-nepal-election-2026-protests-to-polls",
+   "template": "media",
+   "title": "SBS Nepali: Nepal Election 2026: From protests to polls",
+   "properties": {
+    "caption": "Segment of SBS Nepali's radio program (Australia), with show notes in English and Nepali. The notes describe it as covering the background from the ousting of the government after the 8 and 9 September protests to the election, the electoral mood and the candidates in the news.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-election-2026-from-protests-to-polls-%E0%A4%A8-%E0%A4%AA-%E0%A4%B2-%E0%A4%A8/id350450080?i=1000753559989",
+    "page_url": {
+     "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nepal-election-pkg-060326/rzxcj8uno",
+     "label": "SBS episode page"
+    },
+    "platform": "radio",
+    "outlet": "SBS Nepali",
+    "rights": "link-only",
+    "published": "2026-03-06",
+    "duration_seconds": 744,
+    "language": "ne",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Documentary Podcast); Himal Southasian (Himal Conversations); PODS by PEI (Policy Entrepreneurs Inc.); The Hindu (In Focus); The Interview with Karan Thapar"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies",
+      "source:himal-southasian-2026-02-28-nepal-elections-2026",
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-03-05-house-of-representatives-election)."
+    }
+   ]
+  },
+  {
+   "id": "source:bbc-2026-03-22-documentary-shot-like-enemies",
+   "template": "source",
+   "title": "The Documentary Podcast (BBC): Nepal - \"Shot like enemies\"",
+   "properties": {
+    "publisher": "BBC World Service (The Documentary Podcast)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2026-03-22",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.bbc.co.uk/programmes/p0n7wkyq",
+     "label": "BBC programme page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "template": "media",
+   "title": "The Documentary Podcast (BBC): Nepal - \"Shot like enemies\"",
+   "properties": {
+    "caption": "Episode of BBC World Service's The Documentary Podcast, from the BBC Eye and Assignment investigation by Subina Shrestha. The show notes say it draws on more than 4000 videos filmed on the streets, testimony from police and protesters and an exclusive leaked record of police radio to show how Nepali authorities lost control of the 8 September 2025 protest, in which 19 young protesters died, and ask whether the police, army and politicians failed a generation.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-shot-like-enemies/id73802620?i=1000756531260",
+    "page_url": {
+     "url": "https://www.bbc.co.uk/programmes/p0n7wkyq",
+     "label": "BBC programme page"
+    },
+    "platform": "outlet",
+    "outlet": "BBC World Service, The Documentary Podcast (BBC Eye and Assignment)",
+    "rights": "link-only",
+    "published": "2026-03-22",
+    "duration_seconds": 1598,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. The audio episode is the radio version of the BBC investigation; the dataset's event for the investigation is dated 26 February 2026 and this episode aired on 22 March 2026."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:bbc-2026-03-22-documentary-shot-like-enemies"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-02-26-bbc-investigation-published)."
+    }
+   ]
+  },
+  {
+   "id": "source:himal-southasian-2026-02-28-nepal-elections-2026",
+   "template": "source",
+   "title": "Himal Conversations: Nepal Elections 2026: Parties, Power, and the Promise of Change",
+   "properties": {
+    "publisher": "Himal Southasian (Himal Conversations)",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2026-02-28",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Nepal-Elections-2026-Parties--Power--and-the-Promise-of-Change--Himal-Conversations-e3fnvhq",
+     "label": "Episode page (Spotify for Podcasters) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-02-28-himal-conversations-nepal-elections-2026",
+   "template": "media",
+   "title": "Himal Conversations: Nepal Elections 2026: Parties, Power, and the Promise of Change",
+   "properties": {
+    "caption": "Episode of Himal Southasian's Himal Conversations ahead of the 5 March 2026 election, with Himal editor Roman Gautam, associate editor Nayantara Narayanan, Anjali Sah and Pranaya Rana. The show notes list the parties contesting, the persistence of the old guard, federalism, women's under-representation among candidates and what the previous year's Gen Z protests revealed about frustrations in Nepali public life.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-elections-2026-parties-power-and-the-promise/id1464880116?i=1000752080639",
+    "page_url": {
+     "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Nepal-Elections-2026-Parties--Power--and-the-Promise-of-Change--Himal-Conversations-e3fnvhq",
+     "label": "Episode page (Spotify for Podcasters)"
+    },
+    "platform": "podcast",
+    "outlet": "Himal Southasian, Himal Conversations",
+    "rights": "link-only",
+    "published": "2026-02-28",
+    "duration_seconds": 4103,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Documentary Podcast); PODS by PEI (Policy Entrepreneurs Inc.); SBS Nepali (SBS Australia); The Hindu (In Focus); The Interview with Karan Thapar"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:himal-southasian-2026-02-28-nepal-elections-2026"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:himal-southasian-2026-02-28-nepal-elections-2026"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:himal-southasian-2026-02-28-nepal-elections-2026",
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies",
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-03-05-house-of-representatives-election)."
+    }
+   ]
+  },
+  {
+   "id": "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+   "template": "source",
+   "title": "In Focus by The Hindu: From protests to power: Is Nepal entering a new political era?",
+   "properties": {
+    "publisher": "The Hindu (In Focus)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2026-03-07",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasts.apple.com/us/podcast/from-protests-to-power-is-nepal-entering-a-new-political-era/id1494440867?i=1000753769696",
+     "label": "Apple Podcasts episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "template": "media",
+   "title": "In Focus by The Hindu: From protests to power: Is Nepal entering a new political era?",
+   "properties": {
+    "caption": "Episode of The Hindu's In Focus with guest Sanjeev Satgainya, hosted by Shikha Kumari. The show notes say the Rastriya Swatantra Party was heading towards a sweeping victory in the general election, describe Balendra Shah as a rapper-turned-politician and former mayor of Kathmandu, link the result to the youth-led protests that forced Prime Minister Oli to resign, and read it as a reckoning for the Nepali Congress and the CPN-UML.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/from-protests-to-power-is-nepal-entering-a-new-political-era/id1494440867?i=1000753769696",
+    "page_url": {
+     "url": "https://podcasts.apple.com/us/podcast/from-protests-to-power-is-nepal-entering-a-new-political-era/id1494440867?i=1000753769696",
+     "label": "Apple Podcasts episode page"
+    },
+    "platform": "podcast",
+    "outlet": "The Hindu, In Focus",
+    "rights": "link-only",
+    "published": "2026-03-07",
+    "duration_seconds": 1632,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Documentary Podcast); Himal Southasian (Himal Conversations); PODS by PEI (Policy Entrepreneurs Inc.); SBS Nepali (SBS Australia); The Interview with Karan Thapar"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+      "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+      "source:bbc-2026-03-22-documentary-shot-like-enemies",
+      "source:himal-southasian-2026-02-28-nepal-elections-2026",
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-03-05-house-of-representatives-election)."
+    }
+   ]
+  },
+  {
+   "id": "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+   "template": "source",
+   "title": "PODS by PEI: Beyond the Ballot Box: Alok Bohara on Nepal's Gen Z Movement & Why Institutions Matter",
+   "properties": {
+    "publisher": "PODS by PEI (Policy Entrepreneurs Inc.)",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2026-02-16",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://podcasters.spotify.com/pod/show/policy-entrepreneurs-inc/episodes/Beyond-the-Ballot-Box-Alok-Bohara-on-Nepals-Gen-Z-Movement--Why-Institutions-Matter-e3f5arn",
+     "label": "Episode page (Spotify for Podcasters) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-02-16-pods-by-pei-beyond-the-ballot-box-gen-z-movement",
+   "template": "media",
+   "title": "PODS by PEI: Beyond the Ballot Box: Alok Bohara on Nepal's Gen Z Movement & Why Institutions Matter",
+   "properties": {
+    "caption": "Episode of PODS by PEI with Professor Alok Bohara, Nirjan Rai and Saumitra Neupane, recorded ahead of the 5 March 2026 election. The show notes say the discussion looks past the polling numbers at the decay of Nepal's democratic institutions and at how the current Gen Z movement is acting as a decentralized catalyst for institutional reform. A chapter list is given in the notes.",
+    "media_kind": "audio",
+    "embed": "https://podcasters.spotify.com/pod/show/policy-entrepreneurs-inc/episodes/Beyond-the-Ballot-Box-Alok-Bohara-on-Nepals-Gen-Z-Movement--Why-Institutions-Matter-e3f5arn",
+    "page_url": {
+     "url": "https://podcasters.spotify.com/pod/show/policy-entrepreneurs-inc/episodes/Beyond-the-Ballot-Box-Alok-Bohara-on-Nepals-Gen-Z-Movement--Why-Institutions-Matter-e3f5arn",
+     "label": "Episode page (Spotify for Podcasters)"
+    },
+    "platform": "podcast",
+    "outlet": "PODS by PEI, Policy Entrepreneurs Inc.",
+    "rights": "link-only",
+    "published": "2026-02-16",
+    "duration_seconds": 3586,
+    "language": "en",
+    "segment_start": 1365,
+    "segment_end": 2110,
+    "location_method": "The show notes list the chapter '22:45 Gen Z as an \"Emergent\" force in 2026' and the next chapter at 35:10, so the Gen Z chapter runs 22:45 to 35:10 (1365 to 2110 seconds). Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. The notes give the guest's analysis and opinion; the factual points it mentions (such as the 5 March 2026 election date) are covered by other items, but the analysis itself has one source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method",
+      "segment_start",
+      "segment_end"
+     ],
+     "sources": [
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+     ],
+     "verification": "single-source",
+     "note": "Segment times as stated in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (organisation:gen-z-movement)."
+    }
+   ]
+  },
+  {
+   "id": "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+   "template": "source",
+   "title": "The Interview with Karan Thapar: Nepal Elections: New Govt Will Be Unstable and Won't Last Long; Sushila Karki's Govt a Failure",
+   "properties": {
+    "publisher": "The Interview with Karan Thapar",
+    "publisher_type": "other",
+    "medium": "other",
+    "published": "2026-03-02",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://rss.com/podcasts/the-interview-with-karan-thapar/2927797",
+     "label": "Episode page (rss.com) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-03-02-karan-thapar-interview-nepal-elections-ghimire",
+   "template": "media",
+   "title": "The Interview with Karan Thapar: Nepal Elections: New Govt Will Be Unstable and Won't Last Long; Sushila Karki's Govt a Failure",
+   "properties": {
+    "caption": "Interview in which Yubaraj Ghimire, editor of Desh Sanchar.com, tells Karan Thapar that the government elected on 5 March 2026 is likely to be unstable, that the interim administration under Sushila Karki has been a failure, and that the final result may take a month because Nepal uses a hybrid system with 165 directly elected and 110 proportional seats. These are the guest's views as stated in the show notes.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-elections-new-govt-will-be-unstable-and-wont/id1852451945?i=1000752409273",
+    "page_url": {
+     "url": "https://rss.com/podcasts/the-interview-with-karan-thapar/2927797",
+     "label": "Episode page (rss.com)"
+    },
+    "platform": "podcast",
+    "outlet": "The Interview with Karan Thapar",
+    "rights": "link-only",
+    "published": "2026-03-02",
+    "duration_seconds": 1443,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. The notes give the guest's analysis and opinion; the factual points it mentions (such as the 5 March 2026 election date) are covered by other items, but the analysis itself has one source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-03-05-house-of-representatives-election)."
+    }
+   ]
+  },
+  {
+   "id": "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+   "template": "source",
+   "title": "Fireside (Kantipur): Om Prakash Aryal: From Street Activist to Home Minister & The Warning Against \"Digital Fascism\"",
+   "properties": {
+    "publisher": "Kantipur Sounds (Fireside)",
+    "publisher_type": "national-media",
+    "medium": "other",
+    "published": "2026-09-15",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://rss.com/podcasts/kantipur-fireside/3154457",
+     "label": "Episode page (rss.com) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "template": "media",
+   "title": "Fireside (Kantipur): Om Prakash Aryal: From Street Activist to Home Minister & The Warning Against \"Digital Fascism\"",
+   "properties": {
+    "caption": "Episode of Fireside with Rupesh Shrestha, published as one year since the Gen Z movement. Former Home Minister Om Prakash Aryal reflects on the year, and the show notes list the implementation of the Karki Commission report, the organised violence of 8 and 9 September, the detention of former Prime Minister KP Sharma Oli and former Home Minister Ramesh Lekhak, Sushila Karki's role as interim leader, the Rasuwa Bhote Koshi flood response and a warning to Prime Minister Balen Shah about online intimidation. Opinions are the guest's.",
+    "media_kind": "audio",
+    "embed": "https://rss.com/podcasts/kantipur-fireside/3154457",
+    "page_url": {
+     "url": "https://rss.com/podcasts/kantipur-fireside/3154457",
+     "label": "Episode page (rss.com)"
+    },
+    "platform": "podcast",
+    "outlet": "Kantipur Sounds, Fireside with Rupesh Shrestha",
+    "rights": "link-only",
+    "published": "2026-09-15",
+    "duration_seconds": 3241,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-09-08-first-anniversary-gen-z-martyrs-day)."
+    }
+   ]
+  },
+  {
+   "id": "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+   "template": "source",
+   "title": "Fireside Legacy (Kantipur): Prachanda on Political Upheaval, Coalition Shifts, and Good Governance",
+   "properties": {
+    "publisher": "Kantipur Sounds (Fireside)",
+    "publisher_type": "national-media",
+    "medium": "other",
+    "published": "2026-09-18",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://rss.com/podcasts/kantipur-fireside/3163428",
+     "label": "Episode page (rss.com) (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "template": "media",
+   "title": "Fireside Legacy (Kantipur): Prachanda on Political Upheaval, Coalition Shifts, and Good Governance",
+   "properties": {
+    "caption": "Archive episode of Fireside with Rupesh Shrestha, published on 18 September 2026 and recorded at Baluwatar on 18 March 2024 while Pushpa Kamal Dahal 'Prachanda' was Prime Minister. The show notes say that in March 2024 he ended his alliance with the Nepali Congress and formed a new governing coalition with CPN-UML and the Rastriya Swatantra Party, and that in the interview he explains the frictions behind the decision and defends his leadership style.",
+    "media_kind": "audio",
+    "embed": "https://rss.com/podcasts/kantipur-fireside/3163428",
+    "page_url": {
+     "url": "https://rss.com/podcasts/kantipur-fireside/3163428",
+     "label": "Episode page (rss.com)"
+    },
+    "platform": "podcast",
+    "outlet": "Kantipur Sounds, Fireside with Rupesh Shrestha",
+    "rights": "link-only",
+    "published": "2026-09-18",
+    "duration_seconds": 2983,
+    "language": "en",
+    "recorded": "2024-03-18",
+    "recorded_precision": "day",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "single-source",
+    "verified_by": "None. No second independent outlet in this audio set carries the same account; the episode page is the only source."
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language",
+      "recorded",
+      "recorded_precision"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. Recorded date (18 March 2024) is taken from the show notes; the episode was published on 18 September 2026."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+     ],
+     "verification": "single-source",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (person:pushpa-kamal-dahal)."
+    }
+   ]
+  },
+  {
+   "id": "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+   "template": "source",
+   "title": "Up First (NPR): Nepal-Tibet Flood Rescue, Fed Chair Speech, Kennedy Center Renaming Hearing",
+   "properties": {
+    "publisher": "NPR (Up First)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2026-08-28",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.npr.org/2026/08/28/nx-s1-5947775/nepal-tibet-flood-rescue-fed-chair-speech-kennedy-center-renaming-hearing",
+     "label": "NPR episode page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-08-28-npr-up-first-nepal-tibet-flood-rescue",
+   "template": "media",
+   "title": "Up First (NPR): Nepal-Tibet Flood Rescue, Fed Chair Speech, Kennedy Center Renaming Hearing",
+   "properties": {
+    "caption": "Episode of NPR's Up First. The lead item says the flood disaster on the Nepal-Tibet border is far worse than first known, with hundreds dead and more than a thousand missing, and that rescuers were racing to reach survivors. The other two items cover US stories.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-tibet-flood-rescue-fed-chair-speech-kennedy-center/id1222114325?i=1000786483782",
+    "page_url": {
+     "url": "https://www.npr.org/2026/08/28/nx-s1-5947775/nepal-tibet-flood-rescue-fed-chair-speech-kennedy-center-renaming-hearing",
+     "label": "NPR episode page"
+    },
+    "platform": "outlet",
+    "outlet": "NPR, Up First",
+    "rights": "link-only",
+    "published": "2026-08-28",
+    "duration_seconds": 772,
+    "language": "en",
+    "segment_start": 116,
+    "segment_end": 356,
+    "location_method": "The show notes list '(01:56) Nepal-Tibet Flood Rescue' and the next item, Fed Chair Speech, at 05:56, so the Nepal item runs 01:56 to 05:56 (116 to 356 seconds). Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: BBC World Service (The Global Story); Kantipur Sounds (Fireside)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. Not linked to the 2025 protests; included because the dataset records the August 2026 floods as the main current crisis."
+    },
+    {
+     "property": [
+      "location_method",
+      "segment_start",
+      "segment_end"
+     ],
+     "sources": [
+      "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+     ],
+     "verification": "single-source",
+     "note": "Segment times as stated in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+      "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+      "source:bbc-2026-09-01-global-story-covering-disaster"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-08-bhotekoshi-trishuli-floods)."
+    }
+   ]
+  },
+  {
+   "id": "source:bbc-2026-09-01-global-story-covering-disaster",
+   "template": "source",
+   "title": "The Global Story (BBC): Nepal: Covering a disaster in your own country",
+   "properties": {
+    "publisher": "BBC World Service (The Global Story)",
+    "publisher_type": "international-media",
+    "medium": "other",
+    "published": "2026-09-01",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct8mj0",
+     "label": "BBC programme page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:audio-2026-09-01-bbc-global-story-nepal-covering-a-disaster",
+   "template": "media",
+   "title": "The Global Story (BBC): Nepal: Covering a disaster in your own country",
+   "properties": {
+    "caption": "Episode of The Global Story in which co-host Asma Khalid speaks with Anup Kaphle, group editorial director of Kantipur Media Group, about covering the aftermath of the devastating floods in Nepal, the humanitarian efforts, the long-term impact and his concern that international attention will move away.",
+    "media_kind": "audio",
+    "embed": "https://podcasts.apple.com/us/podcast/nepal-covering-a-disaster-in-your-own-country/id1715473158?i=1000787148079",
+    "page_url": {
+     "url": "https://www.bbc.co.uk/programmes/w3ct8mj0",
+     "label": "BBC programme page"
+    },
+    "platform": "outlet",
+    "outlet": "BBC World Service, The Global Story",
+    "rights": "link-only",
+    "published": "2026-09-01",
+    "duration_seconds": 1641,
+    "language": "en",
+    "location_method": "The segment is not stated in the show notes and the whole episode is linked. Only the show notes were read; the audio itself was not listened to or downloaded.",
+    "verification": "confirmed",
+    "verified_by": "Corroborated on the primary point by: Kantipur Sounds (Fireside); NPR (Up First)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "embed",
+      "page_url",
+      "platform",
+      "outlet",
+      "rights",
+      "published",
+      "duration_seconds",
+      "language"
+     ],
+     "sources": [
+      "source:bbc-2026-09-01-global-story-covering-disaster"
+     ],
+     "verification": "single-source",
+     "note": "Read from the episode page and show notes; the caption restates only what the notes say. Not linked to the 2025 protests; included because the dataset records the August 2026 floods as the main current crisis."
+    },
+    {
+     "property": [
+      "location_method"
+     ],
+     "sources": [
+      "source:bbc-2026-09-01-global-story-covering-disaster"
+     ],
+     "verification": "single-source",
+     "note": "No segment times in the show notes."
+    },
+    {
+     "property": [
+      "verification",
+      "verified_by"
+     ],
+     "sources": [
+      "source:bbc-2026-09-01-global-story-covering-disaster",
+      "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+      "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+     ],
+     "verification": "confirmed",
+     "note": "Rule: confirmed only where two independent outlets in the audio set give the same account of the primary point (event:2026-08-bhotekoshi-trishuli-floods)."
+    }
+   ]
+  }
+ ],
+ "references": [
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-depicts-2025-09-08-police-fire-on-protesters-at-",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-documents-death-toll-19-2025-09-08",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": "Stated as at least 19 on 8 September; the notes do not give a place."
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-nepal-published-in",
+   "from": "media:audio-2025-09-11-the-take-why-gen-z-protesting-nepal",
+   "to": "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-reports-2025-09-08-police-fire-on-protesters-at-",
+   "from": "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "quote": "Security forces fired live rounds, killing at least 19."
+   },
+   "sources": [
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-depicts-2025-08-nepo-kid-trend-spreads-on-nepali",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "event:2025-08-nepo-kid-trend-spreads-on-nepali-social-media",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-depicts-sushila-karki",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-documents-death-toll-72-2025-09-14",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "claim:death-toll-72-2025-09-14",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "The notes attribute the figure to officials and add that it includes three police personnel."
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-documents-protesters-core-grievance-was-corruption",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "claim:protesters-core-grievance-was-corruption-not-only-the-ban",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokids-corrupti-published-in",
+   "from": "media:audio-2025-09-15-bbc-what-in-the-world-nepokids-corruption",
+   "to": "source:bbc-2025-09-15-what-in-the-world-nepokids",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-reports-death-toll-72-2025-09-14",
+   "from": "source:bbc-2025-09-15-what-in-the-world-nepokids",
+   "to": "claim:death-toll-72-2025-09-14",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "quote": "officials say 72 people died in the unrest, including three police personnel"
+   },
+   "sources": [
+    "source:bbc-2025-09-15-what-in-the-world-nepokids"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-depicts-2025-09-12-house-of-representatives-diss",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "event:2025-09-12-house-of-representatives-dissolved-election-set",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-depicts-gen-z-movement",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-depicts-sushila-karki",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-documents-death-toll-72-to-74-by-21-september",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "claim:death-toll-72-to-74-by-21-september",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "confirmed",
+   "note": "The notes say \"more than 70\"; no exact figure is given."
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-documents-26-platforms-were-blocked",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "claim:26-platforms-were-blocked",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nepal-published-in",
+   "from": "media:audio-2025-10-14-bbc-the-inquiry-gen-z-new-nepal",
+   "to": "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-reports-26-platforms-were-blocked",
+   "from": "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+   "to": "claim:26-platforms-were-blocked",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "quote": "The trigger for all of this had been a government ban on 26 social media platforms"
+   },
+   "sources": [
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-09-triplej-hack-nepal-social-med-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-09-09-triplej-hack-nepal-social-media-protests",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-triplej-hack-nepal-social-med-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2025-09-09-triplej-hack-nepal-social-media-protests",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-triplej-hack-nepal-social-med-depicts-kathmandu",
+   "from": "media:audio-2025-09-09-triplej-hack-nepal-social-media-protests",
+   "to": "location:kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-triplej-hack-nepal-social-media-protest-published-in",
+   "from": "media:audio-2025-09-09-triplej-hack-nepal-social-media-protests",
+   "to": "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-triplej-hack-nepal-social-med-reports-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "quote": "A social media ban in Nepal has led to deadly protests."
+   },
+   "sources": [
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-depicts-2025-09-08-cabinet-decides-to-lift-socia",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "event:2025-09-08-cabinet-decides-to-lift-social-media-ban",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-documents-death-toll-19-2025-09-08",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": "Stated as at least 19 on 8 September; the notes do not give a place."
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-documents-protesters-core-grievance-was-corruption",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "claim:protesters-core-grievance-was-corruption-not-only-the-ban",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-protests-expl-published-in",
+   "from": "media:audio-2025-09-09-the-daily-aus-nepal-gen-z-protests-explained",
+   "to": "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-reports-death-toll-19-2025-09-08",
+   "from": "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "quote": "after deadly protests swept through the country, killing 19 people"
+   },
+   "sources": [
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-depicts-2025-09-08-police-fire-on-protesters-at-",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-depicts-2025-09-09-arson-and-attacks-on-state-bu",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "event:2025-09-09-arson-and-attacks-on-state-buildings",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-depicts-kp-sharma-oli",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "person:kp-sharma-oli",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-documents-26-platforms-were-blocked",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "claim:26-platforms-were-blocked",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-documents-death-toll-19-2025-09-08",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": "Stated as at least 19 on 8 September; the notes do not give a place."
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-the-brink-published-in",
+   "from": "media:audio-2025-09-10-the-hindu-in-focus-nepal-on-the-brink",
+   "to": "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-reports-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "quote": "Prime Minister K. P. Sharma Oli resigned."
+   },
+   "sources": [
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-10-indian-express-3-things-nepal-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-09-10-indian-express-3-things-nepal-oli-resigns",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-indian-express-3-things-nepal-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-10-indian-express-3-things-nepal-oli-resigns",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-indian-express-3-things-nepal-depicts-kp-sharma-oli",
+   "from": "media:audio-2025-09-10-indian-express-3-things-nepal-oli-resigns",
+   "to": "person:kp-sharma-oli",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-indian-express-3-things-nepal-oli-resig-published-in",
+   "from": "media:audio-2025-09-10-indian-express-3-things-nepal-oli-resigns",
+   "to": "source:indian-express-2025-09-10-3-things-oli-resigns",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:indian-express-2025-09-10-3-things-oli-resigns"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-10-indian-express-3-things-nepal-reports-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "source:indian-express-2025-09-10-3-things-oli-resigns",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "quote": "Prime Minister KP Sharma Oli has since resigned."
+   },
+   "sources": [
+    "source:indian-express-2025-09-10-3-things-oli-resigns"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-depicts-2025-09-10-army-takes-control-of-kathman",
+   "from": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "to": "event:2025-09-10-army-takes-control-of-kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-depicts-nepali-army",
+   "from": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "to": "organisation:nepali-army",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-out-politic-published-in",
+   "from": "media:audio-2025-09-12-times-of-india-gen-z-forces-out-political-class",
+   "to": "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-reports-2025-09-10-army-takes-control-of-kathman",
+   "from": "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+   "to": "event:2025-09-10-army-takes-control-of-kathmandu",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "quote": "the Nepal Army is now in charge"
+   },
+   "sources": [
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-2025-09-04-social-media-platforms-blocke",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "event:2025-09-04-social-media-platforms-blocked",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-2025-09-09-parliament-building-set-on-fi",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "event:2025-09-09-parliament-building-set-on-fire",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-discord",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "organisation:discord",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-sushila-karki",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-depicts-federal-parliament-building",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-documents-death-toll-19-2025-09-08",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": "Stated as at least 19 on 8 September; the notes do not give a place."
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-documents-death-toll-at-least-51-on-12-september",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "claim:death-toll-at-least-51-on-12-september",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-documents-karki-was-chosen-through-a-discord-poll",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "claim:karki-was-chosen-through-a-discord-poll",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "confirmed",
+   "note": "The notes say the Discord vote was on Friday night; the dataset dates the Discord session to 10 September."
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-documents-nepo-kid-campaign-gaining-traction-befor",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "claim:nepo-kid-campaign-gaining-traction-before-ban",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-documents-protesters-core-grievance-was-corruption",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "claim:protesters-core-grievance-was-corruption-not-only-the-ban",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-genz-inclus-published-in",
+   "from": "media:audio-2025-09-15-himal-state-of-southasia-32-genz-inclusive-nepal",
+   "to": "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-reports-death-toll-19-2025-09-08",
+   "from": "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "quote": "Police fired into the crowds and at least 19 people were killed on 8th September."
+   },
+   "sources": [
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-depicts-2025-09-10-discord-session-names-karki-f",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "event:2025-09-10-discord-session-names-karki-for-interim-pm",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "single-source",
+   "note": "The notes say Nepal got a prime minister nominated via social media; the date of the vote is not given."
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-depicts-discord",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "organisation:discord",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-depicts-sushila-karki",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-documents-death-toll-72-to-74-by-21-september",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "claim:death-toll-72-to-74-by-21-september",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "The notes say \"more than 70\"; no exact figure is given."
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-documents-karki-was-chosen-through-a-discord-poll",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "claim:karki-was-chosen-through-a-discord-poll",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-discord-revol-published-in",
+   "from": "media:audio-2025-09-18-this-is-not-a-drill-nepal-discord-revolution",
+   "to": "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-reports-karki-was-chosen-through-a-discord-poll",
+   "from": "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+   "to": "claim:karki-was-chosen-through-a-discord-poll",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "quote": "and Nepal has a new Prime Minister, herself nominated via social media."
+   },
+   "sources": [
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-2025-09-10-army-takes-control-of-kathman",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "event:2025-09-10-army-takes-control-of-kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-2025-09-12-house-of-representatives-diss",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "event:2025-09-12-house-of-representatives-dissolved-election-set",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-2025-09-12-karki-sworn-in-as-interim-pri",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "event:2025-09-12-karki-sworn-in-as-interim-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-sushila-karki",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-depicts-gen-z-movement",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepa-published-in",
+   "from": "media:audio-2025-09-26-nordic-asia-podcast-gen-z-uprising-nepal",
+   "to": "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-reports-2025-09-12-karki-sworn-in-as-interim-pri",
+   "from": "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+   "to": "event:2025-09-12-karki-sworn-in-as-interim-prime-minister",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "quote": "the prime minister and his government resigned, the army intervened, parliament was dissolved"
+   },
+   "sources": [
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-maitighar-mandala",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "location:maitighar-mandala",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-federal-parliament-building",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-2025-09-08-police-fire-on-protesters-at-",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-2025-09-09-arson-and-attacks-on-state-bu",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "event:2025-09-09-arson-and-attacks-on-state-buildings",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-2025-08-nepo-kid-trend-spreads-on-nepali",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "event:2025-08-nepo-kid-trend-spreads-on-nepali-social-media",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-depicts-2025-09-12-karki-sworn-in-as-interim-pri",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "event:2025-09-12-karki-sworn-in-as-interim-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-documents-19-killed-in-kathmandu-on-8-september",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "claim:19-killed-in-kathmandu-on-8-september",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "single-source",
+   "note": "The notes put the shooting at the march from Maitighar toward parliament in Kathmandu. Another claim in the dataset records that two of the 19 deaths were in Jhapa."
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-documents-death-toll-72-2025-09-14",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "claim:death-toll-72-2025-09-14",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-documents-protesters-core-grievance-was-corruption",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "claim:protesters-core-grievance-was-corruption-not-only-the-ban",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisings-indones-published-in",
+   "from": "media:audio-2025-10-17-devpolicy-talks-youth-uprisings-indonesia-nepal",
+   "to": "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-reports-2025-09-08-police-fire-on-protesters-at-",
+   "from": "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal",
+    "quote": "On 8 September, young protesters gathered peacefully at Maitighar in Kathmandu, but when they attempted to reach the parliamentary building, police opened fire."
+   },
+   "sources": [
+    "source:devpolicy-talks-2025-10-17-youth-uprisings-indonesia-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-04-14-himal-state-of-southasia-21-r-depicts-2025-03-09-pro-monarchy-rally-tribhuvan-",
+   "from": "media:audio-2025-04-14-himal-state-of-southasia-21-royalist-resurgence",
+   "to": "event:2025-03-09-pro-monarchy-rally-tribhuvan-airport",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-04-14-royalist-resurgence"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-04-14-himal-state-of-southasia-21-r-depicts-2025-03-28-tinkune-pro-monarchy-protest-",
+   "from": "media:audio-2025-04-14-himal-state-of-southasia-21-royalist-resurgence",
+   "to": "event:2025-03-28-tinkune-pro-monarchy-protest-violence",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-04-14-royalist-resurgence"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-04-14-himal-state-of-southasia-21-r-depicts-gyanendra-shah",
+   "from": "media:audio-2025-04-14-himal-state-of-southasia-21-royalist-resurgence",
+   "to": "person:gyanendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-04-14-royalist-resurgence"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-04-14-himal-state-of-southasia-21-royalist-re-published-in",
+   "from": "media:audio-2025-04-14-himal-state-of-southasia-21-royalist-resurgence",
+   "to": "source:himal-southasian-2025-04-14-royalist-resurgence",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2025-04-14-royalist-resurgence"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-04-14-himal-state-of-southasia-21-r-reports-2025-03-28-tinkune-pro-monarchy-protest-",
+   "from": "source:himal-southasian-2025-04-14-royalist-resurgence",
+   "to": "event:2025-03-28-tinkune-pro-monarchy-protest-violence",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:himal-southasian-2025-04-14-royalist-resurgence",
+    "quote": "Pro-monarchy protesters destroyed vehicles, looted a department store and attacked the offices of two political parties."
+   },
+   "sources": [
+    "source:himal-southasian-2025-04-14-royalist-resurgence"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-depicts-2025-09-12-sushila-karki-appointed-inter",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "event:2025-09-12-sushila-karki-appointed-interim-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-depicts-2025-09-12-house-of-representatives-diss",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "event:2025-09-12-house-of-representatives-dissolved-election-set",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-depicts-sushila-karki",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-depicts-ram-chandra-paudel",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "person:ram-chandra-paudel",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-depicts-house-of-representatives-nepal",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "organisation:house-of-representatives-nepal",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-interim-p-published-in",
+   "from": "media:audio-2025-09-13-sbs-nepali-nepal-update-karki-interim-pm",
+   "to": "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-reports-2025-09-12-sushila-karki-appointed-inter",
+   "from": "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+   "to": "event:2025-09-12-sushila-karki-appointed-interim-prime-minister",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "quote": "has named former Chief Justice Sushila Karki as the country's interim Prime Minister"
+   },
+   "sources": [
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-prot-depicts-amnesty-international",
+   "from": "media:audio-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excessive-force",
+   "to": "organisation:amnesty-international",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-prot-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excessive-force",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-prot-documents-2025-12-08-amnesty-report-unlawful-killi",
+   "from": "media:audio-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excessive-force",
+   "to": "event:2025-12-08-amnesty-report-unlawful-killings",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excess-published-in",
+   "from": "media:audio-2025-12-19-sbs-nepali-amnesty-gen-z-protest-excessive-force",
+   "to": "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-prot-reports-2025-12-08-amnesty-report-unlawful-killi",
+   "from": "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+   "to": "event:2025-12-08-amnesty-report-unlawful-killings",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "quote": "Amnesty International recently released its research briefing on Nepal's Gen Z protest that took place on September 8."
+   },
+   "sources": [
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-03-06-sbs-nepali-nepal-election-202-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-03-06-sbs-nepali-nepal-election-2026-protests-to-polls",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-06-sbs-nepali-nepal-election-202-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2026-03-06-sbs-nepali-nepal-election-2026-protests-to-polls",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-06-sbs-nepali-nepal-election-2026-protests-published-in",
+   "from": "media:audio-2026-03-06-sbs-nepali-nepal-election-2026-protests-to-polls",
+   "to": "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-06-sbs-nepali-nepal-election-202-reports-2026-03-05-house-of-representatives-elec",
+   "from": "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "quote": "Listen to the Nepal election segment from our radio program on Thursday, 5 March"
+   },
+   "sources": [
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-depicts-nepal-police",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "organisation:nepal-police",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-depicts-nepali-army",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "organisation:nepali-army",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-documents-2026-02-26-bbc-investigation-published",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "event:2026-02-26-bbc-investigation-published",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-documents-death-toll-19-2025-09-08",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal"
+   ],
+   "verification": "confirmed",
+   "note": "Stated as at least 19 on 8 September; the notes do not give a place."
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-like-enemies-published-in",
+   "from": "media:audio-2026-03-22-bbc-documentary-nepal-shot-like-enemies",
+   "to": "source:bbc-2026-03-22-documentary-shot-like-enemies",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-reports-2026-02-26-bbc-investigation-published",
+   "from": "source:bbc-2026-03-22-documentary-shot-like-enemies",
+   "to": "event:2026-02-26-bbc-investigation-published",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "quote": "Drawing on more than 4000 videos filmed on the streets, testimony from police and protesters and an exclusive leaked record of police radio"
+   },
+   "sources": [
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-02-28-himal-conversations-nepal-ele-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-02-28-himal-conversations-nepal-elections-2026",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-28-himal-conversations-nepal-ele-depicts-2025-09-08-gen-z-protests-kathmandu-and-",
+   "from": "media:audio-2026-02-28-himal-conversations-nepal-elections-2026",
+   "to": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:abc-triplej-2025-09-09-hack-nepal-social-media-protests",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:sbs-nepali-2025-12-19-amnesty-gen-z-protest",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-28-himal-conversations-nepal-ele-depicts-gen-z-movement",
+   "from": "media:audio-2026-02-28-himal-conversations-nepal-elections-2026",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-28-himal-conversations-nepal-elections-202-published-in",
+   "from": "media:audio-2026-02-28-himal-conversations-nepal-elections-2026",
+   "to": "source:himal-southasian-2026-02-28-nepal-elections-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-28-himal-conversations-nepal-ele-reports-2026-03-05-house-of-representatives-elec",
+   "from": "source:himal-southasian-2026-02-28-nepal-elections-2026",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "quote": "Nepal goes to the polls on 5 March 2026."
+   },
+   "sources": [
+    "source:himal-southasian-2026-02-28-nepal-elections-2026"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-balendra-shah",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-rastriya-swatantra-party",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "organisation:rastriya-swatantra-party",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-nepali-congress",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "organisation:nepali-congress",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-cpn-uml",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "organisation:cpn-uml",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-depicts-2025-09-09-oli-resigns-as-prime-minister",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "event:2025-09-09-oli-resigns-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:indian-express-2025-09-10-3-things-oli-resigns",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-protests-to-po-published-in",
+   "from": "media:audio-2026-03-07-the-hindu-in-focus-nepal-protests-to-power",
+   "to": "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-reports-2026-03-05-house-of-representatives-elec",
+   "from": "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "quote": "The Rastriya Swatantra Party, a relatively new political force, is heading towards a sweeping victory"
+   },
+   "sources": [
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-02-16-pods-by-pei-beyond-the-ballot-depicts-gen-z-movement",
+   "from": "media:audio-2026-02-16-pods-by-pei-beyond-the-ballot-box-gen-z-movement",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-16-pods-by-pei-beyond-the-ballot-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-02-16-pods-by-pei-beyond-the-ballot-box-gen-z-movement",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-16-pods-by-pei-beyond-the-ballot-box-gen-z-published-in",
+   "from": "media:audio-2026-02-16-pods-by-pei-beyond-the-ballot-box-gen-z-movement",
+   "to": "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-02-16-pods-by-pei-beyond-the-ballot-reports-gen-z-movement",
+   "from": "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+   "to": "organisation:gen-z-movement",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:pods-by-pei-2026-02-16-beyond-the-ballot-box",
+    "quote": "how the current Gen Z movement is acting as a decentralized catalyst for institutional reform"
+   },
+   "sources": [
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-03-02-karan-thapar-interview-nepal--depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:audio-2026-03-02-karan-thapar-interview-nepal-elections-ghimire",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:sbs-nepali-2026-03-06-nepal-election-protests-to-polls",
+    "source:bbc-2026-03-22-documentary-shot-like-enemies",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-02-karan-thapar-interview-nepal--depicts-sushila-karki",
+   "from": "media:audio-2026-03-02-karan-thapar-interview-nepal-elections-ghimire",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-02-karan-thapar-interview-nepal-elections--published-in",
+   "from": "media:audio-2026-03-02-karan-thapar-interview-nepal-elections-ghimire",
+   "to": "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-03-02-karan-thapar-interview-nepal--reports-sushila-karki",
+   "from": "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+   "to": "person:sushila-karki",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:karan-thapar-2026-03-02-nepal-elections-ghimire",
+    "quote": "the interim administration under former Chief Justice Sushila Karki has been a failure"
+   },
+   "sources": [
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-2026-09-08-first-anniversary-gen-z-marty",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "event:2026-09-08-first-anniversary-gen-z-martyrs-day",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-om-prakash-aryal",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "person:om-prakash-aryal",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-sushila-karki",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "person:sushila-karki",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:sbs-nepali-2025-09-13-karki-appointed-interim-pm",
+    "source:karan-thapar-2026-03-02-nepal-elections-ghimire"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-balendra-shah",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-kp-sharma-oli",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "person:kp-sharma-oli",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:the-hindu-2025-09-10-in-focus-nepal-on-the-brink",
+    "source:indian-express-2025-09-10-3-things-oli-resigns"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-ramesh-lekhak",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "person:ramesh-lekhak",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-2026-03-28-oli-and-lekhak-arrested",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "event:2026-03-28-oli-and-lekhak-arrested",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-2026-03-08-karki-commission-report-submi",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "event:2026-03-08-karki-commission-report-submitted",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-2026-08-bhotekoshi-trishuli-floods",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "event:2026-08-bhotekoshi-trishuli-floods",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+    "source:bbc-2026-09-01-global-story-covering-disaster"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--depicts-gen-z-movement",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "organisation:gen-z-movement",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:aljazeera-2025-09-11-the-take-gen-z-nepal",
+    "source:bbc-2025-09-15-what-in-the-world-nepokids",
+    "source:bbc-2025-10-14-the-inquiry-gen-z-new-nepal",
+    "source:the-daily-aus-2025-09-09-nepal-gen-z-protests-explained",
+    "source:times-of-india-2025-09-12-gen-z-forces-out-political-class",
+    "source:himal-southasian-2025-09-15-genz-hopes-inclusive-nepal",
+    "source:this-is-not-a-drill-2025-09-18-discord-revolution",
+    "source:nordic-asia-podcast-2025-09-26-gen-z-uprising",
+    "source:himal-southasian-2026-02-28-nepal-elections-2026",
+    "source:pods-by-pei-2026-02-16-beyond-the-ballot-box"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash-aryal-one--published-in",
+   "from": "media:audio-2026-09-15-kantipur-fireside-om-prakash-aryal-one-year",
+   "to": "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--reports-2026-09-08-first-anniversary-gen-z-marty",
+   "from": "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+   "to": "event:2026-09-08-first-anniversary-gen-z-martyrs-day",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "quote": "Marking one year since the historic Gen Z Movement of Bhadra 2082"
+   },
+   "sources": [
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-depicts-pushpa-kamal-dahal",
+   "from": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "to": "person:pushpa-kamal-dahal",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-depicts-cpn-uml",
+   "from": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "to": "organisation:cpn-uml",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-depicts-nepali-congress",
+   "from": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "to": "organisation:nepali-congress",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-depicts-rastriya-swatantra-party",
+   "from": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "to": "organisation:rastriya-swatantra-party",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+    "source:the-hindu-2026-03-07-in-focus-protests-to-power"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prachanda-uphe-published-in",
+   "from": "media:audio-2024-03-18-kantipur-fireside-legacy-prachanda-upheaval",
+   "to": "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-reports-pushpa-kamal-dahal",
+   "from": "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+   "to": "person:pushpa-kamal-dahal",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:kantipur-fireside-2026-09-18-prachanda-legacy",
+    "quote": "ending his alliance with the Nepali Congress and forming a new governing coalition with CPN-UML and the Rastriya Swatantra Party"
+   },
+   "sources": [
+    "source:kantipur-fireside-2026-09-18-prachanda-legacy"
+   ],
+   "verification": "single-source",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-08-28-npr-up-first-nepal-tibet-floo-depicts-2026-08-bhotekoshi-trishuli-floods",
+   "from": "media:audio-2026-08-28-npr-up-first-nepal-tibet-flood-rescue",
+   "to": "event:2026-08-bhotekoshi-trishuli-floods",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:bbc-2026-09-01-global-story-covering-disaster"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-08-28-npr-up-first-nepal-tibet-flood-rescue-published-in",
+   "from": "media:audio-2026-08-28-npr-up-first-nepal-tibet-flood-rescue",
+   "to": "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-08-28-npr-up-first-nepal-tibet-floo-reports-2026-08-bhotekoshi-trishuli-floods",
+   "from": "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+   "to": "event:2026-08-bhotekoshi-trishuli-floods",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:npr-2026-08-28-up-first-nepal-tibet-flood",
+    "quote": "The flood disaster on the Nepal-Tibet border is far worse than first known"
+   },
+   "sources": [
+    "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  },
+  {
+   "id": "ref:aud-2026-09-01-bbc-global-story-nepal-coveri-depicts-2026-08-bhotekoshi-trishuli-floods",
+   "from": "media:audio-2026-09-01-bbc-global-story-nepal-covering-a-disaster",
+   "to": "event:2026-08-bhotekoshi-trishuli-floods",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-09-01-global-story-covering-disaster",
+    "source:kantipur-fireside-2026-09-15-om-prakash-aryal",
+    "source:npr-2026-08-28-up-first-nepal-tibet-flood"
+   ],
+   "verification": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-01-bbc-global-story-nepal-coveri-depicts-kantipur-media-group",
+   "from": "media:audio-2026-09-01-bbc-global-story-nepal-covering-a-disaster",
+   "to": "organisation:kantipur-media-group",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-09-01-global-story-covering-disaster"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-01-bbc-global-story-nepal-covering-a-disas-published-in",
+   "from": "media:audio-2026-09-01-bbc-global-story-nepal-covering-a-disaster",
+   "to": "source:bbc-2026-09-01-global-story-covering-disaster",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:bbc-2026-09-01-global-story-covering-disaster"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:aud-2026-09-01-bbc-global-story-nepal-coveri-reports-2026-08-bhotekoshi-trishuli-floods",
+   "from": "source:bbc-2026-09-01-global-story-covering-disaster",
+   "to": "event:2026-08-bhotekoshi-trishuli-floods",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:bbc-2026-09-01-global-story-covering-disaster",
+    "quote": "As the world watches the aftermath of devastating floods in Nepal"
+   },
+   "sources": [
+    "source:bbc-2026-09-01-global-story-covering-disaster"
+   ],
+   "verification": "confirmed",
+   "note": "Anchor is from the episode show notes."
+  }
+ ]
+}

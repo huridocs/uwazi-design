@@ -1,0 +1,24 @@
+import { clip, S } from "./lib.mjs";
+await clip("06-text-references", async c => {
+  const p = c.page;
+  await p.getByRole("button", { name: /^View:/ }).click(); await p.getByRole("option", { name: "List" }).click(); await c.pause(800);
+  await p.getByText("Velásquez Rodríguez Judgment", { exact: true }).first().click(); await c.pause(1200);
+  await p.getByRole("button", { name: /View entity/ }).click(); await c.pause(3500);
+  const layers = await c.qa(819, 171);
+  const dot = i => c.moveTo(819, [333, 437, 601, 686][i], 500);
+  c.mark(); await c.pause(500);
+  c.zoom({ x: 700, y: 150, width: 170, height: 560 }, 1.9, 4.6);
+  await dot(0); await c.pause(900); await dot(2); await c.pause(800);
+  await c.click(layers, { z: 1.9, hold: 3 }); await c.pause(1500);
+  await c.click(layers); await c.pause(500);
+  await c.wheel(420, 500, 386, 8, 50); await c.pause(500);
+  c.zoom({ x: 60, y: 400, width: 700, height: 110 }, 1.5, 3.2);
+  await c.drag(108, 426, 690, 482, 800); await c.pause(700);
+  await c.click(p.getByText("Create relationship").first(), { z: 1.6, hold: 1.6 }); await c.pause(700);
+  await c.type(p.getByPlaceholder(/Search entities/), "Case 11", { z: 1.4, hold: 2.4 }); await c.pause(500);
+  await c.click(p.getByText(/Case 11\.137/).first()); await c.pause(700);
+  await c.click(p.getByText("Relates to", { exact: true }).first(), { z: 1.5, hold: 1.4 }); await c.pause(400);
+  await c.click(p.getByRole("button", { name: "Create relationship" }).last(), { z: 1.5, hold: 1.4 }); await c.pause(1500);
+  c.zoom({ x: 700, y: 150, width: 170, height: 560 }, 1.9, 1.6); await c.moveTo(819, 214, 500); await c.pause(1200);
+  await p.screenshot({ path: S + "raw/c06-z.png" });
+});

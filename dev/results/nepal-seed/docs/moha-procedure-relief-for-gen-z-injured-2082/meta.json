@@ -1,0 +1,31 @@
+{
+ "doc_id": "moha-procedure-relief-for-gen-z-injured-2082",
+ "title": "Procedure for providing relief assistance to persons injured in the Gen-Z protest and movement of Bhadra 23 and 24, 2082 (Nepali)",
+ "language": "ne",
+ "pages": 5,
+ "bytes": 3875133,
+ "sha256": "161e08cf72e6f99e07b93629078eb044f70a156645b6fd2bbf719abd3aef75a8",
+ "source_url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/GenZ.pdf",
+ "source_page": "https://moha.gov.np/post/sa-vata-sa-l-bha-tha-ra-ra-gata-ka-ja-naja-pa-rathara-shana-tatha-aana-tha-lnama",
+ "retrieved": "2026-10-05",
+ "publisher": "Ministry of Home Affairs",
+ "published": "2026-03-26",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; the embedded text is OCR noise. OCR was not run. Posted on the MoHA site under its Conflict and Relief Management Branch on 2082-12-12 (26 Mar 2026).",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured",
+  "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 6851
+}

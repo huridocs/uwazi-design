@@ -1,0 +1,38 @@
+{
+ "LNG-11": {
+  "id": "LNG-11",
+  "result": "PASS",
+  "evidence": "dialog \"Make default language Make Spanish the default language? Languages installed later start as a copy of it, and Translations marks a text untranslated when it is empty or still equals the Spanish text. Cancel Make default\"; names effect (later installs and untranslated)=true; after Cancel default=English, new Beacon=0, activity entries 0->0; after confirm default=Spanish; Beacon \"Default language change success\" entries=1 (all new: [\"Default language change success just now\"]); activity log 0 -> 1: [\"UPDATE Set “Spanish” as the default language [admin]\"]",
+  "shot": "LNG-11-after.png"
+ },
+ "X-09/default": {
+  "id": "X-09/default",
+  "result": "PASS",
+  "evidence": "activity entries [\"UPDATE Set “Spanish” as the default language [admin]\"]",
+  "shot": ""
+ },
+ "LNG-12": {
+  "id": "LNG-12",
+  "result": "PASS",
+  "evidence": "Person editor headers [\"KEY\",\"Español ES\",\"English EN\",\"Français FR\",\"العربية AR\"]; primary-pill (bg-ink) column(s) [\"Español ES\"]; Spanish inputs=0 (read-only source); English inputs=9, flagged untranslated=9; first row \"Person Person EN FR AR\"; Spanish source cell shows the key text (English) not Spanish: true",
+  "shot": "LNG-12.png"
+ },
+ "lng3-console-a": {
+  "id": "lng3-console-a",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ },
+ "LNG-13": {
+  "id": "LNG-13",
+  "result": "PASS",
+  "evidence": "title \"Are you sure?\"; band \"Other users will be affected by this action!\" (bg rgb(254, 226, 226)); body \"You are about to reset a language.\"; impact [\"System strings only: 412 keys in User Interface go back to the predefined Spanish text.\",\"Templates, thesauri, the menu and every other context keep their translations.\"]; label \"Please type in CONFIRM:\"; buttons [\"\",\"No, cancel\",\"Reset\"]; Reset enabled by input: {\"\\\"\\\"\":false,\"\\\"confirm\\\"\":false,\"\\\"CONFIRM \\\"\":false,\"\\\"CONFIRM\\\"\":true}; width 512px (md = 512); X closes and reopening is empty=true; \"No, cancel\" closes and reopening is empty=true; Beacon entries after X/cancel 0/0",
+  "shot": "LNG-13.png"
+ },
+ "LNG-14": {
+  "id": "LNG-14",
+  "result": "PASS",
+  "evidence": "title \"Are you sure?\"; band \"Other users will be affected by this action!\"; body \"You are about to uninstall a language.\"; content counts [\"101 entities have a French version, which is deleted.\",\"400 translated keys are removed from Translations.\"]; label \"Please type in CONFIRM:\"; buttons [\"\",\"No, cancel\",\"Uninstall\"]; accept enabled by input {\"\\\"\\\"\":false,\"\\\"confirm\\\"\":false,\"\\\"CONFIRM \\\"\":false,\"\\\"CONFIRM\\\"\":true}; after X and after \"No, cancel\" French still listed (true/true), new Beacon entries=0",
+  "shot": "LNG-14.png"
+ }
+}

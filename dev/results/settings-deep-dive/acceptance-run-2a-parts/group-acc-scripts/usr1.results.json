@@ -1,0 +1,50 @@
+[
+ {
+  "id": "USR-01-part",
+  "res": "INFO",
+  "ev": "header=\"Users & Groups\" tabs=[\"Users 5\",\"Groups 3\"] active=\"Users 5\" user rows=5 group rows=3",
+  "shot": ""
+ },
+ {
+  "id": "USR-02",
+  "res": "PASS",
+  "ev": "with 2 ticked footer=\"Selected 2 of 5 Add to group Change role Delete Clear\"; after Groups tab footer=\"Add group\"; back on Users footer=\"Add user\"; ticked rows=0",
+  "shot": ""
+ },
+ {
+  "id": "USR-03",
+  "res": "FAIL",
+  "ev": "columns=[\"\",\"USER\",\"ROLE\",\"GROUPS\",\"2FA\",\"\"] (spec: Username, Protection, Role, Group); rows=[\"AD admin (you) admin@uwazi.io Admin Administrators\",\"ML mlopez m.lopez@cejil.org Editor Litigation\",\"JN jnkemba j.nkemba@example.org Editor Litigation Research —\",\"AF afarah a.farah@example.org Collaborator Research —\",\"TB tbuergenthal t.buergenthal@example.org Collaborator — —\"]; Protection pills \"Password + 2fa\"/\"Password\" present=false (2FA state is a shield icon / dash in a \"2FA\" column); Role pills read Admin/Editor/Collaborator, groups one pill each, tbuergenthal group cell \"—\"; admin pill bg rgb(245, 238, 215)",
+  "shot": "USR-03.png"
+ },
+ {
+  "id": "USR-04",
+  "res": "FAIL",
+  "ev": "default order=[\"admin\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"] (spec: admin, afarah, jnkemba, mlopez, tbuergenthal); after clicking User header: [\"admin\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"]; again: [\"admin\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"]; Role header: [\"admin\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"]; Groups header: [\"admin\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"]; sortable headers (buttons/aria-sort)=0/0; no Protection column",
+  "shot": ""
+ },
+ {
+  "id": "USR-05",
+  "res": "PASS",
+  "ev": "tbuergenthal username colour color(srgb 0.546275 0.190392 0.136471) (error/seal-label colour color(srgb 0.546275 0.190392 0.136471); other rows rgb(26, 26, 26)); lock icon svgs in row=2; hover tooltip=[\"Account locked\"]",
+  "shot": "USR-05.png"
+ },
+ {
+  "id": "USR-06",
+  "res": "FAIL",
+  "ev": "\"lop\" rows=[\"mlopez\"], search row height 32->32, email shown under username=true; cleared rows=5; role options=[\"All roles\",\"Admin\",\"Editor\",\"Collaborator\"], Editor -> [\"mlopez\",\"jnkemba\"]; Group filter controls=0 (spec: a Group filter, Research -> jnkemba, afarah); \"zzz\" -> text \"Nothing matches “zzz” Clear search Add user\" buttons named Clear*=2 (the empty state has \"Clear search\")",
+  "shot": "USR-06.png"
+ },
+ {
+  "id": "USR-21",
+  "res": "FAIL",
+  "ev": "columns=[\"GROUP\",\"MEMBERS\",\"\"] (spec: Name, Members); rows=[\"Administrators 1\",\"Litigation 2\",\"Research 2\"]; member username pills (Litigation: mlopez, jnkemba)=false; built shows a bare count in Members",
+  "shot": "USR-21.png"
+ },
+ {
+  "id": "USR1-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

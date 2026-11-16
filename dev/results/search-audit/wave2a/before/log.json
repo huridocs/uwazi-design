@@ -1,0 +1,172 @@
+[
+  {
+    "k": "cejil-derechos-Grouped",
+    "v": {
+      "layout": "grouped",
+      "rows": 24,
+      "firstRow": "Defensor de DD.HH y otros8 passagesCausa·Guatemala·2012Prope",
+      "showMore": true,
+      "sameAs": [
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Tree",
+    "v": {
+      "layout": "tree",
+      "rows": 24,
+      "firstRow": "Defensor de DD.HH y otros8 passagesCausa·Guatemala·2012Resum",
+      "showMore": true,
+      "sameAs": [
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Passages",
+    "v": {
+      "layout": "passages",
+      "rows": 24,
+      "firstRow": "Integrantes y militantes de la Unión Patriótica. Informe de ",
+      "showMore": true,
+      "sameAs": [
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7",
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7",
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Spine",
+    "v": {
+      "layout": "spine",
+      "rows": 23,
+      "firstRow": "26-05-2001Niños de la calle (Villagrán Morales y otros). Sen",
+      "showMore": true,
+      "sameAs": [
+        "↳ Same passage as Instituto de Reeducacion del Menor \"Panchito López\"",
+        "↳ Same passage as Instituto de Reeducacion del Menor \"Panchito López\"",
+        "↳ Same passage as Cantoral Huamaní y García Santa Cruz"
+      ],
+      "spineMarks": [
+        "2001",
+        "2003",
+        "2005",
+        "2007",
+        "2009",
+        "2011",
+        "2013",
+        "2015"
+      ],
+      "spineDates": [
+        "26-05-2001",
+        "20-05-2002",
+        "13-01-2005",
+        "21-02-2006"
+      ]
+    }
+  },
+  {
+    "k": "cejil-derechos-turn",
+    "v": {
+      "runs": [
+        151,
+        187,
+        203,
+        240,
+        280
+      ],
+      "median": 203
+    }
+  },
+  {
+    "k": "cejil-derechos-after-turns",
+    "v": {
+      "layout": "grouped",
+      "rows": 144,
+      "firstRow": "Defensor de DD.HH y otros8 passagesCausa·Guatemala·2012Prope",
+      "showMore": true,
+      "sameAs": [
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-grossman-full",
+    "v": {
+      "layout": "grouped",
+      "rows": 24,
+      "firstRow": "Claudio Grossman1 title matchJuez y/o Comisionado·Chile",
+      "showMore": true,
+      "sameAs": [],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "nepal-curfew-drawer",
+    "v": {
+      "drawer": 40,
+      "pageEnd": null,
+      "showMore": true,
+      "footer": "105–105 of 1051–30 of 105"
+    }
+  },
+  {
+    "k": "nepal-curfew-passages",
+    "v": {
+      "layout": "passages",
+      "rows": 24,
+      "firstRow": "Curfew in Kathmandu Valley, defied by protesters5 fieldsCurf",
+      "showMore": true,
+      "sameAs": [
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm",
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm",
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "vegas-volley-spine",
+    "v": {
+      "layout": "spine",
+      "rows": 24,
+      "firstRow": "2017/10/01First shots · 22:02:152 fieldsVolleys coveredVolle",
+      "showMore": true,
+      "sameAs": [],
+      "spineMarks": [
+        "Oct"
+      ],
+      "spineDates": [
+        "2017/10/01",
+        "2017/10/01",
+        "2017/10/01",
+        "2017/10/01"
+      ]
+    }
+  },
+  {
+    "k": "phone-sheet",
+    "v": {
+      "sheet": 40,
+      "pageEnd": null
+    }
+  }
+]

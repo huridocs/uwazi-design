@@ -1,0 +1,83 @@
+{
+ "topic": "disputes-research-2026-10-13",
+ "entities": [
+  {
+   "id": "source:himal-press-2025-04-22-bhattarai-resigned-due-to-health-issues",
+   "template": "source",
+   "title": "Education minister Bhattarai resigned due to health issues, Oli insists",
+   "properties": {
+    "publisher": "Himal Press",
+    "publisher_type": "national-media",
+    "medium": "article",
+    "published": "2025-04-22",
+    "accessed": "2026-10-13",
+    "url": {
+     "url": "https://en.himalpress.com/education-minister-bhattarai-resigned-due-to-health-issues-oli-insists/",
+     "label": "Himal Press"
+    },
+    "language": "en",
+    "archived_url": {
+     "url": "https://web.archive.org/web/20261013144029/https://en.himalpress.com/education-minister-bhattarai-resigned-due-to-health-issues-oli-insists/",
+     "label": "Internet Archive, captured 2026-10-13"
+    }
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+   "template": "source",
+   "title": "Will Nepal’s apex court revive Parliament?",
+   "properties": {
+    "publisher": "The Annapurna Express",
+    "publisher_type": "national-media",
+    "medium": "article",
+    "published": "2025-11-07",
+    "accessed": "2026-10-13",
+    "url": {
+     "url": "https://theannapurnaexpress.com/story/59824/",
+     "label": "The Annapurna Express"
+    },
+    "language": "en",
+    "archived_url": {
+     "url": "https://web.archive.org/web/20261013144158/https://theannapurnaexpress.com/story/59824/",
+     "label": "Internet Archive, captured 2026-10-13"
+    }
+   },
+   "evidence": []
+  }
+ ],
+ "references": [
+  {
+   "id": "ref:disputes-himal-press-bhattarai-health-only",
+   "from": "source:himal-press-2025-04-22-bhattarai-resigned-due-to-health-issues",
+   "to": "claim:education-minister-resigned-over-teachers-demands-rift",
+   "type": "disputes",
+   "date": null,
+   "anchor": {
+    "source": "source:himal-press-2025-04-22-bhattarai-resigned-due-to-health-issues",
+    "quote": "She resigned due to health issues. There is no other reason"
+   },
+   "sources": [
+    "source:himal-press-2025-04-22-bhattarai-resigned-due-to-health-issues"
+   ],
+   "verification": "disputed",
+   "note": "Prime Minister Oli, on 22 April 2025, gives health as the only reason for the resignation and rejects that she was forced out. The Kathmandu Post (22 April) reports a rift over teachers' demands. Research pass of 2026-10-13."
+  },
+  {
+   "id": "ref:disputes-annapurna-express-karki-necessity",
+   "from": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+   "to": "claim:karki-ineligible-as-non-member-and-former-chief-justice",
+   "type": "disputes",
+   "date": null,
+   "anchor": {
+    "source": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+    "quote": "Legal experts, however, argue that Karki’s appointment was justified under the “doctrine of necessity.”"
+   },
+   "sources": [
+    "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament"
+   ],
+   "verification": "disputed",
+   "note": "The Annapurna Express (7 November 2025) reports the petitioners' Article 76 and 132 arguments, the Office of the President's reliance on Article 61, and legal experts who say the appointment was justified by necessity. No ruling on the writs was found as of 2026-10-13."
+  }
+ ]
+}

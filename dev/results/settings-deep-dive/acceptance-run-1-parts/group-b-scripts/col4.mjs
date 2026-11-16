@@ -1,0 +1,23 @@
+import { launch, open, S, rail } from "./lib.mjs";
+import { recorder, run, pass } from "./rec.mjs";
+const r = recorder("COL");
+const b = await launch();
+await run(r, "X-01", async () => {
+  const { page } = await open(b, "collection");
+  const f = S(page).getByLabel("Collection name"); const seed = await f.inputValue();
+  await f.fill("Test Archive"); await S(page).getByRole("button", { name: "Save", exact: true }).click(); await page.waitForTimeout(400);
+  await rail(page, "Menu"); await rail(page, "Collection"); await page.waitForTimeout(300);
+  const v2 = await S(page).getByLabel("Collection name").inputValue();
+  await page.reload(); await page.waitForTimeout(1200);
+  const v3 = await S(page).getByLabel("Collection name").inputValue();
+  await rail(page, "Dashboard"); await page.waitForTimeout(300);
+  await S(page).getByRole("button", { name: /Reset demo data/ }).click(); await page.waitForTimeout(500);
+  const dlg = await page.locator("[data-component=ConfirmDialog],[data-component=ConfirmDelete]").count();
+  if (dlg) await page.locator("[data-component=ConfirmDialog],[data-component=ConfirmDelete]").getByRole("button", { name: /Reset|Confirm/ }).last().click();
+  await page.waitForTimeout(800);
+  await rail(page, "Collection"); await page.waitForTimeout(300);
+  const v4 = await S(page).getByLabel("Collection name").inputValue();
+  r("X-01", pass(v2 === "Test Archive" && v3 === "Test Archive" && v4 === seed), `Save "Test Archive" -> after rail round trip "${v2}" -> after reload "${v3}" -> after Dashboard Reset demo data "${v4}" (seed "${seed}")`);
+  await page.context().close();
+});
+await b.close();

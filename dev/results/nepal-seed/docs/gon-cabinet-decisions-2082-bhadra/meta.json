@@ -1,0 +1,32 @@
+{
+ "doc_id": "gon-cabinet-decisions-2082-bhadra",
+ "title": "Decisions of the Council of Ministers, Bhadra 2082 (Nepali; meetings of Bhadra 2, 9, 13, 23 and 30)",
+ "language": "ne",
+ "pages": 8,
+ "bytes": 503436,
+ "sha256": "48c84ecdba3ca24b04f924703c7ad55c9182f21eca48d9612c9b83d6a78cf51f",
+ "source_url": "https://giwmscdnone.gov.np/media/pdf_upload/BHADRA%20CABINET%202082_uk0h2ym.pdf",
+ "source_page": "https://www.opmcm.gov.np/content/472/decisions-of-the-council-of-ministers-in-bhadra/",
+ "retrieved": "2026-10-05",
+ "publisher": "Office of the Prime Minister and Council of Ministers",
+ "published": "2026-01-07",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": true,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Embedded Nepali text uses a legacy font mapping; many conjuncts and vowel signs are wrong (for example the minister title and \"Karyalaya\" are garbled). Searchable only approximately.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+  "action:2025-08-25-cabinet-directs-platforms-to-register-within-one-week",
+  "action:2025-09-15-cabinet-decisions-martyrs-mourning-day-and-relief"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 23250
+}

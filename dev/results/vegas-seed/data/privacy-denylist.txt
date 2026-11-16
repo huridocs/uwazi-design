@@ -1,0 +1,27 @@
+# One string per line, matched case-insensitively against every string in the seed.
+# These are names and handles seen in the map's titles and links that must not reach the corpus.
+# This file stays under dev/ (not in git). The app's build script must read its own copy from outside the repository.
+paddock
+stephen
+aldean
+langdon
+bilzerian
+beckstead
+akiyoshi
+wendelsdorf
+debbie
+murray
+gates
+carmen
+salazar
+brent wolf
+rene downs
+chris record
+don bond
+blake apgar
+apgar
+burgandy
+vostvitzech
+bitsko
+campos
+lombardo

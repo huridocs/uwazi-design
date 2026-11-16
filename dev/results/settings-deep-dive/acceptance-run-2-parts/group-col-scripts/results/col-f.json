@@ -1,0 +1,44 @@
+[
+ {
+  "id": "COL-30",
+  "result": "PASS",
+  "evidence": "Global CSS text after the Collection Save \"a{color:red}\"; Menu rows before/after equal=true (6 rows); Languages rows equal=true (6 rows)",
+  "shot": ""
+ },
+ {
+  "id": "COL-32",
+  "result": "PASS",
+  "evidence": "no \"?\" help buttons exist; help is text under the field. #landing-page aria-describedby -> 1 element(s) \"The landing page is the first page that visitors see when they come to\"; Global JS checkbox name \"Global JS\" describedby -> \"With great power comes great responsibility!This area allows you to ap\"; Analytics card: {\"secTag\":\"SECTION\",\"secRole\":null,\"secLabel\":\":r2v:\",\"secDescribed\":0,\"descText\":\"If you want to track analytics related to your collection vi\",\"inputsDescribed\":[null,\":r39:\"]}; favicon Choose describedby \"[\"Recommended: 16x16 to 512x512 px (square)\",\"A favicon is a small icon that represents your col\"]\"; tab order after Collection Name: [\"Choose\",\"default-view\",\"date-format\",\"landing-page\",\"Public instance\",\"Hide restricted relationships from public\",\"Show cookie policy\",\"Global JS\",\"google-analytics\",\"matomo-analytics\",\"sending-email\",\"receiving-email\",\"Learn how to add and con\",\"public-form-destination\",\"map-provider\",\"map-key\",\"Remove Streets\",\"Remove Hybrid\",\"Remove Satellite\",\"Add map layer\",\"path\",\"path\"]; elements with title attr 0; observation: after \"Add map layer\" Tab enters the map and stops on 176 map country paths before leaving it (MapPointPicker describes itself as not focusable)",
+  "shot": "COL-32"
+ },
+ {
+  "id": "X-02p",
+  "result": "PASS",
+  "evidence": "phone back chevron with an unsaved edit: dialogs [\"Discard changes?\"]",
+  "shot": ""
+ },
+ {
+  "id": "COL-33",
+  "result": "FAIL",
+  "evidence": "390px: document scrollWidth 390 vs client 390, settings pane 390/390; field left edges [16] (one column), field widths [358]; tapped map -> marker 1, lat -18.3518, lon -73.4071; Latitude input below the map=true; favicon modal opened as the harness leaves the page: panel box [x,y,w,h] [0,0,390,0] (expected a sheet or full screen; the screenshot COL-33-modal shows only the dimmed page); :root --kb is \"1189px\" although innerHeight equals visualViewport.height (useKeyboardInset measured it once at mount while the layout viewport was 939x2033 and never recomputed); after nudging the viewport by 1 px so the app recomputes, --kb \"0px\" and the panel is [x,y,w,h] [0,0,390,844] showing 1 gallery items (COL-33-modal-after-kb-fix); with the viewport shortened to 544 px high (keyboard stand-in) and the name focused, Save in view=true and Discard changes in view=true (footer position sticky); console errors []",
+  "shot": "COL-33-map"
+ },
+ {
+  "id": "X-06",
+  "result": "FAIL",
+  "evidence": "Collection at 390x844 touch: no horizontal scroll (390,390,390,390), one column, favicon modal panel 390x0 px as opened (stale --kb \"1189px\", see COL-33); map tap and Choose tap worked, footer reachable",
+  "shot": "COL-33-modal"
+ },
+ {
+  "id": "X-07",
+  "result": "PASS",
+  "evidence": "desktop-light: page []; with favicon modal open [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[40rem\\\\] > .border-b[data-part=\\\"header\\\"]\"]; Discard dialog [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[28rem\\\\] > .border-b[data-part=\\\"header\\\"]\"] (name \"confirm-dialog-title\"); modal name \"Select favicon image\", panel size [640,523], focus trapped over 12 Tabs=true, focus after Escape on \"Choose\", Escape left [\"Discard changes?\"]; console errors [] || desktop-dark: page []; with favicon modal open [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[40rem\\\\] > .border-b[data-part=\\\"header\\\"]\"]; Discard dialog [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[28rem\\\\] > .border-b[data-part=\\\"header\\\"]\"] (name \"confirm-dialog-title\"); modal name \"Select favicon image\", panel size [640,523], focus trapped over 12 Tabs=true, focus after Escape on \"Choose\", Escape left [\"Discard changes?\"]; console errors [] || mobile-light: page []; with favicon modal open [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[40rem\\\\] > .border-b\"]; Discard dialog [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\"] (name \"confirm-dialog-title\"); modal name \"Select favicon image\", panel size [390,844] (phone: --kb was 1189px at load, the viewport was nudged before opening), focus trapped over 12 Tabs=true, focus after Escape on \"Choose\", Escape left [\"Discard changes?\"]; console errors [] || mobile-dark: page []; with favicon modal open [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[40rem\\\\] > .border-b\"]; Discard dialog [\"landmark-no-duplicate-banner (moderate) x1 .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\"] (name \"confirm-dialog-title\"); modal name \"Select favicon image\", panel size [390,844] (phone: --kb was 1189px at load, the viewport was nudged before opening), focus trapped over 12 Tabs=true, focus after Escape on \"Choose\", Escape left [\"Discard changes?\"]; console errors []",
+  "shot": "X-07-desktop-dark-modal"
+ },
+ {
+  "id": "X-08",
+  "result": "N/A",
+  "evidence": "Not in Collection's Applies line (no status pills or badges on the page; the map-layer pills are checked for contrast by axe in X-07, light and dark)",
+  "shot": ""
+ }
+]

@@ -1,0 +1,50 @@
+[
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Tab reaches the first hidden 'Select <title>' checkbox",
+  "ok": true,
+  "detail": "7 tabs -> Select Mexico"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "focus ring is drawn on the card",
+  "ok": true,
+  "detail": "{\"shadow\":\"rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0\",\"focusVisible\":true}"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Space toggles selection",
+  "ok": true,
+  "detail": "{\"n\":1,\"ae\":\"Select Mexico\",\"bar\":\"1 selected\"}"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Shift+ArrowRight extends the range and moves focus",
+  "ok": true,
+  "detail": "{\"n\":2,\"ae\":\"Select Case 10.488 (Ellacuría)\",\"bar\":\"2 selected\"}"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Shift+Arrow keeps extending (3 arrows -> more selected)",
+  "ok": true,
+  "detail": "{\"n\":4,\"ae\":\"Select Case 12.250 (Bámaca Velásquez)\",\"bar\":\"4 selected\"}"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Shift+Arrow back shrinks the range (info)",
+  "ok": true,
+  "detail": "n 4 -> 3"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "Escape clears the selection",
+  "ok": true,
+  "detail": "{\"n\":0,\"ae\":\"Select Case 11.481 (Gelman)\",\"bar\":null}"
+ },
+ {
+  "area": "select-kbd:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

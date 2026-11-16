@@ -1,0 +1,17 @@
+const { chromium } = require("/Users/juanmnl/.operator/worktrees/uwazi_app-ad9c40/app/node_modules/playwright");
+const path = require("path");
+(async () => {
+  const [,, out, ...names] = process.argv;
+  const b = await chromium.launch();
+  for (const spec of names) {
+    const [name, w, h] = spec.split(":");
+    for (const theme of ["light", "dark"]) {
+      const p = await b.newPage({ viewport: { width: +w || 1440, height: +h || 900 }, deviceScaleFactor: 2 });
+      await p.goto("file://" + path.join(__dirname, name + ".html") + "?theme=" + theme);
+      await p.waitForTimeout(600);
+      await p.screenshot({ path: path.join(out, `${name}-${theme}.png`) });
+      await p.close();
+    }
+  }
+  await b.close();
+})();

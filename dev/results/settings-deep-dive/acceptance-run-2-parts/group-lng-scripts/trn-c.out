@@ -1,0 +1,5 @@
+PASS | TRN-03 | before: Menu context row present with 5 keys=true; deleted all links (rows left=0) and saved; Translations System rows now ["User Interface | User interface | 412"] (Menu present=false); text matching "term N" on the list=false, in User Interface keys=0; after adding link "Home" and saving: ["Menu | Menu | 1"]
+PASS | _errs-TC1 | []
+PASS | TRN-07 | Relationship type "Cites" context keys=["Cites"]; after renaming on Relationship types page the context is "Cites also"=true; new type "Zeta link" adds a context=true; deleting it removes it=true; Menu links (5)=["Library","About","Resources","Methodology","Contact"] vs Menu context keys=["About","Contact","Library","Methodology","Resources"]; renaming About -> "About us" gives keys ["About us","C
+PASS | TRN-01 (Filters leg) | System rows in the seed=["Menu","User Interface"] (no Filters context because the seed has no Filters group); after saving one Filters group the System group lists ["Filters","Menu","User Interface"]; Filters row: Filters | Filters | 1
+PASS | _errs-TC2 | []

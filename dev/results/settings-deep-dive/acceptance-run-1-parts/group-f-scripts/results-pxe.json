@@ -1,0 +1,128 @@
+[
+ {
+  "id": "PXE-01",
+  "res": "FAIL",
+  "ev": "columns [\"TEMPLATE\",\"STATUS\",\"PARAGRAPHS\"] (spec \"Source Template\", \"Target Template\" pills, \"Entities\" with \"<n> New\" pill, \"View\"); no \"Extractors\" table header; \"View\" buttons=0; footer button \"Add extraction\" (spec \"Add extractor\"). Empty state could not be reached: rows have no delete action (delete buttons=0); the page's empty state in code would read \"No extractions yet\" but is unreachable",
+  "shot": "PXE-01.png"
+ },
+ {
+  "id": "X-10",
+  "res": "NOT DRIVEABLE",
+  "ev": "zero-extractor state cannot be reached: the list has no delete or remove action for any row (delete buttons=0); a search miss shows a different state",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "no row checkboxes (0), no \"Selected n of total\" bar, footer keeps the lead action \"Add extraction\"; no bulk Delete on this list",
+  "shot": "PXE-01.png"
+ },
+ {
+  "id": "PXE-02",
+  "res": "FAIL",
+  "ev": "\"Add extraction\" opens a full-page editor \"New extraction\" (open dialogs \"\"), not a Modal xl wizard with 3 dots; no \"Target template\" title, description or hint; template select (not filtered to templates with markdown + numeric properties) plus Segmentation and Min characters; buttons [\"Back\",\"Paragraph extraction\",\"Template: Person\",\"Segmentation: By paragraph\",\"Cancel\",\"Start extraction\"]; no \"Next\"",
+  "shot": "PXE-02.png"
+ },
+ {
+  "id": "PXE-03",
+  "res": "FAIL",
+  "ev": "no step 2 \"Source template\" (no wizard); editor has a single Template select, Segmentation and Min characters fields; no Back/Next",
+  "shot": "PXE-02.png"
+ },
+ {
+  "id": "PXE-04",
+  "res": "FAIL",
+  "ev": "no step 3: none of \"Paragraph text extraction property (rich text)\", \"Paragraph number extraction property (numeric)\", \"Target relationship type\", \"Source relationship type\" exist; relationship types are not selectable here",
+  "shot": "PXE-02.png"
+ },
+ {
+  "id": "PXE-05",
+  "res": "FAIL",
+  "ev": "\"Start extraction\" closed the editor; rows 3 (was 3: no new row added); Beacon new entries [\"Extraction started just now\",\"Entity saved successfully. All fields were valid. just now\"] (spec \"Paragraph Extractor added\"); rows after rail round trip 3, after reload 3; Activity log []",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "created an extraction via Start: row count stayed 3, rail round trip 3, reload 3 (nothing is stored; the list reads a static seed)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Start added Beacon entries [\"Extraction started just now\",\"Entity saved successfully. All fields were valid. just now\"]; spec text \"Paragraph Extractor added\"",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity log after Start: []",
+  "shot": ""
+ },
+ {
+  "id": "PXE-06",
+  "res": "FAIL",
+  "ev": "no per-row \"View\" button and no delete: whole row is a button named \"Edit Judgment extraction\" (edit action exists, spec says none); no checkboxes, no \"Selected n of total\", no \"Delete\", no \"Are you sure?\" dialog with the paragraph-entities note; no \"Extractor/s deleted\"",
+  "shot": "PXE-01.png"
+ },
+ {
+  "id": "PXE-08",
+  "res": "FAIL",
+  "ev": "row opens an editor, breadcrumb \"Paragraph extraction / Judgment\" (ok); no \"Paragraphs for\" header with template pill; table columns [\"DOCUMENT\",\"PARAGRAPHS\",\"STATE\",\"SAMPLE PARAGRAPH\",\"\"] (spec \"Entity\", \"Language(s)\", \"Paragraphs\", \"Status\", \"View\"); rows are documents (e.g. \"Velásquez-Rodríguez v. Honduras — Judgment\"), status vocabulary Done/Queued/Skipped (spec New, Processing, Obsolete, Error, Processed); buttons [\"Back\",\"Paragraph extraction\",\"Segmentation: By paragraph\",\"Run extraction\",\"Filter documents: All\",\"Cancel\",\"Re-run\"]",
+  "shot": "PXE-08.png"
+ },
+ {
+  "id": "PXE-09",
+  "res": "FAIL",
+  "ev": "no search by title (search inputs=0); no \"Filters\" slide-over or badge (Filters buttons=0); only a \"Filter documents\" select with All/Done/Queued/Skipped; no \"Clear All\"",
+  "shot": "PXE-08.png"
+ },
+ {
+  "id": "PXE-10",
+  "res": "FAIL",
+  "ev": "no \"Extract new paragraphs\" or \"Extract paragraphs\" action (0); no row ticking; no \"Are you sure?\" / \"Continue\" dialog; present instead: \"Run extraction\" (1) which toasts \"Extraction queued — runs in the background\"; statuses do not move New to Processing to Processed",
+  "shot": "PXE-08.png"
+ },
+ {
+  "id": "PXE-11",
+  "res": "FAIL",
+  "ev": "clicking a Done row does nothing (page text unchanged: no \"Paragraph #\" table); no read-only paragraphs page with main-language row and sub-rows, \"Paragraph #\", \"Language\", text cut at 200 characters",
+  "shot": "PXE-11.png"
+ },
+ {
+  "id": "PXE-12",
+  "res": "FAIL",
+  "ev": "no paragraphs page and no per-paragraph \"View\" slide-over (View buttons 0); the only row action is a \"Re-run extraction for <title>\" button",
+  "shot": "PXE-11.png"
+ },
+ {
+  "id": "PXE-13",
+  "res": "FAIL",
+  "ev": "controls that must not exist are present: [\"Segmentation:true\",\"Min characters:true\",\"Run extraction:true\",\"Re-run:true\",\"Last run:true\"] (\"Re-run\" is the footer Save label; per-row re-run buttons exist). Header stats \"DOCUMENTS 11 PARAGRAPHS 754 STATUS Ready LAST RUN 2 days ago\" vs 11 table rows and table paragraph sum NaN (list row said \"JudgmentReady1,840\")",
+  "shot": "PXE-08.png"
+ },
+ {
+  "id": "PXE-07",
+  "res": "FAIL",
+  "ev": "list on phone: scrollWidth 390, one-line rows (template, status, count) readable without sideways scroll (ok); \"wizard\" is a full-page editor (scrollWidth 390; dialog \"null\"), not a full-screen wizard; entities page does not exist, the document editor shows cards (scrollWidth 390, table headers 0)",
+  "shot": "PXE-07c.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe list [\"color-contrast (serious) x3: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h | span[data-status=\\\"processing\\\"]\"]; axe editor [\"color-contrast (serious) x9: span[data-component=\\\"StatusPill\\\"] | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(5)\"]; row button names [\"Edit Judgment extraction\",\"Edit Court Case extraction\",\"Edit Document extraction\"]; no dialogs exist on this page to test focus trap; console []",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "status pill contrast light [\"Ready:3.32\",\"Processing:1.93\",\"Ready:3.32\"]; dark [\"Ready:2.58\",\"Processing:4.22\",\"Ready:2.58\"]; below 4.5: [\"Ready:3.32\",\"Processing:1.93\",\"Ready:3.32\",\"Ready:2.58\",\"Processing:4.22\",\"Ready:2.58\"]",
+  "shot": "X-08-pxe-dark.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PENDING",
+  "ev": "filled below",
+  "shot": ""
+ }
+]

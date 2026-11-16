@@ -1,0 +1,50 @@
+[
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "multi rows show coverage 'N of M' per value",
+  "ok": true,
+  "detail": "{\"Access to public information\":\"1/3\",\"Amnesty\":\"3/3\",\"Forced disappearance\":\"1/3\",\"Extrajudicial execution\":\"2/3\",\"Military jurisdiction\":\"1/3\",\"Right to appeal the judgment\":\"0/3\",\"Afrodescendents\":\"0/3\",\"Threats and h"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "ticking / unticking projects the coverage (Right to appeal 3 of 3, Amnesty 0 of 3)",
+  "ok": true,
+  "detail": "3/3 / 0/3"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "dirty guard: changing the selection with unsaved bulk changes asks first",
+  "ok": true,
+  "detail": "{\"dlg\":\"Discard unsaved changes? | Bulk edits haven't been saved. Leaving now will discard them. | Keep editing | Discard\",\"sel\":\"3 selected\"}"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "keeping the form leaves the selection at 3 and the edits intact",
+  "ok": true,
+  "detail": "3 selected"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "review text lists the multi changes",
+  "ok": true,
+  "detail": "ue for all. | Change 1 property on 3 entities? | Applies to Gomes Lund y otros, Barrios Altos, Almonacid Arellano y otros. | Descriptores\t+ Right to appeal the judgment\t3 entities | Descriptores\t− Amnesty\t3 entities | Removes 3 values. | Back | Apply to 3 entities"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "after Apply the coverage is Right to appeal 3/3 and Amnesty 0/3",
+  "ok": true,
+  "detail": "3/3 / 0/3"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "Undo restores every value's coverage exactly",
+  "ok": true,
+  "detail": "0/3 / 3/3 vs 0/3 / 3/3"
+ },
+ {
+  "area": "bulk-tristate:CEJIL-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

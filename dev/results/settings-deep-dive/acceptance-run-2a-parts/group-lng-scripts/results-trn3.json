@@ -1,0 +1,44 @@
+{
+ "TRN-14": {
+  "id": "TRN-14",
+  "result": "PASS",
+  "evidence": "partial key \"Canc\" -> 6 keys [\"Cancel\",\"cancel csv import\",\"Canceling\",\"Canceling...\"]; value-only text \"Autenticación de dos factores\" -> [\"2FA\",\"2FA Enabled\",\"Disabled 2FA\",\"Do you want disable 2FA for the following users?\"]; \"CANCEL\" (case) -> 6 keys; \"zzz\" -> no-results state \"Nothing matches “zzz”\" with Clear search shown=true; cleared -> 60 rows rendered (first page of 412); search row height 32/32/32px",
+  "shot": "TRN-14.png"
+ },
+ "TRN-15": {
+  "id": "TRN-15",
+  "result": "PASS",
+  "evidence": "Hearing: Save disabled before edit=true, enabled after editing es and fr=true, disabled after Save=true; Beacon \"Translations saved\" entries=1 [\"Translations saved just now\"]; editor still open=true; after reload and reopen es \"ES nuevo\" fr \"FR nouveau\"; activity 0->1 [\"UPDATE Updated translations of “Hearing” [admin]\"]; saved line \"\"",
+  "shot": "TRN-15.png"
+ },
+ "X-03": {
+  "id": "X-03",
+  "result": "PASS",
+  "evidence": "Save disabled after a successful Save=true; rail click to Dashboard right after Save opened dialogs []; editing again re-enabled Save=true",
+  "shot": "TRN-15.png"
+ },
+ "X-09": {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "activity entries [\"UPDATE Updated translations of “Hearing” [admin]\"]",
+  "shot": ""
+ },
+ "TRN-16": {
+  "id": "TRN-16",
+  "result": "PASS",
+  "evidence": "key \"Active languages\" es \"Idiomas activos\" -> \"Idiomas EDITADO\" saved (English is the read-only source, so only es is editable; no header language picker exists: []); rail text unchanged=true; navbar text unchanged=true; Languages page title still \"Languages\" and card header \"Active languages\" unchanged=true",
+  "shot": ""
+ },
+ "TRN-17": {
+  "id": "TRN-17",
+  "result": "FAIL",
+  "evidence": "with an edited cell: footer Cancel: NO dialog (editor still open=false, edit lost silently); breadcrumb Translations: dialog, asks again after Cancel; back arrow: dialog, asks again after Cancel; rail item: dialog, asks again after Cancel; data-source switch: dialog, asks again after Cancel; navbar Library: dialog, asks again after Cancel; dialog text \"Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes\"; Cancel keeps edit {\"breadcrumb Translations\":true,\"back arrow\":true,\"rail item\":true,\"data-source switch\":true,\"navbar Library\":true}; search typing opened dialogs=0, Untranslated only toggle=0; \"Discard changes\" navigated=true and edit gone on return=true; clean editor rail click dialogs=0; clear X makes form dirty (Save enabled)=true",
+  "shot": "TRN-17-footer-Cancel-nodialog.png"
+ },
+ "X-02": {
+  "id": "X-02",
+  "result": "FAIL",
+  "evidence": "same drive as TRN-17: with an edited cell: footer Cancel: NO dialog (editor still open=false, edit lost silently); breadcrumb Translations: dialog, asks again after Cancel; back arrow: dialog, asks again after Cancel; rail item: dialog, asks again after Cancel; data-source switch: dialog, asks again after Cancel; navbar Library: dialog, asks again after Cancel; dialog text \"Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes\"; Cancel keeps edit {\"breadcrumb Translations\":true,\"back arrow\":true,\"rail item\":true,\"data-source switch\":true,\"navbar Library\":true}; search typing opened dialogs=0, Untranslated only toggle=0; \"Discard changes\" navigated=true and edit gone on return=true; clean editor rail click dialogs=0; clear X makes form dirty (Save enabled)=true",
+  "shot": "TRN-17-footer-Cancel-nodialog.png"
+ }
+}

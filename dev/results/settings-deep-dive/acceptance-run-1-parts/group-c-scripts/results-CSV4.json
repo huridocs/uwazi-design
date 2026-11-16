@@ -1,0 +1,26 @@
+[
+ {
+  "id": "CSV-04",
+  "res": "PASS",
+  "ev": "390x844 touch: list variant \"list\", horizontal overflow (doc) 0px; first row \"cases.csv Completed Court Case 932/932 932 entities 02/18/2026 Open\"; Open button box 51x27; tap on \"Open cases.csv\" opens detail: true; detail overflow 0px.",
+  "shot": "acceptance-run-1-shots/CSV-04-phone.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "Phone 390x844: list overflow 0px (table scroll {\"sw\":356,\"cw\":356}), rows are the stacked list variant with Open per row; footer buttons [\"‹@748\",\"›@748\",\"New import@807\"]; New import modal box 390x844; witnesses detail overflow 0px (issues table {\"sw\":358,\"cw\":358}). All actions reachable by tap.",
+  "shot": "acceptance-run-1-shots/X-06-csv-detail-phone.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe: list [\"color-contrast (serious) x2: span[data-part=\\\"current\\\"] | span[data-part=\\\"auto-refresh\\\"]\"]; New import modal [\"color-contrast (serious) x2: .mt-1.text-ink-muted.text-xs | #import-modal-template-value\",\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[40rem\\\\] > .border-b\"] (focus moved into modal: true; dialog {\"name\":\"import-modal-title\",\"modal\":\"true\"}); detail [\"color-contrast (serious) x3: .hover\\\\:underline | .w-fit | .h-10.text-ink-muted[data-part=\\\"footer\\\"] > span\"]. Escape closes modal (count after: 0); focus returned to \"New import\". Duplicate row button names: []. Serious/critical: [\"list: color-contrast (serious) x2: span[data-part=\\\"current\\\"] | span[data-part=\\\"auto-refresh\\\"]\",\"modal: color-contrast (serious) x2: .mt-1.text-ink-muted.text-xs | #import-modal-template-value\",\"detail: color-contrast (serious) x3: .hover\\\\:underline | .w-fit | .h-10.text-ink-muted[data-part=\\\"footer\\\"] > span\"]. Console errors: [].",
+  "shot": "acceptance-run-1-shots/X-07-csv.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "color-contrast (axe): light list [\"color-contrast (serious) x2: span[data-part=\\\"current\\\"] | span[data-part=\\\"auto-refresh\\\"]\"]; dark (class dark: true) list [\"color-contrast (serious) x1: span[data-part=\\\"auto-refresh\\\"]\"]; dark detail [\"color-contrast (serious) x6: span[data-component=\\\"StatusBadge\\\"] | div[data-part=\\\"message\\\"] | .h-11[data-part=\\\"row\\\"]:nth-child(1) > td:nth-child(3) > .w-fit.py-0\\\\.5.inline-fl\"]. Status pills (Completed, Processing, Failed, Warnings, Pending) included.",
+  "shot": "acceptance-run-1-shots/X-08-csv-dark.png"
+ }
+]

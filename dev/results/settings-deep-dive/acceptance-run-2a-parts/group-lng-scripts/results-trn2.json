@@ -1,0 +1,44 @@
+{
+ "TRN-04": {
+  "id": "TRN-04",
+  "result": "PASS",
+  "evidence": "Templates editor for Country: name \"Country\", properties [\"Title\",\"Date added\",\"Date modified\",\"Region\",\"Ratified ACHR\",\"Accepts Court jurisdiction\"] (3 custom + Title, Date added, Date modified common); context keys [\"Country\",\"Title\",\"Region\",\"Ratified ACHR\",\"Accepts Court jurisdiction\"] = 5 (3 properties + 2 = 5); keys equal template name + title label + each property label: true; every non-English cell equals the English text=true",
+  "shot": "TRN-04.png"
+ },
+ "TRN-08": {
+  "id": "TRN-08",
+  "result": "FAIL",
+  "evidence": "User Interface lists 412 keys (checklist says 100 to 200; SD-7 seed sets 412, checklist TRN-08 text not amended); sorted case-insensitively by key (lower-cased code-point order)=true; keys reading \"term N\"=0; spot-check of 5 keys (indexes 0, 100, 200, 300, 400) against text visible in the Library and the Settings pages: [{\"k\":\"\\\"Costa Rica\\\"\",\"vis\":false},{\"k\":\"All of the previously created paragraphs will be deleted and recreated after the process.\",\"vis\":false},{\"k\":\"Clear All\",\"vis\":true},{\"k\":\"Created thesaurus\",\"vis\":false},{\"k\":\"Done extracting files\",\"vis\":false}]",
+  "shot": "TRN-08.png"
+ },
+ "TRN-09": {
+  "id": "TRN-09",
+  "result": "PASS",
+  "evidence": "breadcrumb \"Translations\" buttons/links=1; title \"Person\"; headers [\"KEY\",\"English EN\",\"Español ES\",\"Français FR\",\"العربية AR\"]; source pill (bg-ink) columns=1; first row inputs=3 (3 target languages) clear X=3; text says \"term\"=false; footer buttons [\"Cancel\",\"Save\"]; header top before/after scroll 265/265 (a scroller scrolled=true)",
+  "shot": "TRN-09.png"
+ },
+ "TRN-10": {
+  "id": "TRN-10",
+  "result": "PASS",
+  "evidence": "cleared the Spanish \"Person\" cell with its X then Save: cell now \"\"; \"This field is required\" shown 1x; alert text \"1 empty cell blocks saving\"; activity entries 1->1; new Beacon entries [] (no write); after refilling: required messages 0, alert \"\"",
+  "shot": "TRN-10.png"
+ },
+ "TRN-11": {
+  "id": "TRN-11",
+  "result": "PASS",
+  "evidence": "default-language header pill class has bg-ink (primary)=true; typing \"Persona nueva\" in es: pill grey (bg-vellum)=true; typing the source text \"Person\" back: amber (bg-warning-light)=true; typing again: grey=true; all before Save. (The \"same as source counts as translated\" mark is optional in the check and the app has none)",
+  "shot": "TRN-11.png"
+ },
+ "TRN-12": {
+  "id": "TRN-12",
+  "result": "PASS",
+  "evidence": "editor head before edits \"Spanish 0 of 9 French 0 of 9 Arabic 0 of 9\"; after translating 2 es cells \"Spanish 2 of 9 French 0 of 9 Arabic 0 of 9\"; after Save the list row reads \"Person Template 9 ES 22% FR 0% AR 0%\" (as built: percent per language accepted, A4)",
+  "shot": "TRN-12.png"
+ },
+ "TRN-13": {
+  "id": "TRN-13",
+  "result": "PASS",
+  "evidence": "toggle label \"Untranslated only\" (as built, A4), off by default=true; 9 keys; after translating 2 keys fully and Save, toggle on shows 7 keys (expected 7), the 2 translated keys hidden=true; visible count text in the pane: \"9 Untranslated\"; language select options [\"All languages\",\"Español\",\"Français\",\"العربية\"]; picking Español narrows to 6 keys (key \"Country\" has es translated, fr and ar not); progress strip \"Spanish 3 of 9 French 2 of 9 Arabic 2 of 9\"; toggle off restores 9; hidden cell kept value \"French-Person\"",
+  "shot": "TRN-13.png"
+ }
+}

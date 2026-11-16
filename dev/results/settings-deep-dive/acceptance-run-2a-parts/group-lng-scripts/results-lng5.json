@@ -1,0 +1,32 @@
+{
+ "X-01": {
+  "id": "X-01",
+  "result": "PASS",
+  "evidence": "installed German + made Spanish default: [\"Arabic (ar)العربية\",\"English (en)\",\"French (fr)Français\",\"German (de)Deutsch\",\"Spanish (es)EspañolDefault\"]; after rail round trip same=true; after reload.(page \"Languages\") same=true; after Dashboard > Reset demo data: [\"Arabic (ar)العربية\",\"English (en)Default\",\"French (fr)Français\",\"Spanish (es)Español\"]",
+  "shot": "X-01-languages.png"
+ },
+ "X-09": {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "sessionStorage log: [\"DELETE Uninstalled language “German” [admin]\",\"UPDATE Reset language “French” [admin]\",\"UPDATE Set “Spanish” as the default language [admin]\",\"CREATE Installed language “German” [admin]\"]; missing []; Activity log page rows [\"Delete admin Uninstalled language “German” Oct 5, 2026 - 08:03\",\"Update admin Reset language “French” Oct 5, 2026 - 08:03\",\"Update admin Set “Spanish” as the default language Oct 5, 2026 - 08:03\",\"Create admin Installed language “German” Oct 5, 2026 - 08:03\"]",
+  "shot": "X-09-activity.png"
+ },
+ "X-13": {
+  "id": "X-13",
+  "result": "PASS",
+  "evidence": "Sample [\"Arabic (ar)العربية\",\"English (en)Default\",\"French (fr)Français\",\"German (de)Deutsch\",\"Spanish (es)Español\"]; CEJIL [\"English (en)\",\"Español (es)Default\",\"Português (pt)\"]; back on Sample [\"Arabic (ar)العربية\",\"English (en)Default\",\"French (fr)Français\",\"German (de)Deutsch\",\"Spanish (es)Español\"]; Users & Groups unchanged=true",
+  "shot": "X-13-cejil.png"
+ },
+ "X-07": {
+  "id": "X-07",
+  "result": "PASS",
+  "evidence": "axe serious/critical page: none; install: none; confirm: none; reset: none; uninstall: none; duplicate button names in the pane []; install dialog name \"modal-:r1b:\", unlabeled inputs 0; focus after Escape: install modal -> \"Install Language(s)\", confirm -> \"Actions for Spanish\", typed dialog -> \"Actions for Spanish\"; confirm dialog name \"confirm-dialog-title\"; typed dialog name \"Are you sure?\", unlabeled inputs 0, still open after Escape=0",
+  "shot": ""
+ },
+ "X-08": {
+  "id": "X-08",
+  "result": "FAIL",
+  "evidence": "contrast ratios (need 4.5): {\"defaultBadgeDark\":15.34,\"defaultBadgeLight\":15.34,\"selectedPillLight\":6.84,\"selectedPillDark\":4.48,\"selectPillDark\":9.04,\"installingDark\":7.96,\"installingLight\":10.89,\"failedLight\":6.71,\"failedDark\":6.19}; below 4.5 or not found: [[\"selectedPillDark\",4.48]]",
+  "shot": "X-08-dark.png"
+ }
+}

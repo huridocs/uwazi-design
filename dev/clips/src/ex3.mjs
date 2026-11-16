@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2500);
+console.log(await p.evaluate(()=>[...document.querySelectorAll("header button, nav button, button")].slice(0,14).map(b=>(b.getAttribute("aria-label")||b.title||b.innerText).trim().slice(0,30)).join(" | ")));
+await p.mouse.click(885,76); await p.waitForTimeout(400);
+await p.getByText("Large", {exact:true}).first().click(); await p.waitForTimeout(800);
+await p.screenshot({ path: "s6.png" });
+await p.mouse.click(1414,25); await p.waitForTimeout(800);
+await p.screenshot({ path: "s7.png" });
+await b.close();

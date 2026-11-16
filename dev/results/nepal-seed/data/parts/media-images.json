@@ -1,0 +1,3959 @@
+{
+ "topic": "media-images",
+ "entities": [
+  {
+   "id": "source:commons-chitwan-protest-8-sep-1",
+   "template": "source",
+   "title": "Wikimedia Commons: GenZ protest against government in chitwan(1), 8 september 2025.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:GenZ_protest_against_government_in_chitwan(1),_8_september_2025.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-chitwan-protest-8-sep-3",
+   "template": "source",
+   "title": "Wikimedia Commons: GenZ protest against government in chitwan(3), 8 september 2025.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:GenZ_protest_against_government_in_chitwan(3),_8_september_2025.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-chitwan-protesters-9-sep-02",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z movement protesters in Chitwan District 02.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_in_Chitwan_District_02.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-chitwan-district-court-fire",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z movement protesters set fire to Chitwan District Court.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_District_Court.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-chitwan-traffic-office-fire",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z movement protesters set fire to Chitwan District traffic office.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_District_traffic_office.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-chitwan-revenue-office-fire",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z movement protesters set fire to Chitwan revenue office 02.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_revenue_office_02.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-bharatpur-metropolitan-office-fire",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z protesters set fire to Bharatpur Metropolitan City office.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_protesters_set_fire_to_Bharatpur_Metropolitan_City_office.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-bharatpur-metropolitan-office-crowd",
+   "template": "source",
+   "title": "Wikimedia Commons: 2025 Nepalese Gen Z protesters infront of Bharatpur mahanagarpalika office.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_protesters_infront_of_Bharatpur_mahanagarpalika_office.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-sansad-bhavan-main-entrance-after",
+   "template": "source",
+   "title": "Wikimedia Commons: Main entrance of Sansad Bhavan of Nepal After GenZ Protest-070A6043.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Main_entrance_of_Sansad_Bhavan_of_Nepal_After_GenZ_Protest-070A6043.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-sansad-bhavan-after-6053",
+   "template": "source",
+   "title": "Wikimedia Commons: Sansad Bhavan of Nepal (International Convention Centre Nepal) After GenZ Protest-070A6053.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)_After_GenZ_Protest-070A6053.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-sansad-bhavan-after-6031-bw",
+   "template": "source",
+   "title": "Wikimedia Commons: Sansad Bhavan of Nepal (International Convention Centre Nepal) After GenZ Protest-070A6031.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)_After_GenZ_Protest-070A6031.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-transport-management-after",
+   "template": "source",
+   "title": "Wikimedia Commons: Department of Transport Management, Nepal after Genz Protest-070A6048.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Department_of_Transport_Management,_Nepal_after_Genz_Protest-070A6048.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-protest-aftermath-070a6047",
+   "template": "source",
+   "title": "Wikimedia Commons: Demonstrations and protests in Nepal in 2025-070A6047.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Demonstrations_and_protests_in_Nepal_in_2025-070A6047.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-government-attorney-office-after",
+   "template": "source",
+   "title": "Wikimedia Commons: Office of government attorney after Gen Z protest in nepal.jpeg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Office_of_government_attorney_after_Gen_Z_protest_in_nepal.jpeg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-sansad-bhavan-before-june-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: Sansad Bhavan of Nepal (International Convention Centre Nepal)-070A4427.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)-070A4427.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-singha-durbar-western-gate-2026",
+   "template": "source",
+   "title": "Wikimedia Commons: The Singha Durbar Western Gate (Main Gate), Nepal. (2).jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:The_Singha_Durbar_Western_Gate_(Main_Gate),_Nepal._(2).jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-singha-durbar-august-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: 1st parliament building of nepal Government office नेपालको पहिलो संसद भवन सिंहदरवार 2.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:1st_parliament_building_of_nepal_Government_office_%E0%A4%A8%E0%A5%87%E0%A4%AA%E0%A4%BE%E0%A4%B2%E0%A4%95%E0%A5%8B_%E0%A4%AA%E0%A4%B9%E0%A4%BF%E0%A4%B2%E0%A5%8B_%E0%A4%B8%E0%A4%82%E0%A4%B8%E0%A4%A6_%E0%A4%AD%E0%A4%B5%E0%A4%A8_%E0%A4%B8%E0%A4%BF%E0%A4%82%E0%A4%B9%E0%A4%A6%E0%A4%B0%E0%A4%B5%E0%A4%BE%E0%A4%B0_2.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-baluwatar-pm-residence-feb-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: Baluwatar Kathmandu बालुवाटार Pm Residence New Building Of Nepal.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Baluwatar_Kathmandu_%E0%A4%AC%E0%A4%BE%E0%A4%B2%E0%A5%81%E0%A4%B5%E0%A4%BE%E0%A4%9F%E0%A4%BE%E0%A4%B0_Pm_Residence_New_Building_Of_Nepal.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-balen-shah-rabi-lamichhane-rally-2026",
+   "template": "source",
+   "title": "Wikimedia Commons: Balen with Rabi.webp",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Balen_with_Rabi.webp",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-balendra-shah-official-portrait-2026",
+   "template": "source",
+   "title": "Wikimedia Commons: Official Portrait of Prime Minister Balendra Shah, 2026.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Official_Portrait_of_Prime_Minister_Balendra_Shah,_2026.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-balen-shah-guterres-unga-2026",
+   "template": "source",
+   "title": "Wikimedia Commons: PM Balen with António Guterres.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:PM_Balen_with_Ant%C3%B3nio_Guterres.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-balen-shah-cabinet-meeting-2026",
+   "template": "source",
+   "title": "Wikimedia Commons: Council of Ministers during Cabinet meeting.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Council_of_Ministers_during_Cabinet_meeting.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-oli-putin-sco-1-sep-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: President Putin meeting PM of Nepal Oli at 2025 SCO Summit.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:President_Putin_meeting_PM_of_Nepal_Oli_at_2025_SCO_Summit.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-oli-modi-bimstec-4-apr-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: PM in a bilateral meeting with the Prime Minister of Nepal, Shri KP Sharma Oli at Bangkok, in Thailand on April 04, 2025.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:PM_in_a_bilateral_meeting_with_the_Prime_Minister_of_Nepal,_Shri_KP_Sharma_Oli_at_Bangkok,_in_Thailand_on_April_04,_2025.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-gyanendra-shah-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: Gyanendra2025.png",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Gyanendra2025.png",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-gagan-thapa-mp-2024",
+   "template": "source",
+   "title": "Wikimedia Commons: Gagan Thapa गगन थापा Member of Parliament, Pratinidhi Sabha (cropped).jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Gagan_Thapa_%E0%A4%97%E0%A4%97%E0%A4%A8_%E0%A4%A5%E0%A4%BE%E0%A4%AA%E0%A4%BE_Member_of_Parliament,_Pratinidhi_Sabha_(cropped).jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-sher-bahadur-deuba-2025",
+   "template": "source",
+   "title": "Wikimedia Commons: SherBahadurDeuba.jpg",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:SherBahadurDeuba.jpg",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-committee-document-lamichhane-2024",
+   "template": "source",
+   "title": "Wikimedia Commons: Action-against-rabi-lamichhane.png",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Action-against-rabi-lamichhane.png",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:commons-balen-shah-mayor-2024",
+   "template": "source",
+   "title": "Wikimedia Commons: Balen Shah - Mayor of Kathmandu.png",
+   "properties": {
+    "publisher": "Wikimedia Commons",
+    "publisher_type": "other",
+    "medium": "photo",
+    "published": null,
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Balen_Shah_-_Mayor_of_Kathmandu.png",
+     "label": "Wikimedia Commons file page (accessed 2026-10-05)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "media:photo-2025-09-08-chitwan-protest-8-sep-1",
+   "template": "media",
+   "title": "Protest march in Chitwan on 8 September 2025",
+   "properties": {
+    "caption": "Protest march in Chitwan on 8 September 2025. The uploader's description gives the date as 23 Bhadra 2082 (Nepali calendar), which is 8 September 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:GenZ_protest_against_government_in_chitwan(1),_8_september_2025.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc0",
+    "licence": "CC0",
+    "attribution": "हिमाल सुवेदी (CC0), via Wikimedia Commons",
+    "recorded": "2025-09-08",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-08); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 322931,
+    "file": {
+     "path": "media/images/chitwan-protest-8-sep-1.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 322931,
+     "sha256": "7a548731118348a3c188bd3d5d37834516690e8ff7e7aec1eadfd526be38a73d",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "GenZ protest against government in chitwan(1), 8 september 2025.jpg"
+    },
+    "licence_url": {
+     "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+     "label": "CC0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-protest-8-sep-1"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-protest-8-sep-1"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-08-chitwan-protest-8-sep-3",
+   "template": "media",
+   "title": "Protesters gathered in Chitwan on 8 September 2025, per the uploader's title and Nepali-calendar description",
+   "properties": {
+    "caption": "Protesters gathered in Chitwan on 8 September 2025, per the uploader's title and Nepali-calendar description.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:GenZ_protest_against_government_in_chitwan(3),_8_september_2025.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc0",
+    "licence": "CC0",
+    "attribution": "हिमाल सुवेदी (CC0), via Wikimedia Commons",
+    "recorded": "2025-09-08",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-08); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 267973,
+    "file": {
+     "path": "media/images/chitwan-protest-8-sep-3.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 267973,
+     "sha256": "986910c2202c1814c1304011769d1d3ef18809b1328420b94ea2c7db1a27cef6",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "GenZ protest against government in chitwan(3), 8 september 2025.jpg"
+    },
+    "licence_url": {
+     "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+     "label": "CC0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-protest-8-sep-3"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-protest-8-sep-3"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-chitwan-protesters-9-sep-02",
+   "template": "media",
+   "title": "Protesters in Chitwan District on 9 September 2025 (Commons upload date and category)",
+   "properties": {
+    "caption": "Protesters in Chitwan District on 9 September 2025 (Commons upload date and category).",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_in_Chitwan_District_02.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 260016,
+    "file": {
+     "path": "media/images/chitwan-protesters-9-sep-02.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 260016,
+     "sha256": "938e21ccf2312bddfd65e415392635e61dd9ba785b5df62aa17aa309b7e548ac",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "2025 Nepalese Gen Z movement protesters in Chitwan District 02.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-protesters-9-sep-02"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-protesters-9-sep-02"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-chitwan-district-court-fire",
+   "template": "media",
+   "title": "Fire at the Chitwan District Court during the 9 September 2025 protests, as titled by the uploader",
+   "properties": {
+    "caption": "Fire at the Chitwan District Court during the 9 September 2025 protests, as titled by the uploader.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_District_Court.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 369826,
+    "file": {
+     "path": "media/images/chitwan-district-court-fire.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 369826,
+     "sha256": "2390c66a1486a6ec74f05fbaaff6534cf751630e3f4dae84cd8d8752047a209f",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "2025 Nepalese Gen Z movement protesters set fire to Chitwan District Court.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-district-court-fire"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-district-court-fire"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-chitwan-traffic-office-fire",
+   "template": "media",
+   "title": "Fire at the Chitwan District traffic office during the 9 September 2025 protests, as titled by the uploader",
+   "properties": {
+    "caption": "Fire at the Chitwan District traffic office during the 9 September 2025 protests, as titled by the uploader.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_District_traffic_office.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 345315,
+    "file": {
+     "path": "media/images/chitwan-traffic-office-fire.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 345315,
+     "sha256": "81926c0f5dd45219c2c529320e6407baeba0d963969024e8cb9552a32a9623a9",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "2025 Nepalese Gen Z movement protesters set fire to Chitwan District traffic office.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-traffic-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-traffic-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-chitwan-revenue-office-fire",
+   "template": "media",
+   "title": "Fire at the Chitwan revenue office during the 9 September 2025 protests, as titled by the uploader",
+   "properties": {
+    "caption": "Fire at the Chitwan revenue office during the 9 September 2025 protests, as titled by the uploader.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_movement_protesters_set_fire_to_Chitwan_revenue_office_02.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 438699,
+    "file": {
+     "path": "media/images/chitwan-revenue-office-fire.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 438699,
+     "sha256": "e378d6ff3d7a7b475294f8b4d24bd933c692174fc9bd7ebd50c0138f9c818ff7",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "2025 Nepalese Gen Z movement protesters set fire to Chitwan revenue office 02.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.583,
+     "lon": 84.5,
+     "label": "Chitwan District"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-chitwan-revenue-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-chitwan-revenue-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-bharatpur-metropolitan-office-fire",
+   "template": "media",
+   "title": "Fire at the Bharatpur Metropolitan City office on 9 September 2025, as titled by the uploader",
+   "properties": {
+    "caption": "Fire at the Bharatpur Metropolitan City office on 9 September 2025, as titled by the uploader.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_protesters_set_fire_to_Bharatpur_Metropolitan_City_office.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 489411,
+    "file": {
+     "path": "media/images/bharatpur-metropolitan-office-fire.jpg",
+     "width": 1066,
+     "height": 1600,
+     "bytes": 489411,
+     "sha256": "106350d967c756c3c920a1bdd0b445cdf5eaca647a5e720807b72e325144e928",
+     "original_width": 4000,
+     "original_height": 6000,
+     "commons_file": "2025 Nepalese Gen Z protesters set fire to Bharatpur Metropolitan City office.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.683,
+     "lon": 84.433,
+     "label": "Bharatpur"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-bharatpur-metropolitan-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-bharatpur-metropolitan-office-fire"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-09-bharatpur-metropolitan-office-crowd",
+   "template": "media",
+   "title": "Crowd in front of the Bharatpur Metropolitan City office on 9 September 2025, as titled by the uploader",
+   "properties": {
+    "caption": "Crowd in front of the Bharatpur Metropolitan City office on 9 September 2025, as titled by the uploader.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:2025_Nepalese_Gen_Z_protesters_infront_of_Bharatpur_mahanagarpalika_office.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "हिमाल सुवेदी",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "हिमाल सुवेदी, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-09",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-09); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 361145,
+    "file": {
+     "path": "media/images/bharatpur-metropolitan-office-crowd.jpg",
+     "width": 1600,
+     "height": 1066,
+     "bytes": 361145,
+     "sha256": "14283825b1fa20f4f10f9d402ec3bd90ee33853d7ac1d5d74749be853d6d5a47",
+     "original_width": 6000,
+     "original_height": 4000,
+     "commons_file": "2025 Nepalese Gen Z protesters infront of Bharatpur mahanagarpalika office.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.683,
+     "lon": 84.433,
+     "label": "Bharatpur"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-bharatpur-metropolitan-office-crowd"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-bharatpur-metropolitan-office-crowd"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-20-sansad-bhavan-main-entrance-after",
+   "template": "media",
+   "title": "Main entrance of the Sansad Bhavan (Federal Parliament building) after the 8 to 9 September 2025 protests; the",
+   "properties": {
+    "caption": "Main entrance of the Sansad Bhavan (Federal Parliament building) after the 8 to 9 September 2025 protests; the Commons description dates the photograph to 20 September 2025 and labels the event 8, 9 September 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Main_entrance_of_Sansad_Bhavan_of_Nepal_After_GenZ_Protest-070A6043.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-20",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-20); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 771363,
+    "file": {
+     "path": "media/images/sansad-bhavan-main-entrance-after.jpg",
+     "width": 1600,
+     "height": 900,
+     "bytes": 771363,
+     "sha256": "536d12b2806168ba373e1794c915a16f8681705cd28db92301f325d0c0be1aec",
+     "original_width": 5698,
+     "original_height": 3205,
+     "commons_file": "Main entrance of Sansad Bhavan of Nepal After GenZ Protest-070A6043.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.6897826,
+     "lon": 85.3374443,
+     "label": "Federal Parliament building (International Convention Centre)"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-main-entrance-after"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-main-entrance-after"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-20-sansad-bhavan-after-6053",
+   "template": "media",
+   "title": "The Sansad Bhavan after the September 2025 protests, photographed 20 September 2025 per Commons metadata",
+   "properties": {
+    "caption": "The Sansad Bhavan after the September 2025 protests, photographed 20 September 2025 per Commons metadata.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)_After_GenZ_Protest-070A6053.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-20",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-20); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 692031,
+    "file": {
+     "path": "media/images/sansad-bhavan-after-6053.jpg",
+     "width": 1600,
+     "height": 900,
+     "bytes": 692031,
+     "sha256": "16f083a74e156be8c9fd7b894f6a1928d9d1a2db1f0e9c383bd8eb38c07b6ebc",
+     "original_width": 6720,
+     "original_height": 3780,
+     "commons_file": "Sansad Bhavan of Nepal (International Convention Centre Nepal) After GenZ Protest-070A6053.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.6897826,
+     "lon": 85.3374443,
+     "label": "Federal Parliament building (International Convention Centre)"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-after-6053"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-after-6053"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-20-sansad-bhavan-after-6031-bw",
+   "template": "media",
+   "title": "Black-and-white photograph of the Sansad Bhavan after the September 2025 protests, per the Commons description",
+   "properties": {
+    "caption": "Black-and-white photograph of the Sansad Bhavan after the September 2025 protests, per the Commons description.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)_After_GenZ_Protest-070A6031.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-20",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-20); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 581741,
+    "file": {
+     "path": "media/images/sansad-bhavan-after-6031-bw.jpg",
+     "width": 1600,
+     "height": 1280,
+     "bytes": 581741,
+     "sha256": "e41471882995d42a47f0d6342224d3797ab273e974b8db9e78469586baaa9d00",
+     "original_width": 4257,
+     "original_height": 3406,
+     "commons_file": "Sansad Bhavan of Nepal (International Convention Centre Nepal) After GenZ Protest-070A6031.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.6897826,
+     "lon": 85.3374443,
+     "label": "Federal Parliament building (International Convention Centre)"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-after-6031-bw"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-after-6031-bw"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-20-transport-management-after",
+   "template": "media",
+   "title": "The Department of Transport Management building after the Gen Z protest, photographed 20 September 2025 per Co",
+   "properties": {
+    "caption": "The Department of Transport Management building after the Gen Z protest, photographed 20 September 2025 per Commons metadata.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Department_of_Transport_Management,_Nepal_after_Genz_Protest-070A6048.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-20",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-20); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 857897,
+    "file": {
+     "path": "media/images/transport-management-after.jpg",
+     "width": 1600,
+     "height": 1066,
+     "bytes": 857897,
+     "sha256": "b24a93c282987b2e62389993b0a610436cc8fbab406612771e73d1222d07ccef",
+     "original_width": 6078,
+     "original_height": 4052,
+     "commons_file": "Department of Transport Management, Nepal after Genz Protest-070A6048.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-transport-management-after"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-transport-management-after"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-20-protest-aftermath-070a6047",
+   "template": "media",
+   "title": "Burned government premises after the September 2025 protests; the Commons file is in the category Demonstratio",
+   "properties": {
+    "caption": "Burned government premises after the September 2025 protests; the Commons file is in the category Demonstrations and protests in Nepal in 2025 and was taken on 20 September 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Demonstrations_and_protests_in_Nepal_in_2025-070A6047.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-20",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-20); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 1212303,
+    "file": {
+     "path": "media/images/protest-aftermath-070a6047.jpg",
+     "width": 1600,
+     "height": 1280,
+     "bytes": 1212303,
+     "sha256": "2053c20f368472776962480882b9dd6951701faceb545b6c96b35c39e1cb86f5",
+     "original_width": 5585,
+     "original_height": 4468,
+     "commons_file": "Demonstrations and protests in Nepal in 2025-070A6047.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-protest-aftermath-070a6047"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-protest-aftermath-070a6047"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-15-government-attorney-office-after",
+   "template": "media",
+   "title": "The office of the government attorney after the Gen Z protest, per the Commons title; taken 15 September 2025 ",
+   "properties": {
+    "caption": "The office of the government attorney after the Gen Z protest, per the Commons title; taken 15 September 2025 per metadata.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Office_of_government_attorney_after_Gen_Z_protest_in_nepal.jpeg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Nirjal stha",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Nirjal stha, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-15",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-15); not independently geolocated. Coordinates are the file's own Commons coordinates.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 593542,
+    "file": {
+     "path": "media/images/government-attorney-office-after.jpg",
+     "width": 1600,
+     "height": 900,
+     "bytes": 593542,
+     "sha256": "6d9552080624413891044ef26c3fc3044b8b162989ccd560e45b1bb71f3bba70",
+     "original_width": 5712,
+     "original_height": 3213,
+     "commons_file": "Office of government attorney after Gen Z protest in nepal.jpeg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.694289,
+     "lon": 85.320319,
+     "label": "Commons file coordinates"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-government-attorney-office-after"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-government-attorney-office-after"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-06-07-sansad-bhavan-before-june-2025",
+   "template": "media",
+   "title": "The Sansad Bhavan (Federal Parliament building) on 7 June 2025, before the protests; useful as a before-image ",
+   "properties": {
+    "caption": "The Sansad Bhavan (Federal Parliament building) on 7 June 2025, before the protests; useful as a before-image for the 9 September fire.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Sansad_Bhavan_of_Nepal_(International_Convention_Centre_Nepal)-070A4427.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Bijay Chaurasia",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Bijay Chaurasia, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2025-06-07",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-06-07); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 630384,
+    "file": {
+     "path": "media/images/sansad-bhavan-before-june-2025.jpg",
+     "width": 1600,
+     "height": 900,
+     "bytes": 630384,
+     "sha256": "6bf3431e0b866004d5bae755b92244347b2be11ae40f7fb4bc49f12f1d4d4b19",
+     "original_width": 5949,
+     "original_height": 3345,
+     "commons_file": "Sansad Bhavan of Nepal (International Convention Centre Nepal)-070A4427.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.6897826,
+     "lon": 85.3374443,
+     "label": "Federal Parliament building (International Convention Centre)"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-before-june-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-sansad-bhavan-before-june-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2026-04-22-singha-durbar-western-gate-2026",
+   "template": "media",
+   "title": "The Western Gate (main gate) of Singha Durbar, photographed 22 April 2026, after the 9 September 2025 fire",
+   "properties": {
+    "caption": "The Western Gate (main gate) of Singha Durbar, photographed 22 April 2026, after the 9 September 2025 fire.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:The_Singha_Durbar_Western_Gate_(Main_Gate),_Nepal._(2).jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Sufe",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Sufe, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2026-04-22",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2026-04-22); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 728332,
+    "file": {
+     "path": "media/images/singha-durbar-western-gate-2026.jpg",
+     "width": 1199,
+     "height": 1600,
+     "bytes": 728332,
+     "sha256": "daa0336ca83f068e5cab17a209ff4e2e3bc469ffeca21f10ab186734b3997ff7",
+     "original_width": 3000,
+     "original_height": 4000,
+     "commons_file": "The Singha Durbar Western Gate (Main Gate), Nepal. (2).jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    },
+    "geolocation": {
+     "lat": 27.698,
+     "lon": 85.324,
+     "label": "Singha Durbar"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-singha-durbar-western-gate-2026"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-singha-durbar-western-gate-2026"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-08-16-singha-durbar-august-2025",
+   "template": "media",
+   "title": "Singha Durbar (first parliament building) photographed 16 August 2025, three weeks before the fire",
+   "properties": {
+    "caption": "Singha Durbar (first parliament building) photographed 16 August 2025, three weeks before the fire.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:1st_parliament_building_of_nepal_Government_office_%E0%A4%A8%E0%A5%87%E0%A4%AA%E0%A4%BE%E0%A4%B2%E0%A4%95%E0%A5%8B_%E0%A4%AA%E0%A4%B9%E0%A4%BF%E0%A4%B2%E0%A5%8B_%E0%A4%B8%E0%A4%82%E0%A4%B8%E0%A4%A6_%E0%A4%AD%E0%A4%B5%E0%A4%A8_%E0%A4%B8%E0%A4%BF%E0%A4%82%E0%A4%B9%E0%A4%A6%E0%A4%B0%E0%A4%B5%E0%A4%BE%E0%A4%B0_2.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Gunjan Raj Giri",
+    "rights": "bundled-cc0",
+    "licence": "CC0",
+    "attribution": "Gunjan Raj Giri (CC0), via Wikimedia Commons",
+    "recorded": "2025-08-16",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-08-16); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 91111,
+    "file": {
+     "path": "media/images/singha-durbar-august-2025.jpg",
+     "width": 720,
+     "height": 540,
+     "bytes": 91111,
+     "sha256": "01b3042503f93ef5951b08910e3366c46a60a42fe4a0b263a6a23260f19d0118",
+     "original_width": 720,
+     "original_height": 540,
+     "commons_file": "1st parliament building of nepal Government office नेपालको पहिलो संसद भवन सिंहदरवार 2.jpg"
+    },
+    "licence_url": {
+     "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+     "label": "CC0"
+    },
+    "geolocation": {
+     "lat": 27.698,
+     "lon": 85.324,
+     "label": "Singha Durbar"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-singha-durbar-august-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-singha-durbar-august-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-02-15-baluwatar-pm-residence-feb-2025",
+   "template": "media",
+   "title": "The prime minister's residence complex at Baluwatar, photographed 15 February 2025",
+   "properties": {
+    "caption": "The prime minister's residence complex at Baluwatar, photographed 15 February 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Baluwatar_Kathmandu_%E0%A4%AC%E0%A4%BE%E0%A4%B2%E0%A5%81%E0%A4%B5%E0%A4%BE%E0%A4%9F%E0%A4%BE%E0%A4%B0_Pm_Residence_New_Building_Of_Nepal.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Gunjan Raj Giri",
+    "rights": "bundled-cc0",
+    "licence": "CC0",
+    "attribution": "Gunjan Raj Giri (CC0), via Wikimedia Commons",
+    "recorded": "2025-02-15",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-02-15); not independently geolocated. Coordinates are those of the named place, not of the camera position.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 470328,
+    "file": {
+     "path": "media/images/baluwatar-pm-residence-feb-2025.jpg",
+     "width": 1600,
+     "height": 900,
+     "bytes": 470328,
+     "sha256": "8a47791f71e2c6398ac2a47d1f3ea3107a6ddc6e5128a41028547b7e2cb97b8d",
+     "original_width": 1920,
+     "original_height": 1080,
+     "commons_file": "Baluwatar Kathmandu बालुवाटार Pm Residence New Building Of Nepal.jpg"
+    },
+    "licence_url": {
+     "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+     "label": "CC0"
+    },
+    "geolocation": {
+     "lat": 27.729122,
+     "lon": 85.328579,
+     "label": "Baluwatar"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-baluwatar-pm-residence-feb-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification",
+      "geolocation"
+     ],
+     "sources": [
+      "source:commons-baluwatar-pm-residence-feb-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2026-02-28-balen-shah-rabi-lamichhane-rally-2026",
+   "template": "media",
+   "title": "Balen Shah and Rabi Lamichhane at a rally in the Kathmandu Valley ahead of the 5 March 2026 election, per the ",
+   "properties": {
+    "caption": "Balen Shah and Rabi Lamichhane at a rally in the Kathmandu Valley ahead of the 5 March 2026 election, per the Commons description.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Balen_with_Rabi.webp",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Prayushk",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 4.0",
+    "attribution": "Prayushk, CC BY 4.0, via Wikimedia Commons",
+    "recorded": "2026-02-28",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2026-02-28); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 369173,
+    "file": {
+     "path": "media/images/balen-shah-rabi-lamichhane-rally-2026.jpg",
+     "width": 1600,
+     "height": 1066,
+     "bytes": 369173,
+     "sha256": "2bf7b5e1a381a0a73c988306414ea6dea2a7fb3c3dbdd102fdaa5594be585d38",
+     "original_width": 1920,
+     "original_height": 1280,
+     "commons_file": "Balen with Rabi.webp"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/4.0",
+     "label": "CC BY 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2026-03-31-balendra-shah-official-portrait-2026",
+   "template": "media",
+   "title": "Official portrait of Prime Minister Balendra Shah, 2026",
+   "properties": {
+    "caption": "Official portrait of Prime Minister Balendra Shah, 2026.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Official_Portrait_of_Prime_Minister_Balendra_Shah,_2026.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Office of the Prime Minister and Council of Ministers",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Office of the Prime Minister and Council of Ministers, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2026-03-31",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2026-03-31); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 231161,
+    "file": {
+     "path": "media/images/balendra-shah-official-portrait-2026.jpg",
+     "width": 912,
+     "height": 1136,
+     "bytes": 231161,
+     "sha256": "16a57e9f56e1f8da07af14dd73ed4e65ae3d4582027c7b6047cbf8e0a9ef1236",
+     "original_width": 912,
+     "original_height": 1136,
+     "commons_file": "Official Portrait of Prime Minister Balendra Shah, 2026.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-balendra-shah-official-portrait-2026"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-balendra-shah-official-portrait-2026"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2026-09-24-balen-shah-guterres-unga-2026",
+   "template": "media",
+   "title": "Prime Minister Balen Shah with UN Secretary-General António Guterres during the 81st UN General Assembly, 24 S",
+   "properties": {
+    "caption": "Prime Minister Balen Shah with UN Secretary-General António Guterres during the 81st UN General Assembly, 24 September 2026.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:PM_Balen_with_Ant%C3%B3nio_Guterres.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "United Nations",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "United Nations, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2026-09-24",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2026-09-24); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 105116,
+    "file": {
+     "path": "media/images/balen-shah-guterres-unga-2026.jpg",
+     "width": 1200,
+     "height": 800,
+     "bytes": 105116,
+     "sha256": "54a1612ba3a606702d4805e3ea85024e9db5a0a9d58696595c86bf1aecfd2b8b",
+     "original_width": 1200,
+     "original_height": 800,
+     "commons_file": "PM Balen with António Guterres.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-balen-shah-guterres-unga-2026"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-balen-shah-guterres-unga-2026"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2026-09-29-balen-shah-cabinet-meeting-2026",
+   "template": "media",
+   "title": "A cabinet meeting under Prime Minister Balen Shah, 29 September 2026",
+   "properties": {
+    "caption": "A cabinet meeting under Prime Minister Balen Shah, 29 September 2026.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Council_of_Ministers_during_Cabinet_meeting.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Government of Nepal",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 3.0",
+    "attribution": "Government of Nepal, CC BY 3.0, via Wikimedia Commons",
+    "recorded": "2026-09-29",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2026-09-29); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 315375,
+    "file": {
+     "path": "media/images/balen-shah-cabinet-meeting-2026.jpg",
+     "width": 1600,
+     "height": 936,
+     "bytes": 315375,
+     "sha256": "4f2e6fd84c766bc10b7e684057b2b6a8802fabfc2de92393985f47bd9112a1e0",
+     "original_width": 2048,
+     "original_height": 1198,
+     "commons_file": "Council of Ministers during Cabinet meeting.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/3.0",
+     "label": "CC BY 3.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-balen-shah-cabinet-meeting-2026"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-balen-shah-cabinet-meeting-2026"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-09-01-oli-putin-sco-1-sep-2025",
+   "template": "media",
+   "title": "Prime Minister Oli meeting President Putin at the 2025 SCO Summit, 1 September 2025, a week before the protest",
+   "properties": {
+    "caption": "Prime Minister Oli meeting President Putin at the 2025 SCO Summit, 1 September 2025, a week before the protests.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:President_Putin_meeting_PM_of_Nepal_Oli_at_2025_SCO_Summit.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "President of Russia",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 4.0",
+    "attribution": "President of Russia, CC BY 4.0, via Wikimedia Commons",
+    "recorded": "2025-09-01",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-09-01); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 345221,
+    "file": {
+     "path": "media/images/oli-putin-sco-1-sep-2025.jpg",
+     "width": 1600,
+     "height": 987,
+     "bytes": 345221,
+     "sha256": "66978e4ed2a491636e030f8d35768e62c0d1d2e2756c3bb1721939f4d65129f8",
+     "original_width": 1880,
+     "original_height": 1160,
+     "commons_file": "President Putin meeting PM of Nepal Oli at 2025 SCO Summit.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/4.0",
+     "label": "CC BY 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-oli-putin-sco-1-sep-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-oli-putin-sco-1-sep-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-04-04-oli-modi-bimstec-4-apr-2025",
+   "template": "media",
+   "title": "Prime Minister Oli in a bilateral meeting with Indian Prime Minister Modi at Bangkok, 4 April 2025",
+   "properties": {
+    "caption": "Prime Minister Oli in a bilateral meeting with Indian Prime Minister Modi at Bangkok, 4 April 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:PM_in_a_bilateral_meeting_with_the_Prime_Minister_of_Nepal,_Shri_KP_Sharma_Oli_at_Bangkok,_in_Thailand_on_April_04,_2025.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Prime Minister's Office",
+    "rights": "bundled-open-government",
+    "licence": "GODL-India",
+    "attribution": "Prime Minister's Office (GODL-India), via Wikimedia Commons",
+    "recorded": "2025-04-04",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-04-04); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 457791,
+    "file": {
+     "path": "media/images/oli-modi-bimstec-4-apr-2025.jpg",
+     "width": 1509,
+     "height": 1600,
+     "bytes": 457791,
+     "sha256": "54e09edf7ae899250d204bfd9ac531e1fbec069d820acad18bc99c64f64764c6",
+     "original_width": 2200,
+     "original_height": 2333,
+     "commons_file": "PM in a bilateral meeting with the Prime Minister of Nepal, Shri KP Sharma Oli at Bangkok, in Thailand on April 04, 2025.jpg"
+    },
+    "licence_url": {
+     "url": "https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf",
+     "label": "GODL-India"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-oli-modi-bimstec-4-apr-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-oli-modi-bimstec-4-apr-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-04-13-gyanendra-shah-2025",
+   "template": "media",
+   "title": "Gyanendra Shah, former king, 2025 (the pro-monarchy rallies of March to April 2025 centred on him)",
+   "properties": {
+    "caption": "Gyanendra Shah, former king, 2025 (the pro-monarchy rallies of March to April 2025 centred on him).",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Gyanendra2025.png",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Vision Nepal HD",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 3.0",
+    "attribution": "Vision Nepal HD, CC BY 3.0, via Wikimedia Commons",
+    "recorded": "2025-04-13",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-04-13); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 1737937,
+    "file": {
+     "path": "media/images/gyanendra-shah-2025.png",
+     "width": 1600,
+     "height": 1307,
+     "bytes": 1737937,
+     "sha256": "2425ca077a97b229a627c8022e027ac812ce293a6f1bb8227f49317efc15a96d",
+     "original_width": 2530,
+     "original_height": 2068,
+     "commons_file": "Gyanendra2025.png"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/3.0",
+     "label": "CC BY 3.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-gyanendra-shah-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-gyanendra-shah-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2024-12-12-gagan-thapa-mp-2024",
+   "template": "media",
+   "title": "Gagan Thapa, member of the House of Representatives, December 2024",
+   "properties": {
+    "caption": "Gagan Thapa, member of the House of Representatives, December 2024.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Gagan_Thapa_%E0%A4%97%E0%A4%97%E0%A4%A8_%E0%A4%A5%E0%A4%BE%E0%A4%AA%E0%A4%BE_Member_of_Parliament,_Pratinidhi_Sabha_(cropped).jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Gunjan Raj Giri",
+    "rights": "bundled-cc0",
+    "licence": "CC0",
+    "attribution": "Gunjan Raj Giri (CC0), via Wikimedia Commons",
+    "recorded": "2024-12-12",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2024-12-12); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 398021,
+    "file": {
+     "path": "media/images/gagan-thapa-mp-2024.jpg",
+     "width": 810,
+     "height": 1080,
+     "bytes": 398021,
+     "sha256": "afe5ebce3bc7060f7bf140524309240d215e2d440a373d1809bdf0f58d4ffc62",
+     "original_width": 810,
+     "original_height": 1080,
+     "commons_file": "Gagan Thapa गगन थापा Member of Parliament, Pratinidhi Sabha (cropped).jpg"
+    },
+    "licence_url": {
+     "url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+     "label": "CC0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-gagan-thapa-mp-2024"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-gagan-thapa-mp-2024"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2025-03-21-sher-bahadur-deuba-2025",
+   "template": "media",
+   "title": "Sher Bahadur Deuba, Nepali Congress president, 2025",
+   "properties": {
+    "caption": "Sher Bahadur Deuba, Nepali Congress president, 2025.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:SherBahadurDeuba.jpg",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Ashishlohorung",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 3.0",
+    "attribution": "Ashishlohorung, CC BY 3.0, via Wikimedia Commons",
+    "recorded": "2025-03-21",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2025-03-21); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 173347,
+    "file": {
+     "path": "media/images/sher-bahadur-deuba-2025.jpg",
+     "width": 1248,
+     "height": 1600,
+     "bytes": 173347,
+     "sha256": "9d13b5a8ed855b8b94bcb3e9322ada67c0c1be1bdc6b37946f369a41a695a956",
+     "original_width": 1422,
+     "original_height": 1823,
+     "commons_file": "SherBahadurDeuba.jpg"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/3.0",
+     "label": "CC BY 3.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-sher-bahadur-deuba-2025"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-sher-bahadur-deuba-2025"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2024-09-17-committee-document-lamichhane-2024",
+   "template": "media",
+   "title": "Image of the document submitted by the parliamentary committee on action against Rabi Lamichhane (cooperative ",
+   "properties": {
+    "caption": "Image of the document submitted by the parliamentary committee on action against Rabi Lamichhane (cooperative fraud case), September 2024, per the Commons description.",
+    "media_kind": "graphic",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Action-against-rabi-lamichhane.png",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Nepali Kalam",
+    "rights": "bundled-cc-by-sa",
+    "licence": "CC BY-SA 4.0",
+    "attribution": "Nepali Kalam, CC BY-SA 4.0, via Wikimedia Commons",
+    "recorded": "2024-09-17",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2024-09-17); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 182041,
+    "file": {
+     "path": "media/images/committee-document-lamichhane-2024.png",
+     "width": 525,
+     "height": 318,
+     "bytes": 182041,
+     "sha256": "22865eff6adf444f24a73aab7c96a173c372b42b33242124b85906f282147273",
+     "original_width": 525,
+     "original_height": 318,
+     "commons_file": "Action-against-rabi-lamichhane.png"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "label": "CC BY-SA 4.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-committee-document-lamichhane-2024"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-committee-document-lamichhane-2024"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  },
+  {
+   "id": "media:photo-2024-05-30-balen-shah-mayor-2024",
+   "template": "media",
+   "title": "Balen Shah, then Mayor of Kathmandu, during a media briefing in 2024",
+   "properties": {
+    "caption": "Balen Shah, then Mayor of Kathmandu, during a media briefing in 2024.",
+    "media_kind": "photo",
+    "page_url": {
+     "url": "https://commons.wikimedia.org/wiki/File:Balen_Shah_-_Mayor_of_Kathmandu.png",
+     "label": "Wikimedia Commons file page"
+    },
+    "platform": "commons",
+    "outlet": "Wikimedia Commons",
+    "creator": "Metro News",
+    "rights": "bundled-cc-by",
+    "licence": "CC BY 3.0",
+    "attribution": "Metro News, CC BY 3.0, via Wikimedia Commons",
+    "recorded": "2024-05-30",
+    "recorded_precision": "day",
+    "language": "en",
+    "content_warning": "none",
+    "location_method": "Place and date are those the Commons uploader gives in the file title, description and metadata (taken 2024-05-30); not independently geolocated.",
+    "verified_by": "Commons uploader (unverified by a third party)",
+    "verification": "single-source",
+    "file_size_bytes": 356946,
+    "file": {
+     "path": "media/images/balen-shah-mayor-2024.png",
+     "width": 542,
+     "height": 626,
+     "bytes": 356946,
+     "sha256": "1c5280efbc5686080e517997cc6fbf3126794a2757b26183608b37ea8d02c888",
+     "original_width": 542,
+     "original_height": 626,
+     "commons_file": "Balen Shah - Mayor of Kathmandu.png"
+    },
+    "licence_url": {
+     "url": "https://creativecommons.org/licenses/by/3.0",
+     "label": "CC BY 3.0"
+    }
+   },
+   "evidence": [
+    {
+     "property": [
+      "caption",
+      "media_kind",
+      "page_url",
+      "platform",
+      "outlet",
+      "creator",
+      "rights",
+      "licence",
+      "licence_url",
+      "attribution",
+      "file",
+      "file_size_bytes",
+      "language",
+      "content_warning"
+     ],
+     "sources": [
+      "source:commons-balen-shah-mayor-2024"
+     ],
+     "verification": "single-source",
+     "note": "Commons file page metadata"
+    },
+    {
+     "property": [
+      "recorded",
+      "recorded_precision",
+      "location_method",
+      "verified_by",
+      "verification"
+     ],
+     "sources": [
+      "source:commons-balen-shah-mayor-2024"
+     ],
+     "verification": "single-source",
+     "note": "Date and place as stated by the Commons uploader"
+    }
+   ]
+  }
+ ],
+ "references": [
+  {
+   "id": "ref:chitwan-protest-8-sep-1-depicts-2025-09-08-gen-z-protests-in-other-citie",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-1",
+   "to": "event:2025-09-08-gen-z-protests-in-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-1"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protest-8-sep-1-depicts-chitwan-district",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-1",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-1"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protest-8-sep-1-published-in",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-1",
+   "to": "source:commons-chitwan-protest-8-sep-1",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-1"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protest-8-sep-3-depicts-2025-09-08-gen-z-protests-in-other-citie",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-3",
+   "to": "event:2025-09-08-gen-z-protests-in-other-cities",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-3"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protest-8-sep-3-depicts-chitwan-district",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-3",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-3"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protest-8-sep-3-published-in",
+   "from": "media:photo-2025-09-08-chitwan-protest-8-sep-3",
+   "to": "source:commons-chitwan-protest-8-sep-3",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protest-8-sep-3"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protesters-9-sep-02-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-chitwan-protesters-9-sep-02",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protesters-9-sep-02"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protesters-9-sep-02-depicts-chitwan-district",
+   "from": "media:photo-2025-09-09-chitwan-protesters-9-sep-02",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protesters-9-sep-02"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-protesters-9-sep-02-published-in",
+   "from": "media:photo-2025-09-09-chitwan-protesters-9-sep-02",
+   "to": "source:commons-chitwan-protesters-9-sep-02",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-protesters-9-sep-02"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-district-court-fire-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-chitwan-district-court-fire",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-district-court-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-district-court-fire-depicts-chitwan-district",
+   "from": "media:photo-2025-09-09-chitwan-district-court-fire",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-district-court-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-district-court-fire-published-in",
+   "from": "media:photo-2025-09-09-chitwan-district-court-fire",
+   "to": "source:commons-chitwan-district-court-fire",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-district-court-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-traffic-office-fire-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-chitwan-traffic-office-fire",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-traffic-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-traffic-office-fire-depicts-chitwan-district",
+   "from": "media:photo-2025-09-09-chitwan-traffic-office-fire",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-traffic-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-traffic-office-fire-published-in",
+   "from": "media:photo-2025-09-09-chitwan-traffic-office-fire",
+   "to": "source:commons-chitwan-traffic-office-fire",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-traffic-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-revenue-office-fire-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-chitwan-revenue-office-fire",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-revenue-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-revenue-office-fire-depicts-chitwan-district",
+   "from": "media:photo-2025-09-09-chitwan-revenue-office-fire",
+   "to": "location:chitwan-district",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-revenue-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:chitwan-revenue-office-fire-published-in",
+   "from": "media:photo-2025-09-09-chitwan-revenue-office-fire",
+   "to": "source:commons-chitwan-revenue-office-fire",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-chitwan-revenue-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-fire-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-fire",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-fire-depicts-bharatpur",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-fire",
+   "to": "location:bharatpur",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-fire-published-in",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-fire",
+   "to": "source:commons-bharatpur-metropolitan-office-fire",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-fire"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-crowd-depicts-2025-09-09-chitwan-and-kanchanpur-office",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-crowd",
+   "to": "event:2025-09-09-chitwan-and-kanchanpur-offices-burned",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-crowd"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-crowd-depicts-bharatpur",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-crowd",
+   "to": "location:bharatpur",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-crowd"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:bharatpur-metropolitan-office-crowd-published-in",
+   "from": "media:photo-2025-09-09-bharatpur-metropolitan-office-crowd",
+   "to": "source:commons-bharatpur-metropolitan-office-crowd",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-bharatpur-metropolitan-office-crowd"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-main-entrance-after-depicts-2025-09-09-parliament-building-set-on-fi",
+   "from": "media:photo-2025-09-20-sansad-bhavan-main-entrance-after",
+   "to": "event:2025-09-09-parliament-building-set-on-fire",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-main-entrance-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-main-entrance-after-depicts-federal-parliament-building",
+   "from": "media:photo-2025-09-20-sansad-bhavan-main-entrance-after",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-main-entrance-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-main-entrance-after-documents-parliament-building-still-stands",
+   "from": "media:photo-2025-09-20-sansad-bhavan-main-entrance-after",
+   "to": "claim:parliament-building-still-stands",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-main-entrance-after"
+   ],
+   "verification": "single-source",
+   "note": "Photograph of the building after the protests; it bears on the dispute over whether the Parliament building survived."
+  },
+  {
+   "id": "ref:sansad-bhavan-main-entrance-after-published-in",
+   "from": "media:photo-2025-09-20-sansad-bhavan-main-entrance-after",
+   "to": "source:commons-sansad-bhavan-main-entrance-after",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-main-entrance-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6053-depicts-2025-09-09-parliament-building-set-on-fi",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6053",
+   "to": "event:2025-09-09-parliament-building-set-on-fire",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6053"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6053-depicts-federal-parliament-building",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6053",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6053"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6053-documents-parliament-building-still-stands",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6053",
+   "to": "claim:parliament-building-still-stands",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6053"
+   ],
+   "verification": "single-source",
+   "note": "Photograph of the building after the protests; it bears on the dispute over whether the Parliament building survived."
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6053-published-in",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6053",
+   "to": "source:commons-sansad-bhavan-after-6053",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6053"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6031-bw-depicts-2025-09-09-parliament-building-set-on-fi",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6031-bw",
+   "to": "event:2025-09-09-parliament-building-set-on-fire",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6031-bw"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6031-bw-depicts-federal-parliament-building",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6031-bw",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6031-bw"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-after-6031-bw-published-in",
+   "from": "media:photo-2025-09-20-sansad-bhavan-after-6031-bw",
+   "to": "source:commons-sansad-bhavan-after-6031-bw",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-after-6031-bw"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:transport-management-after-depicts-2025-09-09-ministries-and-state-offices-",
+   "from": "media:photo-2025-09-20-transport-management-after",
+   "to": "event:2025-09-09-ministries-and-state-offices-burned-in-kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-transport-management-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:transport-management-after-published-in",
+   "from": "media:photo-2025-09-20-transport-management-after",
+   "to": "source:commons-transport-management-after",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-transport-management-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:protest-aftermath-070a6047-depicts-2025-09-09-ministries-and-state-offices-",
+   "from": "media:photo-2025-09-20-protest-aftermath-070a6047",
+   "to": "event:2025-09-09-ministries-and-state-offices-burned-in-kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-protest-aftermath-070a6047"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:protest-aftermath-070a6047-published-in",
+   "from": "media:photo-2025-09-20-protest-aftermath-070a6047",
+   "to": "source:commons-protest-aftermath-070a6047",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-protest-aftermath-070a6047"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:government-attorney-office-after-depicts-2025-09-09-ministries-and-state-offices-",
+   "from": "media:photo-2025-09-15-government-attorney-office-after",
+   "to": "event:2025-09-09-ministries-and-state-offices-burned-in-kathmandu",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-government-attorney-office-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:government-attorney-office-after-published-in",
+   "from": "media:photo-2025-09-15-government-attorney-office-after",
+   "to": "source:commons-government-attorney-office-after",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-government-attorney-office-after"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-before-june-2025-depicts-federal-parliament-building",
+   "from": "media:photo-2025-06-07-sansad-bhavan-before-june-2025",
+   "to": "location:federal-parliament-building",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-before-june-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sansad-bhavan-before-june-2025-published-in",
+   "from": "media:photo-2025-06-07-sansad-bhavan-before-june-2025",
+   "to": "source:commons-sansad-bhavan-before-june-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sansad-bhavan-before-june-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:singha-durbar-western-gate-2026-depicts-singha-durbar",
+   "from": "media:photo-2026-04-22-singha-durbar-western-gate-2026",
+   "to": "location:singha-durbar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-singha-durbar-western-gate-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:singha-durbar-western-gate-2026-published-in",
+   "from": "media:photo-2026-04-22-singha-durbar-western-gate-2026",
+   "to": "source:commons-singha-durbar-western-gate-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-singha-durbar-western-gate-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:singha-durbar-august-2025-depicts-singha-durbar",
+   "from": "media:photo-2025-08-16-singha-durbar-august-2025",
+   "to": "location:singha-durbar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-singha-durbar-august-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:singha-durbar-august-2025-published-in",
+   "from": "media:photo-2025-08-16-singha-durbar-august-2025",
+   "to": "source:commons-singha-durbar-august-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-singha-durbar-august-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:baluwatar-pm-residence-feb-2025-depicts-baluwatar",
+   "from": "media:photo-2025-02-15-baluwatar-pm-residence-feb-2025",
+   "to": "location:baluwatar",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-baluwatar-pm-residence-feb-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:baluwatar-pm-residence-feb-2025-published-in",
+   "from": "media:photo-2025-02-15-baluwatar-pm-residence-feb-2025",
+   "to": "source:commons-baluwatar-pm-residence-feb-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-baluwatar-pm-residence-feb-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-rabi-lamichhane-rally-2026-depicts-balendra-shah",
+   "from": "media:photo-2026-02-28-balen-shah-rabi-lamichhane-rally-2026",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-rabi-lamichhane-rally-2026-depicts-rabi-lamichhane",
+   "from": "media:photo-2026-02-28-balen-shah-rabi-lamichhane-rally-2026",
+   "to": "person:rabi-lamichhane",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-rabi-lamichhane-rally-2026-depicts-2026-03-05-house-of-representatives-elec",
+   "from": "media:photo-2026-02-28-balen-shah-rabi-lamichhane-rally-2026",
+   "to": "event:2026-03-05-house-of-representatives-election",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-rabi-lamichhane-rally-2026-published-in",
+   "from": "media:photo-2026-02-28-balen-shah-rabi-lamichhane-rally-2026",
+   "to": "source:commons-balen-shah-rabi-lamichhane-rally-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-rabi-lamichhane-rally-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balendra-shah-official-portrait-2026-depicts-balendra-shah",
+   "from": "media:photo-2026-03-31-balendra-shah-official-portrait-2026",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balendra-shah-official-portrait-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balendra-shah-official-portrait-2026-depicts-2026-03-27-balendra-shah-sworn-in-as-pri",
+   "from": "media:photo-2026-03-31-balendra-shah-official-portrait-2026",
+   "to": "event:2026-03-27-balendra-shah-sworn-in-as-prime-minister",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balendra-shah-official-portrait-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balendra-shah-official-portrait-2026-published-in",
+   "from": "media:photo-2026-03-31-balendra-shah-official-portrait-2026",
+   "to": "source:commons-balendra-shah-official-portrait-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balendra-shah-official-portrait-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-guterres-unga-2026-depicts-balendra-shah",
+   "from": "media:photo-2026-09-24-balen-shah-guterres-unga-2026",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-guterres-unga-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-guterres-unga-2026-depicts-antonio-guterres",
+   "from": "media:photo-2026-09-24-balen-shah-guterres-unga-2026",
+   "to": "person:antonio-guterres",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-guterres-unga-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-guterres-unga-2026-documents-2026-09-24-pm-balendra-shah-address-to-u",
+   "from": "media:photo-2026-09-24-balen-shah-guterres-unga-2026",
+   "to": "action:2026-09-24-pm-balendra-shah-address-to-un-general-assembly",
+   "type": "documents",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-guterres-unga-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-guterres-unga-2026-published-in",
+   "from": "media:photo-2026-09-24-balen-shah-guterres-unga-2026",
+   "to": "source:commons-balen-shah-guterres-unga-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-guterres-unga-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-cabinet-meeting-2026-depicts-balendra-shah",
+   "from": "media:photo-2026-09-29-balen-shah-cabinet-meeting-2026",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-cabinet-meeting-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-cabinet-meeting-2026-published-in",
+   "from": "media:photo-2026-09-29-balen-shah-cabinet-meeting-2026",
+   "to": "source:commons-balen-shah-cabinet-meeting-2026",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-cabinet-meeting-2026"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:oli-putin-sco-1-sep-2025-depicts-kp-sharma-oli",
+   "from": "media:photo-2025-09-01-oli-putin-sco-1-sep-2025",
+   "to": "person:kp-sharma-oli",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-oli-putin-sco-1-sep-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:oli-putin-sco-1-sep-2025-published-in",
+   "from": "media:photo-2025-09-01-oli-putin-sco-1-sep-2025",
+   "to": "source:commons-oli-putin-sco-1-sep-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-oli-putin-sco-1-sep-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:oli-modi-bimstec-4-apr-2025-depicts-kp-sharma-oli",
+   "from": "media:photo-2025-04-04-oli-modi-bimstec-4-apr-2025",
+   "to": "person:kp-sharma-oli",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-oli-modi-bimstec-4-apr-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:oli-modi-bimstec-4-apr-2025-depicts-narendra-modi",
+   "from": "media:photo-2025-04-04-oli-modi-bimstec-4-apr-2025",
+   "to": "person:narendra-modi",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-oli-modi-bimstec-4-apr-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:oli-modi-bimstec-4-apr-2025-published-in",
+   "from": "media:photo-2025-04-04-oli-modi-bimstec-4-apr-2025",
+   "to": "source:commons-oli-modi-bimstec-4-apr-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-oli-modi-bimstec-4-apr-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:gyanendra-shah-2025-depicts-gyanendra-shah",
+   "from": "media:photo-2025-04-13-gyanendra-shah-2025",
+   "to": "person:gyanendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-gyanendra-shah-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:gyanendra-shah-2025-published-in",
+   "from": "media:photo-2025-04-13-gyanendra-shah-2025",
+   "to": "source:commons-gyanendra-shah-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-gyanendra-shah-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:gagan-thapa-mp-2024-depicts-gagan-thapa",
+   "from": "media:photo-2024-12-12-gagan-thapa-mp-2024",
+   "to": "person:gagan-thapa",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-gagan-thapa-mp-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:gagan-thapa-mp-2024-published-in",
+   "from": "media:photo-2024-12-12-gagan-thapa-mp-2024",
+   "to": "source:commons-gagan-thapa-mp-2024",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-gagan-thapa-mp-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sher-bahadur-deuba-2025-depicts-sher-bahadur-deuba",
+   "from": "media:photo-2025-03-21-sher-bahadur-deuba-2025",
+   "to": "person:sher-bahadur-deuba",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sher-bahadur-deuba-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:sher-bahadur-deuba-2025-published-in",
+   "from": "media:photo-2025-03-21-sher-bahadur-deuba-2025",
+   "to": "source:commons-sher-bahadur-deuba-2025",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-sher-bahadur-deuba-2025"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:committee-document-lamichhane-2024-depicts-rabi-lamichhane",
+   "from": "media:photo-2024-09-17-committee-document-lamichhane-2024",
+   "to": "person:rabi-lamichhane",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-committee-document-lamichhane-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:committee-document-lamichhane-2024-depicts-2024-09-16-parliamentary-committee-finds",
+   "from": "media:photo-2024-09-17-committee-document-lamichhane-2024",
+   "to": "event:2024-09-16-parliamentary-committee-finds-lamichhane-complicit",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-committee-document-lamichhane-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:committee-document-lamichhane-2024-published-in",
+   "from": "media:photo-2024-09-17-committee-document-lamichhane-2024",
+   "to": "source:commons-committee-document-lamichhane-2024",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-committee-document-lamichhane-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-mayor-2024-depicts-balendra-shah",
+   "from": "media:photo-2024-05-30-balen-shah-mayor-2024",
+   "to": "person:balendra-shah",
+   "type": "depicts",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-mayor-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  },
+  {
+   "id": "ref:balen-shah-mayor-2024-published-in",
+   "from": "media:photo-2024-05-30-balen-shah-mayor-2024",
+   "to": "source:commons-balen-shah-mayor-2024",
+   "type": "published_in",
+   "date": null,
+   "anchor": null,
+   "sources": [
+    "source:commons-balen-shah-mayor-2024"
+   ],
+   "verification": "single-source",
+   "note": ""
+  }
+ ]
+}

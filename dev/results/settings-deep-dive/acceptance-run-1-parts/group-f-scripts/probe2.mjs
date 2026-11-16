@@ -1,0 +1,12 @@
+import { launch, open, S, rows, shot, dialogs } from "./lib.mjs";
+const b = await launch();
+const {page} = await open(b, "languages");
+const row = S(page).locator('[role=row]').nth(2);
+console.log(await row.innerHTML().then(h=>h.slice(0,1500)));
+console.log(await S(page).getByRole("button").allTextContents());
+console.log(await S(page).getByRole("button").evaluateAll(e=>e.map(x=>x.getAttribute("aria-label"))));
+await page.getByRole("button",{name:"Install language"}).click();
+await page.waitForTimeout(400);
+console.log(await dialogs(page));
+await shot(page,"probe-lng-modal");
+await b.close();

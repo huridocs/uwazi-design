@@ -1,0 +1,62 @@
+[
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "Permissions opens the same dialog with the user field focused",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "added person shows 'Will be added to 3'",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "review lists the permission change",
+  "ok": true,
+  "detail": "Share 3 entities | Review changes | Court Case | 2 | Country | 1 | Add afarah, can see | 3 entities | Back | Apply to 3 entities"
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "permission persists when reopened",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "Undo removes the added permission",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "Delete asks for confirmation naming the count",
+  "ok": true,
+  "detail": "Delete 3 entities? | Undo restores them until your next delete or bulk change. | Cancel | Delete"
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "deleted entities leave every view (53 -> 50)",
+  "ok": true,
+  "detail": "53 -> 50"
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "and the selection is cleared",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "Undo re-adds exactly what was deleted (back to 53, same cards)",
+  "ok": true,
+  "detail": "50 -> 53"
+ },
+ {
+  "area": "perm-delete:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

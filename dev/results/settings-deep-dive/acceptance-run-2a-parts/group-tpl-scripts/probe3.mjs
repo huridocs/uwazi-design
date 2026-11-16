@@ -1,0 +1,14 @@
+import { launch, open, S, rows, wait, shot, addTemplate, names } from "./common.mjs";
+const b = await launch();
+const { page, errors } = await open(b, "templates");
+await wait(page, 800);
+await S(page).getByRole("button", { name: "Add template" }).click(); await wait(page, 500);
+await shot(page,"probe-new");
+console.log(await S(page).evaluate(e=>e.innerText.slice(0,800)));
+await S(page).getByPlaceholder("Template name").fill("QA One"); await wait(page,200);
+console.log(await S(page).getByRole("button", { name: /^Save/ }).allInnerTexts());
+await S(page).getByRole("button", { name: /^(Save|Create template)/ }).first().click(); await wait(page, 700);
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog]')].filter(e=>!e.closest('[inert]')).map(e=>e.innerText.slice(0,300))));
+await shot(page,"probe-after-save");
+console.log(await S(page).evaluate(e=>e.innerText.slice(0,300)));
+await b.close();

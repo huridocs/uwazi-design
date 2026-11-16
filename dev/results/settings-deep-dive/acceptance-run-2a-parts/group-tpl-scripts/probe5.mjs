@@ -1,0 +1,14 @@
+import { launch, open, S, rows, wait, shot, names, goLibrary } from "./common.mjs";
+const b = await launch();
+const { page, errors } = await open(b, "templates");
+await wait(page, 800);
+const th = S(page).locator("[role=columnheader]", { hasText: "Name" }).first();
+const st = async () => [await th.getAttribute("aria-sort"), (await names(page)).slice(0,3)];
+console.log(await st());
+await th.click(); await wait(page,300); console.log(await st());
+await th.locator("button").click(); await wait(page,300); console.log(await st());
+await goLibrary(page);
+await page.locator("label").filter({ hasText: /^\s*Hearing\s*\d+\s*$/ }).first().click(); await wait(page, 1200);
+await shot(page, "probe-filter");
+console.log(await page.evaluate(()=>document.body.innerText.match(/\d[\d,]* entit(y|ies)/g)));
+await b.close();

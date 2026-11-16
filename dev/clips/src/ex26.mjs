@@ -1,0 +1,12 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2000);
+await p.getByRole("button", { name: /^View:/ }).click(); await p.getByRole("option", { name: "Timeline" }).click(); await p.waitForTimeout(1000);
+await p.mouse.click(885,76); await p.getByText("Spine", {exact:true}).click(); await p.keyboard.press("Escape"); await p.waitForTimeout(1200);
+await p.mouse.move(12,806); await p.mouse.down(); await p.mouse.move(260,806,{steps:12}); await p.mouse.up(); await p.waitForTimeout(1200);
+await p.screenshot({path:"s85.png"});
+await p.mouse.click(1000,300); 
+await p.mouse.click(420,806); await p.waitForTimeout(1200);
+await p.screenshot({path:"s86.png"});
+await b.close();

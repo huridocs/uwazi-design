@@ -1,0 +1,12 @@
+FAIL | USR-22 | New group editor: labels=["Group name","AD admin admin@uwazi.io","ML mlopez m.lopez@cejil.org","JN jnkemba j.nkemba@example.org","AF afarah a.farah@example.org","TB tbuergenthal t.buergenthal@example.org"] (spec "Name" + "Members" with placeholder "Nothing selected" and "Select all"; built "Group name" + checkbox list, Select all controls=0); commit disabled when empty=true; probes=[{"v":"ab","dis":false,"msg":""},{"v":"51 chars","dis":false,"msg":""},{"v":"litigation","dis":false,"msg":""},{"v":"12 chars","dis":false,"msg":""}] (no inline error copy: Name is required / too short / too long / Duplicated name); Enter in Name submits=false; Beacon=["Group created just now"] (spec "Group saved"); Groups list row="Ethics 2" (count, not username pills); tabs=["Users 5","Groups 4"]; tbuergenthal row="TB tbuergenthal t.buergenthal@example.org Collaborator Ethics —" | USR-22.png
+INFO | USR-22-dup | groups listed after Ethics create=4 
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForTimeout: Target page, context or browser has been closed
+    at [90m/Users/juanmnl/Developer/huridocs/uwazi_app/dev/results/settings-deep-dive/acceptance-run-2a-parts/group-acc-scripts/[39musr4.mjs:54:51 {
+  log: []
+}
+
+Node.js v26.8.2

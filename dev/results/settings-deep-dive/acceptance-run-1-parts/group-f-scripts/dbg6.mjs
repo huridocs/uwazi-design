@@ -1,0 +1,13 @@
+import { launch, open, S, shot } from "./lib.mjs";
+const b = await launch();
+const {page} = await open(b,"translations");
+await S(page).locator('[role=row]').filter({hasText:"User Interface"}).first().click(); await page.waitForTimeout(500);
+const sb = S(page).locator('input[aria-label="Search terms"]');
+const h = async()=> sb.evaluate(e=>{let p=e; while(p&&p.getBoundingClientRect().height<30) p=p.parentElement; return Math.round(p.getBoundingClientRect().height)+"@"+Math.round(p.getBoundingClientRect().top)});
+console.log("before",await h());
+await sb.fill("zzz"); await page.waitForTimeout(300);
+console.log("zzz",await h(), (await S(page).innerText()).replace(/\s+/g," "));
+await shot(page,"TRN-14");
+await sb.fill("lib"); await page.waitForTimeout(300); console.log("lib", await h(), await S(page).locator("[role=row]").count()-1);
+await sb.fill(""); await page.waitForTimeout(300); console.log("clear", await h(), await S(page).locator('[role=row]').count());
+await b.close();

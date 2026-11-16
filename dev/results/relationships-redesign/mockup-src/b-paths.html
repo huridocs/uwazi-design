@@ -1,0 +1,97 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="mock.css"><title>B Paths</title>
+<style>
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .card { background: var(--bg-surface); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); }
+  .card .hd { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-primary); display: flex; gap: 0.5rem; align-items: baseline; }
+  .card .hd .name { font-weight: 500; }
+  .q { padding: 0.65rem 0.75rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .fan { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+  .alt { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border-primary); font-size: 0.8125rem; color: var(--text-secondary); display: flex; gap: 0.5rem; align-items: center; }
+  .alt .sp { flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  th { text-align: start; font-size: 0.6875rem; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border-primary); }
+  td { padding: 0.35rem 0.75rem; border-bottom: 1px solid var(--border-primary); vertical-align: middle; }
+  svg text { font-family: var(--font-sans); }
+</style></head><body>
+<div class="app">
+  <div class="nav"><span class="logo"><b>:</b>uwazi</span><span class="crumb">Library</span><span class="muted">›</span><span class="crumb on">Velásquez Rodríguez</span><span class="crumb">Tools</span><span class="sp"></span><span class="navbtn">Ask Bert</span><span class="navbtn">Settings</span></div>
+  <div class="pane" style="grid-row:2">
+    <div class="host">
+      <div class="tabs"><div class="strip"><span>Document</span><span>Metadata</span><span class="on">Relationships <em class="cnt">7</em></span><span>Files <em class="cnt">2</em></span></div><span class="select">English ▾</span></div>
+      <div class="docmeta"><div class="kicker"><span class="sq" data-c="causa"></span>Causa</div><div class="title">Velásquez Rodríguez</div></div>
+      <div class="toolbar">
+        <div class="lens"><span>Connections</span><span class="on">Paths</span><span class="off">In the document</span></div>
+        <span style="flex:1"></span>
+      </div>
+    </div>
+    <div class="body host">
+      <div class="grid2">
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:0">
+          <div class="card"><div class="q">
+            <div class="field"><span class="k">From</span><span class="pill lg" data-c="causa"><span>Velásquez Rodríguez</span></span></div>
+            <div class="field"><span class="k">To</span><span class="picker"><span class="pill lg" data-c="causa"><span>Godínez Cruz</span></span><span class="muted">×</span></span></div>
+            <div class="field"><span class="k">Skip</span><span class="chip">País ×</span><span class="chip">Mecanismo ×</span><span class="chip">Without a relation type ×</span><span class="chip add">+ Relation type</span></div>
+            <div class="field"><span class="k">Up to</span><span class="btn">6 steps ▾</span><span class="muted" style="font-size:.75rem">Skipped types connect almost everything: with them, this path is 2 steps through Honduras.</span></div>
+          </div></div>
+          <div class="card">
+            <div class="hd"><span class="name">Shortest connection</span><span class="muted" style="font-size:.75rem">6 steps · 6 routes, differing at one step</span></div>
+            <ol class="path">
+              <li class="node end"><span class="pill" data-c="causa"><span>Velásquez Rodríguez</span></span><span class="tpl">Causa</span></li>
+              <li class="edge">→ Documentos de la CorteIDH</li>
+              <li class="node"><span class="pill" data-c="sent"><span>Velásquez Rodríguez. Sentencia de 21 de julio de 1989</span></span></li>
+              <li class="edge">→ Firmantes</li>
+              <li class="node fork" style="background:var(--bg-primary);border-radius:6px"><div class="fan"><span class="tert" style="font-size:.75rem">any of 6 judges</span><span class="pill" data-c="juez"><span>Rafael Nieto Navia</span></span><span class="pill" data-c="juez"><span>Héctor Fix Zamudio</span></span><span class="pill" data-c="juez"><span>Pedro Nikken</span></span><span class="chip">+3</span></div></li>
+              <li class="edge">← Firmantes</li>
+              <li class="node"><span class="pill" data-c="res"><span>Velásquez Rodríguez, Fairén Garbi y Solís Corrales y Godínez Cruz. Resolución de la CorteIDH de 19 de enero de 1988</span></span></li>
+              <li class="edge">→ CorteIDH</li>
+              <li class="node"><span class="pill" data-c="res"><span>Velasquez Rodríguez, Fairén Garbi y Solís Rodríguez, y Godínez Cruz. Resolución de 15 de enero de 1988</span></span></li>
+              <li class="edge">→ CorteIDH</li>
+              <li class="node"><span class="pill" data-c="medida"><span>Godínez Cruz</span></span><span class="tpl">Medida Provisional</span></li>
+              <li class="edge">← Relacionado a</li>
+              <li class="node end"><span class="pill" data-c="causa"><span>Godínez Cruz</span></span><span class="tpl">Causa</span></li>
+            </ol>
+            <div class="alt"><span>Longer routes (7 steps)</span><span class="sp"></span><span class="warm">Show</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:0">
+          <div class="card">
+            <div class="hd"><span class="name">Along a pattern</span><span class="muted" style="font-size:.75rem">defined by this template</span></div>
+            <div class="q" style="gap:.4rem">
+              <div class="field"><span class="chip">Causa</span><span class="muted">→ CorteIDH →</span><span class="chip">Sentencia de la CorteIDH</span><span class="muted">→ Firmantes →</span><span class="chip">Juez y/o Comisionado</span><span class="muted">→ País →</span><span class="chip">País</span></div>
+              <div class="prov">The same pattern fills “Jueces firmantes” in Metadata and the Library chain filter.</div>
+            </div>
+            <table>
+              <thead><tr><th>Sentencia</th><th>Juez</th><th>País</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="3"><span class="pill" data-c="sent"><span>Sentencia de 21 de julio de 1989</span></span></td><td><span class="pill" data-c="juez"><span>Rafael Nieto Navia</span></span></td><td><span class="pill" data-c="pais"><span>Colombia</span></span></td></tr>
+                <tr><td><span class="pill" data-c="juez"><span>Héctor Fix Zamudio</span></span></td><td><span class="pill" data-c="pais"><span>México</span></span></td></tr>
+                <tr><td><span class="pill" data-c="juez"><span>Héctor Gross Espiell</span></span></td><td><span class="pill" data-c="pais"><span>Uruguay</span></span></td></tr>
+                <tr><td colspan="3" class="muted" style="font-size:.75rem">3 more judges without a País · 3 more Sentencias <span class="warm" style="margin-inline-start:.4rem">Show all</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="hd"><span class="name">Map</span><span class="muted" style="font-size:.75rem">the shortest connection, drawn</span></div>
+            <svg viewBox="0 0 640 195" width="100%" role="img" aria-label="Path map">
+              <g stroke="var(--border-soft)" stroke-width="2" fill="none">
+                <path d="M40 85 H130"/><path d="M130 85 L230 35"/><path d="M130 85 L230 60"/><path d="M130 85 L230 85"/><path d="M130 85 L230 110"/><path d="M130 85 L230 135"/><path d="M130 85 L230 150"/>
+                <path d="M230 35 L330 85"/><path d="M230 60 L330 85"/><path d="M230 85 L330 85"/><path d="M230 110 L330 85"/><path d="M230 135 L330 85"/><path d="M230 150 L330 85"/>
+                <path d="M330 85 H600"/>
+              </g>
+              <g stroke="var(--text-primary)" stroke-width="1.5">
+                <circle cx="40" cy="85" r="9" fill="#C03B22"/><circle cx="130" cy="85" r="7" fill="#65A30D"/>
+                <circle cx="230" cy="35" r="5" fill="#DB2777"/><circle cx="230" cy="60" r="5" fill="#DB2777"/><circle cx="230" cy="85" r="5" fill="#DB2777"/><circle cx="230" cy="110" r="5" fill="#DB2777"/><circle cx="230" cy="135" r="5" fill="#DB2777"/><circle cx="230" cy="150" r="5" fill="#DB2777"/>
+                <circle cx="330" cy="85" r="7" fill="#D97706"/><circle cx="420" cy="85" r="7" fill="#D97706"/><circle cx="510" cy="85" r="7" fill="#7C3AED"/><circle cx="600" cy="85" r="9" fill="#C03B22"/>
+              </g>
+              <g font-size="11" fill="var(--text-secondary)" text-anchor="middle" transform="translate(0,48)">
+                <text x="40" y="112">Velásquez R.</text><text x="130" y="112">Sentencia 1989</text><text x="262" y="-34">6 judges</text><text x="330" y="112">Res. 19/1/1988</text><text x="420" y="112">Res. 15/1/1988</text><text x="510" y="112">Medida</text><text x="600" y="112">Godínez Cruz</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="tert">Paths are read-only</span><span class="sp"></span><span class="warm">Ask Bert about this path</span></div>
+  </div>
+</div>
+<script src="mock.js"></script></body></html>

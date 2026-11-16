@@ -1,0 +1,21 @@
+import { launch, open, S, shot, rows, dialogs, rec, realErrors, wait, axe, notifTitles, logEntries, rail, switchTo, toSettings } from "./common.mjs";
+export * from "./common.mjs";
+export const openEditor = async (b, name = "Court Case", vp = "desktop", opts = {}) => {
+  const c = await open(b, "templates", vp, opts);
+  await wait(c.page, 700);
+  if (name === "new") await c.page.getByRole("button", { name: "Add template" }).first().click();
+  else if (vp === "mobile") await S(c.page).getByText(name, { exact: true }).first().click();
+  else await S(c.page).locator('[role=row]', { hasText: name }).first().click();
+  await wait(c.page, 500);
+  return c;
+};
+export const footerBtn = (p, name) => S(p).locator("footer").getByRole("button", { name });
+export const saveBtn = (p) => S(p).locator("footer").getByRole("button", { name: /^(Save|Create template)$/ });
+export const dirtyNow = async (p) => !(await saveBtn(p).isDisabled());
+export const propRows = (p) => S(p).locator('[data-part=property]');
+export const propNames = async (p) => propRows(p).evaluateAll(rs => rs.map(r => r.querySelector("td")?.innerText.split("\n")[0].trim()));
+export const dlg = (p) => p.locator('[role=dialog][data-part=panel]:not([inert] *)').last();
+export const openAdd = async (p) => { await S(p).getByRole("button", { name: "Add property" }).click(); await wait(p, 400); };
+export const dlgLines = async (p) => (await dlg(p).innerText()).split("\n").map(s => s.trim()).filter(Boolean);
+export const typeOptions = async (p) => { await dlg(p).getByRole("button", { name: /Property type/ }).click(); await wait(p, 250); const o = await p.locator('[role=listbox] [role=option]').allInnerTexts(); return o.map(s=>s.trim()); };
+export const pickType = async (p, label) => { await dlg(p).getByRole("button", { name: /Property type/ }).click(); await wait(p, 250); const o = p.locator('[role=listbox] [role=option]').filter({ hasText: new RegExp("^\\s*" + label + "\\s*$") }); if (!(await o.count())) { await p.keyboard.press("Escape"); await wait(p, 200); return false; } await o.first().click(); await wait(p, 250); return true; };

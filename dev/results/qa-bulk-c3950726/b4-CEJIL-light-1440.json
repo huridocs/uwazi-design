@@ -1,0 +1,44 @@
+[
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "selection drawer lists the 4 selected",
+  "ok": true,
+  "detail": "Remove Pávez Pávez. Audiencia del 13 de mayo de 2021 from selection,Remove Pávez Pávez. Audiencia del 12 de mayo de 2021 from selection,Remove Julien Grisonas y otros. Audiencia del 11 de mayo de 2021 from selection,Remove Integrantes del Centro Nicaraguense de DD.HH  y de la Comisión Permanente de DD.HH (CENIDH-CPDH). Audiencia del 6 de mayo de 2021 from selection"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "Remove X drops that one entity (4 -> 3)",
+  "ok": true,
+  "detail": "n=3"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "Close keeps the selection",
+  "ok": true,
+  "detail": "n=3 listOpen=false"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "Actions menu opens by keyboard with items",
+  "ok": true,
+  "detail": "{\"items\":[\"Change template\",\"Export CSV\",\"Share\",\"Permissions\",\"Delete\"],\"focus\":\"Change template\"}"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "ArrowDown moves through menu items",
+  "ok": true,
+  "detail": "Change template -> Share"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "Escape closes the menu and returns focus to Actions",
+  "ok": true,
+  "detail": "{\"menuOpen\":false,\"focus\":\"Actions\"}"
+ },
+ {
+  "area": "sel-drawer:CEJIL-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

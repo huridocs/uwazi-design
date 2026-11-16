@@ -1,0 +1,32 @@
+[
+ {
+  "area": "select-all:CEJIL-dark-1440",
+  "item": "footer select-all box (\"Select all loaded entities\") selects the loaded entities",
+  "ok": true,
+  "detail": "120 of 4398; bar: 120 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear | · | Select all 4,398"
+ },
+ {
+  "area": "select-all:CEJIL-dark-1440",
+  "item": "\"Select all 4,398\" selects every result",
+  "ok": true,
+  "detail": "4398 vs total 4398; 4,398 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear"
+ },
+ {
+  "area": "select-all:CEJIL-dark-1440",
+  "item": "unticking the box clears",
+  "ok": false,
+  "detail": "4,278 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear"
+ },
+ {
+  "area": "select-all:CEJIL-dark-1440",
+  "item": "\"N not in view\" appears when a search hides the selection",
+  "ok": true,
+  "detail": "4,281 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear => 4,281 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear | · | 4,281 not in view | 1 filter"
+ },
+ {
+  "area": "select-all:CEJIL-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

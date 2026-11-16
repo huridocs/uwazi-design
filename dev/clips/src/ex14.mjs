@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(1500);
+await p.getByRole("button", { name: /Collection/ }).click(); await p.getByText("CEJIL", {exact:false}).first().click();
+await p.getByText("4,398 entities").waitFor({timeout:20000}); await p.waitForTimeout(3000);
+await p.getByPlaceholder(/Search/).first().click();
+await p.keyboard.type("Caballero Delgado y Santana", {delay:20}); await p.keyboard.press("Enter"); await p.waitForTimeout(2500);
+await p.screenshot({path:"s32.png"});
+await p.getByRole("button", {name:/^Caballero Delgado/}).first().click(); await p.waitForTimeout(1500);
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(2500);
+await p.getByRole("tab", {name:/^Metadata/}).first().click(); await p.waitForTimeout(3000);
+console.log("causa has jueces:", /Jueces firmantes/i.test(await p.evaluate(()=>document.body.innerText)));
+await p.getByText("Caballero Delgado y Santana. Sentencia de 21 de enero",{exact:false}).first().click().catch(e=>console.log("click fail"));
+await p.waitForTimeout(3000);
+console.log("sentencia has jueces:", /Jueces firmantes/i.test(await p.evaluate(()=>document.body.innerText)));
+await p.screenshot({path:"s33.png"});
+await b.close();

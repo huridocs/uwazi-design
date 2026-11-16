@@ -1,0 +1,31 @@
+{
+ "doc_id": "sc-press-release-2082-05-27",
+ "title": "Supreme Court press release: Zoom meeting with the bar on reviving destroyed case files (Nepali, 27 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 256338,
+ "sha256": "a988ad53f7b8abda8d47678c8ffb2cfe1837ac566e6e2b93f588bc9b59eea8c2",
+ "source_url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-27prssbijapti.pdf",
+ "source_page": "https://supremecourt.gov.np/web/",
+ "retrieved": "2026-10-05",
+ "publisher": "Supreme Court of Nepal",
+ "published": "2025-09-12",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; the embedded text is OCR noise. OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082",
+  "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1580
+}

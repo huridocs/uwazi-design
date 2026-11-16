@@ -1,0 +1,41 @@
+import { dialogs, run, open, S, wait, check, clean, rail, sh, toSettings } from "./g.mjs";
+const relCount = async (p) => { await toSettings(p, "Dashboard"); await wait(p, 800); return clean(await S(p).innerText()).match(/RELATIONSHIPS ([\d,—]+) total references/)?.[1]; };
+await run("dsh-rel", async (b) => {
+  const { page: p } = await open(b, "dashboard");
+  await wait(p, 1200);
+  await check("DSH-10", p, async () => {
+    const c0 = clean(await S(p).innerText()).match(/RELATIONSHIPS ([\d,—]+) total references/)?.[1];
+    await p.getByRole("button", { name: "Library" }).first().click(); await wait(p, 1500);
+    await p.getByRole("button", { name: "Open", exact: true }).nth(5).click(); await wait(p, 1500);
+    await p.getByRole("tab", { name: /^Relationships/ }).first().click().catch(async () => p.getByRole("button", { name: /^Relationships/ }).first().click()); await wait(p, 1000);
+    const before = await p.locator("body").innerText();
+    await p.getByRole("button", { name: "Edit", exact: true }).last().click(); await wait(p, 800);
+    await p.getByRole("button", { name: "Create relationship" }).click(); await wait(p, 800);
+    await p.getByRole("dialog").last().getByRole("button", { name: "Juan Carlos Abella" }).click(); await wait(p, 600);
+    await p.getByRole("dialog").last().getByRole("button", { name: "Mentions", exact: true }).click(); await wait(p, 300);
+    await p.getByRole("dialog").last().getByRole("button", { name: "Create relationship" }).click(); await wait(p, 800);
+    await sh(p, "DSH-10-created");
+    await p.getByRole("button", { name: "Save", exact: true }).last().click(); await wait(p, 800);
+    const c1 = await relCount(p);
+    await sh(p, "DSH-10-after-add");
+    // remove: back to the entity
+    await p.getByRole("button", { name: "Library" }).first().click(); await wait(p, 1500);
+    await p.getByRole("button", { name: "Open", exact: true }).nth(5).click(); await wait(p, 1500);
+    await p.getByRole("tab", { name: /^Relationships/ }).first().click().catch(async () => p.getByRole("button", { name: /^Relationships/ }).first().click()); await wait(p, 1000);
+    await p.getByRole("button", { name: "Edit", exact: true }).last().click(); await wait(p, 800);
+    await p.getByRole("button", { name: "Expand all" }).last().click(); await wait(p, 600);
+    await sh(p, "DSH-10-expanded");
+    await p.getByRole("checkbox", { name: "Select relationship" }).nth(1).click(); await wait(p, 400);
+    await sh(p, "DSH-10-ticked");
+    await p.getByRole("button", { name: /^Delete/ }).last().click(); await wait(p, 600);
+    const dtxt = clean(await p.locator("[data-component=ConfirmDelete],[data-component=ConfirmDialog]").last().innerText().catch(() => "no dialog"));
+    const cd = p.locator("[data-component=ConfirmDelete],[data-component=ConfirmDialog]").last();
+    if (await cd.count()) await cd.locator("[data-part=confirm]").or(cd.getByRole("button", { name: /^Delete/ }).last()).first().click();
+    await wait(p, 600);
+    await p.getByRole("button", { name: "Save", exact: true }).last().click(); await wait(p, 800);
+    const c2 = await relCount(p);
+    await sh(p, "DSH-10-after-remove");
+    const ok = c0 === "550" && c1 === "551" && c2 === "550";
+    return [ok, `Dashboard Relationships card (total references) before ${c0}; after adding one "Mentions" reference to Juan Carlos Abella from Hearing 8 and Saving ${c1}; after deleting that reference (dialog "${dtxt.slice(0, 120)}") and Saving ${c2}; the card is "Relationships" with caption "total references"`, "DSH-10"];
+  });
+});

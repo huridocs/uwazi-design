@@ -1,0 +1,20 @@
+[
+ {
+  "id": "ACT-19",
+  "res": "FAIL",
+  "ev": "390x844 touch: horizontal overflow 0px (after expand 0px). Row children visible: [{\"t\":\"\",\"shown\":true},{\"t\":\"UPDATE\",\"shown\":true},{\"t\":\"Updated entity “Velásquez-Rodríguez v. H\",\"shown\":true},{\"t\":\"admin\",\"shown\":false},{\"t\":\"2026-06-15 18:42\",\"shown\":false}] (user and time are display:none on phone; expected on a second line under the pill and description). Filters reachable by tap: Action select options [\"All actions\",\"CREATE\",\"UPDATE\",\"DELETE\",\"MIGRATE\"], CREATE leaves 2 rows. Expanding by tap works (expanded text \"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” Action UPDATE Summary Updated entity “Velásquez-Rodríguez v. Hon\"). Export button count 0; footer \"7 events\".",
+  "shot": "acceptance-run-1-shots/ACT-19-phone.png"
+ },
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "Phone 390x844: no horizontal scroll (0px) and filters/expand work by touch, but each row hides User and Timestamp (visible only after expanding) and the page has no Export (see ACT-19).",
+  "shot": "acceptance-run-1-shots/ACT-19-phone.png"
+ },
+ {
+  "id": "X-10",
+  "res": "NOT DRIVEABLE",
+  "ev": "The seed log always has 7 rows and the page has no delete or clear, so a truly empty log cannot be reached (page code would say \"No activity yet\"). The zero-result state reachable by search reads \"Nothing matches “zzz” Clear search\" (a no-match state, a different case; see ACT-16).",
+  "shot": "acceptance-run-1-shots/X-10-act.png"
+ }
+]

@@ -1,0 +1,14 @@
+[
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe: list [\"color-contrast (serious) x3: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-p [#059669 on #d1fae5 = 3.32] | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-p [#059669 on #d1fae5 = 3.32] | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-p [#059669 on #d1fae5 = 3.32]\",\"empty-table-header (minor) x1: th:nth-child(4)\"]; picker [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[48rem\\\\] > .border-b\"]; editor [\"color-contrast (serious) x13: div:nth-child(10) [#777777 on #ffffff = 4.47] | div:nth-child(11) [#777777 on #ffffff = 4.47] | div:nth-child(12) [#777777 on #ffffff = 4.47]\"]; discard [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > .border-b[data-part=\\\"header\\\"]\"]; palette [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[40rem\\\\] > .border-b[data-part=\\\"header\\\"]\"]. Picker: focus moved into dialog true, dialog name \"modal-:r15:\", Escape closed it (true) and focus returned to \"Add page\". Discard confirm closed by Escape leaving the editor open (true). Row buttons unique (Edit/Delete <title>). Editor inputs without a label: 0. No Publish/Restore dialogs exist to test.",
+  "shot": "acceptance-run-1-shots/X-07-pag.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "Status pills (Draft, Published, Published · edited / draft has changes) axe color-contrast: list light [\"Published fg #059669 on #d1fae5 = 3.32:1\"]; editor footer light []; list dark [\"Published fg #059669 on #064e3b = 2.57:1\",\"Published · edited fg #059669 on #064e3b = 2.57:1\"]; editor footer dark [].",
+  "shot": "acceptance-run-1-shots/X-08-pag-dark.png"
+ }
+]

@@ -1,0 +1,1127 @@
+[
+ {
+  "id": "event",
+  "name": "Event",
+  "color": "#B5483A",
+  "isDefault": true,
+  "commonProperties": [
+   {
+    "id": "event:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "event:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "event:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "event:summary",
+    "name": "summary",
+    "label": "Summary",
+    "type": "markdown",
+    "showInCard": true,
+    "fullWidth": true
+   },
+   {
+    "id": "event:when",
+    "name": "when",
+    "label": "When",
+    "type": "daterange",
+    "required": true,
+    "showInCard": true,
+    "filter": true,
+    "defaultfilter": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "event:precision",
+    "name": "precision",
+    "label": "Time precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "event:event_type",
+    "name": "event_type",
+    "label": "Event type",
+    "type": "select",
+    "content": "event_types",
+    "showInCard": true,
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "event:phase",
+    "name": "phase",
+    "label": "Phase",
+    "type": "select",
+    "content": "phases",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "event:reported_fatalities",
+    "name": "reported_fatalities",
+    "label": "Reported fatalities",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "event:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "event:occurred_at",
+    "name": "occurred_at",
+    "label": "Location",
+    "type": "relationship",
+    "content": "location",
+    "relationType": "occurred_at",
+    "showInCard": true
+   },
+   {
+    "id": "event:organised_by",
+    "name": "organised_by",
+    "label": "Organised by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "organised_by"
+   },
+   {
+    "id": "event:involved",
+    "name": "involved",
+    "label": "Involved",
+    "type": "relationship",
+    "content": "",
+    "relationType": "involved"
+   },
+   {
+    "id": "event:responded_by",
+    "name": "responded_by",
+    "label": "Security and official response",
+    "type": "relationship",
+    "content": "organisation",
+    "relationType": "responded_by"
+   },
+   {
+    "id": "event:led_to",
+    "name": "led_to",
+    "label": "Led to",
+    "type": "relationship",
+    "content": "event",
+    "relationType": "led_to"
+   },
+   {
+    "id": "event:part_of",
+    "name": "part_of",
+    "label": "Part of",
+    "type": "relationship",
+    "content": "event",
+    "relationType": "part_of"
+   }
+  ]
+ },
+ {
+  "id": "person",
+  "name": "Person",
+  "color": "#3B5B8C",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "person:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "person:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "person:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "person:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "person:roles",
+    "name": "roles",
+    "label": "Roles",
+    "type": "multiselect",
+    "content": "person_roles",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "person:profile",
+    "name": "profile",
+    "label": "Profile",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "person:public_status",
+    "name": "public_status",
+    "label": "Public status",
+    "type": "select",
+    "content": "public_status",
+    "filter": true
+   },
+   {
+    "id": "person:member_of",
+    "name": "member_of",
+    "label": "Member of",
+    "type": "relationship",
+    "content": "organisation",
+    "relationType": "member_of"
+   },
+   {
+    "id": "person:held_office",
+    "name": "held_office",
+    "label": "Offices held",
+    "type": "relationship",
+    "content": "organisation",
+    "relationType": "held_office",
+    "showInCard": true
+   },
+   {
+    "id": "person:succeeded",
+    "name": "succeeded",
+    "label": "Succeeded",
+    "type": "relationship",
+    "content": "person",
+    "relationType": "succeeded"
+   }
+  ]
+ },
+ {
+  "id": "organisation",
+  "name": "Organisation",
+  "color": "#5B6B3A",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "organisation:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "organisation:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "organisation:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "organisation:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "organisation:org_type",
+    "name": "org_type",
+    "label": "Organisation type",
+    "type": "select",
+    "content": "org_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "organisation:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "organisation:website",
+    "name": "website",
+    "label": "Official website",
+    "type": "link"
+   },
+   {
+    "id": "organisation:part_of_org",
+    "name": "part_of_org",
+    "label": "Part of",
+    "type": "relationship",
+    "content": "organisation",
+    "relationType": "part_of_org"
+   }
+  ]
+ },
+ {
+  "id": "location",
+  "name": "Location",
+  "color": "#8A6D2F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "location:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "location:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "location:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "location:location_type",
+    "name": "location_type",
+    "label": "Location type",
+    "type": "select",
+    "content": "location_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "location:geolocation",
+    "name": "geolocation",
+    "label": "Coordinates",
+    "type": "geolocation",
+    "showInCard": true
+   },
+   {
+    "id": "location:coordinate_basis",
+    "name": "coordinate_basis",
+    "label": "Coordinate basis",
+    "type": "text"
+   },
+   {
+    "id": "location:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "location:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "location:located_in",
+    "name": "located_in",
+    "label": "Located in",
+    "type": "relationship",
+    "content": "location",
+    "relationType": "located_in"
+   }
+  ]
+ },
+ {
+  "id": "source",
+  "name": "Source",
+  "color": "#6B4F8C",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "source:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "source:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "source:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "source:publisher",
+    "name": "publisher",
+    "label": "Publisher",
+    "type": "text",
+    "required": true,
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "source:publisher_type",
+    "name": "publisher_type",
+    "label": "Publisher type",
+    "type": "select",
+    "content": "publisher_types",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "source:medium",
+    "name": "medium",
+    "label": "Medium",
+    "type": "select",
+    "content": "media",
+    "filter": true
+   },
+   {
+    "id": "source:published",
+    "name": "published",
+    "label": "Published",
+    "type": "date",
+    "showInCard": true,
+    "prioritySorting": true,
+    "filter": true
+   },
+   {
+    "id": "source:accessed",
+    "name": "accessed",
+    "label": "Accessed",
+    "type": "date"
+   },
+   {
+    "id": "source:url",
+    "name": "url",
+    "label": "URL",
+    "type": "link",
+    "required": true
+   },
+   {
+    "id": "source:language",
+    "name": "language",
+    "label": "Language",
+    "type": "select",
+    "content": "languages"
+   },
+   {
+    "id": "source:syndicated_from",
+    "name": "syndicated_from",
+    "label": "Syndicated from",
+    "type": "text"
+   },
+   {
+    "id": "source:archived_url",
+    "name": "archived_url",
+    "label": "Archived copy",
+    "type": "link"
+   },
+   {
+    "id": "source:reports_on",
+    "name": "reports_on",
+    "label": "Reports on",
+    "type": "relationship",
+    "content": "",
+    "relationType": "reports_on"
+   },
+   {
+    "id": "source:supports",
+    "name": "supports",
+    "label": "Supports claims",
+    "type": "relationship",
+    "content": "claim",
+    "relationType": "supports"
+   },
+   {
+    "id": "source:disputes",
+    "name": "disputes",
+    "label": "Disputes claims",
+    "type": "relationship",
+    "content": "claim",
+    "relationType": "disputes"
+   },
+   {
+    "id": "source:geolocates",
+    "name": "geolocates",
+    "label": "Geolocates",
+    "type": "relationship",
+    "content": "location",
+    "relationType": "geolocates"
+   }
+  ]
+ },
+ {
+  "id": "claim",
+  "name": "Claim",
+  "color": "#B8860B",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "claim:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "claim:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "claim:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "claim:statement",
+    "name": "statement",
+    "label": "Statement",
+    "type": "markdown",
+    "required": true,
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "claim:claim_type",
+    "name": "claim_type",
+    "label": "Claim type",
+    "type": "select",
+    "content": "claim_types",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "claim:verification_status",
+    "name": "verification_status",
+    "label": "Verification status",
+    "type": "select",
+    "content": "verification_status",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "claim:asserted_on",
+    "name": "asserted_on",
+    "label": "Asserted on",
+    "type": "date",
+    "prioritySorting": true
+   },
+   {
+    "id": "claim:figure",
+    "name": "figure",
+    "label": "Figure",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "claim:unit",
+    "name": "unit",
+    "label": "Figure unit",
+    "type": "select",
+    "content": "figure_units",
+    "filter": true
+   },
+   {
+    "id": "claim:unit_detail",
+    "name": "unit_detail",
+    "label": "Unit detail",
+    "type": "text"
+   },
+   {
+    "id": "claim:qualifier",
+    "name": "qualifier",
+    "label": "Figure qualifier",
+    "type": "select",
+    "content": "figure_qualifiers"
+   },
+   {
+    "id": "claim:scope",
+    "name": "scope",
+    "label": "Figure scope",
+    "type": "text",
+    "filter": true
+   },
+   {
+    "id": "claim:as_of",
+    "name": "as_of",
+    "label": "Figure as of",
+    "type": "date",
+    "filter": true
+   },
+   {
+    "id": "claim:as_of_time",
+    "name": "as_of_time",
+    "label": "Time of day",
+    "type": "text"
+   },
+   {
+    "id": "claim:as_of_basis",
+    "name": "as_of_basis",
+    "label": "As-of basis",
+    "type": "select",
+    "content": "as_of_bases"
+   },
+   {
+    "id": "claim:figure_more",
+    "name": "figure_more",
+    "label": "Other figures in the statement",
+    "type": "text",
+    "fullWidth": true
+   },
+   {
+    "id": "claim:verification_note",
+    "name": "verification_note",
+    "label": "Verification note",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "claim:claimed_by",
+    "name": "claimed_by",
+    "label": "Claimed by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "claimed_by"
+   },
+   {
+    "id": "claim:concerns",
+    "name": "concerns",
+    "label": "Concerns",
+    "type": "relationship",
+    "content": "",
+    "relationType": "concerns"
+   },
+   {
+    "id": "claim:conflicts_with",
+    "name": "conflicts_with",
+    "label": "Conflicts with",
+    "type": "relationship",
+    "content": "claim",
+    "relationType": "conflicts_with"
+   }
+  ]
+ },
+ {
+  "id": "action",
+  "name": "Official action",
+  "color": "#2F7F7F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "action:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "action:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "action:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "action:action_type",
+    "name": "action_type",
+    "label": "Action type",
+    "type": "select",
+    "content": "action_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "action:date",
+    "name": "date",
+    "label": "Date",
+    "type": "date",
+    "required": true,
+    "showInCard": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "action:precision",
+    "name": "precision",
+    "label": "Time precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "action:status",
+    "name": "status",
+    "label": "Status",
+    "type": "select",
+    "content": "action_status",
+    "filter": true
+   },
+   {
+    "id": "action:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "action:document_url",
+    "name": "document_url",
+    "label": "Document",
+    "type": "link"
+   },
+   {
+    "id": "action:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "filter": true
+   },
+   {
+    "id": "action:issued_by",
+    "name": "issued_by",
+    "label": "Issued by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "issued_by"
+   },
+   {
+    "id": "action:targets",
+    "name": "targets",
+    "label": "Concerns",
+    "type": "relationship",
+    "content": "",
+    "relationType": "targets"
+   },
+   {
+    "id": "action:in_response_to",
+    "name": "in_response_to",
+    "label": "In response to",
+    "type": "relationship",
+    "content": "",
+    "relationType": "in_response_to"
+   }
+  ]
+ },
+ {
+  "id": "media",
+  "name": "Media item",
+  "color": "#4F6F8F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "media:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "media:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "media:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "media:caption",
+    "name": "caption",
+    "label": "What it shows",
+    "type": "markdown",
+    "required": true,
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "media:media_kind",
+    "name": "media_kind",
+    "label": "Kind",
+    "type": "select",
+    "content": "media_kinds",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "media:file",
+    "name": "file",
+    "label": "Bundled file",
+    "type": "image",
+    "style": "contain"
+   },
+   {
+    "id": "media:embed",
+    "name": "embed",
+    "label": "Embedded media",
+    "type": "media"
+   },
+   {
+    "id": "media:page_url",
+    "name": "page_url",
+    "label": "Original page",
+    "type": "link",
+    "required": true
+   },
+   {
+    "id": "media:platform",
+    "name": "platform",
+    "label": "Platform",
+    "type": "select",
+    "content": "platforms",
+    "filter": true
+   },
+   {
+    "id": "media:outlet",
+    "name": "outlet",
+    "label": "Outlet or channel",
+    "type": "text",
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "media:creator",
+    "name": "creator",
+    "label": "Creator",
+    "type": "text"
+   },
+   {
+    "id": "media:rights",
+    "name": "rights",
+    "label": "Rights",
+    "type": "select",
+    "content": "rights",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "media:licence",
+    "name": "licence",
+    "label": "Licence",
+    "type": "text"
+   },
+   {
+    "id": "media:licence_url",
+    "name": "licence_url",
+    "label": "Licence text",
+    "type": "link"
+   },
+   {
+    "id": "media:attribution",
+    "name": "attribution",
+    "label": "Attribution line",
+    "type": "text",
+    "fullWidth": true
+   },
+   {
+    "id": "media:recorded",
+    "name": "recorded",
+    "label": "Recorded",
+    "type": "date",
+    "filter": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "media:recorded_precision",
+    "name": "recorded_precision",
+    "label": "Recorded: precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "media:published",
+    "name": "published",
+    "label": "Published",
+    "type": "date",
+    "filter": true
+   },
+   {
+    "id": "media:duration_seconds",
+    "name": "duration_seconds",
+    "label": "Duration in seconds",
+    "type": "numeric"
+   },
+   {
+    "id": "media:segment_start",
+    "name": "segment_start",
+    "label": "Relevant segment starts (s)",
+    "type": "numeric"
+   },
+   {
+    "id": "media:segment_end",
+    "name": "segment_end",
+    "label": "Relevant segment ends (s)",
+    "type": "numeric"
+   },
+   {
+    "id": "media:language",
+    "name": "language",
+    "label": "Language",
+    "type": "select",
+    "content": "languages"
+   },
+   {
+    "id": "media:content_warning",
+    "name": "content_warning",
+    "label": "Content warning",
+    "type": "select",
+    "content": "content_warnings",
+    "filter": true
+   },
+   {
+    "id": "media:geolocation",
+    "name": "geolocation",
+    "label": "Place shown",
+    "type": "geolocation",
+    "showInCard": true
+   },
+   {
+    "id": "media:location_method",
+    "name": "location_method",
+    "label": "How place and time were established",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "media:verified_by",
+    "name": "verified_by",
+    "label": "Established by",
+    "type": "text"
+   },
+   {
+    "id": "media:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "media_verification",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "media:file_size_bytes",
+    "name": "file_size_bytes",
+    "label": "File size in bytes",
+    "type": "numeric"
+   },
+   {
+    "id": "media:depicts",
+    "name": "depicts",
+    "label": "Shows",
+    "type": "relationship",
+    "content": "",
+    "relationType": "depicts"
+   },
+   {
+    "id": "media:documents",
+    "name": "documents",
+    "label": "Documents",
+    "type": "relationship",
+    "content": "",
+    "relationType": "documents"
+   },
+   {
+    "id": "media:published_in",
+    "name": "published_in",
+    "label": "Published in",
+    "type": "relationship",
+    "content": "source",
+    "relationType": "published_in"
+   },
+   {
+    "id": "media:geolocated_by",
+    "name": "geolocated_by",
+    "label": "Geolocated by",
+    "type": "relationship",
+    "content": "source",
+    "relationType": "geolocated_by"
+   }
+  ]
+ },
+ {
+  "id": "casualty",
+  "name": "Casualty record",
+  "color": "#7A2E2E",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "casualty:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "casualty:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "casualty:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "casualty:full_name",
+    "name": "full_name",
+    "label": "Name as reported",
+    "type": "text",
+    "showInCard": true
+   },
+   {
+    "id": "casualty:age",
+    "name": "age",
+    "label": "Age",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "casualty:gender",
+    "name": "gender",
+    "label": "Gender",
+    "type": "select",
+    "content": "gender",
+    "filter": true
+   },
+   {
+    "id": "casualty:outcome",
+    "name": "outcome",
+    "label": "Outcome",
+    "type": "select",
+    "content": "outcomes",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "casualty:cause",
+    "name": "cause",
+    "label": "Cause as reported",
+    "type": "select",
+    "content": "causes",
+    "filter": true
+   },
+   {
+    "id": "casualty:occurred",
+    "name": "occurred",
+    "label": "Date of incident or death",
+    "type": "date",
+    "showInCard": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "casualty:identity_status",
+    "name": "identity_status",
+    "label": "Identity status",
+    "type": "select",
+    "content": "identity_status"
+   },
+   {
+    "id": "casualty:described_as",
+    "name": "described_as",
+    "label": "Described in reporting as",
+    "type": "text"
+   },
+   {
+    "id": "casualty:district",
+    "name": "district",
+    "label": "District, as reported",
+    "type": "text"
+   },
+   {
+    "id": "casualty:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "filter": true
+   },
+   {
+    "id": "casualty:casualty_of",
+    "name": "casualty_of",
+    "label": "Event",
+    "type": "relationship",
+    "content": "event",
+    "relationType": "casualty_of",
+    "showInCard": true
+   },
+   {
+    "id": "casualty:incident_at",
+    "name": "incident_at",
+    "label": "Incident location",
+    "type": "relationship",
+    "content": "location",
+    "relationType": "incident_at"
+   },
+   {
+    "id": "casualty:treated_at",
+    "name": "treated_at",
+    "label": "Treated at",
+    "type": "relationship",
+    "content": "location",
+    "relationType": "treated_at"
+   }
+  ]
+ }
+]

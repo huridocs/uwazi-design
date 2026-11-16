@@ -1,0 +1,146 @@
+[
+ {
+  "id": "TRN-01",
+  "res": "FAIL",
+  "ev": "title \"Translations\" ok; groups \"System translations\"/\"Content translations\" present=false; one flat table, columns [\"CONTEXT\",\"TYPE\",\"KEYS\"] (spec \"Name\",\"Type\"); contexts: User Interface, Court Case, Person, Violation types, Menu (no Filters, no relationship types); also saw a type-filter select and \"Import translations (CSV)\" lead button (spec G7: no CSV import button)",
+  "shot": "TRN-01.png"
+ },
+ {
+  "id": "TRN-02",
+  "res": "FAIL",
+  "ev": "header \"Context\" (spec \"Name\"); order default [\"User Interface\",\"Court Case\",\"Person\",\"Violation types\",\"Menu\"] (not sorted ascending by name); after clicking Context header [\"User Interface\",\"Court Case\",\"Person\",\"Violation types\",\"Menu\"]; after clicking Type [\"User Interface\",\"Court Case\",\"Person\",\"Violation types\",\"Menu\"] (no sorting toggles); pills [\"System:bg-carbon-tint\",\"Template:bg-warm\",\"Template:bg-warm\",\"Thesaurus:bg-warm\",\"Menu:bg-warm\"] (System has carbon style bg-carbon-tint, others bg-warm: not one warm style); row click opens editor (ok, no visible Translate button: true)",
+  "shot": "TRN-01.png"
+ },
+ {
+  "id": "TRN-PO1",
+  "res": "FAIL",
+  "ev": "list has Keys column (ok) but counts disagree with editor: User Interface says 412 and editor shows 6 rows (see TRN-08); Court Case says 12 and editor 4; header says \"Keys\" in list and \"Term\"/\"No terms yet\"/\"Search terms\" in editor",
+  "shot": ""
+ },
+ {
+  "id": "X-10",
+  "res": "NOT DRIVEABLE",
+  "ev": "zero-row state unreachable: contexts are a static seed (cannot delete or filter to zero except by search). A search miss \"zzzz\" shows \"Nothing matches “zzzz”\" with \"Clear search\" (not the \"No translation contexts\" empty state)",
+  "shot": "X-10-trn.png"
+ },
+ {
+  "id": "TRN-03",
+  "res": "FAIL",
+  "ev": "deleted 5 menu links (rows left 0); Translations list afterwards still holds [\"ContextTypeKeys\",\"User InterfaceSystem412\",\"Court CaseTemplate12\",\"PersonTemplate8\",\"Violation typesThesaurus24\",\"MenuMenu6\"] (Menu context still listed); static seed. \"term N\" strings: Court Case editor keys [\"TERM\",\"Case number\",\"Date filed\",\"Respondent state\",\"Status\"]; Person/Violation types contexts generate \"<name> term N\" keys (see TRN-04/06)",
+  "shot": ""
+ },
+ {
+  "id": "TRN-04",
+  "res": "FAIL",
+  "ev": "Person context keys [\"Person term 1\",\"Person term 2\",\"Person term 3\",\"Person term 4\",\"Person term 5\",\"Person term 6\",\"Person term 7\",\"Person term 8\"] (8 keys, generated \"Person term N\", spec: template name, title label and each property label; count = properties + 2); Court Case keys [\"Case number\",\"Date filed\",\"Respondent state\",\"Status\"] (4 keys, none is the template name or a \"Title\" label); non-English cells empty not equal to English text",
+  "shot": ""
+ },
+ {
+  "id": "TRN-06",
+  "res": "FAIL",
+  "ev": "Violation types context keys [\"Violation types term 1\",\"Violation types term 2\",\"Violation types term 3\",\"Violation types term 4\",\"Violation types term 5\",\"Violation types term 6\"]... (10 generated \"term N\" keys; list says 24); not the thesaurus name plus value labels. Add-value/rename sync not tested because keys do not derive from thesaurus data",
+  "shot": ""
+ },
+ {
+  "id": "TRN-07",
+  "res": "FAIL",
+  "ev": "Menu context keys [\"Library\",\"About\",\"Resources\",\"Contact\"] (4 keys; Menu page has 6 links: Library, About, Resources, Methodology, Contact; Methodology missing; groups in same shape); no relationship-type context and no Filters context exist in the list",
+  "shot": ""
+ },
+ {
+  "id": "TRN-08",
+  "res": "FAIL",
+  "ev": "User Interface context has 6 key rows [\"Library\",\"Search\",\"Filters\",\"Upload\",\"Save\",\"Cancel\"] (spec 100 to 200 real UI strings sorted case-insensitively by key); list claims 412",
+  "shot": ""
+ },
+ {
+  "id": "TRN-09",
+  "res": "FAIL",
+  "ev": "headers [\"TERM\",\"ENGLISH Source\",\"SPANISH\",\"FRENCH\",\"ARABIC\",\"PORTUGUESE\"]: language headers show English names (no autonym \"Español\" + code pill \"ES\", code pill present=false); first column heading \"TERM\" (spec \"key\"); source column labelled \"English Source\" (not primary pill); no clear X on cell inputs (false); header position static/static; footer buttons [\"Back\",\"Translations\",\"Cancel\",\"Save\"]; breadcrumb \"Translations\" present",
+  "shot": "TRN-09.png"
+ },
+ {
+  "id": "TRN-10",
+  "res": "FAIL",
+  "ev": "cleared \"Library\" in Spanish and pressed Save: message \"This field is required\" present=false; empty-count shown=false; editor closed (Save wrote and closed); new Beacon entries [\"User Interface translations saved just now\",\"Entity saved successfully. All fields were valid. just now\"]",
+  "shot": "TRN-10.png"
+ },
+ {
+  "id": "TRN-11",
+  "res": "FAIL",
+  "ev": "no per-cell status pill or dot exists (status elements=0); source column shows \"English Source\" pill only; typing a different text then the exact source text changes nothing visible",
+  "shot": "TRN-11.png"
+ },
+ {
+  "id": "TRN-12",
+  "res": "FAIL",
+  "ev": "no per-language progress (\"ES 3 of 20\") in the editor header; editor header shows \"Source\" tag only (text: Translations / User Interface Translate each term into your active languages. The source language is shown for reference. TERM ENGLISH Source SPANISH FRENCH ARA); list shows only Keys count, no per-language progress",
+  "shot": "TRN-11.png"
+ },
+ {
+  "id": "TRN-13",
+  "res": "FAIL",
+  "ev": "no \"Untranslated Terms\" toggle or language filter in the editor (toolbar has only a \"Search terms\" field)",
+  "shot": "TRN-11.png"
+ },
+ {
+  "id": "TRN-14",
+  "res": "PASS",
+  "ev": "total 6; \"Lib\" -> 1 rows; \"Biblioteca\" (value in pt) -> 1; \"Bibliot\" -> 1; \"zzz\" -> 0 rows, empty text \"\" ; clear -> 6. Search-row height 32",
+  "shot": "TRN-14.png"
+ },
+ {
+  "id": "TRN-18",
+  "res": "FAIL",
+  "ev": "no \"Untranslated Terms\" toggle (TRN-13), so neither \"There are no untranslated terms\" nor a no-keys message can appear; zzz search shows \"No terms yet\" (generic, also shown for a search miss)",
+  "shot": "TRN-14.png"
+ },
+ {
+  "id": "TRN-19",
+  "res": "NOT DRIVEABLE",
+  "ev": "User Interface context has only 6 key rows in the seed (list says 412); virtualization (far fewer rendered rows than total) cannot be observed. Rows rendered = rows total (TRN-08)",
+  "shot": ""
+ },
+ {
+  "id": "TRN-05",
+  "res": "SKIP",
+  "ev": "Needs M8 (Templates on the store)",
+  "shot": ""
+ },
+ {
+  "id": "TRN-15",
+  "res": "FAIL",
+  "ev": "Save disabled before edit=true, after edit=false; after Save the editor closes (spec: stays open and reads clean); Beacon new entries [\"User Interface translations saved just now\",\"Entity saved successfully. All fields were valid. just now\"]; Activity log []; reopening shows es \"Library\" cell = \"Biblioteca\" (typed \"Biblioteca X\"), after rail round trip \"Biblioteca\", after reload \"Biblioteca\"",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "saved es value \"Biblioteca X\" is \"Biblioteca\" on immediate reopen, \"Biblioteca\" after rail round trip, \"Biblioteca\" after reload (editor rebuilds from the static seed; the edit is not stored)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Save added Beacon entries [\"User Interface translations saved just now\",\"Entity saved successfully. All fields were valid. just now\"]; spec text \"Translations saved\"; entry exists as \"<context> translations saved\" if listed (see list) ",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity log after Save: [] (log:false in TranslationEditor)",
+  "shot": ""
+ },
+ {
+  "id": "TRN-16",
+  "res": "FAIL",
+  "ev": "edited es \"Library\" and saved: visible UI strings unchanged (Settings rail label unchanged) but the grid does not reflect the edit afterwards (\"Biblioteca\" on reopen), and en is read-only so the en edit part could not be made",
+  "shot": ""
+ },
+ {
+  "id": "TRN-17",
+  "res": "FAIL",
+  "ev": "see below",
+  "shot": ""
+ }
+]

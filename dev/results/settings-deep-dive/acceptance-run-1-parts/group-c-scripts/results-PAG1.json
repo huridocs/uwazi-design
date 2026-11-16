@@ -1,0 +1,86 @@
+[
+ {
+  "id": "PAG-01",
+  "res": "FAIL",
+  "ev": "Heading \"Pages\" and four rows in seed order ok ([\"About this collection /page/about Published\",\"Methodology /page/methodology Published\",\"Partners /page/partners Draft\",\"Contact /page/contact Published\"]). Differences: row checkboxes 0 (expected one per row); URL cell reads \"/page/<slug>\" e.g. \"/page/about\" (expected /page/<id>/<slug>); no View or Edit buttons per row (View buttons 0; the row opens the editor, plus an icon \"Delete <title>\"); column headers [\"TITLE\",\"URL\",\"STATUS\",\"\"] (4th header is empty text); status pills Published/Draft present; footer \"Add page\" ok. Row button names unique (true): [\"Edit About this collection\",\"Delete About this collection\",\"Edit Methodology\",\"Delete Methodology\"].",
+  "shot": "acceptance-run-1-shots/PAG-01.png"
+ },
+ {
+  "id": "PAG-02",
+  "res": "FAIL",
+  "ev": "\"meth\" -> [\"Methodology\"]; \"/partners\" -> [] (expected Partners: the URL is searched without its leading slash); \"partners\" -> [\"Partners\"]; clearing -> 4 rows. No-match state for \"zzz\" reads \"Nothing matches “zzz” Clear search\" (expected \"No pages match “zzz”\" with a way to clear).",
+  "shot": "acceptance-run-1-shots/PAG-02.png"
+ },
+ {
+  "id": "X-11",
+  "res": "PASS",
+  "ev": "Search row is mounted on load (placeholder \"Search pages…\", wrapper min-h-8); typing filters rows (\"meth\" -> Methodology only), clearing restores 4 rows. Row height stays fixed at the empty state (see PAG-02 shot).",
+  "shot": "acceptance-run-1-shots/PAG-02.png"
+ },
+ {
+  "id": "::errs-list",
+  "res": "INFO",
+  "ev": "[]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-06",
+  "res": "FAIL",
+  "ev": "Cannot tick rows: 0 checkboxes (list has no selection column or header checkbox); a plain click on a row opens its editor and Ctrl-click does not select (editor open after Ctrl-click: 0). Footer stays \"Add page\" with no \"Selected n of total\" and no bulk Delete; delete is a per-row icon.",
+  "shot": "acceptance-run-1-shots/PAG-06.png"
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "The Pages list has no row selection: no checkboxes, no \"Selected n of total\" bar, no bulk Delete (see PAG-06).",
+  "shot": ""
+ },
+ {
+  "id": "PAG-04",
+  "res": "FAIL",
+  "ev": "Footer \"Add page\" opens a Modal \"New page\" listing 8 starters (Legal, Research, Numbers, Images, Index, Editorial, Monitoring, Campaign) ok. Choosing the first and \"Create page\" opens the editor with header \"Case law\" / Title field \"Case law\" (expected \"New page\"). The editor footer has [\"Discard\",\"Save draft\",\"Publish\"]: no Cancel (cancel buttons 0); left with the back arrow, dialogs open: []. The list now has 5 rows (expected 4): the page was added to the list at \"Create page\", before any Save.",
+  "shot": "acceptance-run-1-shots/PAG-04.png"
+ },
+ {
+  "id": "PAG-05",
+  "res": "FAIL",
+  "ev": "Before first Save: EN title \"Case law\", ES title \"Jurisprudencia\" (expected \"New page\" in every language); Publish disabled false (expected disabled), Restore buttons 0 (no Restore control exists). After \"Save draft\" with Title \"QA page\": editor stays open (1), Publish disabled false; list has 5 rows [\"About this collection\",\"Methodology /page/methodology Published\",\"Partners /page/partners Draft\",\"Contact /page/contact Published\",\"Case law /page/legal\"] (the row for the new page was created at \"Create page\" and still carries the starter's title, not \"QA page\"). Notifications: [\"Uploading document batch… Running velasquez-corpus.csv 77%\",\"Processing PDFs complete. 12 items processed. just now\",\"Draft saved — the public page is unchanged just now\"].",
+  "shot": "acceptance-run-1-shots/PAG-05.png"
+ },
+ {
+  "id": "PAG-07",
+  "res": "FAIL",
+  "ev": "Delete dialog text: \"Delete page Delete “Methodology”? Linked from the menu: Methodology. The link stays and will lead nowhere. Cancel Delete\". Cancel keeps 4 rows. Confirm removes the row ([\"About\",\"Partners\",\"Contact\"]); notifications [\"Uploading document batch… Running velasquez-corpus.csv 70%\",\"Processing PDFs… Finishing 12 files 100%\",\"Methodology deleted just now\"] (expected \"Deleted successfully.\"). Menu page afterwards: [\"LabelURL\",\"Library/library\",\"About/page/about\",\"ResourcesGroup\",\"Methodology/page/methodology\",\"Contact/page/contact\"]. Activity log: [].",
+  "shot": "acceptance-run-1-shots/PAG-07.png"
+ },
+ {
+  "id": "X-05",
+  "res": "PASS",
+  "ev": "Delete of a used page (Methodology) opens a guarded dialog that states the menu usage: \"Delete page Delete “Methodology”? Linked from the menu: Methodology. The link stays and will lead nowhere. Cancel Delete\".",
+  "shot": "acceptance-run-1-shots/PAG-07.png"
+ },
+ {
+  "id": "PAG-08",
+  "res": "FAIL",
+  "ev": "No multi-select (see PAG-06), so Partners and About are deleted one at a time. Partners dialog: \"Delete page Delete “Partners”? Cancel Delete\". About dialog: \"Delete page Delete “About this collection”? Linked from the menu: About. The link stays and will lead nowhere. Cancel Delete\". Expected one dialog \"Do you want to delete the following items?\" with a bullet list of both titles. After both confirms: [\"Methodology\",\"Contact\"]; after reload the list reads [\"About\",\"Methodology\",\"Partners\",\"Contact\"] (expected both still gone).",
+  "shot": "acceptance-run-1-shots/PAG-08.png"
+ },
+ {
+  "id": "PAG-29",
+  "res": "FAIL",
+  "ev": "All four deleted: \"No pages yet A page holds your own content, such as an About page or a methodology. Add page\" (generic fallback copy present: false). After adding one page and searching \"zzz\": \"Nothing matches “zzz” Clear search\" (expected \"No pages match “zzz”\" with a way to clear).",
+  "shot": "acceptance-run-1-shots/PAG-29-empty.png"
+ },
+ {
+  "id": "X-10",
+  "res": "PASS",
+  "ev": "Empty list: \"No pages yet A page holds your own content, such as an About page or a methodology. Add page\" (title naming the object, one-line hint, \"Add page\" action).",
+  "shot": "acceptance-run-1-shots/PAG-29-empty.png"
+ },
+ {
+  "id": "X-13",
+  "res": "PASS",
+  "ev": "Sample rows [\"About\",\"Methodology\",\"Partners\",\"Contact\"]; after switching the data source to CEJIL (pane heading \"Pages\") the list reads [\"Jueces\",\"Old\",\"Tabla\",\"Inicio\",\"Contacto\",\"Instrutivo\"].",
+  "shot": "acceptance-run-1-shots/X-13-pag.png"
+ }
+]

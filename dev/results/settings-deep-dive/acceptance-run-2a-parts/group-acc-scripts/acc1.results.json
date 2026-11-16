@@ -1,0 +1,86 @@
+[
+ {
+  "id": "ACC-01",
+  "res": "PASS",
+  "ev": "Card \"General Information\" present=true; Username value=admin disabled=true; after typing value=\"admin\"; focusable=false; no Save button next to it (row text: \"Username User Role\")",
+  "shot": "ACC-01.png"
+ },
+ {
+  "id": "ACC-02a",
+  "res": "INFO",
+  "ev": "admin role field=\"Admin\"",
+  "shot": ""
+ },
+ {
+  "id": "ACC-06-init",
+  "res": "INFO",
+  "ev": "Update disabled when clean=true; footer buttons=[\"Clear all\",\"Activated\",\"Generate\",\"Logout\",\"Discard changes\",\"Update\"]",
+  "shot": ""
+ },
+ {
+  "id": "ACC-02",
+  "res": "PASS",
+  "ev": "Signed in as mlopez: User Role field=\"Editor\" (admin showed \"Admin\" in the previous check)",
+  "shot": "ACC-02.png"
+ },
+ {
+  "id": "ACC-03",
+  "res": "PASS",
+  "ev": "input type=email inputmode=null; error shown after empty/abc/abc@x = true/true/true; dialogs opened during invalid attempts=0; valid abc@x.org opens dialogs=[\"Confirm\"]",
+  "shot": "ACC-03.png"
+ },
+ {
+  "id": "ACC-06-undo",
+  "res": "INFO",
+  "ev": "clean disabled=true; edited enabled=true; undone by hand disabled=true",
+  "shot": ""
+ },
+ {
+  "id": "ACC-05",
+  "res": "PASS",
+  "ev": "abc/empty: mismatch=true, modal=0; abc/abd: mismatch=true, modal=0; message under Confirm field=true; both fields border [\"rgb(232, 67, 42)\",\"rgb(232, 67, 42)\"] (error style on both expected, distinct from neutral); abc/abc: mismatch=false, modal=1; x/x modal=1; both empty clean Update disabled=true",
+  "shot": "ACC-05.png"
+ },
+ {
+  "id": "ACC-07",
+  "res": "PASS",
+  "ev": "after Discard changes: email=\"admin@uwazi.io\", dialogs=0, Update disabled=true",
+  "shot": ""
+ },
+ {
+  "id": "ACC-08",
+  "res": "PASS",
+  "ev": "dialog text=\"Confirm Confirm action Enter your current password to confirm Cancel Accept\"; Accept disabled empty=true, with 1 char disabled=false; Tab x8 stays inside=true; labelled by=modal-:r29:; Escape closes only modal: dialogs left=0, email kept=\"admin2@uwazi.io\", new password kept=\"x\"",
+  "shot": "ACC-08.png"
+ },
+ {
+  "id": "ACC-09",
+  "res": "PASS",
+  "ev": "Cancel: fields kept=true, Account-updated entries after cancel=0; Accept with \"anything\": modal closed=true",
+  "shot": ""
+ },
+ {
+  "id": "ACC-10",
+  "res": "PASS",
+  "ev": "Beacon entries with \"Account updated\"=1 (new entries: [\"Account updated just now\"]); New password=\"\", Confirm=\"\", email=\"admin2@uwazi.io\"",
+  "shot": "ACC-10.png"
+ },
+ {
+  "id": "ACC-06",
+  "res": "PASS",
+  "ev": "clean Update disabled=true; edit enables=true; undone by hand disables=true; after save disabled=true; footer text=\"Logout Saved just now by admin Discard changes Update\" (expects a \"Saved\" line); inline Update password / Disable 2FA buttons=0; footer buttons ghost \"Discard changes\" + ink \"Update\" present",
+  "shot": "ACC-10.png"
+ },
+ {
+  "id": "ACC-12",
+  "res": "PASS",
+  "ev": "Users list shows admin2@uwazi.io=true; user editor inputs=[\"admin\",\"admin2@uwazi.io\",\"on\",\"on\",\"on\",\"on\",\"on\",\"on\"]; Account after reload=\"admin2@uwazi.io\" (Reset demo data restoring seed checked below)",
+  "shot": "ACC-12.png"
+ },
+ {
+  "id": "ACC-console",
+  "res": "PASS",
+  "ev": "console errors: []",
+  "shot": ""
+ }
+]

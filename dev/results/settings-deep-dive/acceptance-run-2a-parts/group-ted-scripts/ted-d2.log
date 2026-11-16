@@ -1,0 +1,4 @@
+PASS | TED-93 | Relationship type options ["Select...","Cites","Hearing","Judgment","Member of","Mentions","Nationality","Petitioner","Refers to","Relates to","Respondent State","Signed by","Victim"] (registry on Settings > Relationship types: ["Mentions","Relates to","Cites","Refers to","Victim","Petitioner","Respondent State","Judgment","Signed by","Nationality","Member of","Hearing"]). Entities options ["Any entity","Country","Document","Hearing","Judgment","Organization","Person","Right","Violation"] (Court
+locator.click: Timeout 30000ms exceeded. / Call log: / [2m  - waiting for locator('button').filter({ hasText: /^Cancel$/ }).last()[22m / 
+FAIL | TED-103 | Script error while driving: locator.click: Timeout 30000ms exceeded.
+done

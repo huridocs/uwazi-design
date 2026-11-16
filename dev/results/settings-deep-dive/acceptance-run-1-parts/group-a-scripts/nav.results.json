@@ -1,0 +1,116 @@
+[
+ {
+  "id": "NAV-01",
+  "res": "FAIL",
+  "ev": "The catalog (logo click) has no dev panel: no role control (admin/editor/collaborator) and no feature switches; role/feature terms in the page: [\"metadata-extraction:false\",\"paragraphExtraction:false\",\"preserve.host:false\",\"custom JS:false\",\"Dev panel:false\",\"Role:true\"] (matches of \"Role\"/\"custom\" are doc prose only); (the 51 switch/radio controls in the catalog belong to component demos). Catalog sidebar entries start with [\"Tokens mapping\",\"Typography\",\"Global styles\",\"Data seams\",\"Patterns\",\"Component inventory\"]. The only way to change role is signing in as another seed user",
+  "shot": "NAV-01.png"
+ },
+ {
+  "id": "NAV-02",
+  "res": "FAIL",
+  "ev": "Rail structure: [{\"heads\":[\"User\"],\"items\":[\"Account\"]},{\"heads\":[\"System(sr-only)\",\"Collection\",\"Content model\",\"Languages\",\"People\"],\"items\":[\"Dashboard\",\"Collection\",\"Menu\",\"Pages\",\"Templates\",\"Thesauri\",\"Relationship types\",\"Filters\",\"Languages\",\"Translations\",\"Users & Groups\"]},{\"heads\":[\"Tools\",\"ML tools\"],\"items\":[\"Preserve\",\"Activity log\",\"Global CSS & JS\",\"Uploads\",\"Import CSV\",\"Metadata extraction\",\"Paragraph extraction\"]}]. Spec labels: Collection / Content model / Languages / People / Tools only. Found headings: User | System(sr-only)/Collection/Content model/Languages/People | Tools/ML tools: extra \"User\" heading above Account and an \"ML tools\" sub-heading (spec: none), Dashboard sits under Collection (Design's choice). Group contents differ: Collection has Dashboard, Collection, Menu, Pages (Uploads and Global CSS & JS are under Tools); Content model lacks Metadata extraction and Paragraph extraction (they are under Tools / ML tools); Tools holds Preserve, Activity log, Global CSS & JS, Uploads, Import CSV, ML tools items. Data visualizations / New Relationships Migration absent (matches). Each item appears once=true",
+  "shot": "NAV-02.png"
+ },
+ {
+  "id": "NAV-04",
+  "res": "FAIL",
+  "ev": "Active item \"Users & Groups\": background rgb(245, 238, 215) (bg-warm is rgb(252, 250, 248), bg-vellum is rgb(245, 238, 215)), font-weight 600 (spec: bg-warm, no semibold); classes \"bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors bg-vellum text-ink font-semibold\"; items marked current=1; group headings that are buttons or collapse controls=0 (plain labels, matches)",
+  "shot": "NAV-02.png"
+ },
+ {
+  "id": "NAV-03",
+  "res": "FAIL",
+  "ev": "Rail keeps all groups visible when selecting items in three groups (Pages: groups visible=3; Languages: groups visible=3; Activity log: groups visible=3) and the Account page also shows the full rail (3 groups). Navbar however has several entry points: top-bar buttons [\"Library\",\"Sample\",\"Tools\",\"2 tasks running\\n65%\",\"Mark all read\",\"All\\n7\",\"Unread\\n3\",\"Ask Bert\",\"Settings\"] plus a Settings menu listing [\"All\\n7\",\"Unread\\n3\",\"Test RTL layout\\nOFF\",\"English\",\"User settings\",\"System settings\",\"Documentation\",\"Log out\"] (\"User settings\", \"System settings\" and a separate \"Tools\" button), spec: one Settings entry",
+  "shot": "NAV-03.png"
+ },
+ {
+  "id": "NAV-05",
+  "res": "PASS",
+  "ev": "Admin: Dashboard: opens \"Dashboard\"; Users & Groups: opens \"Users & Groups\"; Collection: opens \"Collection\"; Menu: opens \"Menu\"; Pages: opens \"Pages\"; Languages: opens \"Languages\"; Translations: opens \"Translations\"; Filters: opens \"Filters\"; Templates: opens \"Templates\"; Thesauri: opens \"Thesauri\"; Relationship types: opens \"Relationship types\"; Activity log: opens \"Activity log\"; Uploads: opens \"Uploads\"; Import CSV: opens \"Import CSV (CSVs table)\"; Global CSS & JS: opens \"Global CSS & JS\"",
+  "shot": ""
+ },
+ {
+  "id": "NAV-06",
+  "res": "FAIL",
+  "ev": "No dev panel to switch the role, so the role was changed by signing in as mlopez (editor) with Templates as the stored page: rail shows [{\"heads\":[\"User\"],\"items\":[\"Account\"]},{\"heads\":[\"Tools\",\"ML tools\"],\"items\":[\"Metadata extraction\",\"Paragraph extraction\"]}] (spec: Account, Metadata extraction, Paragraph extraction: items match; headings \"User\" and \"Tools\"/\"ML tools\" appear because those groups have items); the open Templates page is replaced silently by the Account page (\"Account Profile The \") and the text \"This page is not available.\" with a link to the first allowed item is not shown (present=false); a live role change while a page is open cannot be driven",
+  "shot": "NAV-06.png"
+ },
+ {
+  "id": "NAV-08",
+  "res": "FAIL",
+  "ev": "Editor with Templates stored: Settings shows \"Account Profile The username you log in \" (Account), no \"This page is not available.\" text (present=false), no link to the first allowed item, no focus move to a heading notice. Placeholder text \"part of the cloning roadmap\" appears only on unbuilt pages (not driven)",
+  "shot": "NAV-06.png"
+ },
+ {
+  "id": "NAV-07",
+  "res": "PASS",
+  "ev": "Collaborator (afarah): rail [{\"heads\":[\"User\"],\"items\":[\"Account\"]}]; only \"Account\" remains and the page works (text starts \"Account Profile The username y\"); no empty group headings rendered (groups without items=0). The role came from sign-in, not the dev panel",
+  "shot": "NAV-07.png"
+ },
+ {
+  "id": "NAV-09",
+  "res": "FAIL",
+  "ev": "No feature flag or switch exists for \"metadata-extraction\" (no dev panel, no setting): \"Metadata extraction\" is always shown for admin and editor; turning it off and on cannot be done",
+  "shot": "NAV-01.png"
+ },
+ {
+  "id": "NAV-10",
+  "res": "FAIL",
+  "ev": "No feature flag or switch exists for \"paragraphExtraction\" (no dev panel, no setting): \"Paragraph extraction\" is always shown for admin and editor; turning it off and on cannot be done",
+  "shot": "NAV-01.png"
+ },
+ {
+  "id": "NAV-11",
+  "res": "FAIL",
+  "ev": "No feature flag or switch exists for \"preserve.host\" (no dev panel, no setting): \"Preserve\" is always shown for admin; turning it off and on cannot be done",
+  "shot": "NAV-01.png"
+ },
+ {
+  "id": "NAV-12",
+  "res": "FAIL",
+  "ev": "Rail label is \"Global CSS & JS\" (matches). The Collection page has no custom-JS control (mentions of custom JS on the page=false); the Global CSS & JS page tabs=[\"CSS\",\"JS\"] and cannot hide the JS tab, since no flag exists",
+  "shot": "NAV-12-collection.png"
+ },
+ {
+  "id": "NAV-13",
+  "res": "PASS",
+  "ev": "Item label \"Documentation\" (spec text \"Uwazi Docs\"), at the rail bottom (box y=752 of 800) with 2 svg icons (external-link icon plus the leading icon), href=https://uwazi.io/page/9852italrtk/support target=_blank; the click opened a new tab (request to https://uwazi.io/page/9852italrtk/support, blocked from loading by this run) (spec: https://docs.uwazi.io; the target differs and is recorded as Juan's open decision); current page unchanged (\"Account Profile The \"); visible for collaborator: \"Documentation\"",
+  "shot": "NAV-13.png"
+ },
+ {
+  "id": "NAV-14",
+  "res": "FAIL",
+  "ev": "Templates is in the group with headings [\"System(sr-only)\",\"Collection\",\"Content model\",\"Languages\",\"People\"]; Metadata extraction and Paragraph extraction are in the group with headings [\"Tools\",\"ML tools\"] under the \"ML tools\" sub-heading (spec: same group as Templates, after Relationship types or Filters, no \"ML tools\" subgroup)",
+  "shot": "NAV-02.png"
+ },
+ {
+  "id": "NAV-15",
+  "res": "FAIL",
+  "ev": "Import view opens with the same rail (groups=3), active item(s)=[\"Import CSV\"], breadcrumb \"Import CSV\" is plain text with no Back control (Back button visible=false); there is no way to return to the previous Settings page except choosing a rail item again (spec: Back returns to the Settings page it came from, Users & Groups)",
+  "shot": "NAV-15.png"
+ },
+ {
+  "id": "NAV-16",
+  "res": "PASS",
+  "ev": "Phone 390: Settings opens on the page (back chevron visible=true); chevron returns to the rail (rail visible=true, width 390px); rail headings [\"User\",\"System\",\"Collection\",\"Content model\",\"Languages\",\"People\",\"Tools\",\"ML tools\"] (headings are User/Collection/Content model/Languages/People/Tools + ML tools, not the five spec labels; all reachable by scrolling the lane); tapping Languages opens \"Languages\" with a back chevron (visible=true); chevron returns to the rail=true; item heights 36-36px",
+  "shot": "NAV-16-rail.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "Phone 390 rail and page: horizontal overflow 0px; rail items are 36-36px tall (touch-reachable); rail is the whole page and every item opens a page",
+  "shot": "NAV-16-rail.png"
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe on the rail: []; duplicate item names=[]; keyboard Enter on a focused rail item opens \"Languages\"; rail has no dialogs",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "PASS",
+  "ev": "The rail has no status pills or badges (rail badge absent); active item text contrast light 15:1, dark 11.14:1; group label contrast light 7.46:1, dark 6.5:1 (need >= 4.5:1)",
+  "shot": "X-08-rail-dark.png"
+ }
+]

@@ -1,0 +1,50 @@
+{
+ "TPL-17": {
+  "id": "TPL-17",
+  "result": "FAIL",
+  "evidence": "dialog \"Delete Do you want to delete the following items? QA Unused A Removed from Filters: QA Unused A. Cancel Delete\"; dialog name/buttons {\"name\":\"Delete\",\"buttons\":[\"Close\",\"Cancel\",\"Delete\"]}; selection after Cancel \"Selected 1 of 13 Delete Clear\", after X \"Selected 1 of 13 Delete Clear\", after Escape \"Selected 1 of 13 Delete Clear\" (dialog open 0, page still Templates) \\| CONSOLE during this check: error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p at ul at p at div at div at div at div at Modal (http://localhost:14",
+  "shot": "acceptance-run-2a-shots/TPL-17"
+ },
+ "TPL-18": {
+  "id": "TPL-18",
+  "result": "FAIL",
+  "evidence": "QA Target is pointed to by Court Case \"Related QA\" and QA Via \"Via to Target\", and Court Case \"Through Via\" inherits \"Via to Target\" through QA Via; QA Target has a Filters entry. Dialog reads: \"Delete Do you want to delete the following items? QA Target Court Case loses its relationship property “Related QA”, which points to a deleted template. QA Via loses its relationship property “Via to Target”, which points to a deleted template. Removed from Filters: QA Target. Cancel Delete\". Lists relationship properties=true, Filters entry=true, inherit path through T=false",
+  "shot": "acceptance-run-2a-shots/TPL-18"
+ },
+ "TPL-19": {
+  "id": "TPL-19",
+  "result": "PASS",
+  "evidence": "row gone=true; footer after \"Add template\"; new Beacon entries [\"Template deleted. just now\"]; Activity log top rows [\"Delete admin Deleted template “QA Target” Oct 5, 2026 - 08:02\",\"Update admin Updated template “Court Case” Oct 5, 2026 - 08:01\"]; after reload still gone=true",
+  "shot": "acceptance-run-2a-shots/TPL-19.png"
+ },
+ "X-09-delete": {
+  "id": "X-09-delete",
+  "result": "PASS",
+  "evidence": "Activity log row \"Delete admin Deleted template “QA Target” Oct 5, 2026 - 08:02\"",
+  "shot": ""
+ },
+ "TPL-20": {
+  "id": "TPL-20",
+  "result": "FAIL",
+  "evidence": "Filters mentions QA Target: false; Court Case properties still list \"Related QA\": false (and \"Through Via\" which inherits through the removed property: true); QA Via still lists \"Via to Target\": false; Library Type facet before delete had QA Target: true (list [\"Person\",\"Country\",\"Violation\",\"Right\",\"Organization\",\"Hearing\",\"QA Unused A\",\"QA Unused B\",\"QA Target\",\"QA Via\",\"Documents\",\"Court Case\",\"Judgment\",\"Document\"]), after: false \\| CONSOLE during this check: error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique ke",
+  "shot": "acceptance-run-2a-shots/TPL-19"
+ },
+ "X-04-fail-delete": {
+  "id": "X-04-fail-delete",
+  "result": "FAIL",
+  "evidence": "Dev panel status \"Armed: the next delete fails with “The server did not answer in time.”.\"; after confirming Delete on QA Via: new Beacon entries [\"Template deleted. just now\"]; row still present=false; footer \"Add template\"; running tasks 0 -> 0 \\| CONSOLE during this check: error: Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lo \\|\\| error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p at ul at p at div at div at div at div at Modal (http://localhost:14",
+  "shot": "acceptance-run-2a-shots/X-04-fail-delete"
+ },
+ "X-04-fail-delete-still-armed": {
+  "id": "X-04-fail-delete-still-armed",
+  "result": "FAIL",
+  "evidence": "Dev panel after the delete attempt reads \"Armed: the next delete fails with “The server did not answer in time.”.\" (a consumed switch reads \"Not armed.\")",
+  "shot": ""
+ },
+ "X-04-fail-save": {
+  "id": "X-04-fail-save",
+  "result": "FAIL",
+  "evidence": "armed: \"Armed: the next save fails with “Disk quota exceeded.”.\"; saving the edited template -> new Beacon entries [\"Template saved successfully. just now\"]; editor still open with name \"null\"; running tasks 0 -> 0",
+  "shot": "acceptance-run-2a-shots/X-04-fail-save"
+ }
+}

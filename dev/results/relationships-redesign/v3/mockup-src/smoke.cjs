@@ -1,0 +1,11 @@
+const {chromium}=require("/Users/juanmnl/.operator/worktrees/uwazi_app-ad9c40/app/node_modules/playwright");
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});const errs=[];p.on("pageerror",e=>errs.push(e.message));
+const u="file://"+__dirname+"/../prototype/index.html";
+await p.goto(u+"?c=sample");await p.waitForTimeout(400);console.log("sample lens:",await p.getAttribute("[data-act=lens][aria-pressed=true]","data-l"));
+await p.click("[data-act=bar][data-p='3']");await p.waitForTimeout(100);console.log("chip:",await p.textContent("[data-act=clearpages]"));
+await p.click("[data-act=jump] >> nth=1");await p.click("button.pill >> nth=2");console.log("ov:",(await p.textContent(".how")).slice(0,120));
+await p.click("[data-act=close] >> nth=0");
+await p.click("[data-act=edit]");await p.click("[data-act=rmpassage] >> nth=0");console.log("confirm:",(await p.textContent(".modal")).slice(0,200));await p.click("[data-act=confirmgo]");console.log("toast:",await p.textContent(".toast"));
+await p.goto(u);await p.waitForTimeout(300);await p.click("[data-act=cview][data-v=map]");console.log("map nodes:",await p.locator(".mnode").count());
+await p.click("[data-act=cview][data-v=list]");await p.click("[data-act=edit]");await p.click("[data-act=explore] >> nth=1").catch(()=>{});
+console.log("errors",errs);await b.close()})();

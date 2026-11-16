@@ -1,0 +1,32 @@
+[
+ {
+  "id": "LNG-07",
+  "result": "PASS",
+  "evidence": "modal closed=true; rows with Installing marker=[\"German (de) Deutsch Installing\",\"Korean (ko) 한국어 Installing\"]; Beacon task articles while installing: [\"Installing languages… Running German and Korean 0%\"]; after a 2nd install (Dutch) while the first ran: 2 running 'Installing languages' tasks [\"Installing languages… Running German and Korean 0%\",\"Installing languages… Running Dutch 0%\"]; after ~4s markers left=0; success entries \"Languages installed successfully\"=[\"Languages installed successfully Dutch just now\",\"Languages installed successfully German and Korean just now\"] (one per install job: 2); leftover running tasks=0",
+  "shot": ""
+ },
+ {
+  "id": "LNG-08",
+  "result": "PASS",
+  "evidence": "while installing: German menu=[\"Make default [disabled]\",\"Uninstall [disabled]\"]; Arabic menu=[\"Make default\",\"Reset\",\"Uninstall\"]; Portuguese menu=[\"Make default\",\"Uninstall\"]; after install finished German menu=[\"Make default\",\"Uninstall\"]",
+  "shot": ""
+ },
+ {
+  "id": "_errs-B1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-10",
+  "result": "FAIL",
+  "evidence": "Translations (User Interface) headers=[\"KEY\",\"English\\nEN\",\"Español\\nES\",\"Français\\nFR\",\"العربية\\nAR\",\"Português\\nPT\",\"Deutsch\\nDE\",\"한국어\\nKO\"]; German cells (first 40) all equal source and flagged untranslated=true e.g. [{\"l\":\"\\\"Costa Rica\\\" in German, untranslated\",\"v\":\"\\\"Costa Rica\\\"\"},{\"l\":\"\\\"the status\\\"~5 in German, untranslated\",\"v\":\"\\\"the status\\\"~5\"}]; Korean cells translated (predefined)=38/40; Dashboard shows a language count=false (dashboard text: Dashboard \\| The collection at a glance, and the latest changes made to it. \\| USERS \\| 5 \\| total users \\| 1 Admins \\| 2 Editors \\| 2 Collaborators \\| STORAGE \\| 511.57...); Pages editor language options=[\"Deutsch\",\"English\",\"Español\",\"Français\",\"Português\",\"العربية\",\"한국어\"]",
+  "shot": "group-lng-LNG-10-dashboard.png"
+ },
+ {
+  "id": "_errs-B2",
+  "result": "FAIL",
+  "evidence": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ }
+]

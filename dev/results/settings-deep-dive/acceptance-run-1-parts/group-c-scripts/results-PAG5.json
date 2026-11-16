@@ -1,0 +1,32 @@
+[
+ {
+  "id": "PAG-27",
+  "res": "FAIL",
+  "ev": "Dirty editor: back arrow, breadcrumb, rail, navbar open a guard dialog, but its copy differs from the expected \"Discard changes?\" / \"You have unsaved changes. Do you want to continue?\" / \"Cancel\" + \"Discard changes\": back arrow: \"Discard unsaved changes? Page edits haven't been saved. Leaving now will discard them. Keep editing Discard\" [ | Keep editing | Discard], Cancel/first button keeps edit: true ;; breadcrumb Pages: \"Discard unsaved changes? Page edits haven't been saved. Leaving now will discard them. Keep editing Discard\" [ | Keep editing | Discard], Cancel/first button keeps edit: true ;; rail Templates: \"Discard unsaved changes? Page edits haven't been saved. Leaving now will discard them. Keep editing Discard\" [ | Keep editing | Discard], Cancel/first button keeps edit: true ;; navbar Library: \"Discard unsaved changes? Page edits haven't been saved. Leaving now will discard them. Keep editing Discard\" [ | Keep editing | Discard], Cancel/first button keeps edit: true. No dialog for: [\"footer Cancel\"] (the editor footer has no Cancel; no phone check here, see PAG-30). Language and tab switches opened no dialog (true) and kept the text (true). \"Discard\" then reopening shows saved text \"<section class=\"u-hero\">\n  <h1>Methodolo\" (ok). beforeunload prevented: clean false, dirty true, after Save false. After Save the back arrow opens no dialog (true).",
+  "shot": "acceptance-run-1-shots/PAG-27.png"
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "Dirty guard exists on back arrow, breadcrumb, rail and navbar and not on language/tab switches, no dialog when clean; but the dialog reads \"Discard unsaved changes? / Page edits haven't been saved. Leaving now will discard them.\" with \"Keep editing\" and \"Discard\" instead of \"Discard changes?\" / \"You have unsaved changes. Do you want to continue?\" with \"Cancel\" and \"Discard changes\". Data-source switch not driven here (same guard path).",
+  "shot": "acceptance-run-1-shots/PAG-27.png"
+ },
+ {
+  "id": "PAG-28",
+  "res": "FAIL",
+  "ev": "Clean editor: footer Discard is disabled (true) instead of leaving without a dialog. Dirty editor: Discard opens \"Discard changes Discard your unsaved changes to this page? The last saved draft comes back. Cancel Discard\" [ | Cancel | Discard]; confirming restores the last saved values (\"<section class=\"u-hero\">\n  <h1\") but the editor stays open (editor shown: 1); expected it to return to the list.",
+  "shot": "acceptance-run-1-shots/PAG-28.png"
+ },
+ {
+  "id": "PAG-17::desk",
+  "res": "INFO",
+  "ev": "live Draft — only you see this IC Inter-American Cases EN Hi Powe | saved draft Draft — only you see this IC Inter-American Cases EN Hi Powe | published Published version — what visitors see now IC Inter-American Cases EN M | preview bar controls [\"BUTTON:Desktop\",\"BUTTON:Phone\"] | Save&Preview 0",
+  "shot": ""
+ },
+ {
+  "id": "PAG-17",
+  "res": "PASS",
+  "ev": "Inline preview renders the page; Draft shows the typed HTML live and after Save (\"Draft — only you see this IC Inter-Ameri\"); Published shows the last release (\"Published version — what visitors see now IC Inter-American Cases EN M\"), which does not contain the new draft text (ok); a never-published page shows \"never been published\" (PAG-09). The preview bar's \"Open\" is [] (non-interactive span, not a Save & Preview button; Save & Preview text count 0). At 390px: Code / Preview switch present (1); textarea shown on Code 1, on Preview 0, preview frames 1.",
+  "shot": "acceptance-run-1-shots/PAG-17-phone.png"
+ }
+]

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "CSV-09",
+  "res": "FAIL",
+  "ev": "Registered \"organizations.csv\" (random built-in name, Person). Modal closed and the app jumped to the import's detail page (header \"organizations.csv Uploading\"), not the list; back on the list the first row reads \"Uploading organizations.csv Person 0/0 0 0 10/05/2026 Open\" (6 rows). Expected status \"Queued\" and Beacon task \"CSV Import: Queued — organizations.csv\". Beacon tasks section after: \"TASKS · 2 Uploading document batch… Running velasquez-corpus.csv 70% Processing PDFs… Finishing 12 files 100% NEW Some fields could not be validated. Check highlighted fields and try again. 20 min ago\"; task mentioning the file or \"CSV Import\": false. Notifications before/after: 9/9.",
+  "shot": "acceptance-run-1-shots/CSV-09-detail.png"
+ },
+ {
+  "id": "CSV-10",
+  "res": "FAIL",
+  "ev": "Started import \"organizations.csv\", opened Library for 3.5 s, returned via Tools > Import CSV: list files now [\"cases.csv\",\"locations.csv\",\"judges-import.zip\",\"witnesses.csv\",\"hearings-2026.csv\"]; the new import is gone (the list is view-local state and resets to the 5 seed rows on remount).",
+  "shot": "acceptance-run-1-shots/CSV-10.png"
+ },
+ {
+  "id": "CSV-22",
+  "res": "FAIL",
+  "ev": "Registered an import (CSV-09). Activity log (sessionStorage uwazi:settings:activity) before [] / after []. Expected readable entries for the import and the cancel (cancel does not exist, CSV-18).",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Registering a CSV import added 0 Activity log entries; Delete import also adds none (CSV-20).",
+  "shot": ""
+ },
+ {
+  "id": "::errs1",
+  "res": "INFO",
+  "ev": "[]",
+  "shot": ""
+ },
+ {
+  "id": "CSV-11",
+  "res": "FAIL",
+  "ev": "Waited until the new row read \"Warnings rulings.csv Person 466/466 466 0 10/05/2026 Open\" (9 s). Beacon notifications before 9, after 9; new ones: [\"Uploading document batch complete. 100 items processed. just now\",\"Processing PDFs complete. 12 items processed. just now\",\"Entity saved successfully. All fields were valid. 1 min ago\"]. Expected \"CSV import completed\" / \"CSV import failed\" / \"CSV import cancelled\" and the task closing.",
+  "shot": "acceptance-run-1-shots/CSV-11.png"
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Registering an import and its completion add no import-related Beacon entry (new entries [\"Uploading document batch complete. 100 i\",\"Processing PDFs complete. 12 items proce\",\"Entity saved successfully. All fields we\"] are the seed tasks finishing); only the sort buttons raise \"Sorted by <column>\" notices. Delete of imports: see CSV-20.",
+  "shot": ""
+ },
+ {
+  "id": "CSV-18",
+  "res": "FAIL",
+  "ev": "locations.csv (processing) footer buttons: [\"Back to list\",\"Delete import\"]: no danger \"Cancel\", no \"Canceling\" modal, no Cancelled status or notification \"CSV import cancelled\". The footer has \"Delete import\" (a different action).",
+  "shot": "acceptance-run-1-shots/CSV-18-locations.png"
+ },
+ {
+  "id": "CSV-19",
+  "res": "FAIL",
+  "ev": "The footer has no Cancel button on any status page (cases.csv [\"Back to list\",\"Delete import\"], judges-import.zip [\"Back to list\",\"Delete import\"]), so \"Cancel disabled for Completed, Failed, Cancelled\" cannot be observed; there is no Cancelled status either.",
+  "shot": ""
+ },
+ {
+  "id": "CSV-20",
+  "res": "FAIL",
+  "ev": "Select all > Delete > confirm (\"Delete 5 imports? The selected imports are removed from the list. This can’t be undone. Cancel Delet\") empties the list. Empty state reads \"No CSVs yet Import CSV or ZIP files to create entities in bulk. Select “New import” to get started.\"; expected text \"Import CSV or ZIP files to create entities in bulk. Select + Import CSV to get started.\" (title \"No CSVs yet\" and icon match; the hint says \"Select “New import”\"). Footer button present: [\"New import\"]. Selection bar while 5 ticked: [\"Documentation\",\"New import\",\"Selected 5 of 5\",\"Delete\"].",
+  "shot": "acceptance-run-1-shots/CSV-20.png"
+ },
+ {
+  "id": "X-04::delete",
+  "res": "INFO",
+  "ev": "Bulk delete of 5 imports: activity log entries 0; new Beacon notifications: 9",
+  "shot": ""
+ }
+]

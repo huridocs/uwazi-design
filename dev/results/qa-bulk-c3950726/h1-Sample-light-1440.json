@@ -1,0 +1,32 @@
+[
+ {
+  "area": "change-template:Sample-light-1440",
+  "item": "dialog previews dropped and new properties and states what is always kept",
+  "ok": true,
+  "detail": "urt Case | Country | Judgment | Violation | Right | Organization | Document | Court Case | → Judgment | 2 | DROPPED | Case number: 2 values deleted | Date filed: 2 values deleted | Respondent State: 2 values deleted | Status: 2 values deleted | Region: 1 value deleted | NEW | Date: empty | Court: empty | Series: empty | Outcome: empty | T"
+ },
+ {
+  "area": "change-template:Sample-light-1440",
+  "item": "both entities now show the new template",
+  "ok": true,
+  "detail": "[\"? | JUDGMENT\",\"? | JUDGMENT\"]"
+ },
+ {
+  "area": "change-template:Sample-light-1440",
+  "item": "notification offers Undo",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "change-template:Sample-light-1440",
+  "item": "Undo restores the template and its values",
+  "ok": true,
+  "detail": "[\"? | CASE NUMBER,DATE FILED,RESPONDENT STATE,STATUS,REGION,COURT CASE\",\"? | CASE NUMBER,DATE FILED,RESPONDENT STATE,STATUS,COURT CASE\"] => [\"? | CASE NUMBER,DATE FILED,RESPONDENT STATE,STATUS,REGION,COURT CASE\",\"? | CASE NUMBER,DATE FILED,RESPONDENT STATE,STATUS,COURT CASE\"]"
+ },
+ {
+  "area": "change-template:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

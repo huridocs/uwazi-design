@@ -1,0 +1,11 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const { browser, page, logs } = await launch({ sync: false }); page.setDefaultTimeout(10000);
+const L = page.locator('[data-library-pane=left]');
+await L.getByRole("button", { name: /^Open$/ }).first().click(); await page.waitForTimeout(1200);
+await L.getByRole("tab", { name: /Relationships/ }).first().click(); await page.waitForTimeout(900);
+await L.getByRole("button", { name: /^Filters$/ }).first().click(); await page.waitForTimeout(1200);
+const info = await page.evaluate(() => [...document.querySelectorAll('[role=dialog]')].map(d => { const b = d.getBoundingClientRect(); const cs = getComputedStyle(d); return { st: d.dataset.state, inert: d.hasAttribute("inert"), vis: cs.visibility, t: d.textContent.slice(0, 24), box: [b.left, b.top, b.width, b.height].map(Math.round), inPane: d.closest('[data-library-pane]')?.dataset.libraryPane, tf: cs.transform.slice(0, 30), op: cs.opacity }; }));
+console.log(JSON.stringify(info, null, 1));
+await page.screenshot({ path: OUT + "/rel-filters-narrow-pane.png" });
+console.log(logs);
+await browser.close();

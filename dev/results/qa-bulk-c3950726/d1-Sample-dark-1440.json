@@ -1,0 +1,38 @@
+[
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "Add value: new value appears in the picker",
+  "ok": true,
+  "detail": "labels: 2"
+ },
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "Add value: new value is selected on the entity (info)",
+  "ok": true,
+  "detail": "checked=true"
+ },
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "Save: card shows the new Status value",
+  "ok": true,
+  "detail": "QA Pending"
+ },
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "Library facet lists the new value",
+  "ok": true,
+  "detail": "[\"QA Pending\",\"QA Pending\"]"
+ },
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "Settings › Thesauri › Case status lists the value",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "thesaurus:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

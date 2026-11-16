@@ -1,0 +1,31 @@
+{
+ "doc_id": "sc-press-release-2082-05-26",
+ "title": "Supreme Court press release: condolences, arson at courts, habeas corpus hearings to resume (Nepali, 26 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 240766,
+ "sha256": "e4bd2fcd11199280fb811706359702d3abfc561072a1226c62619dacc9f00448",
+ "source_url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-26pressbigyapti.pdf",
+ "source_page": "https://supremecourt.gov.np/web/",
+ "retrieved": "2026-10-05",
+ "publisher": "Supreme Court of Nepal",
+ "published": "2025-09-11",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; the embedded text is OCR noise. OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+  "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1785
+}

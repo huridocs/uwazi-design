@@ -1,0 +1,4 @@
+PAGE CLOSE
+BROWSER DISCONNECTED
+FAIL | REL-17 | in the panel's "Manage types" modal: added "Colleague of" (listed in Settings without reload=true); deleted the unused type (dialog "Unused type 0 refs Delete Cancel"; gone from Settings=true); rename controls in the modal=0 (the modal can only add and delete, so "rename Mentors" cannot be done there) | acceptance-run-2-shots/REL-17.png
+console REL-5a clean

@@ -1,0 +1,212 @@
+[
+ {
+  "id": "LNG-01",
+  "res": "FAIL",
+  "ev": "title \"Languages\" ok; no card header \"Active languages\" (false); rows read \"EnglishEnglishDefault100%\" not \"Spanish (es)\"; columns [\"Language\",\"Translations\",\"Default\",\"\"] (spec: one Language column, saw separate Translations/Default columns); footer button \"Install Language(s)\" count=0 (saw \"Install language\"); Default badges=2",
+  "shot": "LNG-01.png"
+ },
+ {
+  "id": "LNG-01b(sort)",
+  "res": "INFO",
+  "ev": "default order EnglishEnglishDefault100%,SpanishEspañol100%Set,FrenchFrançais94%Set,ArabicالعربيةRTL81%Set,PortuguesePortuguês67%Set; after clicking Language header EnglishEnglishDefault100%,SpanishEspañol100%Set,FrenchFrançais94%Set,ArabicالعربيةRTL81%Set,PortuguesePortuguês67%Set",
+  "shot": ""
+ },
+ {
+  "id": "LNG-02",
+  "res": "FAIL",
+  "ev": "no row menu (menu buttons=0). Row actions are inline icon buttons: [\"Reset English\",\"Reset Spanish\",\"Uninstall Spanish\",\"Reset French\",\"Uninstall French\",\"Reset Arabic\"]...; default row (English) has \"Reset English\" and no Uninstall (ok) but no \"Make default\" menu; non-default rows show \"Reset\" for Portuguese which has no predefined file (spec: Reset only for ar, el, en, es, fr, ko, my, ru, th, tr, uk); default is changed by a separate \"Set\" text button",
+  "shot": "LNG-02.png"
+ },
+ {
+  "id": "LNG-PO2",
+  "res": "PASS",
+  "ev": "Spanish row: \"SpanishEspañol100%Set\"; English row: \"EnglishEnglishDefault100%\"",
+  "shot": ""
+ },
+ {
+  "id": "LNG-18",
+  "res": "PASS",
+  "ev": "no Save button (0); after Escape dialogs=[]; German installed row present=true; rail click to Dashboard dialogs=[]",
+  "shot": ""
+ },
+ {
+  "id": "X-02/X-03",
+  "res": "N/A",
+  "ev": "Languages: X-02 and X-03 do not apply per page's Applies line",
+  "shot": ""
+ },
+ {
+  "id": "X-05/X-10/X-11/X-12",
+  "res": "N/A",
+  "ev": "Languages: do not apply per Applies line (X-05 replaced by LNG-13/14)",
+  "shot": ""
+ },
+ {
+  "id": "LNG-03",
+  "res": "FAIL",
+  "ev": "modal title \"Install language\" (spec \"Install Language(s)\"); note text present=false; radios All/Selected=0; search placeholder \"Search languages…\" (spec \"Search\"); legend \"* Available default translation\" present=false; footer Cancel/Install buttons absent (dialog buttons: [\"Close language list\",\"Install German\",\"Install Italian\",\"Install Dutch\"] ... one per row); each row has its own Install button",
+  "shot": "LNG-03.png"
+ },
+ {
+  "id": "LNG-04",
+  "res": "FAIL",
+  "ev": "27 rows listed (spec 32 minus installed; catalog in app has 32 entries so expected 27); installed languages listed? false; rows read \"DeutschGerman Install\" (spec \"<name> (<key>)\"); leading * rows=0 (spec ar... not installed: el, ko, my, ru, th, tr, uk = 7 expected); order first 5: DeutschGerman Install / ItalianoItalian Install / NederlandsDutch Install / PolskiPolish Install / РусскийRussian Install",
+  "shot": "LNG-03.png"
+ },
+ {
+  "id": "LNG-05",
+  "res": "FAIL",
+  "ev": "\"ger\" -> [\"DeutschGerman Install\"]; \"GERMAN\" -> [\"DeutschGerman Install\"]; \"de\" -> 2 rows (DeutschGerman Install / NederlandsDutch Install); \"zzz\" shows \"No languages match your search.\" (spec \"No items available\"); clear X buttons=2",
+  "shot": "LNG-05.png"
+ },
+ {
+  "id": "LNG-06",
+  "res": "FAIL",
+  "ev": "clicking a row does not select it (German still listed, \"Install (n)\" button count=0); no \"Selected (n)\" radio; installation is immediate per-row \"Install German\" button",
+  "shot": "LNG-05.png"
+ },
+ {
+  "id": "LNG-07",
+  "res": "FAIL",
+  "ev": "German row appears at once with 0% (row \"GermanDeutsch0%Set\") but no \"Installing\" marker (false); Beacon aria \"Notifications, 4 unread\"; new Beacon entries after 3.5s: [\"Processing PDFs complete. 12 items processed. just now\",\"German installed just now\",\"Entity saved successfully. All fields were valid. just now\"] (one plain \"German installed\" entry, no running task; spec: running task \"Installing languages\", then \"Languages installed successfully\" once)",
+  "shot": "LNG-07.png"
+ },
+ {
+  "id": "LNG-08",
+  "res": "FAIL",
+  "ev": "no Installing state exists, so Uninstall cannot be shown disabled while installing; row has an enabled Uninstall button immediately after install",
+  "shot": "LNG-07.png"
+ },
+ {
+  "id": "LNG-09",
+  "res": "NOT DRIVEABLE",
+  "ev": "no dev panel with a 'fail next install' switch exists in the app (grep and UI)",
+  "shot": ""
+ },
+ {
+  "id": "LNG-17",
+  "res": "NOT DRIVEABLE",
+  "ev": "no dev panel failure switch exists",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "install added new Beacon entries [\"Processing PDFs complete. 12 items processed. just now\",\"German installed just now\",\"Entity saved successfully. All fields were valid. just now\"]; spec expects a Beacon entry with the page's quoted text (\"Languages installed successfully\")",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity log after install: [] (record() is called with log:false in LanguagesPage; no Activity log entry)",
+  "shot": ""
+ },
+ {
+  "id": "LNG-11",
+  "res": "FAIL",
+  "ev": "confirm text \"Change default language Make Spanish the default language? It is shown to users who haven't chosen a language. Cancel Make default\"; names effect on later installs/untranslated=false; Cancel left default \"LanguageTranslationsDefault\"; after confirm Default rows=[\"LanguageTranslationsDefau\",\"SpanishEspañolDefault100%\"]; Beacon notifications [\"Spanish set as default language just now\",\"Entity saved successfully. All fields were valid. just now\"] (spec \"Default language change success\"); Activity log []",
+  "shot": "LNG-11.png"
+ },
+ {
+  "id": "LNG-12",
+  "res": "FAIL",
+  "ev": "after Make default=Spanish, Translations editor headers [\"TERM\",\"ENGLISH Source\",\"SPANISH\",\"FRENCH\",\"ARABIC\",\"PORTUGUESE\"]; editor reads the static seedLanguages, so English remains Source and Spanish stays an editable column",
+  "shot": "LNG-12.png"
+ },
+ {
+  "id": "LNG-13",
+  "res": "FAIL",
+  "ev": "dialog text: \"Reset language Reset all translations for Spanish to their default values? This can't be undone. Cancel Reset\"; spec title \"Are you sure?\" + band \"Other users will be affected by this action!\", body \"You are about to reset a language.\", \"Please type in CONFIRM:\" input (text inputs=0), buttons \"No, cancel\"/\"Reset\" (saw [\"\",\"Cancel\",\"Reset\"]); no CONFIRM gate, no key count",
+  "shot": "LNG-13.png"
+ },
+ {
+  "id": "LNG-13b",
+  "res": "INFO",
+  "ev": "Reset button disabled with empty input = false",
+  "shot": ""
+ },
+ {
+  "id": "LNG-14",
+  "res": "FAIL",
+  "ev": "dialog text \"Uninstall language Uninstall French? Other users will be affected by this action. 101 entities have a version in this language. Interface translated: 94%. Type CONFIRM to continue Cancel Uninstall\"; accept disabled: empty=true, \"confirm\"=true, \"CONFIRM \"=false, \"CONFIRM\"=false. Typing gate works; but title/band/body differ from spec (\"Are you sure?\", \"Other users will be affected by this action!\", \"You are about to uninstall a language.\"), and content counts for the language: false",
+  "shot": "LNG-14.png"
+ },
+ {
+  "id": "X-07a",
+  "res": "INFO",
+  "ev": "axe (pane, uninstall dialog open) [\"color-contrast (serious) x5: .bg-carbon-tint.py-px.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(4)\",\"landmark-no-duplicate-banner (moderate) x1: header[data-testid=\\\"settings-content-header\\\"]\"]; dialog accessible name attr \"notifications-drawer-title\"; focus after Escape: Uninstall French",
+  "shot": ""
+ },
+ {
+  "id": "LNG-16",
+  "res": "FAIL",
+  "ev": "French row removed=true; notifications [\"French uninstalled just now\",\"Entity saved successfully. All fields were valid. just now\"] (spec task \"Uninstalling language\" then \"Language uninstalled successfully\"); Activity log []",
+  "shot": ""
+ },
+ {
+  "id": "LNG-16b",
+  "res": "INFO",
+  "ev": "Translations editor headers after uninstalling French: [\"TERM\",\"ENGLISH Source\",\"SPANISH\",\"FRENCH\",\"ARABIC\",\"PORTUGUESE\"]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-10",
+  "res": "FAIL",
+  "ev": "after installing German, Translations editor headers [\"TERM\",\"ENGLISH Source\",\"SPANISH\",\"FRENCH\",\"ARABIC\",\"PORTUGUESE\"] (no German column; editor uses static seedLanguages). Dashboard text: \"Dashboard The collection at a glance, and the latest changes made to it. ENTITIES 104 RELATIONSHIPS 550 USERS 5 LANGUAGES 5 Recent activity ACTION SUMMARY TIME UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” 2026-06-15 18:42 CREATE Created relationship type “Represented by” 2026-06-15 17:10 \"",
+  "shot": "LNG-10.png"
+ },
+ {
+  "id": "LNG-15",
+  "res": "FAIL",
+  "ev": "Translations User Interface editor opens with 6 Spanish inputs; edit/Reset flow: Reset dialog has no key counts and Reset only logs; nothing restores System keys (no translation store). Reset es notification shows: see LNG-13/14 evidence",
+  "shot": ""
+ },
+ {
+  "id": "LNG-PO1",
+  "res": "FAIL",
+  "ev": "percentages are static seed values ([\"EnglishEnglishDefault100%\",\"SpanishEspañol100%Set\",\"FrenchFrançais94%Set\",\"ArabicالعربيةRTL81%Set\",\"PortuguesePortuguês67%Set\"]); a newly installed language starts at 0% but it is not derived from a Translations store (Translations edits do not change it; see TRN-15)",
+  "shot": ""
+ },
+ {
+  "id": "LNG-PO3",
+  "res": "PASS",
+  "ev": "Installed German and made it default. Interface pickers before [] after []; rail text unchanged=true. (Edit-a-System-key part not drivable: translations editor save writes no store; UI strings cannot change.)",
+  "shot": ""
+ },
+ {
+  "id": "LNG-19",
+  "res": "FAIL",
+  "ev": "no horizontal scroll ({\"sw\":390,\"cw\":390}); rows are cards but show name, native name and Default badge only, no key (spec \"name, key\"), and actions are inline icon buttons (Reset, Uninstall) plus a text \"Set\", no row menu; install modal is full screen {\"w\":390,\"h\":809,\"top\":0} (ok); Reset dialog is a centered card {\"w\":358,\"h\":170,\"top\":337}, not a sheet/full screen, with buttons [\":24x24\",\"Cancel:64x28\",\"Reset:57x28\"] (28px high)",
+  "shot": "LNG-19c.png"
+ },
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "Languages on phone: no horizontal scroll and rows are cards with actions reachable (pass parts, shot LNG-19.png), but the Reset/Uninstall/Make-default dialogs are centered cards {\"w\":358,\"h\":170,\"top\":337} with 28px-high buttons rather than sheets or full screen (reading of \"dialogs are sheets or full screen\")",
+  "shot": "LNG-19c.png"
+ },
+ {
+  "id": "X-13",
+  "res": "PASS",
+  "ev": "Sample rows [\"EnglishEnglishDefault1\",\"SpanishEspañol100%Set\",\"FrenchFrançais94%Set\",\"ArabicالعربيةRTL81%Set\",\"PortuguesePortuguês67%\"]; CEJIL rows [\"EspañolEspañolDefault1\",\"EnglishEnglish100%Set\",\"PortuguêsPortuguês100%\"]",
+  "shot": "X-13-lng-cejil.png"
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "German present after rail round-trip=false; after reload=false (languages live in component useState)",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "Default badge contrast dark {\"fg\":\"rgb(0, 180, 240)\",\"bg\":\"rgb(12, 58, 77)\",\"ratio\":\"5.08\"}, light {\"fg\":\"rgb(0, 180, 240)\",\"bg\":\"rgb(221, 243, 253)\",\"ratio\":\"2.08\"}",
+  "shot": "X-08-lng-dark.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe pane [\"color-contrast (serious) x5: .bg-carbon-tint.py-px.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(4)\"]; axe with install modal [\"color-contrast (serious) x5: .bg-carbon-tint.py-px.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(4)\",\"landmark-no-duplicate-banner (moderate) x1: header[data-testid=\\\"settings-content-header\\\"]\"]; duplicate row button names [\"Set\"] (\"Set\" appears once per row, shared name); dialog {\"name\":\"modal-:r15:\",\"modal\":\"true\"}; focus after Escape \"Install language\"; console issues []",
+  "shot": ""
+ }
+]

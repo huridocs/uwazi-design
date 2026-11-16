@@ -1,0 +1,62 @@
+[
+ {
+  "id": "LNG-01",
+  "result": "PASS",
+  "evidence": "title=Languages; h3=[\"Active languages\"]; headers=[\"LANGUAGE\",\"ACTIONS\"]; aria-sort=ascending; rows=[\"Arabic (ar) العربية\",\"English (en) Default\",\"French (fr) Français\",\"Portuguese (pt) Português\",\"Spanish (es) Español\"]; asc=true toggledDesc=true backAsc=true; Default badges=1; footer buttons \"Install Language(s)\"=1 enabled=true",
+  "shot": ""
+ },
+ {
+  "id": "LNG-PO2",
+  "result": "PASS",
+  "evidence": "Spanish row=\"Spanish (es) Español\"; English row=\"English (en) Default\"",
+  "shot": ""
+ },
+ {
+  "id": "LNG-02",
+  "result": "PASS",
+  "evidence": "default(en)=[\"Make default [disabled]\",\"Reset\"]; es=[\"Make default\",\"Reset\",\"Uninstall\"]; pt=[\"Make default\",\"Uninstall\"]; menu closes on Escape=true; focus after Escape=Actions for English / Actions for Portuguese",
+  "shot": ""
+ },
+ {
+  "id": "_errs-A1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-03",
+  "result": "PASS",
+  "evidence": "dialog named \"Install Language(s)\" count=1, width=640px; close X=1; search placeholder=1; radios=[\"All[checked]\",\"Selected (0)[disabled]\"]; legend present=true; Cancel=1; Install disabled=true; focus escaped dialog in 40 Tabs=false; focus after Escape on=\"Install Language(s)\"",
+  "shot": ""
+ },
+ {
+  "id": "LNG-04",
+  "result": "PASS",
+  "evidence": "rows=27 (expected 27); alphabetical=true; installed listed=false; star rows=[\"el\",\"ko\",\"my\",\"ru\",\"th\",\"tr\",\"uk\"], expected [\"el\",\"ko\",\"my\",\"ru\",\"th\",\"tr\",\"uk\"]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-05",
+  "result": "PASS",
+  "evidence": "\"ger\"=[\"German (de) Select\"]; \"GERMAN\"=[\"German (de) Select\"]; \"de\"=[] (only names containing 'de'? true); \"zzz\" shows 'No items available'=true; clear X count=1, after clear value=\"\" rows=27",
+  "shot": ""
+ },
+ {
+  "id": "LNG-06",
+  "result": "PASS",
+  "evidence": "German row after click=\"German (de) Selected\"; button=\"Install (2)\" enabled=true; Selected (2) view lists [\"German (de) Selected\",\"* Korean (ko) Selected\"]; after deselecting one: 1 row, radio 'Selected (1)'=1, button=\"Install (1)\"; at 0: button=\"Install\" disabled=true, view returns to All with 27 rows; Cancel closed=true, nothing installed=true; reopened: Selected (0)=1, button=\"Install\"",
+  "shot": ""
+ },
+ {
+  "id": "LNG-18",
+  "result": "PASS",
+  "evidence": "dialogs after Escape on a selection=[]; after install + rail click to \"Collection\" dialogs=[]; Dutch row present on return=true; Save buttons on page=0; reopened modal selection empty=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-A2",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ }
+]

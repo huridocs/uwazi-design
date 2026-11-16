@@ -1,0 +1,50 @@
+[
+ {
+  "id": "MEN-11",
+  "result": "PASS",
+  "evidence": "rows [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\",\"E\"]; ticked Library and E: \"Selected 2 of 6\"; footer buttons [[\"Delete\",\"color(srgb 0.546275 0.190392 0.136471)\",\"0px solid\",\"rgba(0, 0, 0, 0)\"],[\"Clear\",\"rgb(51, 51, 51)\",\"0px solid\",\"rgba(0, 0, 0, 0)\"],[\"Save\",\"rgb(255, 255, 255)\",\"0px solid\",\"rgb(26, 26, 26)\"]] (red text token; the plain seal token is rgb(232, 67, 42), the label variant is used for text); lead actions while selecting 0; footer background clean rgb(255, 255, 255) vs selecting rgb(255, 255, 255) (border 1px/1px); selection text width with 2 selected 136px, with 1 (\"Selected 1 of 6\") 136px; after untick both: selection text count 0, Add link/Add group back 2; ticking Resources: \"Selected 3 of 6\", checked rows [\"Library:false\",\"About:false\",\"Resources:true\",\"Methodology:true\",\"Contact:true\",\"E:false\"]",
+  "shot": "MEN-11"
+ },
+ {
+  "id": "X-12",
+  "result": "PASS",
+  "evidence": "selection bar: \"Selected n of total\" fixed width (136px/136px), Delete (seal text) plus count replace Add link/Add group, clearing restores them, footer not tinted (rgb(255, 255, 255) -> rgb(255, 255, 255)), no border (0px solid)",
+  "shot": "MEN-11"
+ },
+ {
+  "id": "MEN-12",
+  "result": "PASS",
+  "evidence": "after ticking Resources and Delete: rows [\"Library\",\"About\"], dialogs [], Save enabled=true; store untouched (stored menu still holds Resources: false); Beacon entries [\"Deleted Resources | Nothing is saved until you save the menu. | just now | Undo\"] with Undo buttons 1; after reload before Save rows [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]",
+  "shot": "MEN-12"
+ },
+ {
+  "id": "MEN-13",
+  "result": "PASS",
+  "evidence": "rows before [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; after Delete then Undo [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; Save disabled again=true",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "result": "PASS",
+  "evidence": "after a successful Save the Save button is disabled=true; the next edit enables it=true; reverting to the stored tree disables it again=true",
+  "shot": ""
+ },
+ {
+  "id": "MEN-14",
+  "result": "FAIL",
+  "evidence": "Save background clean oklab(0.217785 0.00000996143 0.00000435114 / 0.4) / enabled rgb(26, 26, 26); after moving About up Save enabled=true; moved back by hand Save disabled=true; moved again and Save: last-saved line before \"\" -> after \"Saved just now by admin\" (line height 0, footer height 48 -> 48); Beacon new entries [\"Updated\"]; Save disabled after Save=true; edit then revert to the stored tree: enabled true then disabled true; failure path (Armed: the next save fails with “Disk full”.) then a Save: new entries [\"Updated\"] (expected one An error occurred and the draft kept; Save still enabled=false, the save went through instead)",
+  "shot": "MEN-14"
+ },
+ {
+  "id": "MEN-15",
+  "result": "PASS",
+  "evidence": "rail click with one edit: [\"Discard changes?\"] \"Discard changes? / You have unsaved changes. Do you want to continue? / Cancel / Discard changes\"; Cancel keeps page and draft=true; second attempt dialogs [\"Discard changes?\"]; Discard changes -> returning shows stored order [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; navbar Library link: [\"Discard changes?\"]; data source switch: [\"Discard changes?\"]; after Save a rail click opens []",
+  "shot": ""
+ },
+ {
+  "id": "X-02",
+  "result": "PASS",
+  "evidence": "Menu dirty guard: rail [\"Discard changes?\"], navbar [\"Discard changes?\"], data source switch [\"Discard changes?\"], Cancel keeps draft, Discard changes drops it, clean page opens no dialog (phone back chevron: see MEN-20)",
+  "shot": ""
+ }
+]

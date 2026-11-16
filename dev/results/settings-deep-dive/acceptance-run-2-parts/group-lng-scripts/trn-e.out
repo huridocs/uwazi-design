@@ -1,0 +1,14 @@
+PASS | TRN-16 | edited and saved the es value of System key "Dashboard" (key in User Interface=true) to "IDIOMAS-X"; English column editable inputs=0 (it is the read-only source); header language pickers=0; Settings rail text, navbar text unchanged after Save and after opening Languages=true; rail still contains "Dashboard"=true, "IDIOMAS"=false
+PASS | _errs-TE1 | []
+FAIL | TRN-17 | dirty edit in es "Case number"; footer Cancel button: no dialog; left to the list at once; (after re-entering and re-editing) a dialog's Cancel kept the edit=true; navigation attempts: breadcrumb="Discard changes? You have unsaved change", rail="Discard changes? You have unsaved change", back arrow="Discard changes? You have unsaved change", navbar Library button="Discard changes? You have unsaved
+PASS | X-02 | Dialog "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes" opens on breadcrumb, rail, back arrow, navbar link and data-source switch; its Cancel keeps the edit (true); "Discard changes" navigates and drops the edit (left=true, lost=true); with no change (search and toggle only) no dialog (true). The footer Cancel button is not a dialog trigger (see TRN-17).
+PASS | _errs-TE2 | []
+PASS | X-03 | Save disabled when clean=true; enabled after an edit=true; after Save disabled=true; rail click right after Save shows no dialog=true; editing again re-enables Save=true
+PASS | _errs-TE3 | []
+PASS | TRN-18 | context "Cites" (1 key) translated in all four languages and saved; "Untranslated only" on shows: "There are no untranslated terms" with a "Show all keys" action=true
+NOT DRIVEABLE | TRN-18 (context with no keys) | No context with zero keys can be reached: every template, thesaurus and relationship type context holds at least its name key, and the Menu and Filters contexts disappear when they have no links or groups (TRN-03). Rows with 0 keys on the list: 0. The message "This context has no keys" exists only in code and was not seen.
+PASS | _errs-TE4 | []
+PASS | TRN-19 | User Interface holds 412 keys; rendered key rows at the top=60; after scrolling one screen=60; after scrolling to the end=412 (last key "Duplicated email"; rows already shown stay mounted, so this is progressive loading of 60 per page, not row recycling); search for key "Documentation" (position 392 of 412, off-screen at load) finds ["Documentation"]; after clearing the search 60 rows are rendered
+PASS | _errs-TE5 | []
+PASS | TRN-21 | before: keys per context [31,23,1], list row "Court Case | Template | 31 | ES 0% | FR 0% | AR 0% | PT 0%"; after installing German: headers ["KEY","English EN","Español ES","Français FR","العربية AR","Português PT","Deutsch DE"], German cell for "Court Case" aria="Court Case in German, untranslated" value="Court Case" (default-language text), progress ["Spanish 0 of 31","French 0 of 31","Arabic 0 
+PASS | _errs-TE6 | []

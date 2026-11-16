@@ -1,0 +1,66 @@
+# Review — Library bulk work, playground 9f56a49f..2c4f05da
+
+2026-09-21. Read-only review of commits 7e77e624 (overlay store), 3ed6d4ec (footer actions) and 897a8164 (selection model), with the code around them. The header-fold commits are out of scope. `tsc` was not re-run and nothing was run in a browser. Findings are ranked by severity; paths are relative to `app/src/`.
+
+## High
+
+1. **Undo of a delete also erases every change made after the delete.** `atoms/entityOverlay.ts:53-67`. `snapshotForUndoAtom` stores the WHOLE overlay, and `undoAtom` writes it back. Nothing invalidates the snapshot when a later change lands: `createEntitiesAtom`, `commitDraftAtom` and `addUploadedDocumentsAtom` all write without touching `undoSnapshotAtom`. Scenario: delete 3 entities, then upload 2 PDFs or save a new entity, then open the Beacon and click Undo on the delete notification. The 3 entities come back and the uploads and the new entity disappear, with no message. The notification's own copy ("Undo restores them until your next change", `LibrarySelectionBar.tsx:87`) promises the opposite. Fix: clear the snapshot in the overlay atom's write path for any write that is not the undo itself, or make undo remove only the ids that delete added.
+
+2. **An upload that finishes takes over the drawer and throws away an open edit form.** `views/LibraryView.tsx` `startUpload` → `runPdfUploadBatch(..., ids => setSelectedId(ids[0]))`. The callback fires 1.2–8 s plus processing time after Upload is pressed, and it calls `setSelectedId` without `guard()`, while `handleCreate` and Import CSV do go through `guard()`. Scenario: upload one PDF, click Create entity while it runs and start typing in the draft form. When the upload lands, the drawer switches to the new document. `EntityDetailBody` unmounts, and its cleanup discards the draft (`pendingDraftDiscard` → `discardDraft`), so everything typed is lost. A dirty metadata edit on an existing entity is lost in the same way. The only check is `store.get(dataSourceAtom) === corpus`. The user did nothing at the moment the form was discarded, so this is worse than the unguarded plain click (see 17).
+
+## Medium
+
+3. **Cancel in the Beacon does not stop uploads or exports.** `NotificationsDrawer.tsx:216` cancel only removes the activity. `runPdfUploadBatch`'s `tick` keeps scheduling itself and creates the entities anyway; its `patch()` calls hit a missing id, so no "uploaded" notification appears either. For an export, `runCsvExport` still calls `downloadCsv`. Scenario: cancel an 8-file upload and the 8 entities appear in the library a few seconds later, with nothing saying so. Either check that the activity still exists before creating or downloading, or hide the cancel button for `driven` tasks.
+
+4. **The select-all box's "clear" state drops selections outside the loaded page.** `SelectAllBox.tsx:54`: `if (picked > 0) clear()` clears the ENTIRE selection. Scenario: select 10 entities under filter A, switch to filter B and tick one card, then click the footer box to undo that tick. All 11 are gone, including the 10 counted as "not in view" that the box never showed. It should deselect `loadedIds` only (`deselectIdsAtom`).
+
+5. **A second Shift range can drop entities that were ticked one by one.** `atoms/library.ts` `rangeSelectionAtom` sets `lastRangeAtom` to the whole `range`, not to the ids the range ADDED. The docblock says "The ids the last Shift range added". Scenario: tick C, click A, Shift+click E (the range A..E includes C, so lastRange = [A,B,C,D,E]), then Shift+click B to shrink the range. The code deletes A..E and adds A..B, so C is unselected although it was picked on its own. Record `range.filter(id => !prevSelection.has(id))` instead.
+
+6. **"Select all loaded" in Timeline, Results and Map picks entities that are not the ones on screen.** The footer box (`LibraryView.tsx:1258`) and the bar's `allLoaded`/`moreToSelect` both get `loadedIds={shownIds}`, which is the grid's slice (the first DISPLAY_STEP of `filtered` in the current sort). Timeline draws all dated entities in date order, Results draws the ranked `entities` 40 at a time, and Map draws every marker. In those views the box selects 120 entities chosen by the grid's sort, some of them not drawn, and shows "checked" while entities that are drawn stay unticked. Each view should pass the ids it actually draws, the same way each view already registers its own order for ranges.
+
+7. **Escape meant for a menu also clears the selection.** `LibraryView.tsx:~751`. The window listener skips a target inside `[role=dialog|menu|listbox]`, but the Display menu, the Sort/View/Language `Select`s and the search-tips chip do not move focus into their popup when opened by click (none of them call `focus()` or use `useFocusTrap`), so the Escape target is the trigger button. Pressing Escape to close the Display menu with 40 entities selected closes the menu AND clears all 40. `e.defaultPrevented` would not help, because none of those handlers call `preventDefault`.
+
+8. **On a phone, a selection can be made but not acted on or cleared.** `LibrarySelectionBar.tsx:190` `BarButton` is `hidden sm:flex`, so Export, Delete and Clear all disappear below 640px. The baseline `FooterButton`s are `hidden sm:flex` too, and they are unmounted anyway while a selection exists. The only other way to clear is Escape, which a phone does not have. A checkbox tap still selects: it is opacity-0 at rest but tappable, and it is revealed by `group-focus-within`. After that the footer shows only "N selected", and that button opens a drawer that is not rendered on mobile (`AdaptiveSplitView`'s `right`). The selection stays until the collection is switched. Not checked on a device.
+
+9. **Exported CSV cells are not neutralised against spreadsheet formulas.** `utils/exportCsv.ts:108` `cell()` quotes a cell only for `,"\r\n`. A title or value that starts with `=`, `+`, `-` or `@` opens as a formula in Excel, Numbers or Sheets. That covers any user-created title (Create entity and Upload both take free text) and corpus values such as phone numbers. The usual guard prefixes such cells with `'` or a tab. Values are also joined with `|` and a `|` inside a value is not escaped, so a title containing "|" splits into two values on re-import, which breaks the "goes back through Import CSV unchanged" claim.
+
+10. **The selection drawer does quadratic work on every render.** `LibrarySelectionDrawer.tsx:22-23`. `[...selection].filter(id => !listed.includes(id))` runs on every render, and the drawer re-renders on every selection change. With "Select all 4,398" that is about 19M comparisons per render, plus the same again inside the `setListed` updater. Every later tick or untick pays it. A `Set` for `listed` makes it linear.
+
+11. **In the Timeline Spine, two controls per row share one name.** `LibraryTimelineView.tsx:~703`: the row's stretched button, which previews, is still `aria-label="Select ${e.title}"`, and the `EntitySelectBox` in the same row is also "Select ${e.title}". A screen-reader user cannot tell the preview control from the checkbox. `EntityCard` and the list table were renamed to "Preview …"; this one was missed.
+
+## Low
+
+12. **Drawer rows range over the grid's order, not the drawer's.** `EntityListDrawer` scopes `SelectionOrderScope` for the checkbox only. A Shift+click on a drawer row's BODY goes to `handleSelect` → `rangeSelection({ order: currentSelectionOrder() })`, which is the grid's order, so it selects a band of grid entities between the anchor and that row. Separately, Shift+Arrow from a drawer checkbox moves focus with `document.querySelector('[data-select-id=…] input')`, which returns the first match in the DOM: the grid's copy of that box, not the drawer's. Focus leaves the drawer.
+
+13. **Delete leaves a deleted entity open in the preview.** `doDelete` calls `deselect(ids)` but not `setPreview(null)`. If the previewed entity is part of the selection (preview it, then delete from the bar), the drawer keeps showing it, with Edit, after it is gone from every list.
+
+14. **The readout is not fixed-width, so the action buttons move.** `LibrarySelectionBar.tsx:101`: `min-w-[7rem]` is a floor. "1,204 selected · 12 not in view · Select all 4,398" is about 3× that, so Edit…Clear shift sideways whenever "not in view" or "Select all N" appears or disappears. The docblock says "fixed width, so 9 → 10 → 100 moves no button".
+
+15. **The selection drawer re-renders its cards on every keystroke.** `EntityListDrawer` subscribes to the raw `libraryQueryAtom` (the comment says "never on the keystroke path", but a selection survives searching and its drawer stays open) and passes an inline `onView={(id) => openEntity(id)}`, which defeats `EntityCard`'s memo. With a selection open, every keystroke re-renders up to 120 drawer cards against an unsettled query. That is the pattern the EntityCard deferred-query rule in CLAUDE.md exists to prevent.
+
+16. **Some consumers ignore the overlay.** `entityCorpusPool` (`atoms/dataSource.ts`) returns the raw corpora, so Copy From and pickers offer deleted entities and never list created or uploaded ones. `isOverlayDeleted` is exported and unused, and `getEntity` deliberately still resolves deleted ids. Everything outside `libraryEntitiesAtom` therefore still sees deleted entities.
+
+17. **Selection gestures drop the preview without the dirty guard.** `toggleSelectionAtom`, `rangeSelectionAtom` and `selectIdsAtom` all set `librarySelectedEntityIdAtom` to null, so ticking any box while a draft or edit form is open in the drawer unmounts it and loses the edits. A plain preview click already has the same exposure (`handleSelect` is not guarded either), so this is a wider version of an existing gap, not a new one.
+
+18. **The module mirror can drift from the atom (dev only).** Hot-reloading `atoms/entityOverlay.ts` recreates `overlayValueAtom` as EMPTY while `data/entityOverlay.ts` keeps the old mirror, so `getEntity` resolves created ids that the list no longer has. The reverse happens if the data module reloads. Storybook stories that `createStore()` all share one mirror. Neither happens in production. StrictMode is fine: writes happen only in handlers, and the draft discard is deferred and cancelled on remount.
+
+19. **`useSelectionOrder` writes a module global during render.** `EntitySelectBox.tsx:21`. A render that React discards (LibraryView uses `useDeferredValue`, and a concurrent render can be thrown away) can leave `viewOrder` set to an order that never committed. The effect is small: a Shift range runs over the previous query's order until the next commit.
+
+20. **Blob URLs are never revoked.** `libraryTasks.ts:80`. Blob URLs live for the whole document, and the File objects are also held by the task closure, so memory from deleted uploads is not freed. This is acceptable for a prototype. If revocation is ever added on delete, it will break Undo, which restores records that point at those URLs. The CSV download's 1 s revoke is fine.
+
+21. **Smaller items.**
+    - An exception in `exportEntitiesCsv` (a profile build throwing) leaves the activity stuck part-way, because there is no try/finally.
+    - The selection export follows click (Set insertion) order, not view order.
+    - The disabled Undo explains itself only through `title`, which never shows on focus. `Hint` exists for this.
+    - The checkbox is a 14px target, under WCAG 2.5.8's 24px unless its spacing counts.
+    - The SelectAllBox hint says "Cmd" on every platform.
+    - A write to one corpus's overlay rebuilds `libraryEntitiesAtom` for the current corpus whenever that corpus's overlay is non-empty, even though nothing in it changed. For example, an upload that lands after a switch away from CEJIL, when CEJIL has deletions, gives CEJIL's list a new identity and invalidates list-keyed caches.
+
+## Checked and clean
+- Stale ids: delete deselects, and a collection switch clears the selection (`selectDataSourceAtom`, the only writer of `dataSourceAtom`). Undo restores entities without re-selecting them, which is consistent.
+- atomFamily: one derived atom per id ever rendered, never removed. That is bounded by corpus size (about 4.4k) and cheap; only mounted ones recompute on a selection change.
+- Per-card re-render: `EntityCard` stays memo'd with stable props in the grid (`handleSelect` deps are stable setters, `className` is a primitive). LibraryView re-renders only at the 0↔1 transition and on drawer-open changes. The filterState memos are untouched.
+- Reserved slots: cards (with a preview on the slot plate; without one via the title's `pe-6`), the list-layout slot, the table's always-mounted select column and the timeline dot/box slot are all mounted from first paint. Showing a box moves nothing.
+- Forced colours: the `has-[:checked]` ground disappears there, but the checked box is always visible (`checked || active` → opacity-100), so the state is still conveyed.
+- CSV: RFC 4180 quoting of `, " CR LF` is correct, the BOM is written, and CRLF rows are used. RTL/Arabic text needs nothing beyond UTF-8 plus the BOM.
+- Modal Escape: ConfirmDialog, the Upload and Create dialogs and the Notifications drawer are `role=dialog` with focus inside, so the selection-clear listener correctly skips them.

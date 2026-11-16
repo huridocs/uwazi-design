@@ -1,0 +1,56 @@
+[
+ {
+  "id": "DSH-10",
+  "res": "PASS",
+  "ev": "Relationships card 550 -> 551 after creating one relationship (Hearing 3 -> Juan Carlos Abella, \"Mentions\") -> 550 after deleting it (dialogs on delete=[\"Delete relationship?\"]). The card follows the live reference store as specified; the card has no caption",
+  "shot": ""
+ },
+ {
+  "id": "DSH-12",
+  "res": "FAIL",
+  "ev": "Recent activity columns=[\"ACTION\",\"SUMMARY\",\"TIME\"] (no acting-user column; spec \"with the acting user\"); newest rows=[\"DELETE Deleted user “tbuergenthal” 2026-10-04 23:02\",\"UPDATE Updated thesaurus “Violation types QA” 2026-10-04 23:02\",\"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” 2026-06-15 18:42\"] (the two new actions are on top, newest first, then seed rows); link to Settings > Activity log present=false",
+  "shot": "DSH-12.png"
+ },
+ {
+  "id": "DSH-14",
+  "res": "PASS",
+  "ev": "Reset opens a confirm dialog (\"Reset demo data Settings changes made in this visit go back to the demo data, in every collection: users, groups, thesauri, collection settings, filters, global\"); Cancel keeps the edits (top rows still [\"DELETE Deleted user “tbuergenthal” 2026-10-04 23:0\",\"UPDATE Updated thesaurus “Violation types QA” 2026\"]); confirming: session activity entries 2 -> 0, Dashboard rows now [\"UPDATE Updated entity “Velásquez-Rodríguez v. Hond\",\"CREATE Created relationship type “Represented by” \"], users restored to 5; new Beacon=[\"Demo data reset just now\",\"Contact deleted just now\",\"Processing PDFs complete. 12 items processed. just now\",\"tbuergenthal deleted just now\",\"Violation types QA saved just now\"]. edits made: a thesaurus rename, a user delete and a deleted page (Pages rows 5 -> 4; after reset 5); a Pages draft in the editor was not created",
+  "shot": ""
+ },
+ {
+  "id": "DSH-13",
+  "res": "FAIL",
+  "ev": "CEJIL: table rows=false, paragraph present=true; Travesía: table rows=true, paragraph present=false. On CEJIL the page shows the paragraph \"The activity log isn't part of the public summa.cejil.org sample. Switch to the Sample source to see demo activity.\" in place of the Recent activity table (spec: same table, no paragraph about the data source); Travesía shows the Sample cards and table",
+  "shot": "DSH-13-CEJIL.png"
+ },
+ {
+  "id": "DSH-09",
+  "res": "FAIL",
+  "ev": "Desktop 1280: card grid has 4 columns (spec 2; 4 here); phone 390: 2 columns (spec one column; overflow 0px); axe desktop: [\"color-contrast (serious) x4: .bg-carbon-tint.py-0\\\\.5.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\"] (no scrollable-region-focusable violation); axe phone: [\"color-contrast (serious) x4: .bg-carbon-tint.w-fit.text-carbon | li:nth-child(2) > .flex-col.flex-1.relative > .text-ink.min-w-0[data-p\"]; the Reset demo data footer bar exists (spec says \"no footer\")",
+  "shot": "DSH-09-phone.png"
+ },
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "phone 390: Dashboard grid columns=2 (the 4 cards sit two per row, not one column), horizontal overflow 0px, Recent activity table fits without hiding actions; \"Reset demo data\" button reachable",
+  "shot": "DSH-09-phone.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe on page: [\"color-contrast (serious) x4: .bg-carbon-tint.py-0\\\\.5.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\"] (serious color-contrast on the action badges); axe on the Reset dialog: [\"landmark-no-duplicate-banner (moderate)\"]; focus trapped over 6 Tabs=true; Escape closed=true; focus restored to \"Reset demo data\"",
+  "shot": "X-07-dashboard.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "Action badge contrast (light:dark): CREATE 3.32:2.58, UPDATE 2.08:5.08, DELETE 6.71:6.19, MIGRATE 1.93:4.22 (need >= 4.5:1)",
+  "shot": "X-08-dashboard-dark.png"
+ },
+ {
+  "id": "X-13",
+  "res": "FAIL",
+  "ev": "Sample cards: ENTITIES 104 RELATIONSHIPS 550 USERS 5 LANGUAGES 5; CEJIL cards: ENTITIES 4398 RELATIONSHIPS 16998 TEMPLATES 19 LANGUAGES 3. Content cards (Entities, Relationships, Languages) follow the data source, but the Users card is not shown on CEJIL (it is replaced by Templates), so it does not stay unchanged",
+  "shot": "DSH-13-CEJIL.png"
+ }
+]

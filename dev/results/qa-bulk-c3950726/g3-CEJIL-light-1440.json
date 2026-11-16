@@ -1,0 +1,26 @@
+[
+ {
+  "area": "bulk-large:CEJIL-light-1440",
+  "item": "review names 1,084 entities",
+  "ok": true,
+  "detail": " you change are written, with the same value for all. | Change 1 property on 1,084 entities? | Applies to Julien Grisonas y otros. Resolución de la CorteIDH de 19 de abril de 2021, Familiares de Digna"
+ },
+ {
+  "area": "bulk-large:CEJIL-light-1440",
+  "item": "over 200 entities: a Beacon task with a Cancel control appears",
+  "ok": true,
+  "detail": "{\"cancelledAt\":405,\"txt\":\"Editing 1,084 entities…Running37%\"}"
+ },
+ {
+  "area": "bulk-large:CEJIL-light-1440",
+  "item": "cancel at ~40% keeps the changed part and reports it (coverage strictly between 0 and 1,084)",
+  "ok": true,
+  "detail": "before 0, after 400 of 1084"
+ },
+ {
+  "area": "bulk-large:CEJIL-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

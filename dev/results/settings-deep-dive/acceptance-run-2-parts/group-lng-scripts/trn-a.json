@@ -1,0 +1,44 @@
+[
+ {
+  "id": "TRN-01",
+  "result": "FAIL",
+  "evidence": "title=\"Translations\"; group headings=[\"System translations\",\"Content translations\"]; System rows=[\"Menu\",\"User Interface\"] (expected User Interface, Menu and Filters; the seed has no Filters group, see TRN-07); Content rows=27 vs Templates 9 + Thesauri 6 + Relationship types 12 = 27; column headers=[\"NAME\",\"TYPE\",\"KEYS\",\"TRANSLATED\"]",
+  "shot": "group-lng-TRN-01.png"
+ },
+ {
+  "id": "TRN-02",
+  "result": "PASS",
+  "evidence": "Content Name default ascending=true, click Name toggles descending=true; Type click sorts=true; \"Translate\" buttons=0; clicking the Hearing template row opened editor titled \"Hearing\"; pill labels=[\"Menu\",\"User interface\",\"Relationship type\",\"Template\",\"Thesaurus\"]; distinct pill styles (bg\\|colour)=1 [\"rgb(252, 250, 248)\\|rgb(51, 51, 51)\"]; System pill=User interface\\|rgb(252, 250, 248)\\|rgb(51, 51, 51)",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TA1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-11",
+  "result": "PASS",
+  "evidence": "rows 29; \"Court\" -> 1 rows [\"Court Case\"]; \"zzzz\" -> \"Translations \\| Translate the interface and your collection's content into its installed languages. \\| Untranslated only \\| System translations \\| NAME \\| TYPE \\| KEYS \\| TRANSLATED \\| Nothing matches “zzzz” \\| Clear search \\| Content translations \\| NAME \\| TYPE \\| KEYS \\| TRANSLATED \\| Nothing matches “zzzz” \\| Clear search\"; cleared -> 29 rows; search row height before/after/no results = 32/32/32px",
+  "shot": ""
+ },
+ {
+  "id": "TRN-PO1",
+  "result": "PASS",
+  "evidence": "Keys column vs editor rows: [{\"name\":\"Court Case\",\"lk\":31,\"n\":31,\"hasTerm\":false},{\"name\":\"Countries\",\"lk\":23,\"n\":23,\"hasTerm\":false},{\"name\":\"Menu\",\"lk\":5,\"n\":5,\"hasTerm\":false}]; per-language progress on list rows present=true (e.g. \"ES 98% \\| FR 94% ...\"); the word \"term\" appears on list or editors=false",
+  "shot": ""
+ },
+ {
+  "id": "TRN-08",
+  "result": "FAIL",
+  "evidence": "User Interface context holds 412 keys (spec text: 100 to 200; SD-7 seeds 412, so the range is out of date); first rows rendered=[\"\\\"Costa Rica\\\"\",\"\\\"the status\\\"~5\",\"*please keep this key secret and don't share it.\",\"+ Add data source\",\"+ Add filter\",\"+ click to select multiple cards.\",\"198?\",\"2FA\",\"2FA Enabled\",\"A default template cannot be deleted.\"]; first 60 sorted case-insensitively=false; keys reading \"term N\"=0. Several keys are Uwazi search-syntax strings (e.g. [\"\\\"Costa Rica\\\"\",\"\\\"the status\\\"~5\"]) that the prototype never shows.",
+  "shot": "group-lng-TRN-08.png"
+ },
+ {
+  "id": "_errs-TA2",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ }
+]

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "X-04-fail",
+  "res": "FAIL",
+  "ev": "Dev panel present=true; status after Arm=\"Armed: the next save fails with “The server did not answer in time.”.\"; back on Account=true; after Update+Accept with Save armed: new Beacon entries=[\"Account updated just now\"]; \"An error occurred\" entries=0; email kept=\"fail@x.org\"",
+  "shot": "X-04-fail.png"
+ },
+ {
+  "id": "X-04-note",
+  "res": "INFO",
+  "ev": "\"Account updated\" success entries during the armed save=1",
+  "shot": ""
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe page=[]; footer=[]; password modal=[]; revoke dialog=[]; 2FA modal=[]; duplicate button names=[]; unlabelled inputs=[]; modal role=dialog, name ref=modal-:r1n:; focus after Escape: password modal -> \"Update\", revoke dialog -> \"Revoke API key Nightly export\", 2FA modal -> \"Enable\"",
+  "shot": "X-07.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "\"Activated\" status button text contrast light 3.86:1, dark 3.45:1 (need >= 4.5:1; it is a disabled-state button); Logout label light 8.2:1, dark 6.65:1",
+  "shot": "X-08.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "Phone 390: page overflow=0px; footer Update 66x28; password modal box {\"x\":0,\"y\":0,\"w\":390,\"h\":844} (sheet/full width); API key table row action visible on touch (opacity 1), size 26x26; Logout/Update reachable by tap",
+  "shot": "X-06-phone-modal.png"
+ },
+ {
+  "id": "X-05",
+  "res": "N/A",
+  "ev": "Account \"Applies:\" excludes X-05: no delete of a used object on Account (applies line excludes it)",
+  "shot": ""
+ },
+ {
+  "id": "X-10",
+  "res": "N/A",
+  "ev": "Account \"Applies:\" excludes X-10: no list",
+  "shot": ""
+ },
+ {
+  "id": "X-11",
+  "res": "N/A",
+  "ev": "Account \"Applies:\" excludes X-11: no list",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "res": "N/A",
+  "ev": "Account \"Applies:\" excludes X-12: no list",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "res": "N/A",
+  "ev": "Account \"Applies:\" excludes X-13: account is global",
+  "shot": ""
+ },
+ {
+  "id": "ACC4-console",
+  "res": "PASS",
+  "ev": "console errors/warnings (atomFamily baseline excluded): []",
+  "shot": ""
+ }
+]

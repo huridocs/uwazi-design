@@ -1,0 +1,32 @@
+[
+ {
+  "id": "ACT-11",
+  "res": "FAIL",
+  "ev": "Saved Collection name \"A\" then \"B\". Top entry after the second save: \"UPDATE Updated settings “Collection” admin 2026-10-04 23:12 Action UPDATE Summary Updated settings “Collection” User admin Time 2026-10-04 23:12\". Stored entry: [{\"method\":\"UPDATE\",\"summary\":\"Updated settings “Collection”\",\"domain\":\"collection\",\"targetId\":\"collection\",\"scope\":\"mock\",\"id\":\"log-muuqgv5o-2\",\"at\":1791173522364,\"time\":\"2026-10-04 23:12\",\"user\":\"admin\"},{\"method\":\"UPDATE\",\"summary\":\"Updated settings “Collec. Expected the entry to name the collection update and user admin, and its expanded row to show the changed field with before \"A\" / after \"B\" from the stored entry.",
+  "shot": "acceptance-run-1-shots/ACT-11.png"
+ },
+ {
+  "id": "ACT-12",
+  "res": "FAIL",
+  "ev": "Did one action each: Collection save (x3 incl. A/B above), create page \"QA page\" (Save draft), upload file (button only raises \"Upload is not built in the prototype.\"; no file picker), Preserve token (\"Add source\"), CSV import. Log now has 11 rows (4 new; expected 5 new, one per action). Newest first: [\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\",\"UPDATE Updated page “QA page” admin 2026-10-04 23:12\",\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\",\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\",\"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42\"]. Only 2 of the 5 actions wrote an entry (create page, save Collection); upload (no file picker), Preserve token (\"Add source\" adds no row and logs nothing) and CSV import logged none. Step-by-step log counts: {\"a\":1,\"collectionAfterB\":2,\"page\":3,\"upload\":3,\"preserve\":3,\"csv\":3,\"collection2\":4}.",
+  "shot": "acceptance-run-1-shots/ACT-12.png"
+ },
+ {
+  "id": "ACT-13",
+  "res": "FAIL",
+  "ev": "New entries after ACT-12: [\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\",\"UPDATE Updated page “QA page” admin 2026-10-04 23:12\",\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\",\"UPDATE Updated settings “Collection” admin 2026-10-04 23:12\"]. All are readable sentences with no \"POST /api/...\" text and no RAW pill; \"Updated settings “Collection”\" matches Uwazi's \"Updated settings\". Against the Expect: the first save of a new page reads \"Updated page “QA page”\" (Uwazi: \"Created page\"); Publish adds no \"Published page release\" line (the three page actions share one wording); there are no entries at all for the Preserve token, CSV import, upload or a menu link, so those sentences cannot be read.",
+  "shot": "acceptance-run-1-shots/ACT-12.png"
+ },
+ {
+  "id": "ACT-12::persist",
+  "res": "INFO",
+  "ev": "After reload: 11 rows (first: UPDATE Updated settings “Collection” admin 2026-10-04 23:12); Dashboard Recent activity: Recent activity ACTION SUMMARY TIME UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated page “QA page” 2026-10-04 23:12 UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” 2026-06-15 18:42 Reset demo data; after Reset demo data: 7 rows (confirm dialog 1).",
+  "shot": ""
+ },
+ {
+  "id": "::errs",
+  "res": "INFO",
+  "ev": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ }
+]

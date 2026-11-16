@@ -1,0 +1,121 @@
+{
+ "390": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1926,
+    "docTop": 1934,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 390,
+  "iw": 390,
+  "viewMode": "grouped"
+ },
+ "768": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1922,
+    "docTop": 1930,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 768,
+  "iw": 768,
+  "viewMode": "grouped"
+ },
+ "1024": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1807,
+    "docTop": 1815,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 1024,
+  "iw": 1024,
+  "viewMode": "grouped"
+ },
+ "1280": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1716,
+    "docTop": 1724,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 1280,
+  "iw": 1280,
+  "viewMode": "grouped"
+ },
+ "1440": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1693,
+    "docTop": 1701,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 1440,
+  "iw": 1440,
+  "viewMode": "grouped"
+ },
+ "1920": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1625,
+    "docTop": 1633,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 1920,
+  "iw": 1920,
+  "viewMode": "grouped"
+ },
+ "2000": {
+  "nCards": 18,
+  "nBoth": 1,
+  "detail": [
+   {
+    "title": "Masacres de El Mozote",
+    "propBottom": 1625,
+    "docTop": 1633,
+    "propLeft": 29,
+    "docLeft": 29,
+    "stacked": true
+   }
+  ],
+  "scrollW": 2000,
+  "iw": 2000,
+  "viewMode": "grouped"
+ }
+}

@@ -1,0 +1,122 @@
+[
+ {
+  "id": "X-01",
+  "result": "PASS",
+  "evidence": "saved es \"Case number\"=\"PERSIST-1\"; after rail to Languages and back=\"PERSIST-1\"; after reload=\"PERSIST-1\"; after Reset demo data=\"Case number\" (seed text)",
+  "shot": ""
+ },
+ {
+  "id": "_errs-XF1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "result": "FAIL",
+  "evidence": "success half: \"Translations saved\" x1 per Save (TRN-15). Failure half: armed (Armed: the next save fails with “Injected save failure for QA.”.), edited es \"Case number\" and pressed Save: error entries \"An error occurred\"=[], success entries=1, edit kept=true, Save still enabled=false. The Save was written as if nothing was armed.",
+  "shot": "group-lng-X-04-TRN.png"
+ },
+ {
+  "id": "_errs-XF2",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "Activity log rows after one Save: [\"Update admin Updated translations of “Countries” Oct 5, 2026 - 10:38\"]",
+  "shot": ""
+ },
+ {
+  "id": "X-07",
+  "result": "FAIL",
+  "evidence": "serious/critical axe and checks: list=[]; duplicate row-button names on the list=[\"Translate Hearing\",\"Translate Judgment\"] (the column sort buttons Name and Type also repeat across the two tables: [\"Name\",\"Type\"]); editor=[]; inputs without a label=0; discard dialog=[]; dialog named=true, trap held=true, Escape closes=true, focus restored to \"Translations\"",
+  "shot": "group-lng-X-07-TRN.png"
+ },
+ {
+  "id": "_errs-XF3",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-08 (desktop)",
+  "result": "FAIL",
+  "evidence": "list type pills light [\"Menu=12.13\",\"User interface=12.13\",\"Thesaurus=12.13\"] dark [\"Menu=9.04\",\"User interface=9.04\",\"Thesaurus=9.04\"]; list progress text light [\"es 0%=12.63\",\"fr 0%=12.63\"] dark [\"es 0%=9.78\",\"fr 0%=9.78\"]; editor code pills (source, translated, untranslated amber) light [\"en=17.40\",\"es=10.89\",\"fr=10.89\",\"ar=10.89\",\"pt=10.89\",\"es=1.93\"] dark [\"en=13.68\",\"es=7.96\",\"fr=7.96\",\"ar=7.96\",\"pt=7.96\",\"es=4.22\"]; editor progress text light [\"Spanish8 of 23=16.72\",\"8 of 23=7.16\"] dark [\"Spanish8 of 23=12.65\",\"8 of 23=6.01\"]; amber pills in view=50; ratios below 4.5: [1.93,4.22]",
+  "shot": "group-lng-X-08-TRN-desktop-editor-dark.png"
+ },
+ {
+  "id": "_errs-XF4-desktop",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-08 (mobile)",
+  "result": "FAIL",
+  "evidence": "list type pills light [\"Menu=12.13\",\"User interface=12.13\",\"Thesaurus=12.13\"] dark [\"Menu=9.04\",\"User interface=9.04\",\"Thesaurus=9.04\"]; list progress text light [\"es 0%=12.63\",\"fr 0%=12.63\"] dark [\"es 0%=9.78\",\"fr 0%=9.78\"]; editor code pills (source, translated, untranslated amber) light [\"en=17.40\",\"es=10.89\",\"es=1.93\",\"fr=10.89\",\"fr=1.93\",\"ar=10.89\"] dark [\"en=13.68\",\"es=7.96\",\"es=4.22\",\"fr=7.96\",\"fr=4.22\",\"ar=7.96\"]; editor progress text light [\"Spanish8 of 23=16.72\",\"8 of 23=7.16\"] dark [\"Spanish8 of 23=12.65\",\"8 of 23=6.01\"]; amber pills in view=50; ratios below 4.5: [1.93,1.93,4.22,4.22]",
+  "shot": "group-lng-X-08-TRN-mobile-editor-dark.png"
+ },
+ {
+  "id": "_errs-XF4-mobile",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-20",
+  "result": "PASS",
+  "evidence": "list rows=29, horizontal scroll list=false/false; editor structure: first card/row has 4 inputs and 9 code pills, 358x193px, key \"Countries\"; input box {\"l\":144,\"r\":328,\"w\":184}; editor horizontal scroll=false/false; footer [\"Cancel:true\",\"Save:true\"]; status per language row: an amber (untranslated) or grey (translated) code pill sits beside the grey code pill, so the code shows twice per row, and no separate dot (see screenshot); typing marks it dirty (Save enabled=true); back chevron present=1, opens the discard dialog=true",
+  "shot": ""
+ },
+ {
+  "id": "X-06",
+  "result": "PASS",
+  "evidence": "Translations at 390x844: list rows readable (29), editor as cards, no horizontal scroll on list (false) or editor (false), Save/Cancel reachable [\"Cancel:true\",\"Save:true\"], mobile back chevron guarded=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-XF5",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-10",
+  "result": "FAIL",
+  "evidence": "with the Dev panel's Empty templates, thesauri and relationship types: Content translations section reads \"Content translations \\| NAME \\| TYPE \\| KEYS \\| TRANSLATED \\| No content contexts\"; generic \"Nothing here yet.\"=false; title names the object=true; one-line hint present=false; no create action exists on this page (contexts follow their stores). System translations still lists \"System translations \\| NAME \\| TYPE \\| KEYS \\| TRANSLATED \\| Menu \\| Menu \\| 5 \\| ES 0% \\| FR 0% \\| AR 0% \\| PT 0% \\| User Interface \\| User interface \\| 412 \\| ES 98% \\| FR 94% \\| AR 97% \\| PT 0%\"",
+  "shot": "group-lng-X-10-TRN.png"
+ },
+ {
+  "id": "_errs-XF6",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "result": "PASS",
+  "evidence": "Sample contexts (29): [\"Menu/Menu\",\"User Interface/User interface\",\"Case status/Thesaurus\",\"Cites/Relationship type\",\"Countries/Thesaurus\",\"Country/Template\"]...; CEJIL (47): [\"Filters/Filters\",\"Menu/Menu\",\"User Interface/User interface\",\"Audiencia/Template\",\"Causa/Template\",\"CIDH/Relationship type\"]...; Best Artworks (24): [\"Menu/Menu\",\"User Interface/User interface\",\"Artist/Template\",\"Artwork/Template\",\"Case status/Thesaurus\",\"Cites/Relationship type\"]...; back on Sample identical to first read=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-XF7",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "X-05",
+  "result": "N/A",
+  "evidence": "Excluded by the page's Applies line.",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "result": "N/A",
+  "evidence": "Excluded by the page's Applies line.",
+  "shot": ""
+ }
+]

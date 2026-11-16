@@ -1,0 +1,257 @@
+[
+ {
+  "entity": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+  "doc": "gon-cabinet-decisions-2082-bhadra",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-08-25-cabinet-directs-platforms-to-register-within-one-week",
+  "doc": "gon-cabinet-decisions-2082-bhadra",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-15-cabinet-decisions-martyrs-mourning-day-and-relief",
+  "doc": "gon-cabinet-decisions-2082-bhadra",
+  "role": "primary"
+ },
+ {
+  "entity": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+  "doc": "gon-cabinet-decisions-2082-asoj",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-21-karki-inquiry-commission-formed",
+  "doc": "gon-cabinet-decisions-2082-asoj",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-21-cabinet-forms-loss-and-damage-assessment-committee",
+  "doc": "gon-cabinet-decisions-2082-asoj",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-25-cabinet-decides-financial-aid-for-families-of-identified-dead",
+  "doc": "gon-cabinet-decisions-2082-asoj",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+  "doc": "gon-cabinet-decisions-2082-asoj",
+  "role": "primary"
+ },
+ {
+  "entity": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+  "doc": "gon-cabinet-decisions-2082-kartik",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-11-03-cabinet-declares-45-gen-z-martyrs",
+  "doc": "gon-cabinet-decisions-2082-kartik",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-11-10-cabinet-appoints-dan-bahadur-karki-police-chief",
+  "doc": "gon-cabinet-decisions-2082-kartik",
+  "role": "primary"
+ },
+ {
+  "entity": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+  "doc": "gon-cabinet-decisions-2082-chaitra",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+  "doc": "gon-cabinet-decisions-2082-chaitra",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2026-03-27-cabinet-decides-to-implement-commission-report",
+  "doc": "gon-cabinet-decisions-2082-chaitra",
+  "role": "primary"
+ },
+ {
+  "entity": "source:mocit-2023-12-01-notice-social-media-listing-2080",
+  "doc": "mocit-notice-social-media-listing-2080-08-15",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2023-12-01-mocit-notice-social-media-platforms-must-list-within-three-months",
+  "doc": "mocit-notice-social-media-listing-2080-08-15",
+  "role": "primary"
+ },
+ {
+  "entity": "source:mocit-2025-02-03-notice-social-media-listing-2081",
+  "doc": "mocit-notice-social-media-listing-2081-10-21",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point",
+  "doc": "mocit-notice-social-media-listing-2081-10-21",
+  "role": "primary"
+ },
+ {
+  "entity": "source:federal-parliament-secretariat-2025-01-28-social-media-bill-2081",
+  "doc": "na-social-media-bill-2081",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-01-29-social-media-bill-tabled",
+  "doc": "na-social-media-bill-2081",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+  "doc": "nhrc-press-release-2082-05-20",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+  "doc": "nhrc-press-release-2082-05-20",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+  "doc": "nhrc-press-release-2082-05-23",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-08-nhrc-urges-restraint-and-relief",
+  "doc": "nhrc-press-release-2082-05-23",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring",
+  "doc": "nhrc-press-release-2082-05-25",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-10-nhrc-continues-monitoring-after-8-9-september",
+  "doc": "nhrc-press-release-2082-05-25",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en",
+  "doc": "nhrc-press-release-2082-05-27-en",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+  "doc": "nhrc-press-release-2082-05-27-en",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-ne",
+  "doc": "nhrc-press-release-2082-05-27-ne",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons",
+  "doc": "nhrc-press-release-2082-05-28",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned",
+  "doc": "nhrc-press-release-2082-05-28",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-15-appeal-30-bhadra",
+  "doc": "nhrc-appeal-2082-05-30",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-15-nhrc-statement-relief-and-return-to-calm",
+  "doc": "nhrc-appeal-2082-05-30",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief",
+  "doc": "nhrc-press-release-2082-05-31",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel",
+  "doc": "nhrc-press-release-2082-05-31",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life",
+  "doc": "nhrc-press-release-2082-06-06",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life",
+  "doc": "nhrc-press-release-2082-06-06",
+  "role": "primary"
+ },
+ {
+  "entity": "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations",
+  "doc": "nhrc-press-note-2083-02-13",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2026-05-27-nhrc-submits-report-recommending-action-against-oli",
+  "doc": "nhrc-press-note-2083-02-13",
+  "role": "primary"
+ },
+ {
+  "entity": "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+  "doc": "sc-press-release-2082-05-26",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+  "doc": "sc-press-release-2082-05-26",
+  "role": "primary"
+ },
+ {
+  "entity": "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082",
+  "doc": "sc-press-release-2082-05-27",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files",
+  "doc": "sc-press-release-2082-05-27",
+  "role": "primary"
+ },
+ {
+  "entity": "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24",
+  "doc": "sc-full-court-decision-2083-01-02-case-files-after-bhadra-23-24",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events",
+  "doc": "sc-full-court-decision-2083-01-02-case-files-after-bhadra-23-24",
+  "role": "primary"
+ },
+ {
+  "entity": "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured",
+  "doc": "moha-procedure-classification-of-gen-z-injured-2082",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest",
+  "doc": "moha-procedure-classification-of-gen-z-injured-2082",
+  "role": "primary"
+ },
+ {
+  "entity": "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured",
+  "doc": "moha-procedure-relief-for-gen-z-injured-2082",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured",
+  "doc": "moha-procedure-relief-for-gen-z-injured-2082",
+  "role": "primary"
+ },
+ {
+  "entity": "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests",
+  "doc": "moha-procedure-damage-assessment-public-protests-2081",
+  "role": "primary"
+ },
+ {
+  "entity": "action:2024-05-01-moha-posts-procedure-for-assessing-damage-from-protests",
+  "doc": "moha-procedure-damage-assessment-public-protests-2081",
+  "role": "primary"
+ }
+]

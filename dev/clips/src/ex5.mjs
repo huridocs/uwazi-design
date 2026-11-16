@@ -1,0 +1,15 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2500);
+await p.getByPlaceholder(/Search title/).click();
+await p.keyboard.type("disappearance", {delay:40}); await p.waitForTimeout(2000);
+await p.keyboard.press("Enter");
+await p.mouse.click(885,76); await p.waitForTimeout(400);
+await p.getByText("Passages", {exact:true}).click(); await p.waitForTimeout(800);
+await p.keyboard.press("Escape"); await p.mouse.click(700,200);
+await p.waitForTimeout(2500);
+await p.screenshot({ path: "s10.png" });
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(3000);
+await p.screenshot({ path: "s11.png" });
+await b.close();

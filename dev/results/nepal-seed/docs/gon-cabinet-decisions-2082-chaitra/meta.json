@@ -1,0 +1,32 @@
+{
+ "doc_id": "gon-cabinet-decisions-2082-chaitra",
+ "title": "Decisions of the Council of Ministers, Chaitra 2082 (Nepali; meetings of Chaitra 1, 13, 16, 22 and 24)",
+ "language": "ne",
+ "pages": 6,
+ "bytes": 327209,
+ "sha256": "380a3e532f2116bde83b0292c9511d7de6c4fac33b94761fbc4309afdb0e8bd9",
+ "source_url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20chaitra_veoiplv.pdf",
+ "source_page": "https://www.opmcm.gov.np/content/532/cabinet-chaitra/",
+ "retrieved": "2026-10-05",
+ "publisher": "Office of the Prime Minister and Council of Ministers",
+ "published": "2026-06-09",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": true,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Embedded Nepali text is partly legacy-font mapped; some words are garbled. Searchable only approximately.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+  "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+  "action:2026-03-27-cabinet-decides-to-implement-commission-report"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 18985
+}

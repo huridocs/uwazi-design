@@ -1,0 +1,38 @@
+[
+ {
+  "area": "share:Sample-light-1440",
+  "item": "Share shows 'Mixed access · N published, M private'",
+  "ok": true,
+  "detail": "Mixed access · 41 published, 12 private"
+ },
+ {
+  "area": "share:Sample-light-1440",
+  "item": "choosing Private flags 'Will change' with Revert",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "share:Sample-light-1440",
+  "item": "a review step states the effect before applying",
+  "ok": true,
+  "detail": "Share 53 entities | Review changes | Country | 7 | Court Case | 5 | Right | 7 | Judgment | 4 | Organization | 5 | Violation | 6 | Document | 6 | Person | 13 | Make 41 entities private | only members can see them | Back | Apply to 53 entities"
+ },
+ {
+  "area": "share:Sample-light-1440",
+  "item": "Status facet follows the change (all Restricted)",
+  "ok": true,
+  "detail": "{\"restricted\":12,\"published\":41} => {\"restricted\":53,\"published\":0}"
+ },
+ {
+  "area": "share:Sample-light-1440",
+  "item": "Undo restores each entity's own access (12 / 41)",
+  "ok": true,
+  "detail": "{\"restricted\":12,\"published\":41}"
+ },
+ {
+  "area": "share:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

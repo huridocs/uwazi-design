@@ -1,0 +1,38 @@
+[
+ {
+  "id": "USR-22",
+  "res": "FAIL",
+  "ev": "New group editor: labels=[\"Group name\",\"AD admin admin@uwazi.io\",\"ML mlopez m.lopez@cejil.org\",\"JN jnkemba j.nkemba@example.org\",\"AF afarah a.farah@example.org\",\"TB tbuergenthal t.buergenthal@example.org\"] (spec \"Name\" + \"Members\" with placeholder \"Nothing selected\" and \"Select all\"; built \"Group name\" + checkbox list, Select all controls=0); commit disabled when empty=true; probes=[{\"v\":\"ab\",\"dis\":false,\"msg\":\"\"},{\"v\":\"51 chars\",\"dis\":false,\"msg\":\"\"},{\"v\":\"litigation\",\"dis\":false,\"msg\":\"\"},{\"v\":\"12 chars\",\"dis\":false,\"msg\":\"\"}] (no inline error copy: Name is required / too short / too long / Duplicated name); Enter in Name submits=false; Beacon=[\"Group saved just now\"] (spec \"Group saved\"); Groups list row=\"Ethics 2\" (count, not username pills); tabs=[\"Users 5\",\"Groups 4\"]; tbuergenthal row=\"TB tbuergenthal t.buergenthal@example.org Collaborator Ethics Password\"",
+  "shot": "USR-22.png"
+ },
+ {
+  "id": "USR-22-dup",
+  "res": "INFO",
+  "ev": "groups listed after Ethics create=4",
+  "shot": ""
+ },
+ {
+  "id": "USR-23",
+  "res": "PASS",
+  "ev": "Beacon=[\"Group updated just now\"] (spec \"Group updated\"); after reload group row=\"Ethics board 1\", members tbuergenthal=true admin=false; admin row=\"AD admin (you) admin@uwazi.io Admin Administrators Password + 2fa\"; tbuergenthal row=\"TB tbuergenthal t.buergenthal@example.org Collaborator Ethics board Password\"",
+  "shot": ""
+ },
+ {
+  "id": "USR-24",
+  "res": "FAIL",
+  "ev": "Group rows are selectable (checkbox)=0 (spec: tick Litigation then Delete; built: row Delete button only); dialog title=\"Delete group\", text=\"Delete group Delete the Litigation group? Its members keep their accounts. 2 members lose this group: mlopez and jnkemba. Cancel Delete\" (spec: \"Delete\", \"Do you want to delete the following items?\", \"2 members lose this group\", no password field); after confirm Beacon=[\"Deleted user group just now\"] (spec \"Deleted user group\"), groups rows=2; mlopez=\"ML mlopez m.lopez@cejil.org Editor — Password + 2fa\", jnkemba=\"JN jnkemba j.nkemba@example.org Editor Research Password\"",
+  "shot": "USR-24.png"
+ },
+ {
+  "id": "USR-27",
+  "res": "PASS",
+  "ev": "Groups tab with all deleted: \"No groups yet A group shares access to entities among several users. Add group Add group\", Add group buttons=3; Users + \"zzz\": \"Nothing matches “zzz” Clear search Add u\" with Clear search",
+  "shot": "USR-27.png"
+ },
+ {
+  "id": "USR4-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

@@ -1,0 +1,24 @@
+{
+ "downgrade": {
+  "claim:74-deaths-nationwide": "An earlier tally (26 September), not a conflicting one.",
+  "claim:balen-shah-and-kulman-ghising-declined-interim-pm-role": "The statement itself records the differing reports; no other claim or source disputes it.",
+  "claim:bhat-bhateni-loss-10-85-billion": "Figures from September 2025 and September 2026; the later one is an update.",
+  "claim:bhat-bhateni-loss-over-11-billion": "A later figure for the same loss; an update, not a conflict.",
+  "claim:collateral-damage-3-trillion-economists": "Includes indirect effects; it measures something other than direct losses.",
+  "claim:death-toll-72-to-74-by-21-september": "The claim records a toll rising with the counting date.",
+  "claim:death-toll-reported-on-11-september": "The claim records tallies taken at different times of one day.",
+  "claim:education-minister-resigned-over-teachers-demands-rift": "The note records a sourcing gap (no named source for the cost estimate), not a conflict.",
+  "claim:fnj-26-press-freedom-incidents-in-protest-days": "FNJ counts a wider category than CPJ or RSF; a difference of definition.",
+  "claim:injured-2660-verified-list": "A finalised list of May 2026 after the March 2026 report tally; an update.",
+  "claim:injuries-100-plus-2025-09-08": "Same-day counts differ by hour and source; they form a running count.",
+  "claim:insurance-claims-20-7-billion-by-16-sept": "Claims by 16 September, later 22.26 billion; different dates.",
+  "claim:insurance-claims-22-26-billion": "Claims by 24 September, after the 20.7 billion of 16 September; different dates.",
+  "claim:karki-ineligible-as-non-member-and-former-chief-justice": "An argument made in writs; no source says the petitioners did not make it.",
+  "claim:more-than-a-dozen-media-outlets-attacked-on-9-september": "RSF, CPJ and FNJ count different things; a difference of definition.",
+  "claim:relief-amount-for-victims-families": "Possibly different items (relief against the total package); no incompatible account is established.",
+  "claim:thousands-of-prisoners-freed": "The note records that HRW gives no count; no source disputes the claim.",
+  "claim:toll-29-dead-by-10-september": "29 on 10 September fits the Ministry's 30 on the same date; the earlier conflict named is a different date.",
+  "claim:two-media-offices-set-on-fire-on-9-september": "CPJ, RSF and FNJ cover different scopes; not a direct conflict.",
+  "claim:wounded-2522-in-commission-report": "The commission's March 2026 tally; the May 2026 list of 2,660 is a later update."
+ }
+}

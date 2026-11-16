@@ -1,0 +1,8 @@
+﻿Title,Template,Language,Date added,Case number,Description,Region,Ratified ACHR,Accepts Court jurisdiction,Date filed,Respondent State,Status,Source instrument,Convention article,Category,Date,Court,Series,Outcome,Type,Founded,Headquarters,Related right,Definition,Date of adoption,Source,Country,Role,Profession,Date of birth,Victim,Place of the incident,Date of the incident,Date of judgment,Petitioner,Respondent,Articles invoked,Issuing body,People involved,Related cases,Rights invoked
+'=1+1 QA formula,Court Case,en,2026-09-21,"'=HYPERLINK(""http://x"")",'@SUM(A1) +cmd -2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Mexico,Country,en,2024-03-12,,,North America,1981,Yes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Case 10.488 (Ellacuría),Court Case,en,2024-03-11,10.488,,Central America,,,1993,El Salvador,Decided,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Case 11.481 (Gelman),Court Case,en,2024-03-10,11.481,,,,,2006,Uruguay,Decided,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Case 12.250 (Bámaca Velásquez),Court Case,en,2024-03-09,12.250,,,,,1993,Guatemala,Decided,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+...
+'=1+1 QA formula,Court Case,en,2026-09-21,"'=HYPERLINK(""http://x"")",'@SUM(A1) +cmd -2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

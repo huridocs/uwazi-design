@@ -1,0 +1,8 @@
+[
+ {
+  "id": "X-06-kb",
+  "res": "FAIL",
+  "ev": "Fresh phone context (390x844, touch), Settings > Account, no interaction yet: --kb on :root=\"1189px\" while innerHeight=844, visualViewport.height=844, offsetTop=0 (expected 0px, there is no keyboard). With a field edited and the \"Confirm\" dialog opened, the dialog box is {\"y\":0,\"h\":0} (collapsed, the scrim shows but the dialog is not visible; Cancel/Accept cannot be tapped). After dispatching a visualViewport resize --kb=\"0px\" and the dialog box is {\"y\":0,\"h\":844}. The hook (hooks/useKeyboardInset.ts) measures once at mount and only on visualViewport resize/scroll; in this emulation the first value is taken while the layout viewport is still settling. Not confirmed on a real device",
+  "shot": "X-06-kb-stale.png"
+ }
+]

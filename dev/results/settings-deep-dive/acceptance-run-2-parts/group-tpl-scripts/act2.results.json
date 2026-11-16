@@ -1,0 +1,50 @@
+{
+ "ACT-02": {
+  "id": "ACT-02",
+  "result": "PASS",
+  "evidence": "100 entries (93 injected + 7 seed): footer \"Showing 1-100 of 100\", paginator 0, rows 100; 101 entries: page 1 footer \"Showing 1-100 of 101\" rows 100 paginator 1; page 2 footer \"Showing 101-101 of 101\" rows 1 aria-current=page; filter Create on a 101-entry page 2 -> \"Showing 1-96 of 96\" (96 rows, back on page 1); 157 entries: page 2 \"Showing 101-157 of 157\", then Create filter -> \"Showing 1-100 of 152\" rows 100, Page 1 aria-current=page. Log injected through sessionStorage \"uwazi:settings:activity\" (the app writes the same key); no scripted UI loop",
+  "shot": "acceptance-run-2-shots/ACT-02.png"
+ },
+ "ACT-17": {
+  "id": "ACT-17",
+  "result": "FAIL",
+  "evidence": "Dev panel armed: \"Armed: the next read fails with “The log store did not answer.”.\". Opening Activity log shows \"Activity log Every change made in Settings, newest first. Entries cannot be edited or removed. Action Create Update Delete Migrate User All users Date range Date range From To Today Clear filters Activity log ACTION USER DESCRIPTION TIMESTAMP Details Update admin Updated entity “Velásquez-Rodríguez \" (alert regions 0, Retry buttons 0); after Retry: null. No error appeared: the table rendered with its seven rows, so the Read scope switch does not reach the Activity log store",
+  "shot": "acceptance-run-2-shots/ACT-17.png"
+ },
+ "ACT-17b": {
+  "id": "ACT-17b",
+  "result": "PASS",
+  "evidence": "with a broken stored log (not driven through SD-1): \"Activity log Every change made in Settings, newest first. Entries cannot be edited or removed. Action Create Update Delete Migrate User All users Date range Date range From To Today Clear filters The activity log could not be loaded The stored activity log cou\" alert 1 Retry 1; after the cause is fixed Retry reloads 7 rows. The error UI exists; only the Dev panel switch does not reach it (ACT-17)",
+  "shot": "acceptance-run-2-shots/ACT-17b-corrupt-storage.png"
+ },
+ "ACT-11": {
+  "id": "ACT-11",
+  "result": "PASS",
+  "evidence": "name was \"Inter-American Human Rights Archive\", set to \"A\" and saved, then \"B\" and saved (field now \"B\"); top entry \"Update admin Updated settings Oct 5, 2026 - 10:41\"; expanded: \"Action Update Description Updated settings User admin Time Oct 5, 2026 - 10:41 CHANGES Field Before After Collection Name A B\"",
+  "shot": "acceptance-run-2-shots/ACT-11.png"
+ },
+ "ACT-12": {
+  "id": "ACT-12",
+  "result": "FAIL",
+  "evidence": "after one action each (create page, upload file, Preserve token, CSV import, save Collection) the log has 11 rows = 4 new (expected 5): [\"Update admin Updated settings Oct 5, 2026 - 10:41\",\"Create admin Registered CSV import “organizations.csv” (Court Case) Oct 5, 2026 - 10:41\",\"Create admin Uploaded custom file “qa.png” Oct 5, 2026 - 10:41\",\"Create admin Created page “New page” Oct 5, 2026 - 10:41\"]; all by admin: true; time stamps [\"10:41\",\"10:41\",\"10:41\",\"10:41\"] within 10:41-10:41; after rail navigation 11 rows, after reload 11; Dashboard recent activity [\"Update Updated settings admin · Oct 5, 2026 - 10:41\",\"Create Registered CSV import “organizations.csv” (Court Case) admin · Oct 5, 2026 - 10:41\",\"Create Uploaded custom file “qa.png” admin · Oct 5, 2026 - 10:41\",\"Create Created page “New page” admin · Oct 5, 2026 - 10:41\",\"Update Updated entity “Velásquez-Rodríguez v. Honduras” admin · Jun 15, 2026 - 18:42\"] matches the log order: true; after Reset demo data 7 rows. (Activity written after the create-page step: [\"Created page “New page”\"])",
+  "shot": "acceptance-run-2-shots/ACT-12.png"
+ },
+ "ACT-13": {
+  "id": "ACT-13",
+  "result": "FAIL",
+  "evidence": "new entries as sentences [\"Updated settings\",\"Registered CSV import “organizations.csv” (Court Case)\",\"Uploaded custom file “qa.png”\",\"Created page “New page”\"]; request-line text present: false; RAW pill present: false",
+  "shot": "acceptance-run-2-shots/ACT-12.png"
+ },
+ "X-09-collab": {
+  "id": "X-09-collab",
+  "result": "FAIL",
+  "evidence": "five actions from five pages each produced one entry by admin",
+  "shot": "acceptance-run-2-shots/ACT-12.png"
+ },
+ "ACT-18": {
+  "id": "ACT-18",
+  "result": "FAIL",
+  "evidence": "Violation types footer reads \"Saved on Jun 13, 2026 by jnkemba\" (expected \"Saved on Jun 13, 2026 by jnkemba\"); Court Case before save \"Saved on Jun 12, 2026 by mlopez\", after saving in this session \"Saved just now by admin\" (editor returned to the list; reopened to read it) (expected \"Saved just now by admin\"); Dashboard recent first row \"Update Updated template “Court Case X” admin · Oct 5, 2026 - 10:42\", Activity log first row sentence \"Updated template “Court Case X”\" \\| CONSOLE during this check: error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique ke",
+  "shot": "acceptance-run-2-shots/ACT-18-template.png"
+ }
+}

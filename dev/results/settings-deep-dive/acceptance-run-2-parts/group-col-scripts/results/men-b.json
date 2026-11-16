@@ -1,0 +1,20 @@
+[
+ {
+  "id": "MEN-09",
+  "result": "FAIL",
+  "evidence": "initial [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; focus ring on the grip: keyboard focus-visible=true and a blue ring is drawn (crop of MEN-09-focus.png); key sequence Space -> [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; ArrowDown -> [\"About\",\"Library\",\"Resources\",\"  Methodology\",\"  Contact\"]; Space -> [\"About\",\"Library\",\"Resources\",\"  Methodology\",\"  Contact\"]; ArrowDown -> [\"About\",\"Resources\",\"  Library\",\"  Methodology\",\"  Contact\"]; ArrowDown -> [\"About\",\"Resources\",\"  Methodology\",\"  Library\",\"  Contact\"]; ArrowDown -> [\"About\",\"Resources\",\"  Methodology\",\"  Contact\",\"  Library\"]; ArrowUp -> [\"About\",\"Resources\",\"  Methodology\",\"  Library\",\"  Contact\"]; End -> [\"About\",\"Resources\",\"  Methodology\",\"  Library\",\"  Contact\"]; Home -> [\"About\",\"Resources\",\"  Methodology\",\"  Library\",\"  Contact\"]; focus after the first ArrowDown stays on \"Reorder Library. Arrow keys move it.\"; grip aria-label at the end \"Reorder Library. Arrow keys move it.\"; polite live region after the first ArrowDown [], after End [], after Home []; Save enabled after moving=true; Move buttons 10, unique names=true; \"Move About down\" -> [\"Resources\",\"  About\",\"  Methodology\",\"  Library\",\"  Contact\"]; \"Move Resources up\" -> [\"Resources\",\"  About\",\"  Methodology\",\"  Library\",\"  Contact\"]",
+  "shot": "MEN-09"
+ },
+ {
+  "id": "MEN-09b",
+  "result": "INFO",
+  "evidence": "About moved down repeatedly: [[\"Library\",\"Resources\",\"  About\",\"  Methodology\",\"  Contact\"],[\"Library\",\"Resources\",\"  Methodology\",\"  About\",\"  Contact\"],[\"Library\",\"Resources\",\"  Methodology\",\"  Contact\",\"  About\"],[\"Library\",\"Resources\",\"  Methodology\",\"  Contact\",\"About\"]]; then Resources up: [\"Resources\",\"  Methodology\",\"  Contact\",\"Library\",\"About\"]",
+  "shot": ""
+ },
+ {
+  "id": "MEN-10",
+  "result": "PASS",
+  "evidence": "start [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; drag Library onto the Resources row (drop indicator elements during drag 1): [\"About\",\"Resources\",\"  Library\",\"  Methodology\",\"  Contact\"]; drag Library onto About: [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; drag Resources onto the Library/About area: [\"Resources\",\"  Methodology\",\"  Contact\",\"Library\",\"About\"]; Save enabled=true",
+  "shot": "MEN-10-indicator"
+ }
+]

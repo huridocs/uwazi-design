@@ -1,0 +1,56 @@
+[
+ {
+  "id": "VIS-account",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-account-1280-light.png"
+ },
+ {
+  "id": "VIS-account-password-dialog",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[\"1280-light: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[32rem\\\\] > .border-b\",\"1280-dark: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[32rem\\\\] > .border-b\",\"390-light: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[32rem\\\\] > header\",\"390-dark: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[32rem\\\\] > header\"]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-account-password-dialog-1280-light.png"
+ },
+ {
+  "id": "VIS-users",
+  "res": "FAIL",
+  "ev": "axe serious/critical=[\"1280-light: aria-prohibited-attr (serious) x1: .rounded-sm\",\"1280-dark: aria-prohibited-attr (serious) x1: .rounded-sm\",\"1280-dark: color-contrast (serious) x2: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-p | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-p\",\"390-light: aria-prohibited-attr (serious) x1: .rounded-sm\",\"390-dark: aria-prohibited-attr (serious) x1: .rounded-sm\",\"390-dark: color-contrast (serious) x2: .min-h-11.last\\\\:border-b-0[data-part=\\\"row\\\"]:nth-child(1) > . | .min-h-11.last\\\\:border-b-0[data-part=\\\"row\\\"]:nth-child(2) > .\"]; minor axe=[]; badge/pill contrast below 4.5:1=[\"1280-dark: Password + 2fa:4.48\",\"1280-dark: Password + 2fa:4.48\",\"390-dark: Password + 2fa:4.48\",\"390-dark: Password + 2fa:4.48\"]; horizontal overflow=[]; badges measured per combo=[\"1280-light:20\",\"1280-dark:20\",\"390-light:20\",\"390-dark:20\"]",
+  "shot": "X-07-users-1280-light.png"
+ },
+ {
+  "id": "VIS-user-editor",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-user-editor-1280-light.png"
+ },
+ {
+  "id": "VIS-users-delete-dialog",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[\"1280-light: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\",\"1280-dark: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\",\"390-light: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > header\",\"390-dark: landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > header\"]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-users-delete-dialog-1280-light.png"
+ },
+ {
+  "id": "VIS-groups",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-groups-1280-light.png"
+ },
+ {
+  "id": "VIS-group-editor",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:5\",\"1280-dark:5\",\"390-light:5\",\"390-dark:5\"]",
+  "shot": "X-07-group-editor-1280-light.png"
+ },
+ {
+  "id": "VIS-rail",
+  "res": "PASS",
+  "ev": "axe serious/critical=[]; minor axe=[]; badge/pill contrast below 4.5:1=[]; horizontal overflow=[]; badges measured per combo=[\"1280-light:0\",\"1280-dark:0\",\"390-light:0\",\"390-dark:0\"]",
+  "shot": "X-07-rail-1280-light.png"
+ },
+ {
+  "id": "VIS-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

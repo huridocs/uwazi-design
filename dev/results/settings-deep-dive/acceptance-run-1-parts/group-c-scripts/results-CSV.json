@@ -1,0 +1,44 @@
+[
+ {
+  "id": "CSV-01",
+  "res": "FAIL",
+  "ev": "admin: Tools > Import CSV opens list (heading \"CSVs\", Settings rail visible: true); Library footer link opens dialog: New import CSV File Select a CSV file or. Non-admin afarah (collaborator): Tools button count 0, Library footer \"Import CSV\" count 1, click opens: New import CSV File Select a CSV file or drag and drop here Template Select a te | view list visible: 0. Expected non-admin sees neither link. session: {\"uwazi:signedInUser\":\"\\\"u4\\\"\"}",
+  "shot": "acceptance-run-1-shots/CSV-01-afarah.png"
+ },
+ {
+  "id": "CSV-02",
+  "res": "FAIL",
+  "ev": "Seed header counters read [\"Total imports 5\",\"Processing 1\",\"Completed 2\",\"Failed 1\"] (dt/dd, count drawn first): Total 5, Processing 1, Completed 2, Failed 1 match the seed. The post-cancel half cannot be driven: locations.csv has no Cancel action (see CSV-18), so Failed 2 / Processing 0 never occurs. Pending hearings-2026.csv is counted in no bucket (1+2+1=4 of 5).",
+  "shot": "acceptance-run-1-shots/CSV-02.png"
+ },
+ {
+  "id": "CSV-03",
+  "res": "FAIL",
+  "ev": "Columns: [\"\",\"STATUS\",\"FILE\",\"TEMPLATE\",\"PROGRESS\",\"ENTITIES\",\"FAILED\",\"DATE\",\"ACTION\"] (no Entities created / Entities updated split; extra select column; \"Action\" not \"View\"; button label \"Open\"). Default order [\"cases.csv\",\"locations.csv\",\"judges-import.zip\",\"witnesses.csv\",\"hearings-2026.csv\"] dates [\"02/18/2026\",\"02/19/2026\",\"02/17/2026\",\"02/15/2026\",\"02/20/2026\"] is not newest first (02/20 hearings is last). Clicking Date or Status leaves the order unchanged ([\"cases.csv\",\"locations.csv\",\"judges-import.zip\",\"witnesses.csv\",\"hearings-2026.csv\"] / [\"cases.csv\",\"locations.csv\",\"judges-import.zip\",\"witnesses.csv\",\"hearings-2026.csv\"]); the 7 sort buttons only raise a \"Sorted by x\" notification; aria-sort on 0 headers; File and counts also have sort buttons.",
+  "shot": "acceptance-run-1-shots/CSV-03.png"
+ },
+ {
+  "id": "CSV-05",
+  "res": "FAIL",
+  "ev": "Footer button reads \"New import\" (expected \"Import CSV\"). Modal \"New import\": text \"New import CSV File Select a CSV file or drag and drop here Template Select a template… Cancel Import\"; real file inputs: 0 (a dashed button, no \"CSV or ZIP\" hint; field label \"CSV File\"); Template select shows \"Select a template…\" (expected first template preselected); submit \"Import\" disabled=true (expected \"Accept\"). Cancel closes: see CSV-21.",
+  "shot": "acceptance-run-1-shots/CSV-05.png"
+ },
+ {
+  "id": "CSV-06",
+  "res": "FAIL",
+  "ev": "Cannot choose x.csv / x.zip / x.txt: 0 input[type=file] in the modal; the dropzone button assigns a random built-in name (\"testimonies.csv Remove\"), so .csv/.zip acceptance and .txt refusal cannot be driven. Template search works: \"per\" narrows to [\"Person\"].",
+  "shot": "acceptance-run-1-shots/CSV-06.png"
+ },
+ {
+  "id": "CSV-07::opts",
+  "res": "INFO",
+  "ev": "[\"Court Case\",\"Judgment\",\"Person\",\"Country\",\"Violation\",\"Right\",\"Organization\",\"Document\"]",
+  "shot": ""
+ },
+ {
+  "id": "CSV-21",
+  "res": "FAIL",
+  "ev": "After Cancel and reopen the file is discarded (selected-file count 0), but the Template select reads \"Select a template…\" (expected first template preselected again). No Discard changes dialog (ConfirmDialog count 0). locations.csv row went from \"Warnings locations.csv Country 495/634 495 3 02/19/2026 Open\" to \"Warnings locations.csv Country 495/634 495 3 02/19/2026 Open\" within 2.5 s without reload.",
+  "shot": "acceptance-run-1-shots/CSV-21.png"
+ }
+]

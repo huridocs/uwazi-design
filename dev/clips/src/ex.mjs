@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+p.on("pageerror", e => console.log("ERR", e.message));
+await p.goto("http://localhost:1426/");
+await p.waitForTimeout(3000);
+await p.getByRole("button", { name: /Cards/ }).click();
+await p.waitForTimeout(500);
+await p.screenshot({ path: "s2.png" });
+await p.keyboard.press("Escape");
+await p.getByRole("button", { name: /Sample/ }).click();
+await p.waitForTimeout(500);
+await p.screenshot({ path: "s3.png" });
+await b.close();

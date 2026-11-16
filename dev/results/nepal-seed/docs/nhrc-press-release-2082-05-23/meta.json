@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-release-2082-05-23",
+ "title": "NHRC press release: stop excessive force against protesters (Nepali, 23 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 1531113,
+ "sha256": "72a974b2a8a06ed01ccb07ab4d214a6887057b262f125d0e7d2a48e45ecb8a55",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-23.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/838",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-08",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned or rasterised page; no usable text layer (any embedded text is OCR noise or legacy-font ASCII). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+  "action:2025-09-08-nhrc-urges-restraint-and-relief"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 2267
+}

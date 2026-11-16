@@ -1,0 +1,16 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const { browser, page } = await launch({ sync: false }); page.setDefaultTimeout(10000);
+const L = page.locator('[data-library-pane=left]'), R = page.locator('[data-library-pane=right]');
+await L.getByRole("button", { name: /^Open$/ }).first().click(); await page.waitForTimeout(1200);
+await R.getByRole("button", { name: /^Open$/ }).first().click(); await page.waitForTimeout(1200);
+await L.getByRole("button", { name: /^Edit$/ }).first().click(); await page.waitForTimeout(1000);
+await R.getByRole("button", { name: /^Edit$/ }).first().click(); await page.waitForTimeout(1000);
+const armed = () => page.evaluate(() => [...document.querySelectorAll('[data-library-pane]')].map(p => p.querySelectorAll('[data-component=ListeningChip]').length));
+await L.locator('textarea').first().click(); await R.locator('textarea').first().click(); await page.waitForTimeout(400);
+console.log("both armed:", JSON.stringify(await armed()));
+await L.locator('textarea').first().click(); await page.waitForTimeout(200); await page.keyboard.press("Escape"); await page.waitForTimeout(400);
+console.log("Escape with focus in left:", JSON.stringify(await armed()), "(expect [0,1])");
+await R.locator('textarea').first().click(); await page.keyboard.press("Escape"); await page.waitForTimeout(400);
+console.log("Escape with focus in right:", JSON.stringify(await armed()), "(expect [0,0])");
+await page.screenshot({ path: OUT + "/two-edit-forms.png" });
+await browser.close();

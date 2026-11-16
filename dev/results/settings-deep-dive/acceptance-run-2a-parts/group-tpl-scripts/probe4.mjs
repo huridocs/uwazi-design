@@ -1,0 +1,10 @@
+import { launch, open, S, rows, wait, shot, names } from "./common.mjs";
+const b = await launch();
+const { page, errors } = await open(b, "templates");
+await wait(page, 800);
+await page.locator('button:has-text("Library")').first().click(); await wait(page, 2500);
+await page.getByRole("button",{name:/Create entity/}).first().click(); await wait(page, 600);
+await shot(page,"probe-create");
+console.log(await page.evaluate(()=>document.body.innerText.slice(-600)));
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog],[role=menu],[role=listbox]')].filter(e=>!e.closest('[inert]')).map(e=>e.getAttribute("role")+"|"+e.innerText.slice(0,300))));
+await b.close();

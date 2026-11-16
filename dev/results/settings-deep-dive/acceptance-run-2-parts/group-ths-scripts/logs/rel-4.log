@@ -1,0 +1,51 @@
+(browser was closed under REL-4a, attempt 1; retrying)
+FAIL | REL-16 | "Mentors" added in Settings: panel "Manage types" modal lists it=true; the new-reference type picker lists it=true; the template property select lists it=true (first option "Select...", sorted=true); after renaming to "Mentors 2" in Settings: modal true, picker true, template select true. Console errors during the check (template editor): ["error: Warning: Encountered two children with the same key `Judgment` (stack: TemplateEditor PropertyRow) x15"] | acceptance-run-2-shots/REL-16.png
+console REL-4a ERRORS error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE || error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE || error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE

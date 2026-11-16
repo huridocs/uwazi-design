@@ -1,0 +1,32 @@
+[
+ {
+  "area": "select-all:Sample-light-1440",
+  "item": "footer select-all box (\"Select all loaded entities\") selects the loaded entities",
+  "ok": true,
+  "detail": "53 of 53; bar: 53 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear"
+ },
+ {
+  "area": "select-all:Sample-light-1440",
+  "item": "\"Select all N\" offer",
+  "ok": true,
+  "detail": "no offer; loaded 53 of 53"
+ },
+ {
+  "area": "select-all:Sample-light-1440",
+  "item": "unticking the box clears",
+  "ok": true,
+  "detail": "null"
+ },
+ {
+  "area": "select-all:Sample-light-1440",
+  "item": "\"N not in view\" appears when a search hides the selection",
+  "ok": true,
+  "detail": "3 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear => 3 selected | Edit | Change template | Export CSV | Share | Permissions | Delete | Clear | · | 3 not in view | 1 filter"
+ },
+ {
+  "area": "select-all:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

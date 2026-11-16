@@ -1,0 +1,248 @@
+[
+  {
+    "k": "cejil-derechos-Grouped",
+    "v": {
+      "layout": "grouped",
+      "rows": 30,
+      "firstRow": "Defensor de DD.HH y otrosResumen, Descriptors · p.2, p.13 +6",
+      "footerRange": "4,000–4,000 of 4,0001–30 of 4,000",
+      "pageEnd": "/ 1341–30 of 4,000",
+      "showMore": false,
+      "sameAs": [
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Tree",
+    "v": {
+      "layout": "tree",
+      "rows": 30,
+      "firstRow": "Defensor de DD.HH y otrosResumen, Descriptors · p.2, p.13 +6",
+      "footerRange": "4,000–4,000 of 4,0001–30 of 4,000",
+      "pageEnd": "/ 1341–30 of 4,000",
+      "showMore": false,
+      "sameAs": [
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11",
+        "↳Same 5 passages asDefensor de DD.HH y otrosp.2p.13p.1p.5p.11"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Passages",
+    "v": {
+      "layout": "passages",
+      "rows": 30,
+      "firstRow": "Integrantes y militantes de la Unión Patriótica. Informe de ",
+      "footerRange": "4,000–4,000 of 4,0001–30 of 4,000",
+      "pageEnd": "/ 1341–30 of 4,000",
+      "showMore": false,
+      "sameAs": [
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7",
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7",
+        "↳Same 8 passages asDigna Ochoa y Placido y familiaresp.3p.8p.2p.6p.1p.4p.5p.7"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "cejil-derechos-Spine",
+    "v": {
+      "layout": "spine",
+      "rows": 28,
+      "firstRow": "26-05-2001Niños de la calle (Villagrán Morales y otros). Sen",
+      "footerRange": "4,000–4,000 of 4,0001–30 of 4,000",
+      "pageEnd": "/ 1341–30 of 4,000",
+      "showMore": false,
+      "sameAs": [
+        "↳ Same passage as Instituto de Reeducacion del Menor \"Panchito López\"",
+        "↳ Same passage as Instituto de Reeducacion del Menor \"Panchito López\"",
+        "↳ Same passage as Cantoral Huamaní y García Santa Cruz"
+      ],
+      "spineMarks": [
+        "1986",
+        "1990",
+        "1994",
+        "1998",
+        "2002",
+        "2004",
+        "2006",
+        "2008"
+      ],
+      "spineDates": [
+        "26-05-2001",
+        "20-05-2002",
+        "13-01-2005",
+        "21-02-2006"
+      ]
+    }
+  },
+  {
+    "k": "cejil-derechos-turn",
+    "v": {
+      "runs": [
+        149,
+        117,
+        131,
+        136,
+        132
+      ],
+      "median": 132
+    }
+  },
+  {
+    "k": "cejil-derechos-after-turns",
+    "v": {
+      "layout": "grouped",
+      "rows": 30,
+      "firstRow": "Amrhein y otros. Resolución del Presidente de la CorteIDH de",
+      "footerRange": "4,000–4,000 of 4,000151–180 of 4,000",
+      "pageEnd": "/ 134151–180 of 4,000",
+      "showMore": false,
+      "sameAs": [
+        "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+        "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+        "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "opened-record",
+    "v": "CEJIL · Uwazi"
+  },
+  {
+    "k": "back-restore",
+    "v": {
+      "before": {
+        "layout": "grouped",
+        "rows": 30,
+        "firstRow": "Amrhein y otros. Resolución del Presidente de la CorteIDH de",
+        "footerRange": "4,000–4,000 of 4,000151–180 of 4,000",
+        "pageEnd": "/ 134151–180 of 4,000",
+        "showMore": false,
+        "sameAs": [
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1"
+        ],
+        "spineMarks": [],
+        "spineDates": [],
+        "top": 900
+      },
+      "after": {
+        "layout": "grouped",
+        "rows": 30,
+        "firstRow": "Amrhein y otros. Resolución del Presidente de la CorteIDH de",
+        "footerRange": "4,000–4,000 of 4,000151–180 of 4,000",
+        "pageEnd": "/ 134151–180 of 4,000",
+        "showMore": false,
+        "sameAs": [
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1",
+          "↳Same 5 passages asAmrhein y otros. Resolución del Presidente de la CorteIDH de 12 de julio de 2017p.3p.8p.2p.6p.1"
+        ],
+        "spineMarks": [],
+        "spineDates": [],
+        "top": 1293
+      }
+    }
+  },
+  {
+    "k": "cejil-grossman-full",
+    "v": {
+      "layout": "grouped",
+      "rows": 30,
+      "firstRow": "Claudio GrossmanTitleJuez y/o Comisionado·ChileTitle",
+      "footerRange": "44–44 of 441–30 of 44",
+      "pageEnd": "/ 21–30 of 44",
+      "showMore": false,
+      "sameAs": [],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "nepal-curfew-drawer",
+    "v": {
+      "drawer": 30,
+      "pageEnd": "/ 41–30 of 105",
+      "showMore": false,
+      "footer": "105–105 of 1051–30 of 105"
+    }
+  },
+  {
+    "k": "nepal-curfew-passages",
+    "v": {
+      "layout": "passages",
+      "rows": 30,
+      "firstRow": "Curfew in Kathmandu Valley, defied by protestersTitle · Summ",
+      "footerRange": "105–105 of 1051–30 of 105",
+      "pageEnd": "/ 41–30 of 105",
+      "showMore": false,
+      "sameAs": [
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm",
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm",
+        "↳Same passage asCurfew order around New Baneshwar, 12:30 pm to 10 pm"
+      ],
+      "spineMarks": [],
+      "spineDates": []
+    }
+  },
+  {
+    "k": "vegas-volley-spine",
+    "v": {
+      "layout": "spine",
+      "rows": 30,
+      "firstRow": "22:02:15First shots · 22:02:1513 fieldsVolleys coveredVolley",
+      "footerRange": "152–152 of 1521–30 of 152",
+      "pageEnd": "/ 61–30 of 152",
+      "showMore": false,
+      "sameAs": [],
+      "spineMarks": [
+        "00:00",
+        "22:03",
+        "22:04",
+        "22:05",
+        "22:06",
+        "22:07",
+        "22:08",
+        "22:09"
+      ],
+      "spineDates": [
+        "22:02:15",
+        "22:05:14",
+        "22:05:45",
+        "22:05:57"
+      ]
+    }
+  },
+  {
+    "k": "split",
+    "v": {
+      "left": [
+        "31–60 of 4,000"
+      ],
+      "right": [
+        "1–30 of 3,999"
+      ],
+      "footer": null
+    }
+  },
+  {
+    "k": "phone-sheet",
+    "v": {
+      "sheet": 30,
+      "pageEnd": "1/ 1341–30 of 4,000"
+    }
+  }
+]

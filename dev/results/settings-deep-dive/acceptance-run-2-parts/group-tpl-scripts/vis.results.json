@@ -1,0 +1,26 @@
+{
+ "X-08-1280": {
+  "id": "X-08-1280",
+  "result": "PASS",
+  "evidence": "Templates at 1280px: Default badge contrast light 10.89, dark 7.96; text nodes under 4.5 light 0, dark 0; axe color-contrast light [], dark []; screenshots TPL-visual-*",
+  "shot": "acceptance-run-2-shots/TPL-visual-dark-1280"
+ },
+ "X-08-390": {
+  "id": "X-08-390",
+  "result": "PASS",
+  "evidence": "Templates at 390px: Default badge contrast light 10.89, dark 7.96; text nodes under 4.5 light 0, dark 0; axe color-contrast light [], dark []; screenshots TPL-visual-*",
+  "shot": "acceptance-run-2-shots/TPL-visual-dark-390"
+ },
+ "X-04-fail-rename": {
+  "id": "X-04-fail-rename",
+  "result": "FAIL",
+  "evidence": "armed \"Armed: the next save fails with “Disk quota exceeded.”.\"; renaming logo-iachr to brand and saving: new Beacon entries [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"File updated just now\",\"Processing PDFs complete. 12 items processed. 1 min ago\"]; rows [\"NAME\",\"brand.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"] (the rename went through and no error entry was added, so the Save scope does not reach the Uploads rename)",
+  "shot": "acceptance-run-2-shots/X-04-fail-rename"
+ },
+ "X-04-fail-delete-upload": {
+  "id": "X-04-fail-delete-upload",
+  "result": "FAIL",
+  "evidence": "armed \"Armed: the next delete fails with “The server did not answer in time.”.\"; deleting style-guide.pdf: new Beacon entries [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"Deleted custom file just now\",\"Processing PDFs complete. 12 items processed. 1 min ago\"]; rows [\"NAME\",\"logo-iachr.svg\",\"cover-banner.jpg\",\"Inter-brand.woff2\"] (the file was deleted with \"Deleted custom file\" and no error was added, so the Delete scope does not reach Uploads)",
+  "shot": "acceptance-run-2-shots/X-04-fail-delete-upload"
+ }
+}

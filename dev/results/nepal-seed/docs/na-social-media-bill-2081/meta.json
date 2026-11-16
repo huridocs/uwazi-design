@@ -1,0 +1,31 @@
+{
+ "doc_id": "na-social-media-bill-2081",
+ "title": "Bill on operation, use and regulation of social media (Social Media Bill 2081), registered in the National Assembly (Nepali)",
+ "language": "ne",
+ "pages": 33,
+ "bytes": 1168657,
+ "sha256": "ffbf59570c8a730169ae109c2e5dab4ea326398e6869188d3ba7a4c832362cb4",
+ "source_url": "https://na.parliament.gov.np/uploads/attachments/0qbicazidgmddi9n.pdf",
+ "source_page": "https://na.parliament.gov.np/np/bills/JCC7TZJz",
+ "retrieved": "2026-10-05",
+ "publisher": "Federal Parliament Secretariat",
+ "published": "2025-01-28",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": true,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Embedded Nepali text uses a broken font mapping (for example the aa-matra and some conjuncts come out as other letters). Searchable only approximately. The bill page shows registration on 2081-10-15 (28 Jan 2025) and withdrawal on 2082-10-26 (9 Feb 2026).",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:federal-parliament-secretariat-2025-01-28-social-media-bill-2081",
+  "action:2025-01-29-social-media-bill-tabled"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 56760
+}

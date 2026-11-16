@@ -1,0 +1,117 @@
+3b {'PASS': 94, 'FAIL': 89, 'N/A': 3, 'INFO': 2}  playground {'PASS': 91, 'FAIL': 83, 'N/A': 3, 'INFO': 2}
+
+CONSOLE@pag-f2@pag-f: 3b=PASS pg=FAIL
+  3b: 
+  pg: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag. || pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag. || pageerror: Failed to
+
+CONSOLE@pag-x1@pag-x-noreset: 3b=FAIL pg=None
+  3b: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag. || pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag. || pageerror: Failed to
+  pg: 
+
+CONSOLE@pag-x2@pag-x-noreset: 3b=PASS pg=None
+  3b: 
+  pg: 
+
+CONSOLE@pag-x3@pag-x: 3b=PASS pg=FAIL
+  3b: 
+  pg: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.
+
+CONSOLE@pag-x3@pag-x-noreset: 3b=PASS pg=None
+  3b: 
+  pg: 
+
+CONSOLE@pag-x4@pag-x: 3b=PASS pg=FAIL
+  3b: 
+  pg: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.
+
+CONSOLE@pag-x4@pag-x-noreset: 3b=PASS pg=None
+  3b: 
+  pg: 
+
+CSS-15: 3b=FAIL pg=PASS
+  3b: __gutter pass=false ([16,826]); code box left 266 vs title left 266; CSS page code font 14px / "JetBrains Mono", ui-monospace, monospace; Pages editor code areas [["TEXTAREA","14px","\"JetBrains Mono\", ui-monospace, monospace"]]
+  pg: __gutter pass=true ([16]); code box left 266 vs title left 266; CSS page code font 14px / "JetBrains Mono", ui-monospace, monospace; Pages editor code areas [["TEXTAREA","14px","\"JetBrains Mono\", ui-monospace, monospace"]]
+
+MEN-17: 3b=FAIL pg=PASS
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: Menu context keys before: ["About","Contact","Library","Methodology","Resources"]; after translating Library to "Biblioteca"; with the rename/add/delete in an unsaved draft (discarded) the context still reads ["About in Spanish, untranslated=About","Contact in Spanish, untranslated=Contact","Library
+
+PAG-25: 3b=PASS pg=FAIL
+  3b: notification sequence: Save 1 -> ["Saved successfully."] ; Save 2 -> ["Saved successfully."] ; Publish -> ["Page published successfully. rel25"] ; Restore -> ["Draft restored from release."] ; Delete -> ["Deleted successfully."]; stored Activity log entries (newest first) ["DELETE Deleted page “QA25
+  pg: notification sequence: Save 1 -> ["Saved successfully."] ; Save 2 -> ["Saved successfully."] ; Publish -> ["CSV Import: Creating entities… Running locations.csv 74%","Page published successfully. rel25"] ; Restore -> ["Draft restored from release."] ; Delete -> ["Deleted successfully."]; stored Acti
+
+PAG-26: 3b=FAIL pg=PASS
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: Save armed (Armed: the next save fails with “Disk full (QA save)”.): notifications ["An error occurred Disk full (QA save)"]; editor footer "Draft Unsaved edits Cancel Save", Save still enabled=true, edit kept=true, activity entries 0->0 || Publish armed (Armed: the next save fails with “Gateway tim
+
+X-01@pag-x-noreset: 3b=FAIL pg=None
+  3b: Saved "Contact us" -> rail Dashboard -> Pages: "Contact us /page/p4/contact-us Published · edited"; after reload: "undefined"; after Reset demo data: "Contact us /page/p4/contact-us Published · edited"
+  pg: 
+
+X-02@pag-x: 3b=FAIL pg=PASS
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: data-source switch while dirty: "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes" (Cancel kept the edit: true); navbar Library link while dirty: "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes"; clean editor rail 
+
+X-02@pag-x-noreset: 3b=PASS pg=None
+  3b: data-source switch while dirty: "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes" (Cancel kept the edit: true); navbar Library link while dirty: "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes"; clean editor rail 
+  pg: 
+
+X-03@men-c: 3b=None pg=PASS
+  3b: 
+  pg: after a successful Save the Save button is disabled=true; the next edit enables it=true; reverting to the stored tree disables it again=true
+
+X-03@pag-x: 3b=FAIL pg=PASS
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: edit -> Save enabled=true; after Save disabled=true; rail click showed dialog=0; editing again re-enables Save=true
+
+X-03@pag-x-noreset: 3b=PASS pg=None
+  3b: edit -> Save enabled=true; after Save disabled=true; rail click showed dialog=0; editing again re-enables Save=true
+  pg: 
+
+X-04@col-a: 3b=None pg=FAIL
+  3b: 
+  pg: success: ["Settings updated"]; dev panel (Armed: the next save fails with “Disk full”.); failure Save: new notifications ["Settings updated"]; edit kept "Two cards B", still dirty=false
+
+X-04@css: 3b=None pg=FAIL
+  3b: 
+  pg: success ["Saved successfully."]; Armed: the next save fails with “Quota exceeded”.; the next Save after arming "Save" failure: new entries ["Saved successfully."], the save went through (edit stored, Save disabled=true); expected exactly one "An error occurred" entry and the edit kept
+
+X-04@pag-x-noreset: 3b=FAIL pg=None
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: 
+
+X-05@pag-x-noreset: 3b=PASS pg=None
+  3b: unused page (Partners): "Are you sure? Do you want to delete the following items? • Partners No menu link leads to it; nothing else changes. Cancel Delete"; used page (Methodology): "Are you sure? Do you want to delete the following items? • Methodology The menu link “Methodology” (/page/methodology
+  pg: 
+
+X-09@col-a: 3b=None pg=PASS
+  3b: 
+  pg: activity store after Save: ["UPDATE Updated settings [admin]"]
+
+X-09@men-d: 3b=None pg=PASS
+  3b: 
+  pg: activity store after the Save: ["UPDATE Updated menu [admin]","UPDATE Updated menu [admin]"]
+
+X-09@pag-x-noreset: 3b=FAIL pg=None
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: 
+
+X-10@pag-x-noreset: 3b=PASS pg=None
+  3b: Pages has no "Empty pages" dev action, so all four were deleted: "TITLE URL STATUS ACTIONS No pages yet A page holds your own content, such as an About page or a methodology. Add page Add page"
+  pg: 
+
+X-11@pag-x-noreset: 3b=PASS pg=None
+  3b: toolbar height/top: idle 32/160, typed "meth" 32/160 (1 row), no-match 32/160, cleared 32 (4 rows); role=search
+  pg: 
+
+X-12@pag-x-noreset: 3b=FAIL pg=None
+  3b: script error: locator.boundingBox: Timeout 30000ms exceeded.
+  pg: 
+
+X-13@pag-x: 3b=FAIL pg=PASS
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: Sample ["About…","Methodology…","Partners…","Contact…"]; CEJIL ["Jueces /page/58b2f3a45d59f31e1345b896/jueces Published","Old - Inicio /page/58b2f3a45d59f31e1345b89c/old-inicio Published","Tabla de ratificaciones: Convención Americana sobre Derechos Humanos /page/58b2f3a45d59f31e1345b8a2/tabla-de-ra
+
+X-13@pag-x-noreset: 3b=FAIL pg=None
+  3b: script error: locator.click: Timeout 30000ms exceeded.
+  pg: 

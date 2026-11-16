@@ -1,0 +1,2 @@
+PASS | DSH-10 | Dashboard Relationships card (total references) before 550; after adding one "Mentions" reference to Juan Carlos Abella from Hearing 8 and Saving 551; after deleting that reference (dialog "Delete relationship? The relationship is removed from this entity. This can’t be undone. Cancel Delete") and Saving 550; the card is "Relationships" with caption "total references" | acceptance-run-2-shots/DSH-10.png
+console dsh-rel clean

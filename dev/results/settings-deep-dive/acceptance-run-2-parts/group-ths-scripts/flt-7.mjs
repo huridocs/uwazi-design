@@ -1,0 +1,33 @@
+import { axe, dark, light, serious, run, open, S, wait, clean, sh, rec, rail, saveF, showBox, fRows, newGroup, setGroupOf, groupSel, groupNames, hscroll, dialogText, dialogs, errMark, errNew } from "./tx.mjs";
+await run("FLT-7m", async (b) => {
+  let { page } = await open(b, "filters", "mobile");
+  await wait(page, 700);
+  const shape = await page.evaluate(() => { const c = document.querySelector("[data-testid=settings-content]"); const tb = c.querySelector("[data-component=SettingsTable]"); const r = tb.getBoundingClientRect(); return { tableW: Math.round(r.width), minW: getComputedStyle(tb).minWidth, vw: innerWidth, headers: c.querySelectorAll("[role=columnheader]").length, row0: tb.querySelector("[data-part=row]").innerText.replace(/\s+/g, " ") }; });
+  const h0 = await hscroll(page);
+  await sh(page, "X-06-FLT-390");
+  await dark(page); await wait(page, 900);
+  const ax = serious(await axe(page));
+  await sh(page, "X-08-FLT-dark-390");
+  await light(page); await wait(page, 900);
+  const base = (await fRows(page)).map((r) => r.slice(1));
+  const box = page.locator(`input[aria-label="Show ${base[0]}"]`);
+  const sz = await box.evaluate((e) => { const r = e.getBoundingClientRect(); return `${Math.round(r.width)}x${Math.round(r.height)}`; });
+  await box.tap(); await wait(page, 200);
+  const toggled = (await fRows(page))[0].startsWith("-");
+  const down = S(page).getByRole("button", { name: `Move ${base[1]} down`, exact: true });
+  const dsz = await down.evaluate((e) => { const r = e.getBoundingClientRect(); return `${Math.round(r.width)}x${Math.round(r.height)}`; });
+  await down.tap(); await wait(page, 200);
+  const moved = (await fRows(page)).map((r) => r.slice(1));
+  await S(page).getByRole("button", { name: "New group" }).tap(); await wait(page, 300);
+  const dlgGroup = (await dialogs(page)).length;
+  await setGroupOf(page, base[0], "Group 1").catch((e) => { page.__gErr = String(e).slice(0, 100); });
+  const sel = await groupSel(page, base[0]).getAttribute("aria-label").catch(() => null);
+  const h1 = await hscroll(page);
+  await sh(page, "FLT-21");
+  
+  const ok = shape.tableW <= shape.vw && h0.doc <= 0 && h1.doc <= 0 && toggled && moved[2] === base[1] && /Group 1/.test(sel || "");
+  rec("FLT-21", ok && dlgGroup > 0 ? "PASS" : "FAIL", `phone 390x844: list width ${shape.tableW}px of ${shape.vw}px, column headers ${shape.headers} (stacked rows, no wide table), first row "${shape.row0}"; page overflow doc=${h0.doc}px, pane=${h0.pane}px, after adding a group doc=${h1.doc}px pane=${h1.pane}px; Show toggled by touch=${toggled} (checkbox ${sz}); "Move ${base[1]} down" by touch: ${JSON.stringify(moved.slice(0, 3))} (button ${dsz}); "New group" by touch adds a chip, dialog/sheet opened=${dlgGroup} (the app has no group dialog); group select by touch reads "${sel}"`, "acceptance-run-2-shots/FLT-21.png");
+  rec("X-06", ok ? "PASS" : "FAIL", `phone: rows are stacked (name, Show, Entities, Group, Move up/down) in ${shape.tableW}px of ${shape.vw}px, no wide table; no horizontal scroll (page ${h0.doc}px); every action reachable by touch (Show, Move down, New group, group select); touch targets are small (checkbox ${sz}, Move button ${dsz}); see FLT-21`, "acceptance-run-2-shots/X-06-FLT-390.png");
+  rec("X-07m", !ax.length ? "PASS" : "FAIL", `phone dark axe serious/critical ${JSON.stringify(ax)}`, "");
+  await page.context().close();
+});

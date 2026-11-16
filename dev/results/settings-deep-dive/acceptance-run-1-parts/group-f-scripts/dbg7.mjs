@@ -1,0 +1,12 @@
+import { launch, open, S, rows } from "./lib.mjs";
+const b = await launch();
+const {page} = await open(b,"languages");
+const badge = async()=> (await rows(page)).filter(r=>/Default$|Default\d/.test(r)).map(r=>r.slice(0,20));
+console.log("start",await badge());
+await S(page).locator('[role=row]').filter({hasText:"Spanish"}).getByRole("button",{name:"Set",exact:true}).click(); await page.waitForTimeout(400);
+await page.locator('[data-component=ConfirmDialog]').getByRole("button",{name:"Cancel"}).click(); await page.waitForTimeout(300);
+console.log("after cancel",await badge());
+await S(page).locator('[role=row]').filter({hasText:"Spanish"}).getByRole("button",{name:"Set",exact:true}).click(); await page.waitForTimeout(400);
+await page.locator('[data-component=ConfirmDialog]').getByRole("button",{name:"Make default"}).click(); await page.waitForTimeout(400);
+console.log("after confirm",await badge());
+await b.close();

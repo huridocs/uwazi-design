@@ -1,0 +1,69 @@
+[
+ {
+  "ids": [
+   "COL-33",
+   "X-06 (COL)",
+   "MEN-20",
+   "X-06 (MEN)"
+  ],
+  "owner": "Code (Design for the phone layout)",
+  "what": "On a 390x844 touch page the favicon picker (Collection) and the link/group panel (Menu Edit and Add) open as an empty dimmed scrim: the panel measures 390x0. :root --kb is 1189px because useKeyboardInset measured it once at mount (layout viewport 939x2033 then) and never recomputed; any 1 px viewport resize fixes it (panel then 390x844, full screen). Phone users cannot pick a favicon or edit a menu item in this state. Everything else on both pages passed at 390 (no horizontal scroll, one column, tap and touch work, footer reachable)."
+ },
+ {
+  "ids": [
+   "X-04 (COL)",
+   "COL-29",
+   "X-04 (CSS)",
+   "CSS-09",
+   "X-04 (MEN)",
+   "MEN-14"
+  ],
+  "owner": "Code",
+  "what": "Dev panel \"Fail next request\" scope Save does nothing on Collection, Global CSS & JS and Menu: the next Save succeeds (\"Settings updated\" / \"Saved successfully.\" / \"Updated\"), so the failure half of X-04 (one \"An error occurred\" entry, edits kept, Save still enabled) cannot be seen. Only the Pages editor consumes the switch. The success halves pass on all three pages."
+ },
+ {
+  "ids": [
+   "MEN-19"
+  ],
+  "owner": "Code",
+  "what": "Dev panel \"Fail next request\" scope Read for the Menu store has no effect: Menu opens normally. The unreadable-store state itself works when the sessionStorage key holds invalid JSON (\"The menu didn't load\", \"The saved menu could not be read.\", Retry). The empty state half passes."
+ },
+ {
+  "ids": [
+   "MEN-09"
+  ],
+  "owner": "Code",
+  "what": "Keyboard reorder as described in A4 is incomplete: Home and End do nothing, the grip label stays \"Reorder <label>. Arrow keys move it.\" with no position, and the polite live region under the page stays empty after every move (no position announcement). Arrow keys, focus staying on the moved grip, the visible focus ring, unique \"Move <label> up/down\" buttons, moving into and out of a group, and Save enabling all pass."
+ },
+ {
+  "ids": [
+   "CSS-01",
+   "CSS-02",
+   "CSS-13"
+  ],
+  "owner": "Code (flag gating) and Design (copy)",
+  "what": "The page ignores the Global JS flag: title is always \"Global CSS & JS\" and the CSS and JS tabs show with the flag off (seed) and on. Expected title \"Global CSS\" with no tabs and one \"Custom CSS\" area when off; with it on, tabs named \"Custom CSS\" and \"Custom JS\" (built: \"CSS\" and \"JS\"). The rail label does follow the flag. A saved JS text survives the flag off and on."
+ },
+ {
+  "ids": [
+   "CSS-03",
+   "CSS-04"
+  ],
+  "owner": "Design",
+  "what": "The code areas are named \"Global CSS\" and \"Global JS\" with no visible <label> (expected the name \"Custom CSS\" / \"Custom JS\" and a visible label). The JS tab shows the warning \"Scripts run on every public page \u2014 use with care.\" (expected none); and only one editor is mounted at a time (unsaved text is kept across tab switches, so behaviour is fine). Typing, monospace/LTR, `a {` accepted without error, unsaved text kept all pass."
+ },
+ {
+  "ids": [
+   "CSS-14"
+  ],
+  "owner": "Code",
+  "what": "Activity log records every Global CSS & JS Save as \"Updated settings \u201cGlobal CSS & JS\u201d\" by admin. Expected separate entries \"Updated custom CSS\" (3 lines) and \"Updated custom JS\" (2 lines). The saved text is not logged (passes)."
+ },
+ {
+  "ids": [
+   "X-07 (CSS)"
+  ],
+  "owner": "Design",
+  "what": "At 390 px the Reset confirm dialog fails axe with scrollable-region-focusable (serious) on its body (.overflow-auto.py-4[data-part=body]), light and dark. Desktop is clean (focus trap, Escape, focus return, names pass)."
+ }
+]

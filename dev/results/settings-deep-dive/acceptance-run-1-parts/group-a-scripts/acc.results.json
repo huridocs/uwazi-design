@@ -1,0 +1,74 @@
+[
+ {
+  "id": "ACC-01",
+  "res": "FAIL",
+  "ev": "Username input disabled=false; after typing \"zz\" value=\"adminzz\"; card title \"General Information\" present=false (card is titled \"Profile\"); footer buttons=[\"Save\"]",
+  "shot": "ACC-01.png"
+ },
+ {
+  "id": "ACC-02",
+  "res": "FAIL",
+  "ev": "No \"User Role\" field on the page for admin (present=false) nor for mlopez (present=false); the page text lists no role at all: \"Account Profile The username you log in with, and your email address. Username Email Change password Choose a strong password you don't use elsewhere. Current p...\"",
+  "shot": "ACC-02-admin.png"
+ },
+ {
+  "id": "ACC-06",
+  "res": "FAIL",
+  "ev": "footer=[\"Retry\",\"\",\"\",\"\",\"Show details\",\"Retry\",\"Clear all\",\"\",\"\",\"Discard changes (disabled)\",\"Save (disabled)\"] (spec: ghost \"Discard changes\" + solid \"Update\"); button label is \"Save\" not \"Update\"; enabled after typing=true, disabled again after undo by hand=yes; disabled after save=true; \"Saved\" footer line present=false; \"Update password\" button=false; Disable 2FA control=false; Username editable (see ACC-01)",
+  "shot": "ACC-06.png"
+ },
+ {
+  "id": "ACC-03",
+  "res": "FAIL",
+  "ev": "\"\": new text on page=[], saveEnabled=false, error \"A valid email is required\" shown=false, modal=false, inputType=email ; \"abc\": new text on page=[], saveEnabled=true, error \"A valid email is required\" shown=false, modal=false, inputType=email ; \"abc@x\": new text on page=[], saveEnabled=true, error \"A valid email is required\" shown=false, modal=false, inputType=email ; \"abc@x.org\": new text on page=[], saveEnabled=true, error \"A valid email is required\" shown=false, modal=false, inputType=email",
+  "shot": "ACC-03.png"
+ },
+ {
+  "id": "ACC-04",
+  "res": "FAIL",
+  "ev": "inline messages after typing a duplicate email (also upper case): [\"Already exists\"] vs expected 'The email \"j.nkemba@example.org\" already exists'; Save enabled=false; no password modal precedes the check (modal flow absent, see ACC-08)",
+  "shot": "ACC-04.png"
+ },
+ {
+  "id": "ACC-05",
+  "res": "FAIL",
+  "ev": "mismatch text=\"Passwords don't match\" (expected \"Passwords do not match\"); field label \"Confirm new password\" present=false (page labels it \"Confirm password\"); with only New password typed Save enabled=false, mismatch Save enabled=false, match Save enabled=false (needs Current password filled too: spec has no current-password field on the page, it uses a modal)",
+  "shot": "ACC-05.png"
+ },
+ {
+  "id": "ACC-07",
+  "res": "PASS",
+  "ev": "after Discard changes: email=\"admin@uwazi.io\", Save disabled=true, dialogs=[]",
+  "shot": ""
+ },
+ {
+  "id": "ACC-08",
+  "res": "FAIL",
+  "ev": "After clicking Save with email+password changed: dialogs open=[] (expected Confirm modal \"Enter your current password to confirm\" with Cancel/Accept). Page instead saved immediately; Current password is a page field.",
+  "shot": "ACC-08.png"
+ },
+ {
+  "id": "ACC-09",
+  "res": "FAIL",
+  "ev": "No modal exists to Cancel/Accept (no \"Cancel\"/\"Accept\" buttons); the click on Save already committed: Save disabled=true, email now \"admin2@uwazi.io\"",
+  "shot": "ACC-08.png"
+ },
+ {
+  "id": "ACC-10",
+  "res": "FAIL",
+  "ev": "New Beacon entries=[\"Uploading document batch… Running velasquez-corpus.csv 52%\",\"Processing PDFs… Running 12 files 75%\",\"Profile and password saved just now\"] (expected exactly one \"Account updated\"); New/Confirm password after save=[\"\",\"\"]; email=\"admin2@uwazi.io\"",
+  "shot": ""
+ },
+ {
+  "id": "ACC-11",
+  "res": "FAIL",
+  "ev": "Save enabled with duplicate email=false; new Beacon entries=[] (expected one \"An error occurred\" with detail 'The email \"j.nkemba@example.org\" already exists'; the page blocks Save and shows an inline message instead, so no failure path exists); New password field still=\"pw1\"",
+  "shot": "ACC-11.png"
+ },
+ {
+  "id": "ACC-12",
+  "res": "PASS",
+  "ev": "Users list row: \"adadmin(you)admin2@uwazi.ioadminAdministrators\"; editor email=\"admin2@uwazi.io\"; Account after reload=\"admin2@uwazi.io\"; after Reset demo data=\"admin@uwazi.io\"",
+  "shot": ""
+ }
+]

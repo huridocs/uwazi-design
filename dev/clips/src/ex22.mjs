@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+p.on("console", m => { if (m.type()==="error") console.log("console error:", m.text().slice(0,200)); });
+p.on("pageerror", e => console.log("pageerror:", e.message));
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2000);
+await p.getByRole("button", { name: /^View:/ }).click(); await p.getByRole("option", { name: "List" }).click(); await p.waitForTimeout(800);
+await p.getByText("Velásquez Rodríguez Judgment", {exact:true}).first().click(); await p.waitForTimeout(1200);
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(3000);
+console.log("edit buttons:", await p.evaluate(()=>[...document.querySelectorAll("button")].filter(b=>/^\s*Edit\s*$/.test(b.innerText)).map(b=>{const r=b.getBoundingClientRect();return [Math.round(r.x),Math.round(r.y),b.closest("[inert]")?"inert":"live"].join(",")})));
+await p.mouse.click(925,876); await p.waitForTimeout(3000);
+console.log("textboxes right:", await p.evaluate(()=>[...document.querySelectorAll("input,textarea")].filter(e=>e.getBoundingClientRect().x>890).length));
+await p.screenshot({path:"s71.png"});
+await b.close();

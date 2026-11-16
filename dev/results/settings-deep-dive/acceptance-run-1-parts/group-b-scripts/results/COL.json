@@ -1,0 +1,248 @@
+[
+ {
+  "id": "COL-01",
+  "res": "FAIL",
+  "ev": "saw page text: \"Collection \\| The collection's name, where visitors arrive, and who can see it. \\| Collection name \\| Custom landing page \\| Where visitors land first. \\| Default library view \\| How the library shows results by default. \\| Cards \\| Visual entity cards \\| Table \\| Dense rows \\| Map \\| Geographic \\| Access \\| Private instance \\| Only logged-in \". Missing expected cards/labels: General, Analytics, Forms and email configuration, Collection Name, Custom Favicon, Default View, Default date format, Public instance, Hide restricted relationships from public, Global JS. Placeholders: 0. gutter: {\"pass\":true,\"hidden\":false,\"dir\":\"ltr\",\"hostWidth\":1030,\"starts\":[16],\"ends\":[16],\"overflow\":[],\"gaps\":[\"h2 “Collection” → p “The collection's name, ",
+  "shot": "COL-01"
+ },
+ {
+  "id": "COL-02",
+  "res": "PASS",
+  "ev": "seed \"Inter-American Human Rights Archive\"; after Save \"Test Archive\", after rail round trip \"Test Archive\", after reload \"Test Archive\"; placeholder=null; visible label text \"Collection name\" (checklist spells it \"Collection Name\")",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "res": "PASS",
+  "ev": "Save \"Test Archive\" -> after rail round trip \"Test Archive\" -> after reload \"Test Archive\" -> after Dashboard Reset demo data \"Inter-American Human Rights Archive\" (seed \"Inter-American Human Rights Archive\")",
+  "shot": ""
+ },
+ {
+  "id": "COL-04",
+  "res": "FAIL",
+  "ev": "after Save (no reload): navbar crumb text \"Sample\" (aria \"Collection: Sample\"; the crumb shows the data source, not the collection name), window title \"Test Archive · Uwazi\". CEJIL name \"CEJIL\"; back on Sample \"Test Archive\". Login screen shows Test Archive: false (text: \"Log in \\| With your Uwazi username. \\| Username \\| Password \\| Remember me \\| Forgot password? \\| Log in \\| Prototype: log in a\")",
+  "shot": "COL-04-login"
+ },
+ {
+  "id": "COL-28",
+  "res": "PASS",
+  "ev": "disabled [Discard,Save]: clean true,true, dirty false,false, after Discard true,true (value restored \"Inter-American Human Rights Archive\" vs seed \"Inter-American Human Rights Archive\"), after Save true,true; Save bg rgb(245, 238, 215)",
+  "shot": "COL-28"
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "After Save Discard/Save disabled true,true; rail click right after Save opened dialogs: []",
+  "shot": ""
+ },
+ {
+  "id": "COL-29",
+  "res": "FAIL",
+  "ev": "new Beacon entries after one Save: [\"Collection settings saved just now\"] (expected exactly one titled \"Settings updated\")",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Beacon: [\"Collection settings saved just now\"]; checklist quotes \"Settings updated\"",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "PASS",
+  "ev": "Activity entries: [\"UPDATE Updated settings “Collection” [admin]\"]",
+  "shot": ""
+ },
+ {
+  "id": "COL-31",
+  "res": "PASS",
+  "ev": "footer line after Save: \"Saved just now by admin\"; present before first Save: false; footer container height 48",
+  "shot": ""
+ },
+ {
+  "id": "COL-03",
+  "res": "FAIL",
+  "ev": "Cleared the name: Save disabled=false, after clicking Save aria-invalid=null, visible error texts=[], focus on BODY, Beacon entries added [\"Collection settings saved just now\"]. Seed \"Inter-American Human Rights Archive\". See stored value in next check. Saving the empty name was not blocked: after Save and a rail round trip the field reads \"Inter-American Human Rights Archive\" (silently falls back to the old name; no error shown).",
+  "shot": "COL-03"
+ },
+ {
+  "id": "COL-30",
+  "res": "PASS",
+  "ev": "after changing only Collection name and Save: CSS text \"a{color:red}\"; Menu still has seed items: true",
+  "shot": ""
+ },
+ {
+  "id": "COL-05",
+  "res": "FAIL",
+  "ev": "no \"Custom Favicon\" row: \"Choose\" buttons=0, caption \"Recommended: 16x16 to 512x512 px (square)\" count=0; Collection form has no favicon control at all, so the modal \"Select favicon image\" cannot be opened",
+  "shot": "COL-05"
+ },
+ {
+  "id": "COL-06",
+  "res": "FAIL",
+  "ev": "no \"Custom Favicon\" row: \"Choose\" buttons=0, caption \"Recommended: 16x16 to 512x512 px (square)\" count=0; Collection form has no favicon control at all, so the modal \"Select favicon image\" cannot be opened (same missing control)",
+  "shot": ""
+ },
+ {
+  "id": "COL-07",
+  "res": "FAIL",
+  "ev": "no \"Custom Favicon\" row: \"Choose\" buttons=0, caption \"Recommended: 16x16 to 512x512 px (square)\" count=0; Collection form has no favicon control at all, so the modal \"Select favicon image\" cannot be opened (same missing control)",
+  "shot": ""
+ },
+ {
+  "id": "COL-08",
+  "res": "FAIL",
+  "ev": "no \"Custom Favicon\" row: \"Choose\" buttons=0, caption \"Recommended: 16x16 to 512x512 px (square)\" count=0; Collection form has no favicon control at all, so the modal \"Select favicon image\" cannot be opened (same missing control)",
+  "shot": ""
+ },
+ {
+  "id": "COL-09",
+  "res": "FAIL",
+  "ev": "no \"Custom Favicon\" row: \"Choose\" buttons=0, caption \"Recommended: 16x16 to 512x512 px (square)\" count=0; Collection form has no favicon control at all, so the modal \"Select favicon image\" cannot be opened (same missing control)",
+  "shot": ""
+ },
+ {
+  "id": "COL-10",
+  "res": "FAIL",
+  "ev": "\"Default View\" is a radio group labelled \"Default library view\" with options in order [\"Cards\",\"Table\",\"Map\"] (select elements: 0); expected a select \"Default View\" with order Cards, Map, Table",
+  "shot": ""
+ },
+ {
+  "id": "COL-11",
+  "res": "PASS",
+  "ev": "Table: Library view button \"List\", after reload \"List\", radio still checked on return: true; Map: Library view button \"Map\", after reload \"Map\", radio still checked on return: true; Cards: Library view button \"Cards\", after reload \"Cards\", radio still checked on return: true. Library labels the table view \"List\". Switching view inside the Library to Map left the setting on Cards: true",
+  "shot": "COL-11-Table"
+ },
+ {
+  "id": "COL-12",
+  "res": "FAIL",
+  "ev": "No \"Default date format\" field on the page (page text has it: false); the six date options cannot be opened",
+  "shot": ""
+ },
+ {
+  "id": "COL-13",
+  "res": "FAIL",
+  "ev": "No date format setting exists, so Day/Month/Year vs Month-Day-Year cannot be chosen; nothing to drive",
+  "shot": ""
+ },
+ {
+  "id": "COL-14",
+  "res": "FAIL",
+  "ev": "Landing field has no \"https://yourdomain\" addon (count 0); help text reads \"Where visitors land first.\" (count 1), not \"The landing page is the first page that visitors see...\"; placeholder=null; no list of A page / A filtered view / An entity / A document / \"Important: You must use relative URLs.\"",
+  "shot": ""
+ },
+ {
+  "id": "COL-17",
+  "res": "FAIL",
+  "ev": "No \"Hide restricted relationships from public\" toggle on the page; page text: \\| Map \\| Geographic \\| Access \\| Private instance \\| Only logged-in users can see the collection. \\| Show cookie policy \\| Display a cookie consent banner to visitors. \\| Allow public sharing \\| Let visitors share entity links on social media. \\| Discard changes \\| Save",
+  "shot": ""
+ },
+ {
+  "id": "COL-19",
+  "res": "FAIL",
+  "ev": "No \"Global JS\" toggle on Collection (rail already reads \"Global CSS & JS\" with the flag untouched, and the page has a JS tab always); no help text \"With great power comes great responsibility!\"",
+  "shot": ""
+ },
+ {
+  "id": "COL-20",
+  "res": "FAIL",
+  "ev": "No \"Analytics\" card with \"Google\" and \"Matomo\" fields; nothing to fill",
+  "shot": ""
+ },
+ {
+  "id": "COL-21",
+  "res": "FAIL",
+  "ev": "No \"Forms and email configuration\" card, no \"Sending email\", \"Contact form email\" or \"Public Form submit URL\" fields",
+  "shot": ""
+ },
+ {
+  "id": "COL-22",
+  "res": "FAIL",
+  "ev": "No email fields exist, so validation cannot be driven",
+  "shot": ""
+ },
+ {
+  "id": "COL-23",
+  "res": "FAIL",
+  "ev": "No \"Map\" card (no Map Provider, Map API key, Map Layers, Latitude/Longitude); page text has \"Map\" only as the \"Map / Geographic\" default-view radio",
+  "shot": ""
+ },
+ {
+  "id": "COL-24",
+  "res": "FAIL",
+  "ev": "No \"Map\" card (no Map Provider, Map API key, Map Layers, Latitude/Longitude); page text has \"Map\" only as the \"Map / Geographic\" default-view radio",
+  "shot": ""
+ },
+ {
+  "id": "COL-25",
+  "res": "FAIL",
+  "ev": "No \"Map\" card (no Map Provider, Map API key, Map Layers, Latitude/Longitude); page text has \"Map\" only as the \"Map / Geographic\" default-view radio",
+  "shot": ""
+ },
+ {
+  "id": "COL-26",
+  "res": "FAIL",
+  "ev": "No \"Map\" card (no Map Provider, Map API key, Map Layers, Latitude/Longitude); page text has \"Map\" only as the \"Map / Geographic\" default-view radio",
+  "shot": ""
+ },
+ {
+  "id": "COL-27",
+  "res": "FAIL",
+  "ev": "No \"Map\" card (no Map Provider, Map API key, Map Layers, Latitude/Longitude); page text has \"Map\" only as the \"Map / Geographic\" default-view radio",
+  "shot": ""
+ },
+ {
+  "id": "COL-15",
+  "res": "FAIL",
+  "ev": "Save results: \"library\" -> accepted; \"https://yoursite.com/landing\" -> accepted; \"/document/4y9i99fadjp833di\" -> accepted; \"/page/dicxg0oagy3xgr7ixef80k9\" -> accepted; \"/library/?searchTerm=test\" -> accepted; \"/entity/9htbkgpkyy7j5rk9\" -> accepted; \"\" -> accepted. Expected the first three rejected with a visible message",
+  "shot": "COL-15"
+ },
+ {
+  "id": "COL-16",
+  "res": "FAIL",
+  "ev": "Label reads \"Private instance\" (expected \"Public instance\"); seed checkbox checked=false (expected seed off for Public instance); help text \"Only logged-in users can see the collection.\" (expected \"Check to make this instance public (non-logged in users can see public documents and entities)\"); persists after toggle: true; stored key is \"privateInstance\" (inverted)",
+  "shot": ""
+ },
+ {
+  "id": "COL-18",
+  "res": "FAIL",
+  "ev": "Seed state of \"Show cookie policy\" is on; help text \"Display a cookie consent banner to visitors.\" (expected \"When enabled, visitors must accept or reject non-essential cookies before they are set. Analytics and language preference cookies are blocked until accepted.\"). Toggle persistence itself not contradicted",
+  "shot": ""
+ },
+ {
+  "id": "COL-32",
+  "res": "FAIL",
+  "ev": "No \"?\" help controls (count 0); elements with aria-describedby: 1; landing input aria-describedby=:r1a:. Hints are plain text with Uwazi-different copy and no help for Global JS or the Analytics card",
+  "shot": ""
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "Guard works (rail click while dirty opens a dialog; keep-editing keeps the edit: true; discard navigates (Menu shown: true) and edit gone: true; no dialog when clean: true; switching data source opens dialog: true) but copy differs from the checklist: saw \"Discard unsaved changes? Collection settings haven't been saved. Leaving now will discard them. Keep editing Discard\" with buttons [\"\",\"Keep editing\",\"Discard\"]; expected title \"Discard changes?\", body \"You have unsaved changes. Do you want to continue?\", buttons \"Cancel\" and \"Discard changes\"",
+  "shot": "X-02-COL"
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe on Collection pane: no violations (no dialogs exist on this page)",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "res": "PASS",
+  "ev": "Collection name per data source: {\"Sample\":\"Inter-American Human Rights Archive\",\"CEJIL\":\"CEJIL\",\"Best Artworks\":\"Best Artworks\"}; back on Sample \"Inter-American Human Rights Archive\"",
+  "shot": ""
+ },
+ {
+  "id": "COL-33",
+  "res": "FAIL",
+  "ev": "Single column, scrollWidth 390 vs viewport 390 (no horizontal scroll: true); Save/Discard reachable: true (Save box y=806.5); but there is no map (Latitude/Longitude) and no favicon modal on the page, so the expected touch-operable map and sheet cannot be driven",
+  "shot": "COL-33"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone: scrollWidth 390 <= 390; footer Save reachable true; single column form (no list/dialogs on this page)",
+  "shot": "COL-33"
+ }
+]

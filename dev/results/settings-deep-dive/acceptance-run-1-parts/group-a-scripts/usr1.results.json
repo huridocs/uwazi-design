@@ -1,0 +1,80 @@
+[
+ {
+  "id": "USR-01",
+  "res": "PASS",
+  "ev": "Header \"Users & Groups\"; tabs=[\"Users 5\",\"Groups 3\"]; Users rows=5, Groups rows=3; default tab=\"Users 5\". Counts after adding a user (6) and deleting a group (2) are checked in USR-10 and USR-24",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-02",
+  "res": "FAIL",
+  "ev": "Users tab has 0 row checkboxes and no header select-all, so rows cannot be ticked; there is no selection to clear and no bar; \"Add user\" is the only footer action",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-03",
+  "res": "FAIL",
+  "ev": "Columns=[\"USER\",\"ROLE\",\"GROUPS\",\"2FA\"] (spec: Username, Protection, Role, Group); no Protection column and no \"Password + 2fa\" / \"Password\" pill: 2FA is a column with a shield icon for admin and mlopez and an em dash for the rest; roles shown \"Admin\"/\"Editor\"/\"Collaborator\" and the Admin pill is vellum (not seal), which match; the group column is headed \"Groups\" with one pill per group; tbuergenthal group cell shows an em dash (spec: empty). Rows: [\"AD admin(you) admin@uwazi.io Admin Administrators\",\"ML mlopez m.lopez@cejil.org Editor Litigation\",\"JN jnkemba j.nkemba@example.org Editor Litigation Research —\",\"AF afarah a.farah@example.org Collaborator Research —\",\"TB tbuergenthal t.buergenthal@example.org Collaborator — —\"]",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-04",
+  "res": "FAIL",
+  "ev": "Default order (admin, mlopez, jnkemba, afarah, tbuergenthal) = seed order, not Username ascending (admin, afarah, jnkemba, mlopez, tbuergenthal): [\"admin(you)\",\"mlopez\",\"jnkemba\",\"afarah\",\"tbuergenthal\"]; sortable header controls=0; after clicking the first header twice the order is unchanged=true; aria-sort values=[null,null,null,null,null]",
+  "shot": ""
+ },
+ {
+  "id": "USR-05",
+  "res": "NOT DRIVEABLE",
+  "ev": "Needs a seeded locked user (\"add to seed\"); the seed has none and the app has no account-locked state at all (no field, lock icon, \"Account locked\" tooltip or \"Unlock account\" action anywhere in Users & Groups)",
+  "shot": ""
+ },
+ {
+  "id": "USR-30",
+  "res": "FAIL",
+  "ev": "\"Add user\" opens the full editor page (title \"New user\", breadcrumb \"Users & Groups /\"), not a sidepanel; but the footer commit button reads \"Invite user\" (present=true) which the check says must not appear anywhere on the page",
+  "shot": "USR-30.png"
+ },
+ {
+  "id": "USR-07",
+  "res": "FAIL",
+  "ev": "Editor titled \"New user\" with fields Username, Email, a Role radio group (Admin, Editor, Collaborator; default checked=[\"Collaborator Comment and suggest only.\"]) and a Groups checkbox list. Missing vs spec: \"User Role\" select, \"Password\" field (password inputs on page=false), \"Groups\" control with placeholder \"Nothing selected\"; footer buttons=[\"Retry\",\"Show details\",\"Retry\",\"Clear all\",\"Cancel\",\"Invite user\"] (spec commit \"Add\", not \"Invite user\")",
+  "shot": "USR-30.png"
+ },
+ {
+  "id": "USR-06",
+  "res": "FAIL",
+  "ev": "\"lop\" -> 1 row(s) [\"ML mlopez m.lopez@cejil.org Editor Litigation\"] (matches mlopez via username/email; email shown under each username=true); search row height before/during typing=32/32px; clearing -> 5 rows; Role=Editor -> 2 rows; Group filter control present=false (only a role filter exists, so Group=Research and \"both together\" cannot be driven); \"zzz\" -> text:  person can do, and the groups that share access. Users 5 Groups 3 All roles USER ROLE GROUPS 2FA Nothing matches “zzz” Clear search Add user; \"Clear\" action present=true",
+  "shot": "USR-06.png"
+ },
+ {
+  "id": "X-11",
+  "res": "PASS",
+  "ev": "Search field stays mounted at fixed height (32px before, 32px while typing); \"lop\" filters to 1 row; clearing restores 5 rows; no-results state shows a Clear action=true",
+  "shot": "USR-06.png"
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "Users tab has no row checkboxes and no selection bar (see USR-02, USR-15); the footer only holds the lead action \"Add user\"",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "X-13",
+  "res": "PASS",
+  "ev": "After switching Sample -> CEJIL the Users list is identical (5 rows, tabs [\"Users 5\",\"Groups 3\"]) once Settings is reopened; the switch itself leaves Settings for the Library (CEJIL, 4,398 entities)",
+  "shot": "X-13-users.png"
+ },
+ {
+  "id": "USR-28",
+  "res": "FAIL",
+  "ev": "phone 390: overflow 0px; rows are cards showing username, email, role pill, groups and 2FA (cards 5); tapping a row opens the editor (title text \"Users & Groups / mlopez Username Email Role What this user can do in the collect\"), single column input edges=[16,29], editor overflow 0px. Failing parts: no checkboxes (0) so two users cannot be ticked and there is no selection bar; Groups tab rows read: \"e access. Users 5 Groups 3 Administrators Members 1 Litigation Members 2 Research Members 2 Add group\" (name and a member count, spec: name and members)",
+  "shot": "USR-28-phone.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone 390 Users list overflow 0px, editor overflow 0px; row edit target box={\"x\":16,\"y\":329.15625,\"width\":358,\"height\":78.65625}; row actions (delete) are visible without hover on touch (trash icon visible on every card in the screenshot)",
+  "shot": "USR-28-phone.png"
+ }
+]

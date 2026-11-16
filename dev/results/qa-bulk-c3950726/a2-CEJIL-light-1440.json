@@ -1,0 +1,38 @@
+[
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "Upload modal offers a title per file and a template",
+  "ok": true,
+  "detail": "2 title inputs"
+ },
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "Beacon shows the upload task",
+  "ok": true,
+  "detail": "2 tasks running88% > Uploading document batch97% / 2 tasks running"
+ },
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "both uploaded entities appear",
+  "ok": true,
+  "detail": "after 4.044s"
+ },
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "entity count grows by 2",
+  "ok": true,
+  "detail": "398 -> 400"
+ },
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "opened uploaded entity renders the PDF in the viewer",
+  "ok": true,
+  "detail": "{\"canvases\":109,\"textLayer\":31688,\"txt\":true,\"err\":true}"
+ },
+ {
+  "area": "upload:CEJIL-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

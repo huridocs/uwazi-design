@@ -1,0 +1,50 @@
+[
+ {
+  "id": "LNG-09",
+  "result": "FAIL",
+  "evidence": "armed status: \"Armed: the next install or uninstall fails with “Injected install failure for QA.”.\"; German row during install=\"German (de) Deutsch Installing\"; after ~5s row=\"German (de) Deutsch\"; error entries \"An error occurred\"=[]; running Installing tasks=0; Dev panel status afterwards: \"Armed: the next install or uninstall fails with “Injected install failure for QA.”.\"",
+  "shot": "group-lng-LNG-09.png"
+ },
+ {
+  "id": "_errs-C1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "_info-LNG-09-hook",
+  "result": "INFO",
+  "evidence": "Console hook window.__failNextLanguageInstall: row=\"German (de) Deutsch Install failed The server stopped while copying the collection's entities. Retry\"; error entries=[\"An error occurred Installing German failed. The server stopped while copying the collection's entities. just now Retry\"]; running tasks=0; after Retry row=\"German (de) Deutsch\"",
+  "shot": "group-lng-LNG-09-consolehook.png"
+ },
+ {
+  "id": "_LNG-17 Make default (scope Save)",
+  "result": "FAIL",
+  "evidence": "error entries=[]; list rows afterwards=Arabic,English,French,Portuguese,Spanish*; success notices=[\"Default language change success just now\"]; Dev panel after: \"Armed: the next save fails with “Injected failure for QA.”.\"",
+  "shot": "group-lng-LNG-17-Make-Save.png"
+ },
+ {
+  "id": "_LNG-17 Reset (scope Save)",
+  "result": "FAIL",
+  "evidence": "error entries=[]; list rows afterwards=Arabic,English*,French,Portuguese,Spanish; success notices=[\"Language reset success just now\"]; Dev panel after: \"Armed: the next save fails with “Injected failure for QA.”.\"",
+  "shot": "group-lng-LNG-17-Reset-Save.png"
+ },
+ {
+  "id": "_LNG-17 Uninstall (scope Install or Uninstall)",
+  "result": "FAIL",
+  "evidence": "error entries=[]; list rows afterwards=Arabic,English*,French,Portuguese; success notices=[\"Uninstalling language… Finishing Spanish 100%\"]; Dev panel after: \"Armed: the next install or uninstall fails with “Injected failure for QA.”.\"",
+  "shot": "group-lng-LNG-17-Uninstall-Install.png"
+ },
+ {
+  "id": "_LNG-17 Uninstall (scope Delete)",
+  "result": "FAIL",
+  "evidence": "error entries=[]; list rows afterwards=Arabic,English*,French,Portuguese; success notices=[\"Uninstalling language… Finishing Spanish 100%\"]; Dev panel after: \"Armed: the next delete fails with “Injected failure for QA.”.\"",
+  "shot": "group-lng-LNG-17-Uninstall-Delete.png"
+ },
+ {
+  "id": "LNG-17",
+  "result": "FAIL",
+  "evidence": "Make default (scope Save): no error entry; action succeeded (Default language change success just now) \\|\\| Reset (scope Save): no error entry; action succeeded (Language reset success just now) \\|\\| Uninstall (scope Install or Uninstall): no error entry; action succeeded (Uninstalling language… Finishing Spanish 100%) \\|\\| Uninstall (scope Delete): no error entry; action succeeded (Uninstalling language… Finishing Spanish 100%)",
+  "shot": "group-lng-LNG-17-Make-Save.png"
+ }
+]

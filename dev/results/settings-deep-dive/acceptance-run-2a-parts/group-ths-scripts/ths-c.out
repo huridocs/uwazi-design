@@ -1,0 +1,9 @@
+FAIL | THS-07 | new editor: Save/Create disabled when untouched=true; after spaces in the name disabled=false, pressing it: footer reads "Import CSV Export CSV 1 error blocks saving: Name is required Cancel Create thesaurus"; inline "This field is required" count=0; placeholder "e.g. Violation types" (expected "Thesauri name"); clear X buttons=0; nothing saved (editor still open=true, list rows unchanged) | acceptance-run-2a-shots/THS-07.png
+FAIL | THS-08 | "case status " Save: blocked=true (editor still open, list stays 6 rows); message in footer "Import CSV Export CSV 1 error blocks saving: A thesaurus named “case status” already exists Cancel Create thes"; exact text "Thesaurus name already exists" present=false. Own name on "Case status" (kept, plus a new value): saved=true, footer "Add thesaurus" | acceptance-run-2a-shots/THS-08.png
+console THS-d clean
+FAIL | THS-09 | new "Fruits" with one item, Save: Beacon entries ["Thesaurus created"] (expected "Thesauri added."); editor stays in edit mode=false, Save disabled=null; "Fruits" in list=true; after a tab reload in list=false | acceptance-run-2a-shots/THS-09.png
+FAIL | THS-10 | reopened "Fruits": Save disabled when clean=true; after adding "Banana" disabled=false; Save notification ["Processing PDFs complete. 12 items processed.","Fruits saved"] (expected "Thesauri updated."); reopened: disabled=true; label edited to "Applex": disabled=false; changed back by hand: disabled=true | acceptance-run-2a-shots/THS-10.png
+FAIL | THS-40 | list row before "Fruits 4"; editor header "Values (4)"; after adding two values and Save "Fruits 6"; after a tab reload "undefined" | acceptance-run-2a-shots/THS-40.png
+FAIL | X-01@THS | thesaurus "Fruits" created and extended in session: list after a rail round trip "Fruits 6"; after a tab reload "undefined" (a thesaurus kept after reload=false). Reset demo data not re-driven here | 
+console THS-e clean
+done

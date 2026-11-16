@@ -1,0 +1,32 @@
+[
+ {
+  "area": "create-thesaurus:Sample-dark-1440",
+  "item": "Create thesaurus binds the property and lists its values in the picker",
+  "ok": true,
+  "detail": "3 values"
+ },
+ {
+  "area": "create-thesaurus:Sample-dark-1440",
+  "item": "Save: the card shows the new thesaurus value",
+  "ok": true,
+  "detail": "QA Union"
+ },
+ {
+  "area": "create-thesaurus:Sample-dark-1440",
+  "item": "Library facet appears for the new thesaurus",
+  "ok": true,
+  "detail": "[\"QA Union\",\"QA Union\"]"
+ },
+ {
+  "area": "create-thesaurus:Sample-dark-1440",
+  "item": "Settings › Thesauri lists the created thesaurus",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "create-thesaurus:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

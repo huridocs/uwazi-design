@@ -1,0 +1,25 @@
+{
+ "afterReload": [
+  "UPDATE Updated settings “Collection” admin 2026-10-04 23:12",
+  "UPDATE Updated page “QA page” admin 2026-10-04 23:12",
+  "UPDATE Updated settings “Collection” admin 2026-10-04 23:12",
+  "UPDATE Updated settings “Collection” admin 2026-10-04 23:12",
+  "UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42",
+  "CREATE Created relationship type “Represented by” mlopez 2026-06-15 17:10",
+  "CREATE Created entity “Case 12.250 (Bámaca Velásquez)” mlopez 2026-06-15 14:55",
+  "DELETE Deleted user “t.guest@example.org” admin 2026-06-14 09:30",
+  "MIGRATE Ran migration “add-relationship-tiers” system 2026-06-13 22:05",
+  "UPDATE Updated thesaurus “Violation types” jnkemba 2026-06-13 11:48",
+  "UPDATE Updated template “Court Case” mlopez 2026-06-12 16:20"
+ ],
+ "dashRows": "Recent activity ACTION SUMMARY TIME UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated page “QA page” 2026-10-04 23:12 UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated settings “Collection” 2026-10-04 23:12 UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” 2026-06-15 18:42 Reset demo data",
+ "afterReset": [
+  "UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42",
+  "CREATE Created relationship type “Represented by” mlopez 2026-06-15 17:10",
+  "CREATE Created entity “Case 12.250 (Bámaca Velásquez)” mlopez 2026-06-15 14:55",
+  "DELETE Deleted user “t.guest@example.org” admin 2026-06-14 09:30",
+  "MIGRATE Ran migration “add-relationship-tiers” system 2026-06-13 22:05",
+  "UPDATE Updated thesaurus “Violation types” jnkemba 2026-06-13 11:48",
+  "UPDATE Updated template “Court Case” mlopez 2026-06-12 16:20"
+ ]
+}

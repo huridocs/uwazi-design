@@ -1,0 +1,38 @@
+[
+ {
+  "id": "TRN-04",
+  "result": "PASS",
+  "evidence": "Person template editor: title label \"Title\", properties [\"Country\",\"Role\",\"Profession\",\"Date of birth\",\"Mandate\",\"Nationality\",\"Member of\"] (7); Translations context keys [\"Person\",\"Title\",\"Country\",\"Role\",\"Profession\",\"Date of birth\",\"Mandate\",\"Nationality\",\"Member of\"] (9, expected properties + 2 = 9); same set=true; every non-English cell flagged untranslated (equal to English)=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TB1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-05",
+  "result": "PASS",
+  "evidence": "Hearing keys before=[\"Hearing\",\"Title\",\"Date\"]; typed es \"Fecha-ES\" for key Date and saved; renamed property label Date -> \"Hearing date\" in Templates and saved; keys now=[\"Hearing\",\"Title\",\"Hearing date\"]; old key gone=true, new key present=true, es text under new key=\"Fecha-ES\"; after deleting the property keys=[\"Hearing\",\"Title\"] (dropped=true); new template \"Inquiry\" adds a context=true; after deleting template it is removed=true (delete dialogs seen: [] / [\"Delete Do you want to delete the following items? Inquiry Removed from Filters: Inquiry. Cancel Delete\"])",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TB2",
+  "result": "FAIL",
+  "evidence": "[\"error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p \\n    at ul\\n    at p\\n    at div\\n    at div\\n    at div\\n    at div\\n    at Modal (http://localhost:1438/src/components/\"]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-06",
+  "result": "PASS",
+  "evidence": "Regions values in Thesauri editor (8, groups and children): [\"Americas\",\"North America\",\"Central America\",\"Caribbean\",\"South America\",\"Europe\",\"Western Europe\",\"Southern Europe\"]; context keys (9): same set as name + values=true; added value via \"Add value\" focus=INPUT:Value; context now has \"Oceania\"=true cells [\"Spanish, untranslated=Oceania\",\"French, untranslated=Oceania\",\"Arabic, untranslated=Oceania\",\"Portuguese, untranslated=Oceania\"]; Thesauri editor after Add value: [\"Select Europe=on\",\"Select Western Europe=on\",\"Select Southern Europe=on\"]; after rename: [\"Select Oceania\",\"Select The Caribbean\"]; renamed Caribbean -> \"The Caribbean\": old key gone=true, es text kept=\"Caribe-ES\" (typed \"Caribe-ES\")",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TB3",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ }
+]

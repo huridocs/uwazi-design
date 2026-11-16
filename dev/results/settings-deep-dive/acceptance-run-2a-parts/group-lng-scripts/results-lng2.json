@@ -1,0 +1,44 @@
+{
+ "LNG-07": {
+  "id": "LNG-07",
+  "result": "PASS",
+  "evidence": "modal closed (open dialogs=0); rows with Installing marker: [\"German (de)DeutschInstalling\",\"Korean (ko)한국어Installing\"]; running Beacon entries after install of German+Korean: [\"Installing languages… Running German and Korean 0%\"]; after a second install (Italian) started while the first ran: [\"Installing languages… Running German and Korean 0%\",\"Installing languages… Running Italian 0%\"]; after 4.5 s markers left=0; \"Languages installed successfully\" entries=2 [\"Languages installed successfully Italian just now\",\"Languages installed successfully German and Korean just now\"]; still running=0",
+  "shot": "LNG-07-done.png"
+ },
+ "LNG-08": {
+  "id": "LNG-08",
+  "result": "PASS",
+  "evidence": "German menu while installing: Make default(disabled), Uninstall(disabled); Spanish menu meanwhile: Make default, Reset, Uninstall; German menu after install ended: Make default, Uninstall",
+  "shot": "LNG-08-installing.png"
+ },
+ "lng2-console-a": {
+  "id": "lng2-console-a",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ },
+ "LNG-09": {
+  "id": "LNG-09",
+  "result": "FAIL",
+  "evidence": "Dev panel: \"Armed: the next install or uninstall fails with “Disk full”.\". Installed German with the switch armed. After 4.2 s the row reads \"German (de)Deutsch\", Retry buttons=0, error entries \"An error occurred\"=0; new Beacon entries [\"Languages installed successfully German just now\"]. The Dev panel \"Install or Uninstall\" switch is not read by installLanguages (it checks a module flag set only by window.__failNextLanguageInstall()), so the install succeeded",
+  "shot": "LNG-09.png"
+ },
+ "LNG-09-hook(info)": {
+  "id": "LNG-09-hook(info)",
+  "result": "INFO",
+  "evidence": "console hook __failNextLanguageInstall(): row \"German (de)DeutschInstall failedThe server stopped while copying the collection's entities.Retry\", Retry=1, error entries=[\"An error occurred Installing German failed. The server stopped while copying the collection's entities. just now Retry\"], running entries after=0; after Retry: \"German (de)DeutschInstalling\" then \"German (de)Deutsch\"",
+  "shot": "LNG-09-hook.png"
+ },
+ "LNG-10": {
+  "id": "LNG-10",
+  "result": "FAIL",
+  "evidence": "Dashboard LANGUAGES 4 -> 5; Translations (Person) headers [\"KEY\",\"English EN\",\"Español ES\",\"Français FR\",\"العربية AR\",\"Deutsch DE\"]; German cells=9, untranslated=9; first German cell \"Person\" for key \"Person\" (equals English text: true); header pill class \"shrink-0 text-meta font-semibold uppercase px-1.5 py-px rounded-md bg-vellum tex\"; cell pill class \"shrink-0 text-meta font-semibold uppercase px-1.5 py-px rounded-md bg-warning-li\"; Pages editor (About this collection) mentions German/Deutsch=false, the editor's language buttons are [\"EN\",\"ES\",\"FR\\n(empty)\",\"AR\\n(empty)\"] (no DE)",
+  "shot": "LNG-10-pages.png"
+ },
+ "lng2-console-c": {
+  "id": "lng2-console-c",
+  "result": "INFO",
+  "evidence": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ }
+}

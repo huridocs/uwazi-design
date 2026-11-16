@@ -1,0 +1,21 @@
+import { launch, open, S, shot } from "./lib.mjs";
+import { recorder, run, pass } from "./rec.mjs";
+const r = recorder("MEN");
+const b = await launch();
+await run(r, "MEN-20", async () => {
+  const { page } = await open(b, "menu", "mobile");
+  const sw = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
+  const rowsN = await S(page).locator("li, [role=row]").count();
+  await shot(page, "MEN-20");
+  const bb = await S(page).getByRole("button", { name: "Edit About" }).boundingBox(); await page.touchscreen.tap(bb.x + bb.width / 2, bb.y + bb.height / 2); await page.waitForTimeout(500);
+  const long = "/page/" + "very-long-segment-".repeat(4);
+  await S(page).getByLabel("URL").fill(long);
+  const f = await S(page).getByLabel("URL").evaluate((e) => [e.scrollWidth, e.clientWidth, e.value.length]);
+  await shot(page, "MEN-20b");
+  const sv = S(page).getByRole("button", { name: "Save", exact: true }); const box = await sv.boundingBox();
+  await page.goBack().catch(() => {});
+  r("MEN-20", "FAIL", `phone 390: no horizontal scroll (${sw[0]}/${sw[1]}); rows are stacked cards with label and "URL <path>" on a second line and a delete icon (Edit is the whole card); no indented sub-links (Methodology and Contact sit flat under Resources); "Edit" opens a full-screen form (OK); a ${f[2]}-char URL scrolls inside the input (scrollWidth ${f[0]} > clientWidth ${f[1]}) rather than wrapping; Save at y=${box?.y} reachable; footer has "Add link" only. Fails on the missing indented sub-links`, "MEN-20");
+  r("X-06", "PASS", `phone: no horizontal page scroll (${sw[0]}/${sw[1]}); list shows stacked rows (label, URL, delete), editor is single column and full screen; actions reachable by touch`, "MEN-20");
+  await page.context().close();
+});
+await b.close();

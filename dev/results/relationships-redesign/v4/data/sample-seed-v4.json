@@ -1,0 +1,109 @@
+{
+  "newTemplates": [
+    { "id": "hearing", "name": "Hearing", "color": "#0D9488" }
+  ],
+  "newEntities": [
+    { "id": "e54", "title": "Uruguay", "type": "country" },
+    { "id": "e55", "title": "El Salvador", "type": "country" },
+    { "id": "e56", "title": "Unlinked memo (draft)", "type": "document" }
+  ],
+  "hearingSessions": [
+    { "month": "2019-03", "count": 8 },
+    { "month": "2019-10", "count": 10 },
+    { "month": "2021-03", "count": 6 },
+    { "month": "2022-10", "count": 12 },
+    { "month": "2024-03", "count": 12 }
+  ],
+  "relationTypes": [
+    { "id": "victim", "label": "Victim" },
+    { "id": "petitioner", "label": "Petitioner" },
+    { "id": "respondent_state", "label": "Respondent State" },
+    { "id": "judgment_of", "label": "Judgment" },
+    { "id": "signed_by", "label": "Signed by" },
+    { "id": "nationality", "label": "Nationality" },
+    { "id": "member_of", "label": "Member of" },
+    { "id": "hearing_of", "label": "Hearing" }
+  ],
+  "fields": {
+    "court_case": [
+      { "label": "Victims", "relationType": "victim", "content": "person" },
+      { "label": "Petitioners", "relationType": "petitioner", "content": "organization" },
+      { "label": "Respondent State", "relationType": "respondent_state", "content": "country" },
+      { "label": "Judgments", "relationType": "judgment_of", "content": "judgment" }
+    ],
+    "judgment": [
+      { "label": "Signed by", "relationType": "signed_by", "content": "person" }
+    ],
+    "person": [
+      { "label": "Nationality", "relationType": "nationality", "content": "country" },
+      { "label": "Member of", "relationType": "member_of", "content": "organization" }
+    ],
+    "organization": [
+      { "label": "Hearings", "relationType": "hearing_of", "content": "hearing" }
+    ]
+  },
+  "derived": {
+    "court_case": [
+      { "label": "Judges", "path": [["judgment_of", "judgment"], ["signed_by", "person"]], "leaf": "title" },
+      { "label": "Judges' nationality", "path": [["judgment_of", "judgment"], ["signed_by", "person"], ["nationality", "country"]], "leaf": "title" }
+    ]
+  },
+  "hubs": [
+    { "id": "hub-v4-01", "centre": "e3", "type": "victim", "members": ["e1", "e11", "e12", "e16"] },
+    { "id": "hub-v4-02", "centre": "e3", "type": "petitioner", "members": ["e8", "e43"] },
+    { "id": "hub-v4-03", "centre": "e3", "type": "respondent_state", "members": ["e2"] },
+    { "id": "hub-v4-04", "centre": "e3", "type": "judgment_of", "members": ["e7"] },
+    { "id": "hub-v4-05", "centre": "e7", "type": "signed_by", "members": ["e21", "e22", "e23"] },
+    { "id": "hub-v4-06", "centre": "e38", "type": "signed_by", "members": ["e22", "e24", "e25"] },
+    { "id": "hub-v4-07", "centre": "e39", "type": "signed_by", "members": ["e22", "e23", "e24"] },
+    { "id": "hub-v4-08", "centre": "e40", "type": "signed_by", "members": ["e21", "e25"] },
+    { "id": "hub-v4-09", "centre": "e13", "type": "judgment_of", "members": ["e38"] },
+    { "id": "hub-v4-10", "centre": "e33", "type": "judgment_of", "members": ["e39"] },
+    { "id": "hub-v4-11", "centre": "e32", "type": "judgment_of", "members": ["e40"] },
+    { "id": "hub-v4-12", "centre": "e13", "type": "respondent_state", "members": ["e26"] },
+    { "id": "hub-v4-13", "centre": "e33", "type": "respondent_state", "members": ["e27"] },
+    { "id": "hub-v4-14", "centre": "e32", "type": "respondent_state", "members": ["e54"] },
+    { "id": "hub-v4-15", "centre": "e31", "type": "respondent_state", "members": ["e55"] },
+    { "id": "hub-v4-16", "centre": "e33", "type": "victim", "members": ["e19", "e20"] },
+    { "id": "hub-v4-17", "centre": "e32", "type": "petitioner", "members": ["e8", "e44"] },
+    { "id": "hub-v4-18", "centre": "e21", "type": "nationality", "members": ["e2"] },
+    { "id": "hub-v4-19", "centre": "e22", "type": "nationality", "members": ["e15"] },
+    { "id": "hub-v4-20", "centre": "e23", "type": "nationality", "members": ["e28"] },
+    { "id": "hub-v4-21", "centre": "e24", "type": "nationality", "members": ["e29"] },
+    { "id": "hub-v4-22", "centre": "e25", "type": "nationality", "members": ["e30"] },
+    { "id": "hub-v4-23", "centre": "e1", "type": "nationality", "members": ["e2"] },
+    { "id": "hub-v4-24", "centre": "e11", "type": "nationality", "members": ["e2"] },
+    { "id": "hub-v4-25", "centre": "e12", "type": "nationality", "members": ["e27"] },
+    { "id": "hub-v4-26", "centre": "e16", "type": "nationality", "members": ["e2"] },
+    { "id": "hub-v4-27", "centre": "e16", "type": "member_of", "members": ["e43"] },
+    { "id": "hub-v4-28", "centre": "e17", "type": "member_of", "members": ["e43"] },
+    { "id": "hub-v4-29", "centre": "e19", "type": "member_of", "members": ["e44"] },
+    { "id": "hub-v4-30", "centre": "e20", "type": "member_of", "members": ["e8"] },
+    { "id": "hub-v4-31", "centre": null, "type": null, "members": ["e8", "e41", "e42"], "note": "joint statement; no relation type, no owner → Listed together with" },
+    { "id": "hub-v4-32", "centre": "e3", "type": null, "members": ["e52"], "note": "untyped pair → Without a relation type" },
+    { "id": "hub-v4-33", "centre": "e8", "type": "hearing_of", "members": "ALL_HEARINGS" }
+  ],
+  "dates": {
+    "e3":  [["Date of the attack", "1989-01-23"], ["Petition filed", "1989-03-15"], ["Admissibility", "1995-10-12"], ["Report adopted", "1997-11-18"]],
+    "e7":  [["Date", "1997-11-18"]],
+    "e13": [["Petition filed", "1981-10-07"], ["Submitted to the Court", "1986-04-24"]],
+    "e31": [["Petition filed", "1990-01-17"]],
+    "e32": [["Petition filed", "2006-05-08"], ["Submitted to the Court", "2010-01-21"]],
+    "e33": [["Petition filed", "1993-03-05"], ["Submitted to the Court", "1996-08-30"]],
+    "e38": [["Date", "1988-07-29"]],
+    "e39": [["Date", "2000-11-25"]],
+    "e40": [["Date", "2011-02-24"]],
+    "e48": [["Date", "1969-11-22"]],
+    "e49": [["Date", "1991-03-04"]],
+    "e50": [["Date", "1994-06-09"]],
+    "e51": [["Date", "1977-06-08"]],
+    "e52": [["Date", "1948-12-10"]],
+    "e53": [["Date", "2003-05-10"]],
+    "e21": [["Mandate", "1995-01-01", "2003-12-31"]],
+    "e22": [["Mandate", "1986-01-01", "1997-12-31"]],
+    "e23": [["Mandate", "1998-01-01", "2009-12-31"]],
+    "e24": [["Mandate", "1989-01-01", "2000-12-31"]],
+    "e25": [["Mandate", "2004-01-01", "2015-12-31"]]
+  },
+  "zeroRelationship": "e56"
+}

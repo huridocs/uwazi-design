@@ -1,0 +1,38 @@
+[
+ {
+  "id": "COL-05",
+  "result": "PASS",
+  "evidence": "caption count 1; row buttons [Choose]; dialog \"Select favicon image\"; modal text \"Select favicon image | Browse files to upload | or drop your files here. | Select an existing image | logo-iachr.svg | fav-64x64.png | Cancel\"; gallery captions [\"logo-iachr.svg\",\"fav-64x64.png\"]; modal buttons [,Browse files to upload\nor drop your files here.,logo-iachr.svg,fav-64x64.png,Cancel]; Cancel closes=true (favicon unchanged=true); Escape closes=true; focus after Escape on \"Choose\"",
+  "shot": "COL-05"
+ },
+ {
+  "id": "COL-06",
+  "result": "PASS",
+  "evidence": "modal closed=true; row buttons [Change,Clear], preview tiles 1; link[rel=icon] before pick /favicon.svg, after pick/before Save /favicon.svg, after Save data:image/png;base64,iVBORw0KGgoAAAANSU...; after reload preview 1, icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAA; Clear: preview tiles 0, icon still data:image/png;base64,iVBORw0KGgoAAAANSU; after Save icon /favicon.svg; after reload preview 0",
+  "shot": "COL-06"
+ },
+ {
+  "id": "COL-07",
+  "result": "PASS",
+  "evidence": "Uploads seed rows [\"logo-iachr.svg /assets/logo-iachr.svg\",\"cover-banner.jpg /assets/cover-banner.jp\",\"style-guide.pdf /assets/style-guide.pdf\",\"Inter-brand.woff2 /assets/Inter-brand.wo\"]; gallery with 64x64, 600x300, 10x10 added (seed also holds a logo-iachr.svg and a cover-banner.jpg): [\"logo-iachr.svg 160x160\",\"fav-64x64.png 64x64\"] (every listed image measured square 16-512 px: true; 600x300, 10x10 and the jpg are not listed); with only failing images (64x64 and the seed svg deleted): gallery [], modal text \"Select favicon image | Browse files to upload | or drop your files here. | Select an existing image | No uploaded images fit the requirements | Cancel\"; with no images in Uploads: \"Select favicon image | Browse files to upload | or drop your files here. | Select an existing image | There are no images in Uploads yet. Upload one above to use it here. | Cancel\"",
+  "shot": "COL-07-mixed"
+ },
+ {
+  "id": "COL-08",
+  "result": "PASS",
+  "evidence": "drop 600x300: \"Image doesn't match the required size. Actual: 600x300 px. Expected: square 16x16 to 512x512 px\"; modal open=true; 1024x1024: \"Image doesn't match the required size. Actual: 1024x1024 px. Expected: square 16x16 to 512x512 px\"; modal open=true; 10x10: \"Image doesn't match the required size. Actual: 10x10 px. Expected: square 16x16 to 512x512 px\"; modal open=true; text file: \"The file could not be read as an image.\"; modal open=true; broken png: \"The file could not be read as an image.\"; modal open=true; Uploads rows after the bad files: [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"]; valid 128x128: progress \"Uploading fav-128x128.png 100%\", modal closed=true, favicon preview alt \"Favicon: fav-128x128.png\"",
+  "shot": "COL-08-wide"
+ },
+ {
+  "id": "COL-08b",
+  "result": "INFO",
+  "evidence": "observation: a 2.1 MB 512x512 PNG (over Uploads' 2 MB limit, valid size) is accepted by the favicon picker, modal closed=true",
+  "shot": ""
+ },
+ {
+  "id": "COL-09",
+  "result": "PASS",
+  "evidence": "picked image showed in form (preview tiles 1); rail click dialog [\"Discard changes?\"]; after Discard new notifications [\"Uploaded custom file\"]; Uploads rows [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\",\"fav-128x128.png\"]; Collection favicon preview tiles 0 (buttons [Choose])",
+  "shot": ""
+ }
+]

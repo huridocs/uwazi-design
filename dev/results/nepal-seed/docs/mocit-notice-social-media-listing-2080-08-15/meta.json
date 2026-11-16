@@ -1,0 +1,31 @@
+{
+ "doc_id": "mocit-notice-social-media-listing-2080-08-15",
+ "title": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 1 December 2023)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 500072,
+ "sha256": "d1656e13a1bccc1b74d560a7111ca84947835c383bfffb5be76988b3b4fa0f2d",
+ "source_url": "https://giwmscdnone.gov.np/media/app/public/22/posts/1701416487_66.pdf",
+ "source_page": "https://www.mocit.gov.np/content/8383/8383-notice-regarding-regulating-th/",
+ "retrieved": "2026-10-05",
+ "publisher": "Ministry of Communication and Information Technology",
+ "published": "2023-12-01",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": true,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Embedded Nepali text has systematic font-mapping errors (an extra consonant inserted in many words). Searchable only approximately.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:mocit-2023-12-01-notice-social-media-listing-2080",
+  "action:2023-12-01-mocit-notice-social-media-platforms-must-list-within-three-months"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1946
+}

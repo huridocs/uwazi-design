@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2500);
+await p.getByPlaceholder(/Search title/).click();
+await p.keyboard.type("disappearance", {delay:60}); await p.waitForTimeout(2500);
+await p.screenshot({ path: "s8.png" });
+await p.mouse.click(885,76); await p.waitForTimeout(600);
+await p.screenshot({ path: "s9.png" });
+await b.close();

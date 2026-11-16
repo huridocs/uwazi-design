@@ -1,0 +1,56 @@
+[
+ {
+  "id": "MEN-16",
+  "result": "PASS",
+  "evidence": "seed navbar [\"Library\",\"About\",\"Resources\"]; draft tree [\"Resources\",\"  Methodology\",\"  Contact\",\"Alpha\",\"Docs\"]; navbar while unsaved [\"Library\",\"About\",\"Resources\"] (unchanged=true); after Save [\"Resources\",\"Alpha\",\"Docs\"]; group dropdown items [\"Methodology\",\"Contact\"]; after reload [\"Resources\",\"Alpha\",\"Docs\"] (Menu rows [\"Resources\",\"  Methodology\",\"  Contact\",\"Alpha\",\"Docs\"]); after Reset demo data [\"Library\",\"About\",\"Resources\"]",
+  "shot": "MEN-16-desktop"
+ },
+ {
+  "id": "MEN-17",
+  "result": "PASS",
+  "evidence": "Menu context keys before: [\"About\",\"Contact\",\"Library\",\"Methodology\",\"Resources\"]; after translating Library to \"Biblioteca\"; with the rename/add/delete in an unsaved draft (discarded) the context still reads [\"About in Spanish, untranslated=About\",\"Contact in Spanish, untranslated=Contact\",\"Library in Spanish=Biblioteca\",\"Methodology in Spanish, untranslated=Methodology\",\"Resources in Spanish, untranslated=Resources\"]; after Save the Spanish inputs are [\"Alpha in Spanish=Biblioteca\",\"Contact in Spanish, untranslated=Contact\",\"Docs in Spanish, untranslated=Docs\",\"Methodology in Spanish, untranslated=Methodology\",\"Resources in Spanish, untranslated=Resources\"] (Alpha carries \"Biblioteca\"=true, Library gone=true, Docs value \"Docs\", About gone=true)",
+  "shot": "MEN-17"
+ },
+ {
+  "id": "MEN-18",
+  "result": "PASS",
+  "evidence": "after adding T1 and Save: T1 id \"m-muvdl9t5-1\"; after delete T1, add T2, Save: T2 id \"m-muvdlb8k-2\" (differs from T1's=true); after renaming About to About2, moving T2 and Save: About2 id \"m2\" equals About's earlier id \"m2\" (true), T2 id stable true; all ids [\"m-muvdlb8k-2\",\"m1\",\"m2\",\"m3\",\"m4\",\"m5\"]; ids starting with tmp_: 0; unique=true",
+  "shot": ""
+ },
+ {
+  "id": "X-10",
+  "result": "PASS",
+  "evidence": "after deleting every row and Save: empty state text \"No menu links yet / Add the links readers see in the collection's top navigation. / Add link\"; \"Add link\" buttons 2; generic \"Nothing here yet.\"/\"NO DATA AVAILABLE\" present=false",
+  "shot": "MEN-19-empty"
+ },
+ {
+  "id": "MEN-19",
+  "result": "FAIL",
+  "evidence": "empty store: \"No menu links yet / Add the links readers see in the collection's top navigation. / Add link\" with \"Add link\"=2; Dev panel Armed: the next read fails with “Menu store unreadable”. then opening Menu: error state shown=false (page text \"Menu | The links in the collection's top navigation, in navbar order. A group opens to its links. Changes show in the navbar after Save. | LABEL | URL | ACTIONS\", error entries []); invalid JSON in \"uwazi:settings:v2:menu:mock\": error state with Retry=true (\"Menu | The menu didn't load | The saved menu could not be read. | Retry\"), Retry buttons 1",
+  "shot": "MEN-19-read"
+ },
+ {
+  "id": "X-01",
+  "result": "PASS",
+  "evidence": "saved \"Keep\" survives rail round trip [\"  Contact\",\"Keep\"], reload [\"  Contact\",\"Keep\"]; after Dashboard > Reset demo data rows [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "result": "FAIL",
+  "evidence": "success: [\"Updated\"]; Armed: the next save fails with “Store is read-only”.; the next Save: new entries [\"Updated\"], Ok2 in draft true, Save still enabled (draft kept)=false (the save went through instead: Save disabled=true)",
+  "shot": "X-04-menu"
+ },
+ {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "activity store after the Save: [\"UPDATE Updated menu [admin]\",\"UPDATE Updated menu [admin]\"]",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "result": "PASS",
+  "evidence": "Sample rows [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]; CEJIL rows [\"Inicio\",\"Processes\",\"Provisional Measure\",\"Documents\",\"Judge and/or Commissioners\",\"Contact\"] (navbar [\"Inicio\",\"Processes\",\"Provisional Measure\",\"Documents\",\"Judge and/or Commissioners\",\"Contact\"]); back on Sample [\"Library\",\"About\",\"Resources\",\"  Methodology\",\"  Contact\"]",
+  "shot": ""
+ }
+]

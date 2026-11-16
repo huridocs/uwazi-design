@@ -1,0 +1,62 @@
+{
+ "LNG-01": {
+  "id": "LNG-01",
+  "result": "PASS",
+  "evidence": "title \"Languages\"; h3 [\"Active languages\"]; column headers [\"LANGUAGE\",\"ACTIONS\"] (second is sr-only Actions); rows [\"Arabic (ar)العربية\",\"English (en)Default\",\"French (fr)Français\",\"Spanish (es)Español\"]; ascending by English name=true; header click reverses=true; \"<name> (<key>)\" format=true; Default badges=1; \"Install Language(s)\" buttons=1 enabled=true; stray Reset/Uninstall/Install buttons outside the footer button=0",
+  "shot": "LNG-01.png"
+ },
+ "LNG-PO2": {
+  "id": "LNG-PO2",
+  "result": "PASS",
+  "evidence": "Spanish row \"Spanish (es)Español\"; English row \"English (en)Default\"",
+  "shot": "LNG-01.png"
+ },
+ "LNG-PO1": {
+  "id": "LNG-PO1",
+  "result": "FAIL",
+  "evidence": "percentages found in rows: 0. Row text [\"Arabic (ar)العربية\",\"English (en)Default\",\"French (fr)Français\",\"Spanish (es)Español\"]; page text \"Languages Active languages LANGUAGE ACTIONS Arabic (ar) العربية English (en) Default French (fr) Français Spanish (es) Español Install Language(s)\". Spec: each row shows a translated percentage derived from the Translations store",
+  "shot": "LNG-01.png"
+ },
+ "LNG-02": {
+  "id": "LNG-02",
+  "result": "PASS",
+  "evidence": "English menu: Make default(disabled), Reset; Spanish: Make default, Reset, Uninstall; German (no predefined file, installed in this run): Make default, Uninstall; Escape closes=true; focus after Escape \"Actions for English\" / \"Actions for German\"",
+  "shot": "LNG-02-german.png"
+ },
+ "X-13/Lang-console": {
+  "id": "X-13/Lang-console",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ },
+ "LNG-03": {
+  "id": "LNG-03",
+  "result": "PASS",
+  "evidence": "dialog name \"Install Language(s)\"; width 640px (size lg = 640); close X buttons=1; note present=true; search placeholder \"Search\"; radios [{\"l\":\"All\",\"dis\":false,\"chk\":true},{\"l\":\"Selected (0)\",\"dis\":true,\"chk\":false}]; legend present=true; Install disabled=true; Tab x40 left the dialog=false; focus after Escape \"Install Language(s)\", after Cancel \"Install Language(s)\"",
+  "shot": "LNG-03.png"
+ },
+ "LNG-04": {
+  "id": "LNG-04",
+  "result": "PASS",
+  "evidence": "28 rows (32 catalog minus 4 installed = 28); installed languages listed: []; alphabetical=true; \"<name> (<key>)\" format=true; starred rows [\"Burmese\",\"Greek\",\"Korean\",\"Russian\",\"Thai\",\"Turkish\",\"Ukrainian\"] expected [\"Burmese\",\"Greek\",\"Korean\",\"Russian\",\"Thai\",\"Turkish\",\"Ukrainian\"] (el, ko, my, ru, th, tr, uk); first rows [\"* Burmese (my) Select\",\"Chinese (zh) Select\",\"Czech (cs) Select\",\"Danish (da) Select\"]",
+  "shot": "LNG-03.png"
+ },
+ "LNG-05": {
+  "id": "LNG-05",
+  "result": "PASS",
+  "evidence": "\"ger\" -> [\"German (de)\"]; \"GERMAN\" -> [\"German (de)\"]; \"de\" -> [] (German, key de, must not be listed: true); \"zzz\" rows=0, text has \"No items available\"=true; clear X buttons=1, after clear rows=28, field=\"\"",
+  "shot": "LNG-05.png"
+ },
+ "LNG-06": {
+  "id": "LNG-06",
+  "result": "PASS",
+  "evidence": "after two clicks German row \"German (de) Selected\"; button \"Install (2)\" enabled=true; radios [{\"l\":\"All\",\"dis\":false},{\"l\":\"Selected (2)\",\"dis\":false}]; Selected view lists [\"German (de)\",\"Korean (ko)\"]; deselect one -> list [\"Korean (ko)\"], radio \"Selected (1)\", button \"Install (1)\"; at 0: Install disabled=true, back to All=true; Cancel installed nothing (rows 4); reopen: radio \"Selected (0)\", selected rows=0",
+  "shot": "LNG-06.png"
+ },
+ "console-lng1b": {
+  "id": "console-lng1b",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ }
+}

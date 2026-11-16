@@ -1,0 +1,22 @@
+PASS | X-01 | installed Korean + made Spanish default: ["Arabic (ar) العربية","English (en)","French (fr) Français","Korean (ko) 한국어","Portuguese (pt) Português","Spanish (es) Español Default"]; after rail to Collection and back: true; after reload: true; Reset demo data dialog buttons ["","Cancel","Reset"]; after reset Korean gone and English default=true (["Arabic (ar) العربية","English (en) Default","French 
+PASS | _errs-X1 | []
+FAIL | X-04 | success half: install "Languages installed successfully" x1, make default "Default language change success" x1, reset "Language reset success" x1, uninstall "Language uninstalled successfully" x1 -> one each. Failure half: Dev panel "Fail next request" (scopes Install or Uninstall, Save, Delete) armed for install, make default, reset and uninstall produced NO "An error occurred" entry and the acti
+PASS | X-09 | Activity log rows with a user: ["Delete admin Uninstalled language “French” Oct 5, 2026 - 10:33","Update admin Reset language “Spanish” Oct 5, 2026 - 10:32","Update admin Set “Korean” as the default language Oct 5, 2026 - 10:32","Create admin Installed language “Korean” Oct 5, 2026 - 10:32"]
+PASS | _errs-X4 | []
+PASS | X-07 | serious/critical axe: page=[]; dup button names=[]; install modal=[]; row menu=[]; Make default dialog=[]; Reset dialog=[]; Uninstall dialog=[]; Make default: named=true, trap held=true, Escape closes=true, focus restored to "Actions for Spanish"; Reset: named=true, trap held=true, Escape closes=true, focus restored to "Actions for Spanish"; Uninstall: named=true, trap held=true, Escape closes=tru
+PASS | _errs-X7 | []
+PASS | X-08 (desktop) | contrast light: Default ["Default=15.34"] Installing ["Installing=10.89"] Failed ["Install failed=6.71","Install failed=6.71"]; dark: Default ["Default=15.34"] Installing ["Installing=7.96"] Failed ["Install failed=6.19","Install failed=6.19"]; values below 4.5: []
+PASS | _errs-X8-desktop | []
+PASS | X-08 (mobile) | contrast light: Default ["Default=15.34"] Installing ["Installing=10.89"] Failed ["Install failed=6.71","Install failed=6.71"]; dark: Default ["Default=15.34"] Installing ["Installing=7.96"] Failed ["Install failed=6.19","Install failed=6.19"]; values below 4.5: []
+PASS | _errs-X8-mobile | []
+PASS | LNG-19 | rows=["Arabic (ar) العربية","English (en) Default","French (fr) Français","Portuguese (pt) Português","Spanish (es) Español"]; row menu buttons=5 (36x36), all inside viewport=true; horizontal scroll page=false pane=false; row menu box={"l":178,"r":358,"t":497,"b":595,"items":["Make default","Reset","Uninstall"]} (inside viewport=true); Reset dialog box={"t":0,"b":844,"w":390,"h":844} confirm butto
+PASS | X-06 | Languages at 390x844 with touch: rows (name, key, Default badge, action menu), no horizontal scroll, menu/dialogs full screen or sheets and reachable by tap
+PASS | _errs-X6 | []
+PASS | X-13 | Sample=["Arabic (ar) العربية","English (en) Default","French (fr) Français","Portuguese (pt) Português","Spanish (es) Español"]; CEJIL=["English (en)","Español (es) Default","Português (pt)"]; Best Artworks=["Arabic (ar) العربية","English (en) Default","French (fr) Français","Portuguese (pt) Português","Spanish (es) Español"]; Red Trav=["Arabic (ar) العربية","English (en) Default","French (fr) Fra
+PASS | _errs-X13 | []
+N/A | X-02 | Excluded by the page's Applies line (no form; every action is immediate); LNG-18 drove the absence of a dirty guard and Save button.
+N/A | X-03 | Excluded by the page's Applies line (no form; every action is immediate); LNG-18 drove the absence of a dirty guard and Save button.
+N/A | X-05 | Replaced by LNG-13 and LNG-14 (type-the-word dialogs), both driven.
+N/A | X-10 | Excluded by the page's Applies line (the list always holds the default language; no search or bulk selection).
+N/A | X-11 | Excluded by the page's Applies line (the list always holds the default language; no search or bulk selection).
+N/A | X-12 | Excluded by the page's Applies line (the list always holds the default language; no search or bulk selection).

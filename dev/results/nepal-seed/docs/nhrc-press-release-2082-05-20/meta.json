@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-release-2082-05-20",
+ "title": "NHRC press release: reconsider the decision to close social media (Nepali, 20 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 817680,
+ "sha256": "756e812cf6370b077b9e0abbc80348dd5a43e24e1585a3b158dbd030f0297a8f",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release_2082-5-20.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/837",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-05",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned or rasterised page; no usable text layer (any embedded text is OCR noise or legacy-font ASCII). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+  "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1846
+}

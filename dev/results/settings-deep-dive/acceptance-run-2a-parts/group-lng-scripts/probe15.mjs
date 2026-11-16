@@ -1,0 +1,12 @@
+import { launch, open, S, shot } from "./lib.mjs";
+import { openCtx, cell, squash } from "./u.mjs";
+const b = await launch(); const {page}=await open(b,"translations");
+await openCtx(page,"Person");
+await cell(page,"Person","Spanish").fill("Edit1");
+console.log("save enabled", await page.getByRole("button",{name:"Save",exact:true}).isEnabled());
+await page.getByRole("button",{name:"Cancel",exact:true}).click(); await page.waitForTimeout(500);
+console.log("editor open", await page.locator("[data-component=TranslationEditor]").count(), "value", await cell(page,"Person","Spanish").inputValue().catch(()=>"(gone)"));
+console.log("dialogs", await page.evaluate(()=>[...document.querySelectorAll("[role=dialog],[role=alertdialog]")].filter(e=>!e.closest("[inert]")).length));
+await shot(page,"probe-cancel");
+console.log(squash(await S(page).innerText()).slice(0,300));
+await b.close();

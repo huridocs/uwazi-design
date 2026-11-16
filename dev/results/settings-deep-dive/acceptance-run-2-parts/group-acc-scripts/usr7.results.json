@@ -1,0 +1,38 @@
+[
+ {
+  "id": "USR-29",
+  "res": "PASS",
+  "ev": "row actions opacity idle 0, hover 1, keyboard focus in row 1; Tab trail [\"Search users|\",\"Filter by role: All roles|\",\"Select all|\",\"Edit admin|row\",\"Select admin|row\",\"Delete admin|row\",\"Edit mlopez|row\"]; row buttons' accessible names=[\"Edit mlopez\",\"Delete mlopez\"] (unique=true); Enter on the row target opens the editor=true",
+  "shot": "USR-29.png"
+ },
+ {
+  "id": "USR-28",
+  "res": "PASS",
+  "ev": "Phone 390: list overflow 0px; rows (5) read [\"AD admin (you) admin@uwazi.io Role Admin Groups Administrators Protection Password + 2fa\",\"ML mlopez m.lopez@cejil.org Role Editor Groups Litigation Protection Password + 2fa\"]; table headers still rendered=[]; row Delete button opacity 1 size 26x26; 2 ticked footer=\"Selected 2 of 5 Actions Clear\", Actions sheet=\"2 selected Add to group Change role Delete\"; tapping a row opens the editor (single column input lefts [16], overflow 0); Groups rows=[\"Administrators Members 1\",\"Litigation Members 2\",\"Research Members 2\"] overflow 0; group editor input lefts [16] overflow 0",
+  "shot": "USR-28-list.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "Phone 390: no horizontal overflow on list/editor/groups (0/0/0); rows not a wide table (columns shown: 0); row actions visible on touch (opacity 1); selection actions behind an \"Actions\" button=1; editor single column; Back chevron present=1; dirty Back opens guard \"Discard changes? You have unsaved changes. Do you want to continue? Ca\"",
+  "shot": "USR-28-list.png"
+ },
+ {
+  "id": "X-02-phone",
+  "res": "PASS",
+  "ev": "phone back chevron on a dirty user editor: \"Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes\"",
+  "shot": "X-02-phone.png"
+ },
+ {
+  "id": "X-10",
+  "res": "PASS",
+  "ev": "Groups tab emptied (USR-27): title \"No groups yet\", hint \"A group shares access to entities among several users.\" and \"Add group\" action, not \"Nothing here yet.\"; the Users tab cannot reach zero rows (the signed-in admin cannot be deleted), its search no-result state is \"Nothing matches “zzz”\" with \"Clear search\"",
+  "shot": "USR-27.png"
+ },
+ {
+  "id": "USR7-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

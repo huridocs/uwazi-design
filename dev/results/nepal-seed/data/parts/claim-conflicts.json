@@ -1,0 +1,243 @@
+{
+ "references": [
+  {
+   "id": "ref:conflict-14555-inmates-escaped-prison-escapes-14549-department-of-prison-manage",
+   "from": "claim:14555-inmates-escaped",
+   "to": "claim:prison-escapes-14549-department-of-prison-management",
+   "type": "conflicts_with",
+   "sources": [
+    "source:himalpress-2025-09-26-6494-inmates-at-large",
+    "source:ratopati-2026-03-26-commission-report-bhadra-violence"
+   ],
+   "verification": "single-source",
+   "note": "Different national totals of escaped inmates (14,555 against 14,549, 14,558 and 14,507)."
+  },
+  {
+   "id": "ref:conflict-14555-inmates-escaped-prison-escapes-14558-department-of-prison-manage",
+   "from": "claim:14555-inmates-escaped",
+   "to": "claim:prison-escapes-14558-department-of-prison-management",
+   "type": "conflicts_with",
+   "sources": [
+    "source:onmanorama-2025-09-29-over-7700-inmates-return",
+    "source:ratopati-2026-03-26-commission-report-bhadra-violence",
+    "source:tribune-india-2025-09-28-over-7700-inmates-back-in-prisons"
+   ],
+   "verification": "single-source",
+   "note": "Different national totals of escaped inmates (14,555 against 14,549, 14,558 and 14,507)."
+  },
+  {
+   "id": "ref:conflict-14555-inmates-escaped-prison-escapes-14507-nepal-police",
+   "from": "claim:14555-inmates-escaped",
+   "to": "claim:prison-escapes-14507-nepal-police",
+   "type": "conflicts_with",
+   "sources": [
+    "source:onlinekhabar-2025-09-11-over-14000-prisoners-escape",
+    "source:ratopati-2026-03-26-commission-report-bhadra-violence"
+   ],
+   "verification": "single-source",
+   "note": "Different national totals of escaped inmates (14,555 against 14,549, 14,558 and 14,507)."
+  },
+  {
+   "id": "ref:conflict-2024-floods-death-toll-219-2024-floods-death-toll-224",
+   "from": "claim:2024-floods-death-toll-219",
+   "to": "claim:2024-floods-death-toll-224",
+   "type": "conflicts_with",
+   "sources": [
+    "source:global-voices-2024-10-02-nepal-floods-festival-joy",
+    "source:ksat-2024-10-01-nepal-floods-rescuers-search",
+    "source:peninsula-qatar-2024-10-01-nepal-floods-killed-224"
+   ],
+   "verification": "single-source",
+   "note": "219 on 2 October 2024 against 224 on 1 October."
+  },
+  {
+   "id": "ref:conflict-amnesty-19-killed-300-injured-at-kathmandu-assem-death-toll-17-kathmandu-2025-09-08",
+   "from": "claim:amnesty-19-killed-300-injured-at-kathmandu-assembly",
+   "to": "claim:death-toll-17-kathmandu-2025-09-08",
+   "type": "conflicts_with",
+   "sources": [
+    "source:amnesty-international-2025-12-08-accountability-unlawful-killings",
+    "source:himalpress-2025-09-08-death-toll-rises-to-17",
+    "source:hrw-2025-11-20-unlawful-use-of-force",
+    "source:insec-2025-09-09-nineteen-killed-453-injured",
+    "source:onlinekhabar-2025-09-08-18-dead-256-injured"
+   ],
+   "verification": "single-source",
+   "note": "19 killed in Kathmandu (Amnesty) against 17 in Kathmandu and 2 in Itahari."
+  },
+  {
+   "id": "ref:conflict-arrest-warrants-were-urgent-and-awaiting-validat-arrest-warrants-were-issued-by-the-court",
+   "from": "claim:arrest-warrants-were-urgent-and-awaiting-validation",
+   "to": "claim:arrest-warrants-were-issued-by-the-court",
+   "type": "conflicts_with",
+   "sources": [
+    "source:ians-2026-03-28-new-govt-arrests-oli-lekhak",
+    "source:jurist-2026-03-28-nepal-arrests-former-pm"
+   ],
+   "verification": "single-source",
+   "note": "Warrants awaiting a judge's validation against warrants already issued by the court."
+  },
+  {
+   "id": "ref:conflict-charge-under-sections-181-and-182-charge-under-sections-281-to-283",
+   "from": "claim:charge-under-sections-181-and-182",
+   "to": "claim:charge-under-sections-281-to-283",
+   "type": "conflicts_with",
+   "sources": [
+    "source:jurist-2026-03-28-nepal-arrests-former-pm",
+    "source:kathmandu-post-2026-03-25-karki-commission-recommendations-10-points",
+    "source:kathmandu-post-2026-03-26-leaked-report-oli-lekhak-liable",
+    "source:online-khabar-2026-03-28-oli-lekhak-arrested",
+    "source:tribune-india-2026-03-28-oli-arrested-genz-case"
+   ],
+   "verification": "single-source",
+   "note": "Sections 181-182 (up to 10 years) against sections 281-283 (up to 3 years)."
+  },
+  {
+   "id": "ref:conflict-commission-report-is-1000-pages-commission-report-is-8000-to-10000-pages",
+   "from": "claim:commission-report-is-1000-pages",
+   "to": "claim:commission-report-is-8000-to-10000-pages",
+   "type": "conflicts_with",
+   "sources": [
+    "source:b360-nepal-undated-inquiry-commission-submits-report",
+    "source:setopati-2026-03-08-who-is-recommended-for-action"
+   ],
+   "verification": "single-source",
+   "note": "1,000 pages against 8,000-10,000 pages."
+  },
+  {
+   "id": "ref:conflict-death-toll-76-for-8-9-september-death-toll-77-for-8-9-september",
+   "from": "claim:death-toll-76-for-8-9-september",
+   "to": "claim:death-toll-77-for-8-9-september",
+   "type": "conflicts_with",
+   "sources": [
+    "source:hamro-patro-2026-09-08-genz-martyrs-day-observed",
+    "source:hrw-2026-02-12-nepal-publish-reports-on-violent-crackdowns-on-protests",
+    "source:ians-2026-09-09-parties-treat-uprising-days-differently",
+    "source:kathmandu-post-2026-03-26-leaked-report-oli-lekhak-liable",
+    "source:kathmandupost-2025-11-04-45-declared-martyrs",
+    "source:reuters-2026-03-26-panel-wants-prosecution-of-oli"
+   ],
+   "verification": "single-source",
+   "note": "Final toll of 76 against 77."
+  },
+  {
+   "id": "ref:conflict-death-toll-76-for-8-9-september-death-toll-77-2025-12-11",
+   "from": "claim:death-toll-76-for-8-9-september",
+   "to": "claim:death-toll-77-2025-12-11",
+   "type": "conflicts_with",
+   "sources": [
+    "source:hamro-patro-2026-09-08-genz-martyrs-day-observed",
+    "source:hamro-patro-2026-09-11-gen-z-rewrote-political-landscape",
+    "source:hrw-2026-02-12-nepal-publish-reports-on-violent-crackdowns-on-protests",
+    "source:ians-2025-12-11-genz-protests-77-dead-damages",
+    "source:kathmandupost-2025-11-04-45-declared-martyrs",
+    "source:reuters-2026-03-26-panel-wants-prosecution-of-oli"
+   ],
+   "verification": "single-source",
+   "note": "Final toll of 76 against 77."
+  },
+  {
+   "id": "ref:conflict-first-day-writ-petitions-more-than-seven-writ-petitions-received-14-on-15-october",
+   "from": "claim:first-day-writ-petitions-more-than-seven",
+   "to": "claim:writ-petitions-received-14-on-15-october",
+   "type": "conflicts_with",
+   "sources": [
+    "source:all-india-radio-2025-10-14-supreme-court-resumes-registrations",
+    "source:kathmandu-post-2025-10-15-petitions-karki-premiership"
+   ],
+   "verification": "single-source",
+   "note": "More than seven petitions on 14 October against 14 petitions on 15 October."
+  },
+  {
+   "id": "ref:conflict-home-minister-says-arrest-is-not-revenge-oli-says-arrest-was-retaliatory",
+   "from": "claim:home-minister-says-arrest-is-not-revenge",
+   "to": "claim:oli-says-arrest-was-retaliatory",
+   "type": "conflicts_with",
+   "sources": [
+    "source:ians-2026-03-28-new-govt-arrests-oli-lekhak",
+    "source:online-khabar-2026-03-28-oli-lekhak-arrested"
+   ],
+   "verification": "single-source",
+   "note": "The arrest as justice against the arrest as retaliation."
+  },
+  {
+   "id": "ref:conflict-joint-embassy-statement-seven-signatories-joint-embassy-statement-nine-signatories",
+   "from": "claim:joint-embassy-statement-seven-signatories",
+   "to": "claim:joint-embassy-statement-nine-signatories",
+   "type": "conflicts_with",
+   "sources": [
+    "source:b360-nepal-2025-09-09-diplomatic-missions-urge-all-parties-to-exercise-maximum-restraint",
+    "source:diplomat-nepal-2025-09-09-nine-embassies-joint-statement-on-violence"
+   ],
+   "verification": "single-source",
+   "note": "Seven signatories against nine."
+  },
+  {
+   "id": "ref:conflict-lamichhane-release-letter-counterfeit-lamichhane-release-letter-genuine",
+   "from": "claim:lamichhane-release-letter-counterfeit",
+   "to": "claim:lamichhane-release-letter-genuine",
+   "type": "conflicts_with",
+   "sources": [
+    "source:republica-2025-09-13-lamichhane-returns-to-nakkhu"
+   ],
+   "verification": "single-source",
+   "note": "Counterfeit release letter against a genuine one."
+  },
+  {
+   "id": "ref:conflict-oli-and-lekhak-arrested-on-27-march-oli-and-lekhak-arrested-on-28-march",
+   "from": "claim:oli-and-lekhak-arrested-on-27-march",
+   "to": "claim:oli-and-lekhak-arrested-on-28-march",
+   "type": "conflicts_with",
+   "sources": [
+    "source:himalayan-times-2026-03-31-former-cdo-rijal-arrested",
+    "source:ians-2026-03-28-new-govt-arrests-oli-lekhak",
+    "source:jurist-2026-03-28-nepal-arrests-former-pm",
+    "source:tribune-india-2026-03-28-oli-arrested-genz-case"
+   ],
+   "verification": "single-source",
+   "note": "Arrest dated 27 March against 28 March."
+  },
+  {
+   "id": "ref:conflict-telegram-ban-followed-refusal-to-hand-over-user--telegram-ban-reason-online-fraud-and-money-laund",
+   "from": "claim:telegram-ban-followed-refusal-to-hand-over-user-data",
+   "to": "claim:telegram-ban-reason-online-fraud-and-money-laundering",
+   "type": "conflicts_with",
+   "sources": [
+    "source:access-now-2025-07-29-keepiton-reverse-nationwide-telegram-ban",
+    "source:access-now-2025-07-29-keepiton-telegram-ban-dangerous-escalation"
+   ],
+   "verification": "single-source",
+   "note": "Two stated reasons for the Telegram ban."
+  },
+  {
+   "id": "ref:conflict-tinkune-injured-45-tinkune-injured-hundreds",
+   "from": "claim:tinkune-injured-45",
+   "to": "claim:tinkune-injured-hundreds",
+   "type": "conflicts_with",
+   "sources": [
+    "source:ians-2025-04-08-rpp-protest-monarchy",
+    "source:kathmandu-post-2025-03-28-two-dead-45-injured"
+   ],
+   "verification": "single-source",
+   "note": "45 injured against hundreds injured."
+  },
+  {
+   "id": "ref:conflict-two-8-september-deaths-were-in-jhapa-death-toll-19-2025-09-08",
+   "from": "claim:two-8-september-deaths-were-in-jhapa",
+   "to": "claim:death-toll-19-2025-09-08",
+   "type": "conflicts_with",
+   "sources": [
+    "source:aljazeera-2025-09-09-topple-this-government-resignations",
+    "source:cbc-2025-09-08-at-least-19-killed-nepal-protests",
+    "source:guardian-2025-09-09-pm-quits-after-protest-deaths",
+    "source:himalayan-times-2025-09-08-19-dead-over-300-injured",
+    "source:hrw-2025-09-09-police-fire-on-gen-z-protest",
+    "source:kathmandu-post-2026-03-26-leaked-report-oli-lekhak-liable",
+    "source:kathmandupost-2025-09-08-19-dead-across-nepal",
+    "source:setopati-2025-09-08-death-toll-rises-to-19"
+   ],
+   "verification": "single-source",
+   "note": "Two of the 8 September deaths outside the capital in Jhapa against in Itahari."
+  }
+ ]
+}

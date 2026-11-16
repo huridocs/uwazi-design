@@ -1,0 +1,11 @@
+FAIL | X-04-fail | Dev panel present=true; status after Arm="Armed: the next save fails with “The server did not answer in time.”."; back on Account=true; after Update+Accept with Save armed: new Beacon entries=["Account updated just now"]; "An error occurred" entries=0; email kept="fail@x.org" | X-04-fail.png
+INFO | X-04-note | "Account updated" success entries during the armed save=1 
+PASS | X-07 | axe page=[]; footer=[]; password modal=[]; revoke dialog=[]; 2FA modal=[]; duplicate button names=[]; unlabelled inputs=[]; modal role=dialog, name ref=modal-:r1n:; focus after Escape: password modal -> "Update", revoke dialog -> "Revoke API key Nightly export", 2FA modal -> "Enable" | X-07.png
+FAIL | X-08 | "Activated" status button text contrast light 3.86:1, dark 3.45:1 (need >= 4.5:1; it is a disabled-state button); Logout label light 8.2:1, dark 6.65:1 | X-08.png
+PASS | X-06 | Phone 390: page overflow=0px; footer Update 66x28; password modal box {"x":0,"y":0,"w":390,"h":844} (sheet/full width); API key table row action visible on touch (opacity 1), size 26x26; Logout/Update reachable by tap | X-06-phone-modal.png
+N/A | X-05 | Account "Applies:" excludes X-05: no delete of a used object on Account (applies line excludes it) 
+N/A | X-10 | Account "Applies:" excludes X-10: no list 
+N/A | X-11 | Account "Applies:" excludes X-11: no list 
+N/A | X-12 | Account "Applies:" excludes X-12: no list 
+N/A | X-13 | Account "Applies:" excludes X-13: account is global 
+PASS | ACC4-console | console errors/warnings (atomFamily baseline excluded): [] 

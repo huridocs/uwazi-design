@@ -1,0 +1,86 @@
+[
+ {
+  "id": "USR-08",
+  "res": "FAIL",
+  "ev": "empty + click: aria-disabled=null disabled=true, new text=[], still on editor=true ; username ab: new text=[] ; username 51 chars: new text=[] ; username a b: new text=[] ; email abc@x: new text=[]. Spec messages found: [] of 6; no Password field exists (password inputs=0), so \"Password is too long\" cannot be produced",
+  "shot": "USR-08.png"
+ },
+ {
+  "id": "USR-09",
+  "res": "FAIL",
+  "ev": "MLOPEZ / \"  M.LOPEZ@CEJIL.ORG  \": new text=[\"Already exists\",\"Already exists\"] (spec: \"Duplicated username\", \"Duplicated email\"; case-insensitive and trimmed matching works); save blocked (aria-disabled=null, stayed on editor=true); username \"a.farah@example.org\" not flagged=true; editing mlopez without changing the name is not flagged against itself=true",
+  "shot": "USR-09.png"
+ },
+ {
+  "id": "USR-10",
+  "res": "FAIL",
+  "ev": "Click \"Invite user\": password modal opened=[] (none; saved at once); list row=\"NE newbie newbie@example.org Editor Litigation —\"; tabs=[\"Users 6\",\"Groups 3\"]; new Beacon entries=[\"User invited just now\"] (spec: \"Added new user\" plus a welcome-email entry for newbie@example.org; only one entry, text \"User invited\"/other). Share dialog membership of newbie: not driven",
+  "shot": "USR-10.png"
+ },
+ {
+  "id": "USR-11",
+  "res": "FAIL",
+  "ev": "newbie created (no password field exists in the editor). Row/editor status \"Invited\" present=false; \"Resend invitation\" action present=false; editor text: \"Users & Groups / newbie Username Email Role What this user can do in the collection. Admin Full access to settings and content. Editor Create and edit content; no settings. Collaborator Comment and su\"",
+  "shot": ""
+ },
+ {
+  "id": "USR-12",
+  "res": "FAIL",
+  "ev": "No \"?\" button next to the role control; buttons on the editor page: [\"Back\",\"Users & Groups\",\"Reset\",\"Cancel\",\"Save\"]; no \"Permissions\" modal (table of 15 actions) exists. The roles are described by one-line hints under each radio: \"Full access to settings and content.\" / \"Create and edit content; no settings.\" / \"Comment and suggest only.\"",
+  "shot": ""
+ },
+ {
+  "id": "USR-14",
+  "res": "FAIL",
+  "ev": "Existing user editor: security buttons=[\"Reset\"] (spec: \"Reset Password\", \"Reset 2FA\", and \"Unlock account\" for a locked user); there is a single \"Reset\" button in a 2FA card, clicking it opened dialogs=[] (no confirm, no password modal) and only raised the notification \"2FA reset for this user\" (see ACC-18: the account's 2FA stays on); no \"Reset Password\" action; \"Disabled 2FA\" entry text not produced. New user shows no reset buttons=true (matches). mlopez Users row afterwards (2FA still on): \"ML mlopez m.lopez@cejil.org Editor Litigation\"",
+  "shot": ""
+ },
+ {
+  "id": "USR-13",
+  "res": "FAIL",
+  "ev": "Groups control is a checkbox list ([\"Administrators:null\",\"Litigation:null\",\"Research:null\"]), not a searchable multi-select: comboboxes/\"Nothing selected\" placeholder=0, no search field, no removable pills. Toggling Litigation off, Administrators on, Research off and saving works: jnkemba row afterwards \"JN jnkemba j.nkemba@example.org Editor Administrators —\"",
+  "shot": "USR-13.png"
+ },
+ {
+  "id": "X-01",
+  "res": "PASS",
+  "ev": "After Save: \"JN jnkemba j.nkemba@example.org Editor Administrators —\"; after rail away/back: same; after reload: \"JN jnkemba j.nkemba@example.org Editor Administrators —\"; after Reset demo data: \"JN jnkemba j.nkemba@example.org Editor Litigation Research —\"",
+  "shot": ""
+ },
+ {
+  "id": "USR-18",
+  "res": "FAIL",
+  "ev": "Save on an edited user: password modal dialogs=[] (none: the record is written and the editor closes at once, no \"Confirm\"/\"Enter your current password to confirm\", no Cancel/Accept); new Beacon=[\"mlopez saved just now\"] (spec \"User updated\"); row now \"ML mlopez m.lopez2@cejil.org Editor Litigation\"",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "User save/create/delete Beacon texts differ from the Uwazi strings: edit -> [\"mlopez saved just now\"] (spec \"User updated\"); create -> see USR-10 (spec \"Added new user\"); and no failure path exists to produce \"An error occurred\" (a forced failure is blocked inline instead)",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "PASS",
+  "ev": "After editing a user, Activity log newest entries: UPDATE / Updated user “mlopez” / admin / 2026-10-04 22:52 / UPDATE / Updated entity “Velásquez-Rodríguez v. Honduras” / admin / 2026-06-15 18:42 / CREATE / Created relationship type “Represented by”",
+  "shot": ""
+ },
+ {
+  "id": "USR-19",
+  "res": "FAIL",
+  "ev": "No row checkbox/bulk \"Delete\" (delete is a per-row trash button). Dialog text: \"Delete user Delete mlopez? They can no longer sign in to this collection. Member of Litigation. Cancel Delete\" (spec: title \"Delete\", warning \"Do you want to delete the following items?\", \"mlopez\", line \"removed from 1 group\", password field; password inputs=0); buttons=[\"Cancel\",\"Delete\"]. After confirming: rows=4, tabs=[\"Users 4\",\"Groups 3\"], new Beacon=[\"mlopez deleted just now\"] (spec \"Deleted user\"), Groups after: [\"GROUP MEMBERS\",\"Administrators 1\",\"Litigation 1\",\"Research 2\"] (Litigation members now 1). Share dialog not driven",
+  "shot": "USR-19.png"
+ },
+ {
+  "id": "X-05",
+  "res": "FAIL",
+  "ev": "Deleting mlopez (member of Litigation) dialog: \"Delete user Delete mlopez? They can no longer sign in to this collection. Member of Litigation. Cancel Delete\" -> states the group impact in the dialog text",
+  "shot": "USR-19.png"
+ },
+ {
+  "id": "USR-20",
+  "res": "FAIL",
+  "ev": "Admin row delete trash button disabled=false; clicking it opens dialog \"Delete user You can't delete the account you're signed in with. Member of Administrators. OK\" buttons=[\"OK\"] (spec reason \"Users cannot delete themselves\"); admin's own editor role radios=[\"Admin:null\",\"Editor:true\",\"Collaborator:true\"]; page text mentions \"Cannot change own role\"=false, \"Cannot remove the last remaining admin\"=false; role note text: \"This is the last admin, so the role stays Admin. Groups Administrators 1 member Litigation 2 members Research 2 members Two-factor authentication 2FA is enabled for this account. Res\"",
+  "shot": "USR-20-delete.png"
+ }
+]

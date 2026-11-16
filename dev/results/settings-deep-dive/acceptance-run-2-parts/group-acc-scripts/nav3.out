@@ -1,0 +1,17 @@
+FAIL | NAV-12 | Collection page has a "Global JS" checkbox=true. Rail label: seed default "Global CSS"; after Collection > Global JS on + Save "Global CSS & JS"; Dev panel "custom JS" toggled (was on=true, now off=true): label "Global CSS & JS", Global CSS & JS tabs with the flag on=["CSS","JS"], with the Dev switch off=["CSS","JS"] (spec: label "Global CSS & JS" in both states; JS tab absent when off); after reload Dev switch stored customJs=false, tabs=["CSS","JS"], label "Global CSS & JS" | NAV-12-off.png
+PASS | NAV-13 | Item "Documentation" at rail bottom (top 752 of 800) with 2 svg icons (leading + external-link), href=https://uwazi.io/page/9852italrtk/support, target=_blank; click opened a new tab=true (chrome-error://chromewebdata/); current page unchanged ("Account" -> "Account"); present for roles ["Editor=1","Collaborator=1"] plus admin. Open decision (Juan): the built label is "Documentation" (spec "Uwazi Docs") and the target is https://uwazi.io/page/9852italrtk/support (spec https://docs.uwazi.io); recorded as built, not failed | NAV-13.png
+PASS | NAV-16 | Phone 390: Settings opened on the page (back chevron true); chevron returns to the rail (rail visible true, 390px of 390); group labels reached by scrolling the lane: ["User","Collection","Content model","Languages","People","Tools","ML tools"] (the spec's five labels are superseded by A2's User, Collection, Content model, Languages, People, Tools, ML tools; "System" is sr-only); tapping "Languages" opens "Languages" with a back chevron=true; chevron returns to the rail=true; rail item heights 36-36px | NAV-16-rail.png
+PASS | X-06 | Phone 390 rail and a page: horizontal overflow 0px; rail items 36-36px tall (touch targets), rail is the full width (390px) | NAV-16-rail.png
+PASS | X-07 | axe on the rail: []; duplicate item names=[]; headings ["H2:User","H2:System","H3:Collection","H3:Content model","H3:Languages","H3:People","H2:Tools","H3:ML tools"]; keyboard Enter on a focused rail item opens "Languages"; the rail opens no dialogs (dialogs of the blocked page checked in NAV-06/NAV-08: none) 
+PASS | X-08 | The rail has no status pills or badges; active item text contrast light 16.72:1, dark 12.65:1; group label (h2) light 7.46:1, dark 6.5:1; shelf label (h3) light 7.46:1, dark 6.5:1 (need >= 4.5:1) | X-08-rail-dark.png
+N/A | X-01 | Navigation "Applies:" lists only X-06, X-07, X-08; X-01 does not apply to the rail 
+N/A | X-02 | Navigation "Applies:" lists only X-06, X-07, X-08; X-02 does not apply to the rail 
+N/A | X-03 | Navigation "Applies:" lists only X-06, X-07, X-08; X-03 does not apply to the rail 
+N/A | X-04 | Navigation "Applies:" lists only X-06, X-07, X-08; X-04 does not apply to the rail 
+N/A | X-05 | Navigation "Applies:" lists only X-06, X-07, X-08; X-05 does not apply to the rail 
+N/A | X-09 | Navigation "Applies:" lists only X-06, X-07, X-08; X-09 does not apply to the rail 
+N/A | X-10 | Navigation "Applies:" lists only X-06, X-07, X-08; X-10 does not apply to the rail 
+N/A | X-11 | Navigation "Applies:" lists only X-06, X-07, X-08; X-11 does not apply to the rail 
+N/A | X-12 | Navigation "Applies:" lists only X-06, X-07, X-08; X-12 does not apply to the rail 
+N/A | X-13 | Navigation "Applies:" lists only X-06, X-07, X-08; X-13 does not apply to the rail 
+PASS | NAV3-console | [] 

@@ -1,0 +1,18 @@
+PASS | LNG-11 | confirm dialog="Make default language Make Spanish the default language? Languages installed later start as a copy of it, and Translations marks a text untranslated when it is empty or still equals the Spanish text. Cancel Make default"; after Cancel default still English=true, notices=0; after confirm Default badge on Spanish=true, English badge gone=true; Beacon entries "Default language change 
+FAIL | LNG-12 | headers=["KEY","Español\nES","English\nEN","Français\nFR","العربية\nAR","Português\nPT"]; first row inputs=["\"Costa Rica\" in English, untranslated","\"Costa Rica\" in French, untranslated","\"Costa Rica\" in Arabic","\"Costa Rica\" in Portuguese, untranslated"] (Spanish has no input => read-only source); pill classes=["es:bg-ink","en:bg-vellum","fr:bg-vellum","ar:bg-vellum","pt:bg-vellum"]; Engl
+PASS | _errs-D1 | []
+parts13 [true,true,true,true,true,true,true,true,true,true,true,true,true,true]
+PASS | LNG-13 | dialog text="Are you sure? Other users will be affected by this action! You are about to reset a language. System strings only: 412 keys in User Interface go back to the predefined Spanish text. Templates, thesauri, the menu and every other context keep their translations. Please type in CONFIRM: No, cancel Reset"; label=["Please type in CONFIRM:"]; width=512; close X buttons=1; Reset disabled at 
+PASS | _errs-D2 | []
+parts14 {"a":true,"b":true,"c":true,"d":true,"e":true,"f":true,"g":true,"h":true,"i":true,"j":true}
+PASS | LNG-14 | dialog text="Are you sure? Other users will be affected by this action! You are about to uninstall a language. 101 entities have a French version, which is deleted. 400 translated keys are removed from Translations. Please type in CONFIRM: No, cancel Uninstall"; accept="Uninstall" disabled initially=true, "confirm"=true, "CONFIRM"=false; after No, cancel French still listed=true
+PASS | _errs-D3 | []
+FAIL | LNG-15 | System key ""the status"~5" predefined es text=""el estado"~5", edited to "EDITADO-SISTEMA" and saved; template context ""Costa Rica"" key ""Costa Rica"" edited to EDITADO-TEMPLATE and saved; Reset es confirmed; Beacon "Language reset success" entries=1; System key after Reset="EDITADO-SISTEMA" (expected ""el estado"~5"); template key after Reset="EDITADO-TEMPLATE" (expected unchanged); Languages 
+PASS | _errs-D4 | []
+FAIL | LNG-16 | edited pt cell ""Costa Rica"" -> EDITADO-PT, saved; uninstalled pt: row gone=true; task "Uninstalling language" while pending=1; "Language uninstalled successfully" entries=1; Translations User Interface lost pt column=true; Dashboard language count: no Dashboard language count exists; after reinstalling pt the cell reads "EDITADO-PT" (expected the default text ""Costa Rica"", not the old edit)
+PASS | _errs-D5 | []
+FAIL | LNG-PO1 | rows before an edit: ["Arabic (ar) العربية","English (en) Default","French (fr) Français","Portuguese (pt) Português","Spanish (es) Español"]; percentages read=[null,null,null,null,null]; after saving a French cell in Translations and returning: ["Arabic (ar) العربية","English (en) Default","French (fr) Français","Portuguese (pt) Português","Spanish (es) Español"] percentages=[null,null,null,null,
+PASS | _errs-D6 | []
+PASS | LNG-PO3 | language pickers found=0; German installed and made default: Languages list=["Arabic (ar) العربية","English (en)","French (fr) Français","German (de) Deutsch Default","Portuguese (pt) Português","Spanish (es) Español"]; Translations source column header="Deutsch
+DE"; edited ""the status"~5" (English) and saved; rail text, navbar text and page title unchanged=true
+PASS | _errs-D7 | []

@@ -1,0 +1,44 @@
+{
+ "UPL-01": {
+  "id": "UPL-01",
+  "result": "PASS",
+  "evidence": "heading \"Uploads\"; columns [\"Preview\",\"Name\",\"URL\",\"Action\"]; list rows [[\" /  / logo-iachr.svg / /assets/logo-iachr.svg / \",\"img=160\",\"icon=false\"],[\" /  / cover-banner.jpg / /assets/cover-banner.jpg / \",\"img=1200\",\"icon=false\"],[\" /  / style-guide.pdf / /assets/style-guide.pdf / \",\"img=0\",\"icon=true\"],[\" /  / Inter-brand.woff2 / /assets/Inter-brand.woff2 / \",\"img=0\",\"icon=true\"]]; URL cells [\"/assets/logo-iachr.svg\",\"/assets/cover-banner.jpg\",\"/assets/style-guide.pdf\",\"/assets/Inter-brand.woff2\"]; grid cards [{\"name\":\"logo-iachr.svg\",\"img\":160,\"icon\":false},{\"name\":\"cover-banner.jpg\",\"img\":1200,\"icon\":false},{\"name\":\"style-guide.pdf\",\"img\":0,\"icon\":true},{\"name\":\"Inter-brand.woff2\",\"img\":0,\"icon\":true}]",
+  "shot": "acceptance-run-2-shots/UPL-01.png"
+ },
+ "UPL-02": {
+  "id": "UPL-02",
+  "result": "PASS",
+  "evidence": "Name header: click 1 aria-sort=ascending order [\"cover-banner.jpg\",\"Inter-brand.woff2\",\"logo-iachr.svg\",\"style-guide.pdf\"]; click 2 aria-sort=descending order [\"style-guide.pdf\",\"logo-iachr.svg\",\"Inter-brand.woff2\",\"cover-banner.jpg\"]; URL header sort button count 0, aria-sort=null",
+  "shot": "acceptance-run-2-shots/UPL-02"
+ },
+ "UPL-03": {
+  "id": "UPL-03",
+  "result": "PASS",
+  "evidence": "\"logo\" -> 1 row; \"/assets/cover\" -> [\"cover-banner.jpg\"]; type Images -> 2 rows; cleared/all types -> 4 rows",
+  "shot": "acceptance-run-2-shots/UPL-03"
+ },
+ "X-11": {
+  "id": "X-11",
+  "result": "PASS",
+  "evidence": "search row height 32px idle, 32px with zero results (\"zzz\"), 32px after clearing; typing filtered to 1 row, clearing restored 4",
+  "shot": "acceptance-run-2-shots/UPL-03"
+ },
+ "UPL-08": {
+  "id": "UPL-08",
+  "result": "PASS",
+  "evidence": "Copy button named \"Copy URL for logo-iachr.svg\" count 1 (separate from 4 Edit buttons); clipboard \"/assets/logo-iachr.svg\"; confirmation in Beacon [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"URL copied: /assets/logo-iachr.svg just now\"]; pasted into search -> 1 row",
+  "shot": "acceptance-run-2-shots/UPL-08.png"
+ },
+ "UPL-09": {
+  "id": "UPL-09",
+  "result": "PASS",
+  "evidence": "row buttons [\"Edit logo-iachr.svg\",\"Copy URL for logo-iachr.svg\",\"Delete logo-iachr.svg\"]; dialog \"Edit File GENERAL INFORMATION File name .svg URL /assets/logo-iachr.svg stays the same. Cancel Save\" prefilled \"logo-iachr\"; Cancel after typing \"zzz\" left rows [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"]; after Save row \"brand.svg /assets/logo-iachr.svg\"; Beacon [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"File updated just now\"]; after rail navigation rows [\"brand.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"]; Copy URL is its own action (named \"Copy URL for logo-iachr.svg\")",
+  "shot": "acceptance-run-2-shots/UPL-09.png"
+ },
+ "UPL-10": {
+  "id": "UPL-10",
+  "result": "PASS",
+  "evidence": "after clearing and Save dialog text \"Edit File GENERAL INFORMATION File name .svg This field is required URL /assets/logo-iachr.svg stays the same. Cancel Save\", still open: true; Escape closed: true; names unchanged [\"brand.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"]; focus returned to \"Edit brand.svg\"",
+  "shot": "acceptance-run-2-shots/UPL-10"
+ }
+}

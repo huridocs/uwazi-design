@@ -1,0 +1,4 @@
+[33m19[39m
+[{"template":"Geolocalización de los hechos del caso","property":"Ubicación geográfica","text":"Remove property Causa inherits this property. Remove the inheritance there first. OK"}]
+["QA unused removed Nothing is saved until you save the template. just now Undo"]
+PASS | TED:X-05 | Reading: property removal in the editor never opens a confirm dialog when entities hold values (TED-25: Beacon entry with the count instead). Where a property is inherited the dialog blocks: CEJIL template "Geolocalización de los hechos del caso", property "Ubicación geográfica": dialog "Remove property Causa inherits this property. Remove the inheritance there first. OK". Sample: none of the 9 te

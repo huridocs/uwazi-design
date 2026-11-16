@@ -1,0 +1,176 @@
+{
+ "entities": 2126,
+ "entities_by_template": {
+  "action": 184,
+  "casualty": 73,
+  "claim": 289,
+  "event": 180,
+  "location": 109,
+  "media": 104,
+  "organisation": 151,
+  "person": 112,
+  "source": 924
+ },
+ "references": 5304,
+ "references_by_type": {
+  "reports_on": 1450,
+  "concerns": 495,
+  "supports": 418,
+  "involved": 398,
+  "claimed_by": 283,
+  "targets": 277,
+  "disputes": 249,
+  "depicts": 237,
+  "issued_by": 224,
+  "occurred_at": 179,
+  "in_response_to": 145,
+  "held_office": 112,
+  "published_in": 109,
+  "casualty_of": 102,
+  "located_in": 96,
+  "part_of": 93,
+  "led_to": 86,
+  "documents": 62,
+  "responded_by": 60,
+  "member_of": 53,
+  "incident_at": 39,
+  "treated_at": 30,
+  "geolocated_by": 29,
+  "succeeded": 26,
+  "conflicts_with": 18,
+  "geolocates": 14,
+  "organised_by": 11,
+  "part_of_org": 9
+ },
+ "references_with_anchor_quote": 2012,
+ "event_action_date_span": [
+  "2023-12-01",
+  "2026-10-05"
+ ],
+ "event_action_dates_by_year": {
+  "2023": 1,
+  "2024": 25,
+  "2025": 401,
+  "2026": 55
+ },
+ "all_date_span": [
+  "2013-12-12",
+  "2026-10-05"
+ ],
+ "entity_fact_verification_explicit": {
+  "confirmed": 1482,
+  "single-source": 2025,
+  "disputed": 543
+ },
+ "entity_fact_verification_inferred": {
+  "confirmed": 138,
+  "single-source": 106,
+  "disputed": 11
+ },
+ "evidence_entries": {
+  "explicit": 4050,
+  "inferred": 255
+ },
+ "reference_verification": {
+  "single-source": 3678,
+  "confirmed": 1102,
+  "disputed": 524
+ },
+ "combined_verification": {
+  "confirmed": 2584,
+  "single-source": 5703,
+  "disputed": 1067
+ },
+ "combined_verification_share": {
+  "confirmed": 0.276,
+  "single-source": 0.61,
+  "disputed": 0.114
+ },
+ "media": {
+  "items": 104,
+  "by_kind": {
+   "audio": 25,
+   "photo": 28,
+   "graphic": 1,
+   "video": 50
+  },
+  "by_rights": {
+   "link-only": 75,
+   "bundled-cc-by": 6,
+   "bundled-cc-by-sa": 17,
+   "bundled-cc0": 5,
+   "bundled-open-government": 1
+  },
+  "by_verification": {
+   "single-source": 60,
+   "confirmed": 25,
+   "misattributed": 17,
+   "disputed": 2
+  },
+  "by_platform": {
+   "podcast": 16,
+   "outlet": 6,
+   "radio": 3,
+   "commons": 29,
+   "x": 7,
+   "youtube": 28,
+   "tiktok": 7,
+   "facebook": 4,
+   "other": 2,
+   "instagram": 2
+  },
+  "by_content_warning": {
+   "null": 24,
+   "distressing": 20,
+   "none": 56,
+   "graphic": 4
+  },
+  "bundled_items": 29,
+  "bundled_bytes": 14156477,
+  "with_geolocation": 34,
+  "with_segment": 6
+ },
+ "documents": {
+  "bundled": 23,
+  "bytes": 31623059,
+  "by_language": {
+   "ne": 22,
+   "en": 1
+  },
+  "link_only": 18,
+  "references_page_anchored": 11,
+  "page_anchored_by_doc": {
+   "gon-cabinet-decisions-2082-bhadra": 2,
+   "gon-cabinet-decisions-2082-asoj": 1,
+   "gon-cabinet-decisions-2082-kartik": 1,
+   "gon-cabinet-decisions-2082-chaitra": 2,
+   "mocit-notice-social-media-listing-2081-10-21": 1,
+   "nhrc-press-release-2082-05-20": 1,
+   "nhrc-press-release-2082-05-23": 1,
+   "nhrc-press-release-2082-05-27-en": 1,
+   "sc-press-release-2082-05-26": 1
+  }
+ },
+ "claim_figures": {
+  "claims_with_figure": 106,
+  "by_unit": {
+   "other": 25,
+   "killed": 55,
+   "injured": 17,
+   "damage-NPR": 9
+  },
+  "by_as_of_basis": {
+   "derived": 9,
+   "stated": 51,
+   "published": 42,
+   "unknown": 4
+  },
+  "by_qualifier": {
+   "exact": 64,
+   "at-least": 33,
+   "about": 9
+  },
+  "groups_same_unit_scope_as_of": 75,
+  "groups_with_disagreement": 9
+ }
+}

@@ -1,0 +1,30 @@
+import { launch, URL, OUT } from "./lib.mjs";
+import { geo } from "./common.mjs";
+const { browser, page, logs } = await launch({ sync: true });
+await page.goto(URL); await page.waitForTimeout(3000);
+const rail = page.locator('[data-component=LibraryRail]');
+const show = async (label) => { await page.waitForTimeout(800); const g = await page.evaluate(geo); console.log(label.padEnd(34), JSON.stringify(g.panels.map(p => ({ t: (p.title||"").slice(0,26), l: p.l, r: p.r, cx: p.cx, owner: p.owner }))), "focusIn", g.activeInPanel); return g; };
+const cardL = () => page.mouse.click(250, 240);
+const cardR = () => page.mouse.click(1200, 240);
+await cardL(); await show("left card →");
+await rail.getByRole("button", { name: "Filters" }).click(); await show("click Filters (from left preview) →");
+await page.keyboard.press("Escape"); await page.waitForTimeout(400);
+await cardR(); await show("right card →");
+await page.screenshot({ path: OUT + "/synced-preview-right.png" });
+await rail.getByRole("button", { name: "Views and history" }).click(); await show("click Views (from right preview) →");
+await page.keyboard.press("Escape"); await page.waitForTimeout(400);
+await cardR(); await show("right card →");
+await page.keyboard.press("Escape"); await show("Esc on right preview →");
+await cardL(); await show("left card →");
+await cardR(); await show("right card while left preview open →");
+await cardL(); await show("left card while right/left open →");
+await rail.getByRole("button", { name: "Results" }).click(); await show("Results while preview open →");
+await cardR(); await show("right card while Results open →");
+await page.keyboard.press("Escape"); await show("Esc →");
+// Tab trap inside right-pane preview
+await cardR(); await show("right card →");
+let outside = 0;
+for (let i = 0; i < 30; i++) { await page.keyboard.press("Tab"); const inP = await page.evaluate(() => document.querySelector('[role=dialog][data-state=open]')?.contains(document.activeElement)); if (!inP) outside++; }
+console.log("right preview tab escapes", outside);
+console.log(logs.filter(l => !/atomFamily/.test(l)));
+await browser.close();

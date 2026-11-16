@@ -1,0 +1,10 @@
+import { launch, open, S, shot } from "./lib.mjs";
+const b = await launch();
+const {page} = await open(b,"translations","mobile");
+await S(page).getByText("User Interface",{exact:true}).first().click(); await page.waitForTimeout(600);
+await S(page).locator('input[aria-label="Library in Spanish"]').fill("Ed");
+await S(page).getByRole("button",{name:"Back",exact:true}).click(); await page.waitForTimeout(500);
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog]')].filter(e=>!e.closest('[inert]')).map(d=>{const r=d.getBoundingClientRect();return d.getAttribute("aria-label")+" "+[r.left,r.top,r.width,r.height].map(Math.round)})));
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog] button')].filter(e=>!e.closest('[inert]')).map(x=>{const r=x.getBoundingClientRect();return x.textContent.trim()+" "+Math.round(r.width)+"x"+Math.round(r.height)})));
+await shot(page,"X-06-trn-dialog");
+await b.close();

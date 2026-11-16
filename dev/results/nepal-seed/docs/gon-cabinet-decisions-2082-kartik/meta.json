@@ -1,0 +1,32 @@
+{
+ "doc_id": "gon-cabinet-decisions-2082-kartik",
+ "title": "Decisions of the Council of Ministers, Kartik 2082 (Nepali; meetings of Kartik 12, 17 and 24)",
+ "language": "ne",
+ "pages": 4,
+ "bytes": 321655,
+ "sha256": "3bb528ccb4a7f82a58734cb2816daec29b76534b2b28e309b8356350818d1719",
+ "source_url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20KARTIK_kvl6cyv.pdf",
+ "source_page": "https://www.opmcm.gov.np/content/474/cabinet-decision-kartiknew-2082/",
+ "retrieved": "2026-10-05",
+ "publisher": "Office of the Prime Minister and Council of Ministers",
+ "published": "2026-01-07",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": true,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Embedded Nepali text uses a legacy font mapping; many conjuncts and vowel signs are wrong. Searchable only approximately.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+  "action:2025-11-03-cabinet-declares-45-gen-z-martyrs",
+  "action:2025-11-10-cabinet-appoints-dan-bahadur-karki-police-chief"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 12310
+}

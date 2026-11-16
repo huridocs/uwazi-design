@@ -1,0 +1,38 @@
+[
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "Export of a selection contains exactly the selected entities",
+  "ok": true,
+  "detail": "uwazi-mock-selection-2026-09-21.csv: Mexico ; Argentina ; Case 11.137 (La Tablada)"
+ },
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "columns: fixed four then only the properties the selected templates carry",
+  "ok": true,
+  "detail": "22 columns: Region, Ratified ACHR, Accepts Court jurisdiction, Description, Victim, Country, Place of the incident, Date of the incident..."
+ },
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "multi-values and relationships are \"|\"-joined",
+  "ok": true,
+  "detail": "Juan Carlos Abella|Carlos Mendoza|Rosa Quintero|Luis Hernánd ## Case 12.045 (Velásquez Rodríguez)|Case 10.488 (Ellacuría)|Ca ## Right to Life|Right to Humane Treatment|Right to Personal Li"
+ },
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "Export of results follows the search (rows = result count)",
+  "ok": true,
+  "detail": "17 rows vs 17 results"
+ },
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "file parses cleanly: every row has the header's column count, UTF-8 BOM present",
+  "ok": true,
+  "detail": "34 cols"
+ },
+ {
+  "area": "csv-selection:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

@@ -1,0 +1,10 @@
+import { launch, open, S, rows, shot } from "./lib.mjs";
+const b = await launch();
+const {page} = await open(b, "translations");
+console.log(await rows(page));
+await S(page).locator('[role=row]').filter({hasText:"User Interface"}).first().click(); await page.waitForTimeout(600);
+console.log((await S(page).innerText()).replace(/\s+/g," ").slice(0,900));
+console.log(await S(page).locator('[role=row]').count());
+await shot(page,"probe-trn-editor");
+console.log(await page.evaluate(()=>[...document.querySelectorAll("[data-testid=settings-content] button")].map(b=>b.getAttribute("aria-label")||b.textContent.trim())));
+await b.close();

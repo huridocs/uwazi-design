@@ -1,0 +1,41 @@
+import { launch, open, S, shot, makeRec, realErrors, sh, hasHScroll, phoneNav } from "./c.mjs";
+const R = makeRec("ACT4");
+const b = await launch();
+const T = async (id, fn) => { try { await fn(); } catch (e) { R.add(id, "ERR", "script error: " + e.message.split("\n")[0]); } };
+const clean = (s) => s.replace(/\s+/g, " ").trim();
+await T("ACT-19", async () => {
+  const { ctx, page, errors } = await open(b, "pages", "mobile");
+  await phoneNav(page, "Activity log");
+  const hs = await hasHScroll(page);
+  const first = S(page).locator("ul > li").first();
+  const vis = await first.evaluate(li => [...li.querySelectorAll("button > *")].map(e => ({ t: e.textContent.trim().slice(0, 40), shown: e.getBoundingClientRect().width > 0 })));
+  const rowBox = await first.boundingBox();
+  const s1 = await sh(page, "ACT-19-phone");
+  // filters
+  await page.locator('[data-component=Select] button[aria-label^="Filter by action"]').tap(); await page.waitForTimeout(300);
+  const opts = await page.getByRole("option").allInnerTexts();
+  await page.getByRole("option", { name: "CREATE", exact: true }).tap(); await page.waitForTimeout(300);
+  const nCreate = await S(page).locator("ul > li").count();
+  await page.locator('[data-component=Select] button[aria-label^="Filter by action"]').tap(); await page.waitForTimeout(300);
+  await page.getByRole("option", { name: "All actions", exact: true }).tap(); await page.waitForTimeout(300);
+  await S(page).locator("ul > li").first().locator("> button").tap(); await page.waitForTimeout(300);
+  const exp = clean(await S(page).locator("ul > li").first().innerText());
+  const exportBtn = await page.getByRole("button", { name: /Export/i }).count();
+  const foot = clean(await page.locator("footer").last().innerText());
+  const hs2 = await hasHScroll(page);
+  const secondLine = vis.filter(v => /admin|2026-/.test(v.t)).every(v => v.shown);
+  R.add("ACT-19", secondLine && exportBtn ? "PASS" : "FAIL", `390x844 touch: horizontal overflow ${hs.doc}px (after expand ${hs2.doc}px). Row children visible: ${JSON.stringify(vis)} (user and time are display:none on phone; expected on a second line under the pill and description). Filters reachable by tap: Action select options ${JSON.stringify(opts)}, CREATE leaves ${nCreate} rows. Expanding by tap works (expanded text "${exp.slice(0, 120)}"). Export button count ${exportBtn}; footer "${foot}".`, s1);
+  R.add("X-06", secondLine && exportBtn ? "PASS" : "FAIL", `Phone 390x844: no horizontal scroll (${hs.doc}px) and filters/expand work by touch, but each row hides User and Timestamp (visible only after expanding) and the page has no Export (see ACT-19).`, s1);
+  await ctx.close();
+});
+await T("X-10", async () => {
+  const { ctx, page } = await open(b, "activitylog");
+  await page.waitForTimeout(500);
+  await page.locator('[data-testid=settings-content] input').first().fill("zzz"); await page.waitForTimeout(300);
+  const t = clean(await page.locator("[data-component=SettingsEmptyState]").innerText());
+  const s = await sh(page, "X-10-act");
+  R.add("X-10", "NOT DRIVEABLE", `The seed log always has 7 rows and the page has no delete or clear, so a truly empty log cannot be reached (page code would say "No activity yet"). The zero-result state reachable by search reads "${t}" (a no-match state, a different case; see ACT-16).`, s);
+  await ctx.close();
+});
+R.save();
+await b.close();

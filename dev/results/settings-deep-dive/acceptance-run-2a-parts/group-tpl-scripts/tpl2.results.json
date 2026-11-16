@@ -1,0 +1,86 @@
+{
+ "TPL-10": {
+  "id": "TPL-10",
+  "result": "PASS",
+  "evidence": "60ms after click default badge on \"Hearing\"; Hearing star disabled=true, Document star disabled=false; new Beacon entries [\"Default template set successfully. just now\"]; Activity log top rows [\"Update admin Set default template “Hearing” Oct 5, 2026 - 08:00\",\"Update admin Updated entity “Velásquez-Rodríguez v. Honduras” Jun 15, 2026 - 18:42\"]; after rail nav default=Hearing, after reload default=Hearing",
+  "shot": "acceptance-run-2a-shots/TPL-10.png"
+ },
+ "X-01": {
+  "id": "X-01",
+  "result": "PASS",
+  "evidence": "Set default to Hearing -> rail to Activity log and back: Hearing; reload: Hearing; Reset demo data checked below",
+  "shot": "acceptance-run-2a-shots/TPL-10"
+ },
+ "X-04": {
+  "id": "X-04",
+  "result": "PASS",
+  "evidence": "success half: set default added exactly 1 Beacon entry [\"Default template set successfully. just now\"]; failure half in TPL-X04-fail",
+  "shot": "acceptance-run-2a-shots/TPL-10"
+ },
+ "X-09-default": {
+  "id": "X-09-default",
+  "result": "PASS",
+  "evidence": "Activity log row \"Update admin Set default template “Hearing” Oct 5, 2026 - 08:00\"",
+  "shot": ""
+ },
+ "X-01-reset": {
+  "id": "X-01-reset",
+  "result": "PASS",
+  "evidence": "after Reset demo data default=Document (seed default Document)",
+  "shot": ""
+ },
+ "TPL-11": {
+  "id": "TPL-11",
+  "result": "PASS",
+  "evidence": "Person: badges 1, disabled stars 1 (Person); Right: badges 1, disabled stars 1 (Right); Country: badges 1, disabled stars 1 (Country)",
+  "shot": "acceptance-run-2a-shots/TPL-11.png"
+ },
+ "TPL-12": {
+  "id": "TPL-12",
+  "result": "PASS",
+  "evidence": "default Hearing: Create entity form template field reads \"Template* Hearing Changing it keeps the values both templates share.\"; default back to Document: \"Template* Document Changing it keeps the values both templates share.\"",
+  "shot": "acceptance-run-2a-shots/TPL-12"
+ },
+ "X-09-create": {
+  "id": "X-09-create",
+  "result": "PASS",
+  "evidence": "Activity log after four creations: [\"Create admin Created template “QA Via” Oct 5, 2026 - 08:01\",\"Create admin Created template “QA Target” Oct 5, 2026 - 08:01\",\"Create admin Created template “QA Unused B” Oct 5, 2026 - 08:01\",\"Create admin Created template “QA Unused A” Oct 5, 2026 - 08:01\",\"Update admin Updated entity “Velásquez-Rodríguez v. Honduras” Jun 15, 2026 - 18:42\"]",
+  "shot": ""
+ },
+ "TPL-14": {
+  "id": "TPL-14",
+  "result": "PASS",
+  "evidence": "keyboard focus on Select Document: reached=true tooltip \"A default template cannot be deleted. Set another template as the default first. This template is in use by existing entities and cannot be deleted. 7 entities use it: change their template first.\"; Hearing: reached=true \"This template is in use by existing entities and cannot be deleted. 48 entities use it: change their template first.\"; QA Unused A (0 entities, not default): reached=true aria-disabled=null tooltip \"\"",
+  "shot": "acceptance-run-2a-shots/TPL-14"
+ },
+ "TPL-21": {
+  "id": "TPL-21",
+  "result": "PASS",
+  "evidence": "reason on the default row (keyboard focus): \"A default template cannot be deleted. Set another template as the default first. This template is in use by existing entities and cannot be deleted. 7 entities use it: change their template first.\"; way forward text \"Set another template as the default first.\" true",
+  "shot": "acceptance-run-2a-shots/TPL-14"
+ },
+ "TPL-22": {
+  "id": "TPL-22",
+  "result": "FAIL",
+  "evidence": "reason on Hearing: \"This template is in use by existing entities and cannot be deleted. 48 entities use it: change their template first.\" (names the rule and \"48 entities use it\": true); interactive way forward in the tooltip: []; after clicking the disabled checkbox dialogs: []; no Change template dialog is offered",
+  "shot": "acceptance-run-2a-shots/TPL-22"
+ },
+ "TPL-15": {
+  "id": "TPL-15",
+  "result": "PASS",
+  "evidence": "after Select all ticked: [\"Select QA Target\",\"Select QA Unused A\",\"Select QA Unused B\",\"Select QA Via\"] (enabled rows only: [\"Select QA Target\",\"Select QA Unused A\",\"Select QA Unused B\",\"Select QA Via\"]); after unticking QA Via header {\"indeterminate\":true,\"checked\":false,\"aria\":null}",
+  "shot": "acceptance-run-2a-shots/TPL-15"
+ },
+ "TPL-16": {
+  "id": "TPL-16",
+  "result": "PASS",
+  "evidence": "none {\"footerH\":48,\"borderTop\":\"1px\",\"borderBottom\":\"0px\",\"bg\":\"rgb(255, 255, 255)\",\"slot\":null,\"slotW\":null,\"lead\":true,\"buttons\":[\"Add template\"],\"delColor\":[]}; 1 ticked {\"footerH\":48,\"borderTop\":\"1px\",\"borderBottom\":\"0px\",\"bg\":\"rgb(255, 255, 255)\",\"slot\":\"Selected 1 of 13\",\"slotW\":136,\"lead\":false,\"buttons\":[\"Delete\",\"Clear\"],\"delColor\":[\"color(srgb 0.546275 0.190392 0.136471)\"]}; 2 ticked {\"footerH\":48,\"borderTop\":\"1px\",\"borderBottom\":\"0px\",\"bg\":\"rgb(255, 255, 255)\",\"slot\":\"Selected 2 of 13\",\"slotW\":136,\"lead\":false,\"buttons\":[\"Delete\",\"Clear\"],\"delColor\":[\"color(srgb 0.546275 0.190392 0.136471)\"]} (expected \"Selected 2 of 13\"); the page footer keeps its one 1px top rule in every state, the selection adds no tint or border; after Clear {\"footerH\":48,\"borderTop\":\"1px\",\"borderBottom\":\"0px\",\"bg\":\"rgb(255, 255, 255)\",\"slot\":null,\"slotW\":null,\"lead\":true,\"buttons\":[\"Add template\"],\"delColor\":[]}",
+  "shot": "acceptance-run-2a-shots/TPL-16"
+ },
+ "X-12": {
+  "id": "X-12",
+  "result": "PASS",
+  "evidence": "selection slot width with 1 ticked 136px, 2 ticked 136px (fixed); footer height 48 -> 48 -> 48; bg rgb(255, 255, 255) -> rgb(255, 255, 255); top border 1px -> 1px; lead action restored after clear: true",
+  "shot": "acceptance-run-2a-shots/TPL-16"
+ }
+}

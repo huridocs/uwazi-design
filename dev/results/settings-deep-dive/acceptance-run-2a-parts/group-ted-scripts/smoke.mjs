@@ -1,0 +1,11 @@
+import { launch, S, wait, strip, shot, openEditor, pickOpt } from "./ted-common.mjs";
+import { addProp, saveTemplate, toLibrary, createEntity, field } from "./ent.mjs";
+const b = await launch();
+const c = await openEditor(b, "Court Case"); const p = c.page;
+await addProp(p, { type: "Relationship", label: "QA Relationship", fill: async (d) => { await pickOpt(d.page(), "Relationship type", 1); await pickOpt(d.page(), "Entities", "Person"); await pickOpt(d.page(), "Inherit property", "Profession"); } });
+await saveTemplate(p);
+await toLibrary(p, "Court Case"); await createEntity(p, "Court Case");
+console.log(await p.evaluate(() => { const g = [...document.querySelectorAll("[data-component=RelationshipFieldEditor]")]; return g.map(x => x.outerHTML.slice(0, 200) + " ## " + x.innerText.replace(/\n/g, " | ")); }));
+console.log(await p.evaluate(() => [...document.querySelectorAll("label")].map(l=>l.innerText).filter(x=>/QA|Rel/.test(x))));
+console.log(await p.locator("body").evaluate(() => [...document.querySelectorAll("[role=group]")].map(g => g.getAttribute("aria-label")||g.getAttribute("aria-labelledby")).slice(0,20)));
+await b.close();

@@ -1,0 +1,31 @@
+{
+ "doc_id": "moha-procedure-classification-of-gen-z-injured-2082",
+ "title": "Procedure for classification of the injured in the Gen-Z protest 2082 (Nepali)",
+ "language": "ne",
+ "pages": 10,
+ "bytes": 4275163,
+ "sha256": "31a21f3a5363a8ee6d2192ecbcccf91117586b9d87c219493adcc61f06fd88f0",
+ "source_url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%9C%E0%A5%87%E0%A4%A8%E0%A4%9C%E0%A5%80_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8%E0%A4%95%E0%A4%BE_%E0%A4%98%E0%A4%BE%E0%A4%87%E0%A4%A4%E0%A5%87%E0%A4%B9%E0%A4%B0%E0%A5%82%E0%A4%95%E0%A5%8B_%E0%A4%B5%E0%A4%B0%E0%A5%8D%E0%A4%97%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3_%E0%A4%B8%E0%A4%AE%E0%A5%8D%E0%A4%AC%E0%A4%A8%E0%A5%8D%E0%A4%A7%E0%A5%80_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%B5%E0%A4%BF%E0%A4%A7%E0%A4%BF_%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8.pdf",
+ "source_page": "https://moha.gov.np/post/ja-naja-pa-rathara-shanaka-gha-ita-hara-ka-vara-ga-karanae-sama-bna-thha-ka-ra",
+ "retrieved": "2026-10-05",
+ "publisher": "Ministry of Home Affairs",
+ "published": "2025-11-11",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image (CamScanner); no text layer. OCR was not run. Posted on the MoHA site under its Disaster and Conflict Management Division on 2082-07-25 (11 Nov 2025); the document defines \"ministry\" as the Ministry of Health and Population and cites the Public Health Service Act 2075.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured",
+  "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 15121
+}

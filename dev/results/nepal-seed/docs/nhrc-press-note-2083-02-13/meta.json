@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-note-2083-02-13",
+ "title": "NHRC press note: recommendations of the Gen-Z movement investigation report sent to the government (Nepali, 13 Jestha 2083)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 794178,
+ "sha256": "2aa502458c6edbb8aeabc6e11a65defa6f7f7b81104eded66279ad9205992d3d",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Note-2083-2-13.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/883",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2026-05-27",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned or rasterised page; no usable text layer (any embedded text is OCR noise or legacy-font ASCII). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations",
+  "action:2026-05-27-nhrc-submits-report-recommending-action-against-oli"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1074
+}

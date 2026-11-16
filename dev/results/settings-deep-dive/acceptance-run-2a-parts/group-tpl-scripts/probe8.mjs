@@ -1,0 +1,17 @@
+import { launch, open, S, rows, wait, shot, rowsData, addTemplate, openRow, toSettingsItem, addRelProp } from "./common.mjs";
+const b = await launch();
+const { page } = await open(b, "templates");
+await wait(page, 800);
+await addTemplate(page, "QA Target");
+await openRow(page, "Court Case");
+await addRelProp(page, "Related QA", "QA Target");
+console.log(await S(page).innerText().then(t=>t.slice(0,200)));
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog]')].filter(e=>!e.closest('[inert]')).map(e=>e.innerText.slice(0,300))));
+await shot(page,"probe-rel");
+await toSettingsItem(page, "Filters");
+console.log((await S(page).innerText()).includes("QA Target"));
+await toSettingsItem(page, "Templates");
+await S(page).locator("[role=row]").filter({hasText:"QA Target"}).locator("input[type=checkbox]").check();
+await S(page).getByRole("button",{name:"Delete"}).click(); await wait(page,400);
+console.log(await page.locator("[data-component=ConfirmDelete]").innerText());
+await b.close();

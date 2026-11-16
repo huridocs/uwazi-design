@@ -1,0 +1,26 @@
+import { launch, open, S, rows, wait, shot, rowsData, addTemplate, openRow, toSettingsItem } from "./common.mjs";
+const b = await launch();
+const { page } = await open(b, "templates");
+await wait(page, 800);
+await addTemplate(page, "QA Target");
+console.log(JSON.stringify((await rowsData(page)).map(r=>r.name)));
+await toSettingsItem(page, "Filters");
+console.log((await S(page).innerText()).split("\n").slice(0,40).join("|"));
+await toSettingsItem(page, "Templates");
+await openRow(page, "Court Case");
+await S(page).getByRole("button",{name:"Add property"}).click(); await wait(page, 500);
+await shot(page, "probe-prop");
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog]')].filter(e=>!e.closest('[inert]')).map(e=>e.innerText.slice(0,600))));
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog] button, [role=dialog] [role=combobox]')].filter(e=>!e.closest('[inert]')).map(e=>(e.getAttribute("aria-label")||e.innerText||"").trim().slice(0,40)+"|"+e.id)));
+
+const dlg = page.locator('[role=dialog]:not([inert] *)').last();
+await page.getByRole("button",{name:/Property type/}).click(); await wait(page,300);
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=option]')].map(o=>o.innerText)));
+await page.getByRole("option",{name:/Relationship/}).first().click(); await wait(page,300);
+await page.getByRole("textbox",{name:"Label"}).fill("Related QA"); 
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=dialog] button')].filter(e=>!e.closest('[inert]')).map(e=>(e.getAttribute("aria-label")||e.innerText||"").trim().slice(0,50))));
+await page.getByRole("button",{name:/^Relationship type/}).click().catch(e=>console.log("no reltype btn"));
+await wait(page,300);
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=option]')].map(o=>o.innerText)));
+await shot(page,"probe-prop2");
+await b.close();

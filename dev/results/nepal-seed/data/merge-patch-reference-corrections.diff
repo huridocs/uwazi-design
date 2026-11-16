@@ -1,0 +1,37 @@
+--- a/merge.py
++++ b/merge.py
+@@ -196,11 +196,19 @@
+ # A claim is `disputed` only if a source disputes it or another claim conflicts with it (checked below). Claims
+ # whose note describes a difference of date, scope or definition were reviewed (build_claim_status.py) and
+ # get the status their own sources support.
++REF_FIX = {}
++if os.path.exists(f"{HERE}/reference-status-corrections.json"):
++    REF_FIX = json.load(open(f"{HERE}/reference-status-corrections.json")).get("recompute", {})
+ STATUS_FIX = json.load(open(f"{HERE}/status-corrections.json")) if os.path.exists(f"{HERE}/status-corrections.json") else {}
+ n_status_fixed = 0
++# A downgrade says the claim had no dispute link. A `disputes` reference added later (disputes-research part) voids it.
++DISPUTED_CLAIMS = {r["to"] for r in refs.values() if r["type"] == "disputes" and r["to"].startswith("claim:")}
+ for cid, why in STATUS_FIX.get("downgrade", {}).items():
+     e = ents.get(cid)
+     if not e or e["properties"].get("verification_status") != "disputed": continue
++    if al(cid) in DISPUTED_CLAIMS:
++        warn("status_downgrade_void", f"{cid}: a source now disputes it")
++        continue
+     st_srcs = {s for ev in e["evidence"] for s in ev.get("sources", []) if "statement" in (ev["property"] if isinstance(ev["property"], list) else [ev["property"]])}
+     new = "confirmed" if independent(st_srcs) >= 2 else "single-source"
+     e["properties"]["verification_status"] = new
+@@ -353,6 +361,14 @@
+     r["sources"] = [s for s in r["sources"] if s in ents]
+     if not r["sources"]: warn("ref_no_source", r["id"]); r["verification"] = "single-source"
+     else: r["verification"] = settle(r.get("verification"), r["sources"], r["id"])
++    # reference-status-corrections.json: a reference kept `disputed` with no opposing source or conflicting claim
++    # takes the status its own sources give (confirmed with 2+ independent publishers, else single-source).
++    if r["id"] in REF_FIX and r["verification"] == "disputed" and r["sources"]:
++        new = "confirmed" if independent(r["sources"]) >= 2 else "single-source"
++        r["note"] = ((r.get("note") or "") + (" " if r.get("note") else "") +
++                     f"Status was 'disputed' with no opposing source or conflicting claim; set to '{new}' on review: {REF_FIX[r['id']]}").strip()
++        warn("reference_status_corrected", f"{r['id']}: disputed -> {new}")
++        r["verification"] = new
+     if r.get("anchor") and not (r["anchor"].get("quote") and r["anchor"].get("source") in ents):
+         warn("bad_anchor", r["id"]); r["anchor"] = None
+     if r.get("anchor") and not (r["from"].startswith("source:") and r["anchor"]["source"] == r["from"]):

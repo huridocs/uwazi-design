@@ -1,0 +1,14 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.reload: net::ERR_CONNECTION_REFUSED
+Call log:
+[2m  - waiting for navigation until "load"[22m
+
+    at [90m/Users/juanmnl/Developer/huridocs/uwazi_app/dev/results/settings-deep-dive/acceptance-run-2a-parts/group-tpl-scripts/[39mupl2.mjs:54:14 {
+  log: [ [32m'  - waiting for navigation until "load"'[39m ],
+  name: [32m'Error'[39m
+}
+
+Node.js v26.8.2

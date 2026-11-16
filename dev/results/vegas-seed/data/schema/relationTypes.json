@@ -1,0 +1,257 @@
+[
+ {
+  "id": "captures",
+  "label": "captures",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "moment"
+  ],
+  "description": "The recording contains the moment. The reference carries the offset in the recording.",
+  "anchorOnSource": false,
+  "anchorOnMedia": true,
+  "datedReference": false
+ },
+ {
+  "id": "recorded_at",
+  "label": "recorded at",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "place"
+  ],
+  "description": "Camera position inside the place's footprint.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "depicts",
+  "label": "depicts",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "place"
+  ],
+  "description": "A place is visible in the recording.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "derived_from",
+  "label": "part of",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "recording"
+  ],
+  "description": "A call segment inside a compilation, or a re-upload of another recording.",
+  "anchorOnSource": false,
+  "anchorOnMedia": true,
+  "datedReference": false
+ },
+ {
+  "id": "synced_with",
+  "label": "synced with",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "recording"
+  ],
+  "description": "Pair checked by hand, with the measured offset difference. Not created for every overlapping pair.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "occurred_at",
+  "label": "occurred at",
+  "from": [
+   "moment"
+  ],
+  "to": [
+   "place"
+  ],
+  "description": "Where the moment was heard or took place.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "fired_from",
+  "label": "fired from",
+  "from": [
+   "moment"
+  ],
+  "to": [
+   "place"
+  ],
+  "description": "Where the gunfire came from, as the official reports state it.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "part_of",
+  "label": "part of",
+  "from": [
+   "moment"
+  ],
+  "to": [
+   "moment"
+  ],
+  "description": "A single shot within a volley.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "followed_by",
+  "label": "followed by",
+  "from": [
+   "moment"
+  ],
+  "to": [
+   "moment"
+  ],
+  "description": "Order of the volleys, with the interval between starts.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "documents",
+  "label": "documents",
+  "from": [
+   "source",
+   "finding"
+  ],
+  "to": [
+   "moment",
+   "claim",
+   "finding"
+  ],
+  "description": "The source or finding records the moment or the claim.",
+  "anchorOnSource": true,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "issued_by",
+  "label": "issued by",
+  "from": [
+   "finding"
+  ],
+  "to": [
+   "organisation"
+  ],
+  "description": "The organisation that issued the finding.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "supports",
+  "label": "supports",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "The source backs the claim.",
+  "anchorOnSource": true,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "disputes",
+  "label": "disputes",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "The source contradicts the claim.",
+  "anchorOnSource": true,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "contradicts",
+  "label": "contradicts",
+  "from": [
+   "claim"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "Two claims that cannot both hold.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "supersedes",
+  "label": "replaces",
+  "from": [
+   "claim"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "A later count or time replaces an earlier one; both stay on record with their dates.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "geolocated_by",
+  "label": "positioned by",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "source"
+  ],
+  "description": "The source that gives the camera position.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "synced_by",
+  "label": "synced by",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "source"
+  ],
+  "description": "The source that gives the clock time and offsets.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ },
+ {
+  "id": "published_in",
+  "label": "published in",
+  "from": [
+   "recording"
+  ],
+  "to": [
+   "source"
+  ],
+  "description": "Where the recording is hosted.",
+  "anchorOnSource": false,
+  "anchorOnMedia": false,
+  "datedReference": false
+ }
+]

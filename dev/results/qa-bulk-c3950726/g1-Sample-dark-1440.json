@@ -1,0 +1,62 @@
+[
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "Mixed shown for fields whose values differ",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "no radio pre-checked while Mixed",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "picking a value flags 'Will change'",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "a Revert control exists for a changed field",
+  "ok": true,
+  "detail": "1 Revert buttons"
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "Revert returns the field to Mixed",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "review text names count, entities and the change",
+  "ok": true,
+  "detail": "r all. | Change 1 property on 3 entities? | Applies to Case 10.488 (Ellacuría), Case 11.481 (Gelman), Case 11.137 (La Tablada). | Status\t→ Under review\t3 entities | Back | Apply to 3 entities"
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "Apply writes the value to all 3 cards",
+  "ok": true,
+  "detail": "{\"10.488\":\"Under review\",\"11.481\":\"Under review\",\"11.137\":\"Under review\"}"
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "notifications drawer offers Undo for the edit",
+  "ok": true,
+  "detail": "Notifications | 5 | Mark all read | All | 9 | Unread | 5 | TASKS · 1 | Uploading document batch… | Running | velasquez-corpus.csv | 92% | NEW | Some fields could not be validated. | Check highlighted fields and try again. | 20 min ago | A new version of Uwazi is available. | 3 min ago | 3 entities u"
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "Undo restores each entity's exact previous value",
+  "ok": true,
+  "detail": "{\"10.488\":\"Decided\",\"11.481\":\"Decided\",\"11.137\":\"-\"} => {\"10.488\":\"Decided\",\"11.481\":\"Decided\",\"11.137\":\"-\"}"
+ },
+ {
+  "area": "bulk-edit:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

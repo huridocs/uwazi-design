@@ -1,0 +1,104 @@
+{
+ "ACT-01": {
+  "id": "ACT-01",
+  "result": "PASS",
+  "evidence": "heading \"Activity log\"; column headers [\"ACTION\",\"USER\",\"DESCRIPTION\",\"TIMESTAMP\",\"Details\"]; row order l1,l2,l3,l4,l5,l6,l7; first row \"Update admin Updated entity “Velásquez-Rodríguez v. Honduras” Jun 15, 2026 - 18:42\"; timestamp \"Jun 15, 2026 - 18:42\"; expand buttons 7, first name \"View details: Updated entity “Velásquez-Rodríguez v. Honduras”, Jun 15, 2026 - 18:42\"; footer \"Showing 1-7 of 7\"",
+  "shot": "acceptance-run-2-shots/ACT-01.png"
+ },
+ "ACT-04": {
+  "id": "ACT-04",
+  "result": "PASS",
+  "evidence": "options [\"Create\",\"Update\",\"Delete\",\"Migrate\"] (toggle chips, aria-pressed [\"true\",\"false\",\"true\",\"false\"]); Create -> l2,l3; Create+Delete -> l2,l3,l4; deselecting both restores 7 rows; no Warning option",
+  "shot": "acceptance-run-2-shots/ACT-04.png"
+ },
+ "ACT-05": {
+  "id": "ACT-05",
+  "result": "PASS",
+  "evidence": "User options [\"All users\",\"admin\",\"jnkemba\",\"mlopez\",\"system\"]; mlopez -> l2,l3,l7; plus Action Create -> l2,l3",
+  "shot": "acceptance-run-2-shots/ACT-05.png"
+ },
+ "ACT-08": {
+  "id": "ACT-08",
+  "result": "PASS",
+  "evidence": "filters applied live (the list changed on each selection); Apply buttons 0, side panels 0; one \"Clear filters\" reset Action, User, Search and both dates: {\"q\":\"\",\"from\":\"\",\"to\":\"\",\"pressed\":[\"false\",\"false\",\"false\",\"false\"],\"user\":\"User\\nAll users\",\"rows\":7}",
+  "shot": "acceptance-run-2-shots/ACT-08.png"
+ },
+ "ACT-06": {
+  "id": "ACT-06",
+  "result": "PASS",
+  "evidence": "placeholder \"by ids, methods, keywords, etc.\"; \"relationship\" -> l2,l5; \"THESAURUS\" -> l6; \"delete\" -> l4; cleared -> 7 rows",
+  "shot": "acceptance-run-2-shots/ACT-06.png"
+ },
+ "ACT-07": {
+  "id": "ACT-07",
+  "result": "PASS",
+  "evidence": "From 2026-06-14 -> To auto-filled 2026-06-14, rows l4; From 2026-06-13 -> l4,l5,l6; Today -> {\"from\":\"2026-10-05\",\"to\":\"2026-10-05\",\"rows\":0,\"empty\":true,\"f\":\"0 of 0\"}; Clear From -> {\"from\":\"\",\"to\":\"2026-10-05\",\"rows\":7}; Clear To -> {\"from\":\"\",\"to\":\"\",\"rows\":7}",
+  "shot": "acceptance-run-2-shots/ACT-07.png"
+ },
+ "ACT-10": {
+  "id": "ACT-10",
+  "result": "PASS",
+  "evidence": "expanded l6: \"Action Update Description Updated thesaurus “Violation types” User jnkemba Time Jun 13, 2026 - 11:48 No details recorded.\"; expanded l1: \"Action Update Description Updated entity “Velásquez-Rodríguez v. Honduras” User admin Time Jun 15, 2026 - 18:42 No details recorded.\"; request/Query/Body lines present: false",
+  "shot": "acceptance-run-2-shots/ACT-10"
+ },
+ "ACT-09": {
+  "id": "ACT-09",
+  "result": "PASS",
+  "evidence": "default Timestamp aria-sort=descending, order l1,l2,l3,l4,l5,l6,l7; Action asc ascending labels Create,Create,Delete,Migrate,Update,Update,Update, then descending; User asc ascending admin,admin,jnkemba,mlopez,mlopez,mlopez,system, then descending; Timestamp asc ascending, then descending",
+  "shot": "acceptance-run-2-shots/ACT-09.png"
+ },
+ "ACT-14": {
+  "id": "ACT-14",
+  "result": "PASS",
+  "evidence": "edit/delete/clear controls on rows or footer: []; after Delete and Backspace on a focused row the list still has 7 rows",
+  "shot": "acceptance-run-2-shots/ACT-10"
+ },
+ "ACT-15": {
+  "id": "ACT-15",
+  "result": "PASS",
+  "evidence": "Create filter -> download \"activity-log-2026-10-05.csv\" with 3 lines: [\"Time,User,Action,Description\",\"\\\"Jun 15, 2026 - 17:10\\\",mlopez,Create,Created relationship type “Represented by”\",\"\\\"Jun 15, 2026 - 14:55\\\",mlopez,Create,Created entity “Case 12.250 (Bámaca Velásquez)”\"]; no filter -> 8 lines (header + 7); footer height 48px with rows, 48px with no rows",
+  "shot": "acceptance-run-2-shots/ACT-15.png"
+ },
+ "ACT-16": {
+  "id": "ACT-16",
+  "result": "PASS",
+  "evidence": "search \"zzz\": body has “No activity matches “zzz””: true; footer \"0 of 0\"; \"Clear filters\" buttons 2; clicking restores 7 rows (search value \"\")",
+  "shot": "acceptance-run-2-shots/ACT-16.png"
+ },
+ "X-07": {
+  "id": "X-07",
+  "result": "PASS",
+  "evidence": "axe page []; with a row expanded []; unlabeled inputs []; row buttons have unique names (each names its entry and time): duplicates []; the page opens no dialogs",
+  "shot": "acceptance-run-2-shots/X-08-light"
+ },
+ "X-08": {
+  "id": "X-08",
+  "result": "PASS",
+  "evidence": "action pill contrast (label ratio): light [\"Update 6.24\",\"Create 8.05\",\"Create 8.05\",\"Delete 6.71\",\"Migrate 5.93\",\"Update 6.24\",\"Update 6.24\"]; dark [\"Update 7.38\",\"Create 5.07\",\"Create 5.07\",\"Delete 6.19\",\"Migrate 5.95\",\"Update 7.38\",\"Update 7.38\"]; axe color-contrast light [], dark []",
+  "shot": "acceptance-run-2-shots/X-08-dark"
+ },
+ "ACT-03": {
+  "id": "ACT-03",
+  "result": "PASS",
+  "evidence": "Create/Update/Delete/Migrate pills: contrast light min 5.93, dark min 5.07; axe color-contrast violations light 0, dark 0; pill labels Create, Update, Delete, Migrate equal the Action filter chips (ACT-04)",
+  "shot": "acceptance-run-2-shots/X-08-dark"
+ },
+ "X-10": {
+  "id": "X-10",
+  "result": "PASS",
+  "evidence": "Dev panel \"Empty activity log: done. Reset demo data brings the seed back.\"; page reads \"Activity log Every change made in Settings, newest first. Entries cannot be edited or removed. Action Create Update Delete Migrate User All users Date range Date range From To Today Clear filters No activity yet Changes made in Settings are listed here. 0 of 0 Export CSV\"; footer \"0 of 0\", Export CSV disabled=true. The page is read-only (ACT-14), so it offers no create action; title names the object and a one-line hint is present",
+  "shot": "acceptance-run-2-shots/X-10.png"
+ },
+ "ACT-19": {
+  "id": "ACT-19",
+  "result": "PASS",
+  "evidence": "phone list rows 7 (table shown: 0); first row \"Update Updated entity “Velásquez-Rodríguez v. Honduras” admin · Jun 15, 2026 - 18:42\" (pill + description, then user and time); page scroll 390/390; Create chip by touch -> 2 rows; User mlopez -> 2; Clear filters -> 7; search \"thesaurus\" -> 1; expand by touch -> \"Action Update Description Updated entity “Velásquez-Rodríguez v. Honduras” User admin Time Jun 15, 2026 - 18:42 No details recorded.\" (button box {\"x\":335,\"y\":363,\"width\":26,\"height\":26}); Export CSV box {\"x\":264.15625,\"y\":806.5,\"width\":109.84375,\"height\":28} download by touch true; footer \"Showing 1-7 of 7\"; --kb at load 1189px (re-measured)",
+  "shot": "acceptance-run-2-shots/ACT-19-expanded.png"
+ },
+ "X-06": {
+  "id": "X-06",
+  "result": "PASS",
+  "evidence": "rows not table, no sideways scroll (390/390, after expand 390/390); no dialogs on this page; see ACT-19 for the touch actions",
+  "shot": "acceptance-run-2-shots/ACT-19-expanded.png"
+ }
+}

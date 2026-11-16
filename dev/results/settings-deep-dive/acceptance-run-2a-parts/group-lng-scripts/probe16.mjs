@@ -1,0 +1,11 @@
+import { launch, open, S, shot } from "./lib.mjs";
+import { squash } from "./u.mjs";
+const b = await launch(); const {page}=await open(b,"translations","mobile");
+await shot(page,"probe-trn-m-list");
+console.log(squash(await S(page).innerText()).slice(0,300));
+await page.getByText("Person",{exact:false}).filter({hasText:/Template/}).first().tap().catch(e=>console.log("tapfail"));
+await page.waitForTimeout(800);
+await shot(page,"probe-trn-m-ed");
+console.log(await page.evaluate(()=>({doc:document.documentElement.scrollWidth,w:innerWidth})));
+console.log(squash(await S(page).innerText()).slice(0,500));
+await b.close();

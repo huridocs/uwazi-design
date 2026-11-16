@@ -1,0 +1,284 @@
+{
+ "nepal-karki-tab": {
+  "tabCount": "Relationships 33",
+  "views": [
+   "List=true",
+   "Tree=false",
+   "Graph=false",
+   "When=false"
+  ],
+  "display": "Group by | Relation type | Then by | None | Sort | Appearance | Density",
+  "displayChecked": [
+   "All0",
+   "",
+   ""
+  ],
+  "groupHeaders": [
+   "Tools",
+   "Notebook0",
+   "Settings",
+   "EnglishEspañolFrançaisالعربية",
+   "shows33 references",
+   "led to33 references",
+   "occurred at11 reference",
+   "involved44 references",
+   "part of11 reference",
+   "in response to99 references",
+   "concerns22 references",
+   "reports on1010 references"
+  ],
+  "rows": 33,
+  "firstRows": [
+   "The Nordic Asia Podcast: Gen Z Uprising: Youth, Protest and Political Change in Nepal Confirmed Media item",
+   "Devpolicy Talks: Youth uprisings: understanding the protests in Indonesia and Nepal Confirmed Media item",
+   "Al Jazeera: Nepal's interim prime minister, a former chief justice, sworn into office (13 September 2025) Sing",
+   "Army-mediated talks on an interim government (9-12 September 2025) Confirmed Event",
+   "Friday talks at Sheetal Niwas agree on Karki and dissolution Confirmed Event",
+   "House of Representatives dissolved and election set for 5 March 2026 Confirmed Event"
+  ],
+  "chipRects": [
+   [
+    68,
+    19,
+    46
+   ],
+   [
+    68,
+    19,
+    46
+   ],
+   [
+    85,
+    19,
+    45
+   ],
+   [
+    68,
+    19,
+    46
+   ]
+  ],
+  "facetTitles": [
+   "Verification",
+   "Reported by",
+   "Publisher",
+   "Publisher type",
+   "Anchoring",
+   "Direction",
+   "Relationship type",
+   "Target entity type"
+  ],
+  "facetEntries": [
+   "Verification: Confirmed 19 ; Single source 5 ; Disputed 9",
+   "Publisher: Al Jazeera 12 ; Deccan Chronicle 11 ; The Kathmandu Post 11 ; B360 Nepal 9 ; Border Lens 9 ; The Himalayan Times 9",
+   "Publisher type: Nepali media 25 ; International media 14 ; News agency 5 ; Other 3",
+   "Anchoring: Anchored in text 10 ; Entity-level 23",
+   "Direction: Outgoing 7 ; Incoming 26",
+   "Relationship type: reports on 10 ; in response to 9 ; involved 4 ; led to 3 ; shows 3 ; concerns 2",
+   "Target entity type: Source 10 ; Official action 9 ; Event 4 ; Person 4 ; Media item 3 ; Claim 2"
+  ],
+  "sort": []
+ },
+ "nepal-karki-tree-rows": 33,
+ "nepal-karki-tree-first": [
+  "MEDIA ITEM The Nordic Asia Podcast: Gen Z Uprising: Youth, Protest and Political Change in Nepal Con",
+  "MEDIA ITEM Devpolicy Talks: Youth uprisings: understanding the protests in Indonesia and Nepal Confi",
+  "MEDIA ITEM Al Jazeera: Nepal's interim prime minister, a former chief justice, sworn into office (13",
+  "EVENT Army-mediated talks on an interim government (9-12 September 2025) Confirmed 1",
+  "EVENT Friday talks at Sheetal Niwas agree on Karki and dissolution Confirmed 1"
+ ],
+ "vegas-volley5": {
+  "tabCount": "Relationships 48",
+  "views": [
+   "List=true",
+   "Tree=false",
+   "Graph=false",
+   "When=false"
+  ],
+  "display": "Group by | Relation type | Then by | None | Sort | Appearance | Density",
+  "displayChecked": [
+   "All0",
+   "",
+   ""
+  ],
+  "groupHeaders": [
+   "Tools",
+   "Notebook0",
+   "Settings",
+   "EnglishEspañolFrançaisالعربية",
+   "fired from11 reference",
+   "occurred at11 reference",
+   "followed by22 references",
+   "captures4444 references"
+  ],
+  "rows": 48,
+  "firstRows": [
+   "Mandalay Bay Hotel Single source Place",
+   "Las Vegas Village Single source Place",
+   "Volley 4 · 22:07:50 Single source Moment",
+   "Volley 6 · 22:10:59 Single source Moment",
+   "Las vegas shooting eyewitness account from the foundation room of the mandalay bay hotel · 22:09:36 Confirmed ",
+   "East Venue Escape to Parking Lot · 22:08:48 Confirmed Recording 0:58 5th Volley Begins · 22:09:46"
+  ],
+  "chipRects": [
+   [
+    85,
+    19,
+    45
+   ],
+   [
+    85,
+    19,
+    45
+   ],
+   [
+    85,
+    19,
+    46
+   ],
+   [
+    85,
+    19,
+    45
+   ]
+  ],
+  "facetTitles": [
+   "Verification",
+   "Publisher",
+   "Publisher type",
+   "Direction",
+   "Relationship type",
+   "Target entity type"
+  ],
+  "facetEntries": [
+   "Verification: Confirmed 40 ; Single source 5 ; Disputed 3",
+   "Publisher: Vegas Map Project Team 48 ; ClickOnDetroit 1 ; Wikipedia 1",
+   "Publisher type: Community map 48 ; Encyclopedia 1 ; News media 1",
+   "Direction: Outgoing 3 ; Incoming 45",
+   "Relationship type: captures 44 ; followed by 2 ; fired from 1 ; occurred at 1",
+   "Target entity type: Recording 44 ; Moment 2 ; Place 2"
+  ],
+  "sort": []
+ },
+ "cejil-record": "Uwazi",
+ "cejil": {
+  "tabCount": "Relationships 4",
+  "views": [
+   "List=true",
+   "Tree=false",
+   "Graph=false",
+   "When=false"
+  ],
+  "display": "Group by | Relation type | Then by | None | Sort | Appearance | Density",
+  "displayChecked": [
+   "All0",
+   "",
+   "",
+   "any"
+  ],
+  "groupHeaders": [
+   "Tools",
+   "Notebook0",
+   "Settings",
+   "EnglishEspañolFrançaisالعربية",
+   "Mecanismo11 reference",
+   "CorteIDH11 reference",
+   "related11 reference",
+   "País11 reference"
+  ],
+  "rows": 4,
+  "firstRows": [
+   "Corte Interamericana de Derechos Humanos Organismo",
+   "Corte Suprema de Justicia (Quintana Coello y otros) Causa",
+   "Humberto Antonio Sierra Porto Juez y/o Comisionado",
+   "Ecuador País"
+  ],
+  "chipRects": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "facetTitles": [
+   "Direction",
+   "Relationship type",
+   "Target entity type",
+   "Target country",
+   "Descriptores"
+  ],
+  "facetEntries": [
+   "Direction: Outgoing 2 ; Incoming 2",
+   "Relationship type: CorteIDH 1 ; Mecanismo 1 ; País 1 ; related 1",
+   "Target entity type: Organismo 1 ; País 1 ; Causa 1 ; Juez y/o Comisionado 1",
+   "Target country: Ecuador 2 ; Colombia 1",
+   "Descriptores: Destitución de funcionario público 1 ; Jueces/zas 1"
+  ],
+  "sort": []
+ },
+ "sample-record": "Uwazi",
+ "sample": {
+  "tabCount": "Relationships 465",
+  "views": [
+   "List=true",
+   "Tree=false",
+   "Graph=false",
+   "When=false"
+  ],
+  "display": "Group by | Relation type | Then by | None | Sort | Appearance | Density",
+  "displayChecked": [
+   "All0",
+   "",
+   ""
+  ],
+  "groupHeaders": [
+   "Tools",
+   "Notebook0",
+   "Settings",
+   "EnglishEspañolFrançaisالعربية",
+   "Relates to123123 references",
+   "Cites9797 references",
+   "Mentions100100 references",
+   "Refers to9595 references",
+   "Victim44 references",
+   "Petitioner22 references",
+   "Respondent State11 reference",
+   "Judgment11 reference",
+   "No label4242 references"
+  ],
+  "rows": 465,
+  "firstRows": [
+   "Case 12.045 (Velásquez Rodríguez) Court Case",
+   "Roberto Cárdenas Person",
+   "Inter-American Court Organization",
+   "Argentina Country",
+   "Inter-American Commission Organization",
+   "Final Report La Tablada Investigation Document p.1 “Elena Ríos provided crucial testimony about the chain of c"
+  ],
+  "chipRects": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "facetTitles": [
+   "Anchoring",
+   "Direction",
+   "Relationship type",
+   "Target entity type",
+   "Target country",
+   "Role",
+   "Region"
+  ],
+  "facetEntries": [
+   "Anchoring: Anchored in text 435 ; Entity-level 30",
+   "Direction: Outgoing 213 ; Incoming 35 ; Both 217",
+   "Relationship type: Relates to 123 ; Mentions 100 ; Cites 97 ; Refers to 95 ; Victim 4 ; Petitioner 2",
+   "Target entity type: Person 119 ; Right 59 ; Violation 59 ; Country 55 ; Organization 41 ; Document 39",
+   "Target country: Argentina 4 ; Guatemala 4 ; Chile 3 ; Honduras 3 ; Colombia 2 ; Mexico 2",
+   "Role: Petitioner 5 ; Victim 4 ; Witness 2 ; Expert witness 1",
+   "Region: Central America 2"
+  ],
+  "sort": []
+ },
+ "errs": []
+}

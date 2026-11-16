@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2000);
+await p.getByRole("button", { name: /^View:/ }).click(); await p.getByRole("option", { name: "List" }).click(); await p.waitForTimeout(800);
+await p.getByText("Velásquez Rodríguez Judgment", {exact:true}).first().click(); await p.waitForTimeout(1200);
+await p.screenshot({path:"s43.png"});
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(3000);
+await p.getByRole("tab", {name:/^Relationships/}).first().click(); await p.waitForTimeout(1500);
+await p.getByText("Relates to").first().click(); await p.waitForTimeout(800);
+await p.screenshot({path:"s44.png"});
+await p.mouse.click(692,176); await p.waitForTimeout(1200);
+await p.screenshot({path:"s45.png"});
+await p.mouse.click(723,176); await p.waitForTimeout(2500);
+await p.screenshot({path:"s46.png"});
+await b.close();

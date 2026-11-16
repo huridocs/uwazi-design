@@ -1,0 +1,92 @@
+[
+ {
+  "id": "LNG-11",
+  "result": "PASS",
+  "evidence": "confirm dialog=\"Make default language Make Spanish the default language? Languages installed later start as a copy of it, and Translations marks a text untranslated when it is empty or still equals the Spanish text. Cancel Make default\"; after Cancel default still English=true, notices=0; after confirm Default badge on Spanish=true, English badge gone=true; Beacon entries \"Default language change success\"=1; session activity entries=[\"UPDATE Set “Spanish” as the default language [admin]\"]; Activity log page rows=[\"Update admin Set “Spanish” as the default language Oct 5, 2026 - 10:31\"]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-12",
+  "result": "FAIL",
+  "evidence": "headers=[\"KEY\",\"Español\\nES\",\"English\\nEN\",\"Français\\nFR\",\"العربية\\nAR\",\"Português\\nPT\"]; first row inputs=[\"\\\"Costa Rica\\\" in English, untranslated\",\"\\\"Costa Rica\\\" in French, untranslated\",\"\\\"Costa Rica\\\" in Arabic\",\"\\\"Costa Rica\\\" in Portuguese, untranslated\"] (Spanish has no input => read-only source); pill classes=[\"es:bg-ink\",\"en:bg-vellum\",\"fr:bg-vellum\",\"ar:bg-vellum\",\"pt:bg-vellum\"]; English cells now inputs=[\"\\\"Costa Rica\\\" in English, untranslated\",\"\\\"the status\\\"~5 in English, untranslated\"]; second key row text=\"\"the status\"~5 \"the status\"~5 EN FR AR PT\" (Spanish predefined text for this key is \"el estado\"~5; the Español source column does not show it)",
+  "shot": "group-lng-LNG-12.png"
+ },
+ {
+  "id": "_errs-D1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-13",
+  "result": "PASS",
+  "evidence": "dialog text=\"Are you sure? Other users will be affected by this action! You are about to reset a language. System strings only: 412 keys in User Interface go back to the predefined Spanish text. Templates, thesauri, the menu and every other context keep their translations. Please type in CONFIRM: No, cancel Reset\"; label=[\"Please type in CONFIRM:\"]; width=512; close X buttons=1; Reset disabled at start=true; disabled for {\"\\\"confirm\\\"\":true,\"\\\"CONFIRM \\\"\":true,\"\\\" CONFIRM\\\"\":true,\"\\\"CONFIRM\\\"\":false}; reopened input value=\"\"; X/Escape closed=true; no reset notice=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-D2",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-14",
+  "result": "PASS",
+  "evidence": "dialog text=\"Are you sure? Other users will be affected by this action! You are about to uninstall a language. 101 entities have a French version, which is deleted. 400 translated keys are removed from Translations. Please type in CONFIRM: No, cancel Uninstall\"; accept=\"Uninstall\" disabled initially=true, \"confirm\"=true, \"CONFIRM\"=false; after No, cancel French still listed=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-D3",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-15",
+  "result": "FAIL",
+  "evidence": "System key \"\"the status\"~5\" predefined es text=\"\"el estado\"~5\", edited to \"EDITADO-SISTEMA\" and saved; template context \"\"Costa Rica\"\" key \"\"Costa Rica\"\" edited to EDITADO-TEMPLATE and saved; Reset es confirmed; Beacon \"Language reset success\" entries=1; System key after Reset=\"EDITADO-SISTEMA\" (expected \"\"el estado\"~5\"); template key after Reset=\"EDITADO-TEMPLATE\" (expected unchanged); Languages table unchanged=true; activity entries=[\"UPDATE Reset language “Spanish” [admin]\"]",
+  "shot": "group-lng-LNG-15.png"
+ },
+ {
+  "id": "_errs-D4",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-16",
+  "result": "FAIL",
+  "evidence": "edited pt cell \"\"Costa Rica\"\" -> EDITADO-PT, saved; uninstalled pt: row gone=true; task \"Uninstalling language\" while pending=1; \"Language uninstalled successfully\" entries=1; Translations User Interface lost pt column=true; Dashboard language count: no Dashboard language count exists; after reinstalling pt the cell reads \"EDITADO-PT\" (expected the default text \"\"Costa Rica\"\", not the old edit)",
+  "shot": "group-lng-LNG-16.png"
+ },
+ {
+  "id": "_errs-D5",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-PO1",
+  "result": "FAIL",
+  "evidence": "rows before an edit: [\"Arabic (ar) العربية\",\"English (en) Default\",\"French (fr) Français\",\"Portuguese (pt) Português\",\"Spanish (es) Español\"]; percentages read=[null,null,null,null,null]; after saving a French cell in Translations and returning: [\"Arabic (ar) العربية\",\"English (en) Default\",\"French (fr) Français\",\"Portuguese (pt) Português\",\"Spanish (es) Español\"] percentages=[null,null,null,null,null]",
+  "shot": "group-lng-LNG-PO1.png"
+ },
+ {
+  "id": "_errs-D6",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "LNG-PO3",
+  "result": "PASS",
+  "evidence": "language pickers found=0; German installed and made default: Languages list=[\"Arabic (ar) العربية\",\"English (en)\",\"French (fr) Français\",\"German (de) Deutsch Default\",\"Portuguese (pt) Português\",\"Spanish (es) Español\"]; Translations source column header=\"Deutsch DE\"; edited \"\"the status\"~5\" (English) and saved; rail text, navbar text and page title unchanged=true",
+  "shot": ""
+ },
+ {
+  "id": "_errs-D7",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ }
+]

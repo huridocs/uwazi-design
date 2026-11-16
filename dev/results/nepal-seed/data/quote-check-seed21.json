@@ -1,0 +1,850 @@
+{
+ "sampled": 120,
+ "summary": {
+  "found": 112,
+  "reachable-but-not-found": 5,
+  "unreachable": 3
+ },
+ "results": [
+  {
+   "ref": "ref:reports-on-319-setopati-2025-09-1-2025-09-10-uml-sta",
+   "url": "https://en.setopati.com/political/165222",
+   "http": "200",
+   "found": true,
+   "quote": "The political solution after the prime minister's resignation must be sought in a constitutional and democratic manner."
+  },
+  {
+   "ref": "ref:ok74-bhat-007",
+   "url": "https://english.onlinekhabar.com/charred-body-found-at-koteshwor-bhatbhateni-gen-z-protest-death-toll-rises-to-74.html",
+   "http": "200",
+   "found": true,
+   "quote": "Previously, seven charred bodies were recovered from the Bhatbhateni outlet in Chuchchepati."
+  },
+  {
+   "ref": "ref:vm-123",
+   "url": "https://monitor.civicus.org/explore/nepal-still-no-accountability-for-violent-crackdown-by-security-forces-as-civic-space-violations-persist-and-election-draws-near/",
+   "http": "200",
+   "found": false,
+   "quote": "At least 76 people nationwide died in the two days of violence around the Gen Z protests."
+  },
+  {
+   "ref": "ref:t1014-443",
+   "url": "https://nepalitimes.com/madam-prime-minister-of-nepal",
+   "http": "200",
+   "found": true,
+   "quote": "The site of the negotiations moved to the official residence of the president in Shital Niwas from the Nepal Army Headqu"
+  },
+  {
+   "ref": "ref:bg24-195",
+   "url": "https://thehimalayantimes.com/kathmandu/durga-prasai-sent-to-judicial-custody-for-12-days",
+   "http": "200",
+   "found": true,
+   "quote": "the chief coordinator of the March 28 pro-monarchy protest in Tinkune"
+  },
+  {
+   "ref": "ref:cv-0121",
+   "url": "https://nepal.newschecker.co/en/fact-check/english/fact-check-false-statement-attributed-to-nepal-army-chief-sigdel-goes-viral",
+   "http": "200",
+   "found": true,
+   "quote": "Nepal Army has finally made its position clear. We are the soldiers of the nation but not the government."
+  },
+  {
+   "ref": "ref:aftermath-386",
+   "url": "https://english.ratopati.com/story/55517/olis-statement-arson-and-attacks-on-all-three-government-bodies-are-planned-incidents",
+   "http": "200",
+   "found": true,
+   "quote": "The arson and attack on all three organs of the government were premeditated incidents."
+  },
+  {
+   "ref": "ref:cv-0097",
+   "url": "https://nepal.newschecker.co/en/english/kp-oli-convicted-by-intl-court-for-crime-against-humanity-no-viral-claim-is-false",
+   "http": "200",
+   "found": true,
+   "quote": "No, KP Sharma Oli has not been convicted by an international court for crimes against humanity."
+  },
+  {
+   "ref": "ref:reports-kp_ministers-shital-niwas",
+   "url": "https://kathmandupost.com/national/2025/09/15/three-newly-appointed-ministers-sworn-in",
+   "http": "200",
+   "found": true,
+   "quote": "took the oath of office and secrecy at a ceremony at Sheetal Niwas, the President's office"
+  },
+  {
+   "ref": "ref:aftermath-306",
+   "url": "https://www.kathmandupost.com/national/2025/09/19/oli-denies-government-ordered-police-to-shoot-protesters",
+   "http": "200",
+   "found": true,
+   "quote": "Even the organisers admitted infiltration took place. Conspirators created violence."
+  },
+  {
+   "ref": "ref:cv-0263",
+   "url": "https://english.onlinekhabar.com/genz-protests-death-toll-rises-to-36.html",
+   "http": "200",
+   "found": true,
+   "quote": "The death toll from the ongoing GenZ protests has reached 36, according to the latest update from the Ministry of Health"
+  },
+  {
+   "ref": "ref:reports-n_ffn-freedom-forum",
+   "url": "https://www.freedomforum.org.np",
+   "http": "200",
+   "found": true,
+   "quote": "Freedom Forum is a prominent non-governmental organization in Nepal dedicated to institutionalizing democracy"
+  },
+  {
+   "ref": "ref:aftermath-475",
+   "url": "https://en.himalpress.com/nc-seeks-govts-official-position-on-nhrc-report/",
+   "http": "200",
+   "found": true,
+   "quote": "The government should act on the commission's recommendations and proceed with legal action, free from political pressur"
+  },
+  {
+   "ref": "ref:8sep-013",
+   "url": "https://nominatim.openstreetmap.org/search?q=Kathmandu+Medical+College+Sinamangal&format=json&limit=2",
+   "http": "403",
+   "found": false,
+   "quote": "Kathmandu-09"
+  },
+  {
+   "ref": "ref:8sep-219",
+   "url": "https://asianews.network/?p=225606",
+   "http": "200",
+   "found": true,
+   "quote": "14 people have died after police opened fire during a Gen Z protest"
+  },
+  {
+   "ref": "ref:reports_on-onlinekhabar-2026-03-25-oli-top-offici-youth-against-corruption",
+   "url": "https://english.onlinekhabar.com/oli-top-officials-gen-z-protest-probe.html",
+   "http": "200",
+   "found": true,
+   "quote": "the admin of the Discord server named Youth Against Corruption was ‘Hami Nepal’"
+  },
+  {
+   "ref": "ref:t1014-315",
+   "url": "https://www.tribuneindia.com/news/world/nepal-set-for-key-talks-on-interim-govt-as-gen-z-backs-sushila-karki-for-pm",
+   "http": "200",
+   "found": true,
+   "quote": "In a Facebook post on Wednesday, Shah addressed the younger generation"
+  },
+  {
+   "ref": "ref:supports-death-toll-19-2025-09-08-kp19-0",
+   "url": "https://kathmandupost.com/national/2025/09/08/19-dead-in-gen-z-protests-across-nepal",
+   "http": "200",
+   "found": true,
+   "quote": "At least 19 people have died after police opened fire on Gen Z-led protests in Kathmandu and other cities on Monday."
+  },
+  {
+   "ref": "ref:reports-on-049",
+   "url": "https://www.newslaundry.com/2025/09/10/you-can-burn-the-newsroom-not-the-spirit-kathmandu-post-carries-on-as-nepal-protests-turn-against-the-media",
+   "http": "200",
+   "found": true,
+   "quote": "Kantipur TV and Radio Kantipur's studios in Tinkune were also reportedly attacked."
+  },
+  {
+   "ref": "ref:reports-on-271-tribune-india-2025-arzu-rana-deuba",
+   "url": "https://www.tribuneindia.com/news/top-headlines/pu-alumna-nepal-foreign-minister-arzu-rana-deuba-assaulted-in-nepal-protests/amp",
+   "http": "200",
+   "found": true,
+   "quote": "show the 65-year-old being punched and kicked by enraged protesters who stormed her residence in Kathmandu."
+  },
+  {
+   "ref": "ref:aftermath-451",
+   "url": "https://english.onlinekhabar.com/oli-top-officials-gen-z-protest-probe.html",
+   "http": "200",
+   "found": true,
+   "quote": "not making efforts to prevent further human loss in the capacity of an office-bearer who holds the responsibility and du"
+  },
+  {
+   "ref": "ref:aftermath-452",
+   "url": "https://english.onlinekhabar.com/investigation-commission-report-on-bhadra-incidents-under-cabinet-review.html",
+   "http": "200",
+   "found": true,
+   "quote": "Once the sealed report is presented at the upcoming Cabinet meeting, it will decide the remaining matters."
+  },
+  {
+   "ref": "ref:vm-160",
+   "url": "https://www.amnesty.org.au/nepal-government-must-ensure-accountability-for-unlawful-killings-and-use-of-force-during-gen-z-protests/",
+   "http": "200",
+   "found": true,
+   "quote": "Tear gas grenades were launched from elevated positions."
+  },
+  {
+   "ref": "ref:8sep-327",
+   "url": "https://www.newsonair.gov.in/inquiry-committee-formed-to-probe-violence-during-gen-z-protest/",
+   "http": "200",
+   "found": true,
+   "quote": "Inquiry committee formed to investigate today's incident of Gen Z protest turning violent."
+  },
+  {
+   "ref": "ref:supports-death-toll-60-2025-09-14-republica-repbir-0",
+   "url": "https://www.myrepublica.nagariknetwork.com/index.php/news/two-more-protest-victims-die-during-treatment-at-bir-hospital-death-toll-re-11-30.html",
+   "http": "200",
+   "found": true,
+   "quote": "With this the total number of death have reached almost 60 during the two day protest of 8 September and 9 September."
+  },
+  {
+   "ref": "ref:hpmart-dinesh-rajvanshi",
+   "url": "https://en.himalpress.com/45-victims-of-gen-z-protests-declared-martyrs-with-namelist/",
+   "http": "200",
+   "found": true,
+   "quote": "Dinesh Rajvanshi – Arjundhara-4, Jhapa"
+  },
+  {
+   "ref": "ref:t1014-401",
+   "url": "https://en.setopati.com/political/165224",
+   "http": "200",
+   "found": true,
+   "quote": "We have officially sent our Sudan Dai (elder brother) from the organization"
+  },
+  {
+   "ref": "ref:supports-death-toll-75-2025-10-sopa-0",
+   "url": "https://www.sopaimages.com/galleries/85158/a-month-after-nepals-gen-z-protest-in-kathmandu",
+   "http": "200",
+   "found": true,
+   "quote": "The protests led by youths against corruption left 75 people dead"
+  },
+  {
+   "ref": "ref:8sep-303",
+   "url": "https://www.hrw.org/news/2025/09/09/nepal-police-fire-on-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "They also used tear gas at Civil Hospital in Kathmandu, where some of the injured were taken."
+  },
+  {
+   "ref": "ref:reports_on-al-jazeera-2025-09-08-gen-z-protests-a-2025-09-07-protest-permission-sought-f",
+   "url": "https://www.aljazeera.com/news/2025/9/8/six-killed-in-nepal-amid-gen-z-protests-after-social-media-ban-all-to-know",
+   "http": "200",
+   "found": true,
+   "quote": "According to the Kathmandu District Administration Office, the nonprofit had secured approval for it."
+  },
+  {
+   "ref": "ref:reports-on-diplomat-nepal-2025-09-09-nine-embassi-2025-09-09-joint-embassy-statement-on",
+   "url": "https://diplomatnepal.com/?p=19831",
+   "http": "200",
+   "found": true,
+   "quote": "We are deeply saddened by the violence seen in Kathmandu and elsewhere in Nepal today"
+  },
+  {
+   "ref": "ref:cv-0219",
+   "url": "https://english.onlinekhabar.com/uml-gen-z-uprising-attack-on-nepal.html",
+   "http": "200",
+   "found": true,
+   "quote": "Criminal groups infiltrated a peaceful youth demonstration on September 9"
+  },
+  {
+   "ref": "ref:reports-on-474",
+   "url": "https://nepalitimes.com/here-now/bhat-bhateni-burning",
+   "http": "200",
+   "found": true,
+   "quote": "Watching the buildings burn felt painful to the core of my heart. But we will rebuild, we will rise again."
+  },
+  {
+   "ref": "ref:t1014-471",
+   "url": "https://www.newsonair.gov.in/sushila-karki-appointed-as-interim-pm-of-nepal",
+   "http": "200",
+   "found": true,
+   "quote": "She is the first woman chief Justice of Nepal who was widely praised for her integrity."
+  },
+  {
+   "ref": "ref:reports_on-himalayan-times-2025-09-08-gen-z-youth-2025-09-08-rally-gathers-at-maitighar",
+   "url": "https://thehimalayantimes.com/kathmandu/gen-z-youths-stage-protest-at-maitighar-against-corruption-social-media-ban",
+   "http": "200",
+   "found": true,
+   "quote": "Students, many in school and college uniforms, began gathering from 9 a.m."
+  },
+  {
+   "ref": "ref:8sep-259",
+   "url": "https://english.onlinekhabar.com/death-toll-in-gen-z-protests-rises-to-6.html",
+   "http": "200",
+   "found": false,
+   "quote": "suffered critical injuries from rubber bullets"
+  },
+  {
+   "ref": "ref:reports-on-296-al-jazeera-2025-09-2025-09-09-preside",
+   "url": "https://www.aljazeera.com/amp/news/liveblog/2025/9/9/nepal-protests-live-nepali-congress-office-top-leaders-homes-set-on-fire",
+   "http": "200",
+   "found": true,
+   "quote": "all parties to exercise restraint"
+  },
+  {
+   "ref": "ref:reports-on-112",
+   "url": "https://edition.mv/world/44153",
+   "http": "200",
+   "found": true,
+   "quote": "The Nepali Army has recaptured 192 prisoners"
+  },
+  {
+   "ref": "ref:disputes-227-setopati-2025-09-0-oli-resignation-le",
+   "url": "https://en.setopati.com/political/165189",
+   "http": "200",
+   "found": true,
+   "quote": "I was appointed as Prime Minister on July 15, 2024, in accordance to Article 76 (2)"
+  },
+  {
+   "ref": "ref:8sep-241",
+   "url": "https://www.sharesansar.com/newsdetail/ramesh-lekhak-quits-as-home-minister-after-protest-deaths-2025-09-08",
+   "http": "200",
+   "found": true,
+   "quote": "347 people are receiving treatment for injuries in various hospitals nationwide"
+  },
+  {
+   "ref": "ref:cv-0006",
+   "url": "https://www.ipsnews.net/?p=192257",
+   "http": "200",
+   "found": true,
+   "quote": "On September 9, a Facebook page called Corporate Bazaar posted a video claiming protesters had reached Pashupatinath Tem"
+  },
+  {
+   "ref": "ref:reports-on-309-ekantipur-2025-09-2025-09-09-tejulal",
+   "url": "https://ekantipur.com/news/2025/09/09/en/sports-minister-chaudhary-also-resigned-29-46.html",
+   "http": "200",
+   "found": true,
+   "quote": "After the use of force in the Genji movement, the resignation of Congress ministers continues."
+  },
+  {
+   "ref": "ref:supports-amnesty-international-2025-12-08-accou-toll-76-dead-over-8-9-september",
+   "url": "https://www.amnesty.org/en/latest/news/2025/12/nepal-government-must-ensure-accountability-for-unlawful-killings-and-use-of-force-during-gen-z-protests/",
+   "http": "403",
+   "found": false,
+   "quote": "76 people dead and more than 2,000 injured"
+  },
+  {
+   "ref": "ref:supports-kathmandu-post-2025-09-04-nepal-bans-f-names-of-the-five-registered-platforms",
+   "url": "https://www.kathmandupost.com/national/2025/09/04/nepal-bans-facebook-and-other-major-social-media-platforms-over-non-compliance",
+   "http": "200",
+   "found": true,
+   "quote": "TikTok, Viber, Witk, Nimbuzz, and Popo Live have already been listed, while Telegram and Global Diary have applied and a"
+  },
+  {
+   "ref": "ref:hpmart-dhiraj-shrestha",
+   "url": "https://en.himalpress.com/45-victims-of-gen-z-protests-declared-martyrs-with-namelist/",
+   "http": "200",
+   "found": true,
+   "quote": "Dhiraj Shrestha – Tadi-3, Nuwakot"
+  },
+  {
+   "ref": "ref:cv-0153",
+   "url": "https://en.prothomalo.com/international/south-asia/f7xg6tn60j",
+   "http": "200",
+   "found": true,
+   "quote": "Footage of protesters calling for a Hindu monarchy in the past was falsely shared"
+  },
+  {
+   "ref": "ref:reports-on-286-himalayan-times-20-2025-09-09-lekhak",
+   "url": "https://thehimalayantimes.com/kathmandu/protesters-set-fire-to-former-home-minister-ramesh-lekhaks-residence",
+   "http": "200",
+   "found": true,
+   "quote": "Protesters have completely torched the residence of former Home Minister Ramesh Lekhak in Naikap, Kathmandu."
+  },
+  {
+   "ref": "ref:aftermath-317",
+   "url": "https://kathmandupost.com/politics/2026/01/14/congress-central-committee-suspends-gagan-thapa-and-bishwa-sharma-for-five-years",
+   "http": "200",
+   "found": true,
+   "quote": "calling the special general convention without the consent of the establishment faction"
+  },
+  {
+   "ref": "ref:vm-047",
+   "url": "https://en.setopati.com/political/165154",
+   "http": "200",
+   "found": true,
+   "quote": "Police opened fire after the protest turned violent."
+  },
+  {
+   "ref": "ref:8sep-314",
+   "url": "https://hsph.harvard.edu/atrocity-prevention-lab/news/the-2025-gen-z-uprising-in-nepal-a-three-part-analysis",
+   "http": "200",
+   "found": true,
+   "quote": "By 11:38 a.m., demonstrators breached the first police barricades, prompting security forces to deploy water cannons."
+  },
+  {
+   "ref": "ref:cv-0076",
+   "url": "https://www.newslaundry.com/2025/09/09/foreign-hand-gen-z-data-addiction-5-ways-indian-media-missed-the-nepal-story",
+   "http": "200",
+   "found": true,
+   "quote": "Deputy PM and Finance Minister Bishnu Paudel was beaten up by protesters."
+  },
+  {
+   "ref": "ref:aftermath-469",
+   "url": "https://www.occrp.org/en/news/nepal-rights-body-urges-charges-against-ex-pm-over-gen-z-protest-deaths",
+   "http": "200",
+   "found": true,
+   "quote": "a bloody crackdown on youth-led anti-corruption protests last year that left at least 76 people dead."
+  },
+  {
+   "ref": "ref:reports-on-071",
+   "url": "https://en.setopati.com/political/165650",
+   "http": "200",
+   "found": true,
+   "quote": "The party office suffered significant damage after it was set on fire during the Gen Z movement on September 9."
+  },
+  {
+   "ref": "ref:aftermath-341",
+   "url": "https://www.sharesansar.com/newsdetail/sudan-gurung-reappointed-as-home-minister-oath-taking-set-at-3-pm-after-clean-chit-2026-06-09",
+   "http": "200",
+   "found": true,
+   "quote": "Sudan Gurung has been reappointed as the Minister for Home Affairs."
+  },
+  {
+   "ref": "ref:aftermath-366",
+   "url": "https://english.onlinekhabar.com/?p=590194",
+   "http": "200",
+   "found": true,
+   "quote": "The mandate of the general convention cannot in any way be undermined by the result of a particular election"
+  },
+  {
+   "ref": "ref:vm-065",
+   "url": "https://www.tribuneindia.com/news/india/pm-oli-quits-parliament-torched-as-nepal-uprising-spirals",
+   "http": "200",
+   "found": true,
+   "quote": "Flames have engulfed Singha Durbar, the historic seat of government, as well as the parliament building in New Baneshwor"
+  },
+  {
+   "ref": "ref:vm-026",
+   "url": "https://www.amnesty.org/en/latest/news/2025/12/nepal-government-must-ensure-accountability-for-unlawful-killings-and-use-of-force-during-gen-z-protests/",
+   "http": "403",
+   "found": false,
+   "quote": "Security forces fired into crowds – including protesters, children, bystanders and journalists – striking people in the "
+  },
+  {
+   "ref": "ref:t1014-294",
+   "url": "https://en.setopati.com/political/165223/",
+   "http": "200",
+   "found": true,
+   "quote": "Oli confirmed this in a letter addressed to the Gen Z youth on Wednesday night."
+  },
+  {
+   "ref": "ref:reports-on-059",
+   "url": "https://www.news24.com/world/from-parliament-to-luxury-hotels-nepals-protest-movement-targeted-the-elite-20250911-0934",
+   "http": "200",
+   "found": true,
+   "quote": "The Hyatt Regency, a sprawling property near Boudhanath Stupa"
+  },
+  {
+   "ref": "ref:supports-222-business-today-202-dahal-residence-se",
+   "url": "https://www.businesstoday.in/amp/india/story/nepal-protests-kp-sharma-oli-resigns-as-pm-amid-rising-unrest-military-may-step-up-493206-2025-09-09",
+   "http": "200",
+   "found": true,
+   "quote": "Protestors have also set ablaze the private home of President Ramchandra Paudel and the residence of former prime minist"
+  },
+  {
+   "ref": "ref:reports-on-cpj-2025-09-04-nepal-orders-ban-on-pla-2025-09-04-social-media-platforms-bloc",
+   "url": "https://cpj.org/2025/09/nepal-orders-ban-on-major-social-media-platforms/",
+   "http": "200",
+   "found": true,
+   "quote": "failed to heed an August 25 Cabinet directive requiring foreign social media and online streaming platforms to register "
+  },
+  {
+   "ref": "ref:cv-0106",
+   "url": "https://nepal.newschecker.co/en/english/fact-check-viral-video-falsely-claims-prime-minister-oli-had-a-heart-attack",
+   "http": "200",
+   "found": true,
+   "quote": "No, Prime Minister Oli didn't have a heart attack."
+  },
+  {
+   "ref": "ref:disputes-hrw-2025-09-09-nepal-police-fire-on-ge-injured-more-than-100",
+   "url": "https://www.hrw.org/news/2025/09/09/nepal-police-fire-on-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "injured over 300"
+  },
+  {
+   "ref": "ref:hpmart-yog-bahadur-shrestha",
+   "url": "https://en.himalpress.com/45-victims-of-gen-z-protests-declared-martyrs-with-namelist/",
+   "http": "200",
+   "found": true,
+   "quote": "Yog Bahadur Shrestha – Barhabiise-6, Sindhupalchok"
+  },
+  {
+   "ref": "ref:aftermath-348",
+   "url": "https://kathmandupost.com/national-security/2025/11/21/gen-z-youth-bara-security-committee-reach-six-point-verbal-deal",
+   "http": "200",
+   "found": true,
+   "quote": "During the talks held at the Armed Police Force Technical School in Pathahiya, officials agreed to address all six deman"
+  },
+  {
+   "ref": "ref:supports-al-jazeera-2025-09-08-gen-z-protests-a-26-platforms-were-blocked",
+   "url": "https://www.aljazeera.com/news/2025/9/8/six-killed-in-nepal-amid-gen-z-protests-after-social-media-ban-all-to-know",
+   "http": "200",
+   "found": true,
+   "quote": "The government blocked 26 social media platforms, including WhatsApp, Facebook, Instagram, LinkedIn and YouTube."
+  },
+  {
+   "ref": "ref:reports-on-274-setopati-2025-09-1-2025-09-09-shital",
+   "url": "https://en.setopati.com/political/165212",
+   "http": "200",
+   "found": true,
+   "quote": "Protestors entered Sheetal Niwas and set it on fire on Tuesday."
+  },
+  {
+   "ref": "ref:reports-on-un-media-2025-09-09-ohchr-nepal-escala-2025-09-09-turk-appalled-calls-for-inv",
+   "url": "https://media.un.org/avlibrary/en/asset/d344/d3445542",
+   "http": "200",
+   "found": true,
+   "quote": "I am appalled by the escalating violence in Nepal that has resulted in multiple deaths and the injury of hundreds of mos"
+  },
+  {
+   "ref": "ref:hpmart-milan-rai",
+   "url": "https://en.himalpress.com/45-victims-of-gen-z-protests-declared-martyrs-with-namelist/",
+   "http": "200",
+   "found": true,
+   "quote": "Milan Rai – Dudhauli-8, Sindhuli"
+  },
+  {
+   "ref": "ref:reports_on-global-voices-2025-09-09-gen-z-expose-2025-08-28-ministry-issues-seven-day-r",
+   "url": "https://advox.globalvoices.org/2025/09/09/gen-z-stands-up-to-expose-corruption-in-nepal/",
+   "http": "200",
+   "found": true,
+   "quote": "On August 28, 2025, the Ministry of Communications and Information Technology gave all local"
+  },
+  {
+   "ref": "ref:reports_on-himalayan-times-2025-09-08-curfew-exte-2025-09-08-curfew-extended-to-singha-d",
+   "url": "https://thehimalayantimes.com/school-times/curfew-extended-across-key-areas-of-kathmandu-following-escalation-of-gen-z-protests",
+   "http": "200",
+   "found": true,
+   "quote": "the Kathmandu District Administration Office has extended the curfew across key areas of Kathmandu Metropolitan City fro"
+  },
+  {
+   "ref": "ref:cv-0002",
+   "url": "https://www.altnews.in/pashupatinath-temple-attacked-during-nepal-genz-protest-no-viral-video-shows-ceremonial-ritual/",
+   "http": "200",
+   "found": true,
+   "quote": "the idol of Naxal Bhagwati to symbolically knock on the main door (gate) of Pashupatinath Temple three times"
+  },
+  {
+   "ref": "ref:cv-0236",
+   "url": "https://english.onlinekhabar.com/a-year-after-gen-z-movement-investigation-reports-remain-unimplemented.html",
+   "http": "200",
+   "found": true,
+   "quote": "casualties occurred when the Special Task Force of the Nepal Police, which was regularly deployed in the area, attempted"
+  },
+  {
+   "ref": "ref:hpmart-aayush-thapa",
+   "url": "https://en.himalpress.com/45-victims-of-gen-z-protests-declared-martyrs-with-namelist/",
+   "http": "200",
+   "found": true,
+   "quote": "Aayush Thapa – Nepalganj-1, Banke"
+  },
+  {
+   "ref": "ref:reports_on-onlinekhabar-2026-09-08-security-appar-2025-09-06-gen-z-march-called-for-8-se",
+   "url": "https://english.onlinekhabar.com/intelligence-failure-gen-z-protest.html",
+   "http": "200",
+   "found": true,
+   "quote": "From September 6, Reddit, TikTok and Discord were filled with calls to protest over the “Nepo Baby” issue and the social"
+  },
+  {
+   "ref": "ref:insec9-gaurav-joshi",
+   "url": "https://inseconline.org/en/main_news/138809/",
+   "http": "200",
+   "found": true,
+   "quote": "Gaurav Joshi, 27, address not disclosed"
+  },
+  {
+   "ref": "ref:bg24-129",
+   "url": "https://thehimalayantimes.com/nepal/social-media-bill-gets-heavy-criticism",
+   "http": "200",
+   "found": true,
+   "quote": "The government on Monday introduced the Social Media Bill in the National Assembly, the Upper House of Parliament"
+  },
+  {
+   "ref": "ref:8sep-281",
+   "url": "https://hsph.harvard.edu/atrocity-prevention-lab/news/the-2025-gen-z-uprising-in-nepal-a-three-part-analysis",
+   "http": "200",
+   "found": true,
+   "quote": "13,182 rounds of ammunition had been fired over the two days"
+  },
+  {
+   "ref": "ref:reports-on-129",
+   "url": "https://myrepublica.nagariknetwork.com/news/over-13000-inmates-escape-prisons-in-two-days-7-inmates-including-five-in-j-93-43.html",
+   "http": "200",
+   "found": true,
+   "quote": "1,400 from the Central Prison"
+  },
+  {
+   "ref": "ref:reports-on-305-setopati-2025-09-0-2025-09-09-ram-nat",
+   "url": "https://en.setopati.com/political/165172",
+   "http": "200",
+   "found": true,
+   "quote": "Agriculture Minister Ram Nath Adhikari, from NC, has announced his resignation"
+  },
+  {
+   "ref": "ref:cv-0210",
+   "url": "https://stratnewsglobal.com/nepal/chinese-netizens-suspect-us-india-role-in-nepal/",
+   "http": "200",
+   "found": true,
+   "quote": "The possibility of America being behind it is big."
+  },
+  {
+   "ref": "ref:8sep-007",
+   "url": "https://en.himalpress.com/home-minister-lekhak-resigns-nc-under-pressure-to-quit-govt/",
+   "http": "200",
+   "found": true,
+   "quote": "the NC cannot remain in government even for a moment longer"
+  },
+  {
+   "ref": "ref:cv-0183",
+   "url": "https://www.decodeinternet.in/amp/decode/discord-nepal-youth-political-revolution-digital-democracy-explained-29575",
+   "http": "200",
+   "found": true,
+   "quote": "There were about 30-35,000 people listening"
+  },
+  {
+   "ref": "ref:reports-on-055",
+   "url": "https://www.news24.com/world/from-parliament-to-luxury-hotels-nepals-protest-movement-targeted-the-elite-20250911-0934",
+   "http": "200",
+   "found": true,
+   "quote": "The Hilton Hotel, a five-star glass tower, was also torched, sending black plumes of smoke into the sky."
+  },
+  {
+   "ref": "ref:reports-on-himal-press-2026-05-28-nc-seeks-govt-o-2026-05-28-nepali-congress-demands-gov",
+   "url": "https://en.himalpress.com/nc-seeks-govts-official-position-on-nhrc-report/",
+   "http": "200",
+   "found": true,
+   "quote": "incomplete, inadequate and limited in scope"
+  },
+  {
+   "ref": "ref:t1014-361",
+   "url": "https://www.aljazeera.com/news/2025/9/13/nepal-sets-march-5-vote-restrictions-eased-as-interim-govt-takes-charge",
+   "http": "200",
+   "found": true,
+   "quote": "India is fully committed to the peace, progress, and prosperity of Nepal’s brothers and sisters"
+  },
+  {
+   "ref": "ref:reports-ss_gurung-mahabir-pun",
+   "url": "https://www.sharesansar.com/newsdetail/sudan-gurung-reappointed-as-home-minister-oath-taking-set-at-3-pm-after-clean-chit-2026-06-09",
+   "http": "200",
+   "found": false,
+   "quote": "Mahavir Pun has been assigned the portfolio of Minister for Science, Technology, and Innovation."
+  },
+  {
+   "ref": "ref:aftermath-399",
+   "url": "https://www.b360nepal.com/detail/27871/inquiry-commission-submits-report-to-pm-karki-recommends-legal-action",
+   "http": "200",
+   "found": true,
+   "quote": "has presented a 1,000-page report to Prime Minister Sushila Karki"
+  },
+  {
+   "ref": "ref:t1014-256",
+   "url": "https://m.thewire.in/article/south-asia/after-the-inferno-nepals-gen-z-the-army-and-the-battle-for-constitutional-survival",
+   "http": "200",
+   "found": true,
+   "quote": "Parliamentary democracy has only been partially wounded in the search for a practical solution under the doctrine of nec"
+  },
+  {
+   "ref": "ref:t1014-386",
+   "url": "https://kathmandupost.com/national/2025/09/21/prime-minister-karki-names-five-new-ministers",
+   "http": "200",
+   "found": true,
+   "quote": "The judicial inquiry commission led by Gauri Bahadur Karki, former chair of the Special Court"
+  },
+  {
+   "ref": "ref:reports_on-onlinekhabar-2026-09-08-who-called-nep-new-baneshwar",
+   "url": "https://english.onlinekhabar.com/one-year-nepals-gen-z-protest.html",
+   "http": "200",
+   "found": true,
+   "quote": "Parliament at New Baneshwor was a prohibited area and that protesters should instead gather at Maitighar"
+  },
+  {
+   "ref": "ref:supports-cpj-2025-09-10-nepal-protests-media-ou-two-media-offices-set-on-fire-on-9-sep",
+   "url": "https://cpj.org/2025/09/nepal-protests-media-outlets-torched-and-journalists-injured-in-deadly-unrest/",
+   "http": "200",
+   "found": true,
+   "quote": "On September 9, protestors set fire to the offices of privately owned Kantipur Media Group"
+  },
+  {
+   "ref": "ref:t1014-416",
+   "url": "https://www.tribuneindia.com/news/india/no-end-to-nepal-political-vacuum-as-leaderless-gen-z-factions-clash",
+   "http": "200",
+   "found": true,
+   "quote": "the Nepal army chief holding a second round of talks with Gen Z representatives"
+  },
+  {
+   "ref": "ref:reports-on-186",
+   "url": "https://ianslive.in/nepals-insurers-receive-record-claims-from-gen-z-protest-damages--20250919062159",
+   "http": "200",
+   "found": true,
+   "quote": "major business enterprises alone have reported damages worth over NPR 60 billion."
+  },
+  {
+   "ref": "ref:aftermath-299",
+   "url": "https://kathmandupost.com/national/2026/04/09/oli-lekhak-released-following-court-order",
+   "http": "200",
+   "found": true,
+   "quote": "They will be present before the authorities when required."
+  },
+  {
+   "ref": "ref:vm-057",
+   "url": "https://scroll.in/latest/1086368/nepal-14-killed-more-than-50-injured-in-protests-against-social-media-ban",
+   "http": "200",
+   "found": true,
+   "quote": "Police fired tear gas, water cannons, rubber bullets and live ammunition."
+  },
+  {
+   "ref": "ref:reports-on-330-setopati-2025-09-1-2025-09-09-pm-resi",
+   "url": "https://en.setopati.com/political/165210",
+   "http": "200",
+   "found": false,
+   "quote": "the prime minister's residence in Baluwatar, and the President's Office in Maharajgunj have all been completely destroye"
+  },
+  {
+   "ref": "ref:t1014-425",
+   "url": "https://www.tribuneindia.com/news/world/congratulations-pour-in-from-world-leaders-for-nepal-pm-karki",
+   "http": "200",
+   "found": true,
+   "quote": "the UK on Sunday affirmed support for inclusive governance"
+  },
+  {
+   "ref": "ref:supports-swarajya-2025-09-05-nepal-orders-ban-2-discord-was-on-the-block-list",
+   "url": "https://swarajyamag.com/amp/story/world/nepal-orders-ban-on-26-major-social-media-platforms-including-facebook-whatsapp-and-x-move-sparks-public-outcry",
+   "http": "200",
+   "found": true,
+   "quote": "as well as LinkedIn, Snapchat, Reddit, Discord, Pinterest, Signal, Threads, and several others"
+  },
+  {
+   "ref": "ref:supports-hrw-2025-09-09-nepal-police-fire-on-ge-ban-justified-by-registration-tax-and",
+   "url": "https://www.hrw.org/news/2025/09/09/nepal-police-fire-on-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "The government said that social media registration was necessary for tax and regulatory purposes, although critics accus"
+  },
+  {
+   "ref": "ref:supports-al-jazeera-2025-09-08-gen-z-protests-a-registration-deadline-expired-wednesda",
+   "url": "https://www.aljazeera.com/news/2025/9/8/six-killed-in-nepal-amid-gen-z-protests-after-social-media-ban-all-to-know",
+   "http": "200",
+   "found": true,
+   "quote": "The websites had until September 3 to register with the Ministry of Communications and Information Technology."
+  },
+  {
+   "ref": "ref:t1014-357",
+   "url": "https://www.aljazeera.com/news/2025/9/12/nepal-protest-death-toll-reaches-51-as-12500-prisoners-remain-on-the-run",
+   "http": "200",
+   "found": true,
+   "quote": "was sworn in late Friday by Poudel at the presidential residence in a ceremony that aired on state-run television"
+  },
+  {
+   "ref": "ref:reports_on-onlinekhabar-2026-09-08-who-called-nep-2025-09-02-early-nepo-baby-tiktok-vide",
+   "url": "https://english.onlinekhabar.com/one-year-nepals-gen-z-protest.html",
+   "http": "200",
+   "found": true,
+   "quote": "One of the earliest Nepo baby-related videos found on TikTok was posted by an account called"
+  },
+  {
+   "ref": "ref:bg24-030",
+   "url": "https://en.himalpress.com/pm-oli-wins-trust-vote-secures-support-of-188-members/",
+   "http": "200",
+   "found": true,
+   "quote": "188 lawmakers voted in favor of his motion of confidence, while 74 voted against the motion and one remained neutral."
+  },
+  {
+   "ref": "ref:reports-on-161",
+   "url": "https://en.himalpress.com/two-inmates-shot-dead-by-army-personnel-in-ramechhap-prison-clash/",
+   "http": "200",
+   "found": true,
+   "quote": "the clash occurred when the prisoners attempted to break out of the prison, demanding that they be allowed to return hom"
+  },
+  {
+   "ref": "ref:reports-on-327-nepali-times-2025-2025-09-09-army-ev",
+   "url": "https://nepalitimes.com/news/kathmandu-burns-despite-pm-resignation",
+   "http": "200",
+   "found": true,
+   "quote": "The minister's quarters in Bhaisepati were set on fire"
+  },
+  {
+   "ref": "ref:reports-on-040",
+   "url": "https://carnegieendowment.org/research/2025/09/nepal-gen-z-topple-government?lang=en",
+   "http": "200",
+   "found": false,
+   "quote": "The Prime Minister's Office went up in flames, along with the Ministries of Home, Finance, and Health."
+  },
+  {
+   "ref": "ref:reports-on-356-setopati-2025-09-0-rajyalaxmi-chitrak",
+   "url": "https://en.setopati.com/political/165197",
+   "http": "200",
+   "found": true,
+   "quote": "has been severely injured after Gen-Z protestors set their house on fire"
+  },
+  {
+   "ref": "ref:supports-death-toll-19-2025-09-08-seto19-2",
+   "url": "https://en.setopati.com/political/165163",
+   "http": "200",
+   "found": true,
+   "quote": "the total number of deaths during the protests across the country has risen to 19."
+  },
+  {
+   "ref": "ref:reports_on-kathmandu-post-2025-09-04-nepal-bans-f-prithvi-subba-gurung",
+   "url": "https://www.kathmandupost.com/national/2025/09/04/nepal-bans-facebook-and-other-major-social-media-platforms-over-non-compliance",
+   "http": "200",
+   "found": true,
+   "quote": "chaired by Minister Prithvi Subba Gurung"
+  },
+  {
+   "ref": "ref:reports-on-307-republica-2025-09-2025-09-09-ram-nat",
+   "url": "https://www.myrepublica.nagariknetwork.com/index.php/amp/news/minister-from-nc-rival-faction-resigns-amid-growing-pressure-on-oli-govt-23-84.html",
+   "http": "200",
+   "found": true,
+   "quote": "I have already made up my mind. The curfew has prevented me from reaching the ministry, but I am prepared to resign"
+  },
+  {
+   "ref": "ref:vm-088",
+   "url": "https://en.dismislab.com/?p=8704",
+   "http": "200",
+   "found": true,
+   "quote": "not from the ongoing conflict in Khagrachhari but from Guashala Police Circle on Ring Road in Kathmandu, Nepal"
+  },
+  {
+   "ref": "ref:8sep-313",
+   "url": "https://english.ratopati.com/story/50578/bbc-report-nepal-polices-peter-one-orders-then-massacre",
+   "http": "200",
+   "found": true,
+   "quote": "Police fired upon the protesters from the Parliament building premises following this order"
+  },
+  {
+   "ref": "ref:vm-071",
+   "url": "https://kathmandupost.com/art-culture/2025/09/14/the-story-of-singha-durbar-from-fire-to-fire",
+   "http": "200",
+   "found": true,
+   "quote": "The recent fire at Singha Durbar on September 9 during the Gen Z protests"
+  },
+  {
+   "ref": "ref:reports-hp_lam_return-rabi-lamichhane",
+   "url": "https://en.himalpress.com/lamichhane-returns-to-rsp-central-office-after-216-days/",
+   "http": "200",
+   "found": true,
+   "quote": "Rastriya Swatantra Party (RSP) Chairperson Rabi Lamichhane has returned to the party headquarters for the first time in "
+  },
+  {
+   "ref": "ref:bg24-015",
+   "url": "https://kathmandupost.com/national/2024/07/15/prime-minister-oli-forms-22-member-cabinet",
+   "http": "200",
+   "found": true,
+   "quote": "Prakash Man Singh of the Nepali Congress and CPN-UML's Bishnu Prasad Paudel have been inducted as deputy prime ministers"
+  },
+  {
+   "ref": "ref:reports-on-315-setopati-2025-09-0-2025-09-09-nc-gene",
+   "url": "https://en.setopati.com/political/165182",
+   "http": "200",
+   "found": true,
+   "quote": "urged NC President Sher Bahadur Deuba to recall all ministers from the Oli government"
+  },
+  {
+   "ref": "ref:t1014-331",
+   "url": "https://www.tribuneindia.com/news/world/families-of-martyrs-to-receive-1-million-nepali-rupees-in-compensation-interim-pm-karki",
+   "http": "200",
+   "found": true,
+   "quote": "all the deceased of September 8 will be known as 'Martyrs' and be given one million Nepali rupees each."
+  },
+  {
+   "ref": "ref:8sep-222",
+   "url": "https://en.himalpress.com/?p=77196",
+   "http": "200",
+   "found": true,
+   "quote": "At least 17 people were killed in Kathmandu on Monday after police opened fire during a demonstration organized by Gen Z"
+  },
+  {
+   "ref": "ref:cv-0182",
+   "url": "https://www.aljazeera.com/news/2025/9/15/more-egalitarian-how-nepals-gen-z-used-gaming-app-discord-to-pick-pm",
+   "http": "200",
+   "found": true,
+   "quote": "more than 10,000 people, including many from the Nepali diaspora"
+  }
+ ]
+}

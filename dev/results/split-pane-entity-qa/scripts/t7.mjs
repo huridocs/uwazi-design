@@ -1,0 +1,18 @@
+import { launch, state, setView, OUT } from "./lib2.mjs";
+const port = Number(process.argv[2]);
+const run = async (name, fn) => {
+  const { browser, page, logs } = await launch({ sync: false, port });
+  const rail = (side) => page.locator(`[data-library-pane=${side}] [data-component=LibraryRail]`);
+  const panels = async () => (await state(page)).panels.length;
+  let r; try { r = await fn(page, rail, panels); } catch (e) { r = "ERR " + e.message.split("\n")[0]; }
+  console.log(`${port} ${name.padEnd(52)} ${r}`);
+  await browser.close();
+};
+const esc = async (page, panels) => { await page.keyboard.press("Escape"); await page.waitForTimeout(600); return await panels(); };
+await run("S11 focus in right search input, left Filters, Esc", async (page, rail, panels) => { await page.locator('[data-library-pane=right]').getByPlaceholder(/Search title/).click(); await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); return (await panels()) + "→" + await esc(page, panels); });
+await run("S12 card selected (checkbox) in left, Filters, Esc", async (page, rail, panels) => { const cb = page.locator('[data-library-pane=left]').getByRole("checkbox").first(); await cb.check({ force: true }); await page.waitForTimeout(500); await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); const a = await panels(); const e1 = await esc(page, panels); const e2 = e1 ? await esc(page, panels) : "-"; return `open ${a} → esc1 ${e1} esc2 ${e2}`; });
+await run("S13 shift-click selection of 2 cards, Filters, Esc", async (page, rail, panels) => { const cbs = page.locator('[data-library-pane=left]').getByRole("checkbox"); await cbs.nth(0).check({ force: true }); await cbs.nth(1).check({ force: true }); await page.waitForTimeout(500); await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); const a = await panels(); const e1 = await esc(page, panels); return `open ${a} → esc1 ${e1}`; });
+await run("S14 Filters open then drag divider then Esc", async (page, rail, panels) => { await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); const sb = await page.locator('[role=separator]').boundingBox(); await page.mouse.move(sb.x + 2, 300); await page.mouse.down(); await page.mouse.move(sb.x - 120, 300, { steps: 5 }); await page.mouse.up(); await page.waitForTimeout(400); return (await panels()) + "→" + await esc(page, panels); });
+await run("S15 Filters open, ArrowDown/Tab in panel, Esc", async (page, rail, panels) => { await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); for (let i = 0; i < 5; i++) await page.keyboard.press("Tab"); return (await panels()) + "→" + await esc(page, panels); });
+await run("S16 Filters open with a facet ticked, Esc", async (page, rail, panels) => { await rail("left").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); await page.getByRole("checkbox", { name: /Causa/ }).first().check({ force: true }); await page.waitForTimeout(800); return (await panels()) + "→" + await esc(page, panels); });
+await run("S17 right pane Filters open, left Filters open, Esc x2", async (page, rail, panels) => { await rail("right").getByRole("button", { name: "Filters" }).click(); await page.waitForTimeout(600); await rail("left").getByRole("button", { name: "Filters" }).click({ force: true }); await page.waitForTimeout(600); const a = await panels(); const e1 = await esc(page, panels); const e2 = await esc(page, panels); return `open ${a} esc1 ${e1} esc2 ${e2}`; });

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "DSH-01",
+  "res": "FAIL",
+  "ev": "Cards read [\"ENTITIES 104\",\"RELATIONSHIPS 550\",\"USERS 5\",\"LANGUAGES 5\"]: the Users card has the label \"USERS\" and the number 5 only; caption \"total users\" present=false; role split \"1 Admins | 2 Editors | 2 Collaborators\" present=false",
+  "shot": "DSH-01.png"
+ },
+ {
+  "id": "DSH-03",
+  "res": "FAIL",
+  "ev": "No \"Storage\" card (cards: [\"ENTITIES\",\"RELATIONSHIPS\",\"USERS\",\"LANGUAGES\"]); caption \"Files and database usage\" present=false; same on CEJIL (see DSH-13)",
+  "shot": "DSH-01.png"
+ },
+ {
+  "id": "DSH-06",
+  "res": "FAIL",
+  "ev": "No \"Files\" card or \"total files\" caption; cards are [\"ENTITIES 104\",\"RELATIONSHIPS 550\",\"USERS 5\",\"LANGUAGES 5\"]. Uploads delete -> dashboard figure cannot be compared",
+  "shot": "DSH-01.png"
+ },
+ {
+  "id": "DSH-11",
+  "res": "FAIL",
+  "ev": "A \"Languages\" card is present (cards: [\"ENTITIES 104\",\"RELATIONSHIPS 550\",\"USERS 5\",\"LANGUAGES 5\"]): ENTITIES, RELATIONSHIPS, USERS, LANGUAGES; spec grid is Users, Storage, Entities, Files (plus Relationships) with no Languages card",
+  "shot": "DSH-01.png"
+ },
+ {
+  "id": "DSH-09-desktop",
+  "res": "INFO",
+  "ev": "desktop grid columns=4 (width 998px; spec: 2-column grid); axe on page: [\"color-contrast (serious) x4: .bg-carbon-tint.py-0\\\\.5.w-fit | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\"]",
+  "shot": ""
+ },
+ {
+  "id": "DSH-07",
+  "res": "FAIL",
+  "ev": "Focusable controls on the page: [\"Back to settings\",\"Reset demo data\"] (no card is a link or button, so none has a name like \"Users, 5 total users\"); clicking the Users card leaves the page on \"Dashboard The collection at a glance, an\" (expected Users & Groups); the Files card does not exist. Cards are plain text, not button-looking",
+  "shot": ""
+ },
+ {
+  "id": "DSH-08",
+  "res": "NOT DRIVEABLE",
+  "ev": "No loading state is reachable: after reload the Dashboard cards render at once from bundled values (first paints: [\"no-pane\",\"Account Profile The username you log in with, and your email address. Username E|skeleton=0\",\"Dashboard The collection at a glance, and the latest changes made to it. ENTITIE|skeleton=0\"]); the app has no mock load delay, and no skeleton placeholders exist in the card markup. A throttled network does not change this because the figures are static",
+  "shot": ""
+ },
+ {
+  "id": "DSH-02",
+  "res": "FAIL",
+  "ev": "After adding a collaborator-role user, deleting tbuergenthal and making mlopez an Admin: Users number=5 (count follows, 5 expected), no role split line (spec \"2 Admins | 1 Editors | 2 Collaborators\"); after reload number=5; on the CEJIL source the Users card is not shown at all (cards: \"ENTITIES 4398 RELATIONSHIPS 16998 TEMPLATES 19 LANGUAGES 3 Recent\"), instead of staying unchanged",
+  "shot": "DSH-02.png"
+ },
+ {
+  "id": "DSH-04",
+  "res": "FAIL",
+  "ev": "Sample: dashboard 104 vs Library 104; CEJIL: dashboard 4398 vs Library 4,398; Travesía: dashboard 104 vs Library 589; Artworks: dashboard 104 vs Library 82. The Travesía and Artworks dashboards show the Sample's figure (104) instead of their own library count; no caption \"total entities\" or \"Entities across all languages\"; CEJIL value is unformatted (\"4398\")",
+  "shot": ""
+ },
+ {
+  "id": "DSH-05",
+  "res": "FAIL",
+  "ev": "Library count 104 -> 105 after saving a new entity; Dashboard Entities 104 -> 104 (spec +1; the card counts the static seed list); after reload 104. Deleting the entity to confirm the reverse was not driven",
+  "shot": ""
+ },
+ {
+  "id": "DSH-10",
+  "res": "NOT DRIVEABLE",
+  "ev": "Relationships card shows 550; adding and removing one reference needs a driveable create-reference flow in an entity; the check could be attempted only via the Relationships tab text selection flow, which was not driven in this run, so the +1/-1 behaviour is unverified",
+  "shot": ""
+ }
+]

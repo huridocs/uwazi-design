@@ -1,0 +1,1735 @@
+{
+ "Sample": {
+  "name": "Sample",
+  "nodes": 104,
+  "refs": 517,
+  "pairs": 137,
+  "dangling": 33,
+  "comps": 2,
+  "hist": [
+   {
+    "bucket": "1",
+    "comps": 1,
+    "nodes": 1
+   },
+   {
+    "bucket": "2–5",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": "6–50",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": "51–500",
+    "comps": 1,
+    "nodes": 103
+   },
+   {
+    "bucket": ">500",
+    "comps": 0,
+    "nodes": 0
+   }
+  ],
+  "largest": 103,
+  "largestShare": 0.9903846153846154,
+  "second": 1,
+  "isolated": 1,
+  "nonTrivial": 1,
+  "avgDeg": 2.6346153846153846,
+  "medianDeg": 1,
+  "types": [
+   {
+    "type": "relates_to",
+    "refs": 116,
+    "rels": 44,
+    "nodes": 45,
+    "maxDeg": 116,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.22437137330754353
+   },
+   {
+    "type": "mentions",
+    "refs": 97,
+    "rels": 42,
+    "nodes": 43,
+    "maxDeg": 97,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.18762088974854932
+   },
+   {
+    "type": "cites",
+    "refs": 87,
+    "rels": 43,
+    "nodes": 44,
+    "maxDeg": 87,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.16827852998065765
+   },
+   {
+    "type": "refers_to",
+    "refs": 85,
+    "rels": 41,
+    "nodes": 42,
+    "maxDeg": 85,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.1644100580270793
+   },
+   {
+    "type": "hearing_of",
+    "refs": 48,
+    "rels": 48,
+    "nodes": 49,
+    "maxDeg": 48,
+    "maxNode": "Inter-American Commission",
+    "shareOfRefs": 0.09284332688588008
+   },
+   {
+    "type": "no_label",
+    "refs": 41,
+    "rels": 30,
+    "nodes": 30,
+    "maxDeg": 39,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.07930367504835589
+   },
+   {
+    "type": "signed_by",
+    "refs": 11,
+    "rels": 11,
+    "nodes": 9,
+    "maxDeg": 3,
+    "maxNode": "La Tablada Attack",
+    "shareOfRefs": 0.02127659574468085
+   },
+   {
+    "type": "nationality",
+    "refs": 9,
+    "rels": 9,
+    "nodes": 15,
+    "maxDeg": 4,
+    "maxNode": "Argentina",
+    "shareOfRefs": 0.017408123791102514
+   },
+   {
+    "type": "victim",
+    "refs": 6,
+    "rels": 6,
+    "nodes": 8,
+    "maxDeg": 4,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.01160541586073501
+   },
+   {
+    "type": "respondent_state",
+    "refs": 5,
+    "rels": 5,
+    "nodes": 10,
+    "maxDeg": 1,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.009671179883945842
+   },
+   {
+    "type": "petitioner",
+    "refs": 4,
+    "rels": 4,
+    "nodes": 5,
+    "maxDeg": 2,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.007736943907156673
+   },
+   {
+    "type": "judgment_of",
+    "refs": 4,
+    "rels": 4,
+    "nodes": 8,
+    "maxDeg": 1,
+    "maxNode": "Case 11.137 (La Tablada)",
+    "shareOfRefs": 0.007736943907156673
+   },
+   {
+    "type": "member_of",
+    "refs": 4,
+    "rels": 4,
+    "nodes": 7,
+    "maxDeg": 2,
+    "maxNode": "Amnesty International",
+    "shareOfRefs": 0.007736943907156673
+   }
+  ],
+  "top": [
+   {
+    "id": "e8",
+    "title": "Inter-American Commission",
+    "tpl": "organization",
+    "deg": 53,
+    "refs": 66
+   },
+   {
+    "id": "e3",
+    "title": "Case 11.137 (La Tablada)",
+    "tpl": "court_case",
+    "deg": 52,
+    "refs": 432
+   },
+   {
+    "id": "e22",
+    "title": "Roberto Cárdenas",
+    "tpl": "person",
+    "deg": 5,
+    "refs": 12
+   },
+   {
+    "id": "e2",
+    "title": "Argentina",
+    "tpl": "country",
+    "deg": 5,
+    "refs": 13
+   },
+   {
+    "id": "e32",
+    "title": "Case 11.481 (Gelman)",
+    "tpl": "court_case",
+    "deg": 5,
+    "refs": 9
+   },
+   {
+    "id": "e33",
+    "title": "Case 12.250 (Bámaca Velásquez)",
+    "tpl": "court_case",
+    "deg": 5,
+    "refs": 7
+   },
+   {
+    "id": "e38",
+    "title": "Velásquez Rodríguez Judgment",
+    "tpl": "judgment",
+    "deg": 5,
+    "refs": 9
+   },
+   {
+    "id": "e39",
+    "title": "Bámaca Velásquez Judgment",
+    "tpl": "judgment",
+    "deg": 5,
+    "refs": 11
+   },
+   {
+    "id": "e21",
+    "title": "Beatriz Morales",
+    "tpl": "person",
+    "deg": 4,
+    "refs": 11
+   },
+   {
+    "id": "e23",
+    "title": "Elena Ríos",
+    "tpl": "person",
+    "deg": 4,
+    "refs": 10
+   },
+   {
+    "id": "e24",
+    "title": "Manuel Ortega",
+    "tpl": "person",
+    "deg": 4,
+    "refs": 13
+   },
+   {
+    "id": "e25",
+    "title": "Sofía Reyes",
+    "tpl": "person",
+    "deg": 4,
+    "refs": 10
+   },
+   {
+    "id": "e7",
+    "title": "La Tablada Attack",
+    "tpl": "judgment",
+    "deg": 4,
+    "refs": 15
+   },
+   {
+    "id": "e40",
+    "title": "Gelman v. Uruguay Ruling",
+    "tpl": "judgment",
+    "deg": 4,
+    "refs": 11
+   },
+   {
+    "id": "e16",
+    "title": "Carlos Mendoza",
+    "tpl": "person",
+    "deg": 3,
+    "refs": 12
+   },
+   {
+    "id": "e19",
+    "title": "Ana Velázquez",
+    "tpl": "person",
+    "deg": 3,
+    "refs": 13
+   },
+   {
+    "id": "e20",
+    "title": "Jorge Fuentes",
+    "tpl": "person",
+    "deg": 3,
+    "refs": 6
+   },
+   {
+    "id": "e27",
+    "title": "Guatemala",
+    "tpl": "country",
+    "deg": 3,
+    "refs": 13
+   },
+   {
+    "id": "e13",
+    "title": "Case 12.045 (Velásquez Rodríguez)",
+    "tpl": "court_case",
+    "deg": 3,
+    "refs": 14
+   },
+   {
+    "id": "e43",
+    "title": "Amnesty International",
+    "tpl": "organization",
+    "deg": 3,
+    "refs": 9
+   }
+  ],
+  "degDist": [
+   [
+    0,
+    104
+   ],
+   [
+    1,
+    103
+   ],
+   [
+    2,
+    33
+   ],
+   [
+    3,
+    21
+   ],
+   [
+    5,
+    8
+   ],
+   [
+    10,
+    2
+   ],
+   [
+    25,
+    2
+   ],
+   [
+    50,
+    2
+   ],
+   [
+    100,
+    0
+   ],
+   [
+    250,
+    0
+   ],
+   [
+    500,
+    0
+   ]
+  ],
+  "tplCount": [
+   [
+    "hearing",
+    48
+   ],
+   [
+    "person",
+    13
+   ],
+   [
+    "country",
+    9
+   ],
+   [
+    "right",
+    7
+   ],
+   [
+    "document",
+    7
+   ],
+   [
+    "violation",
+    6
+   ],
+   [
+    "court_case",
+    5
+   ],
+   [
+    "organization",
+    5
+   ],
+   [
+    "judgment",
+    4
+   ]
+  ],
+  "tplPairs": [
+   [
+    "hearing — organization",
+    48
+   ],
+   [
+    "court_case — person",
+    15
+   ],
+   [
+    "country — court_case",
+    11
+   ],
+   [
+    "judgment — person",
+    11
+   ],
+   [
+    "country — person",
+    9
+   ],
+   [
+    "court_case — right",
+    7
+   ],
+   [
+    "court_case — judgment",
+    7
+   ],
+   [
+    "court_case — organization",
+    7
+   ],
+   [
+    "court_case — violation",
+    6
+   ],
+   [
+    "court_case — document",
+    6
+   ],
+   [
+    "court_case — court_case",
+    4
+   ],
+   [
+    "organization — person",
+    4
+   ]
+  ],
+  "tplPairCount": 13,
+  "noHub": {
+   "threshold": 20,
+   "hubs": 2,
+   "hubEdgesRemoved": 104,
+   "pairs": 33,
+   "nodes": 102,
+   "comps": 73,
+   "largest": 29,
+   "largestShare": 0.28431372549019607,
+   "isolated": 71,
+   "hist": [
+    {
+     "bucket": "1",
+     "comps": 71,
+     "nodes": 71
+    },
+    {
+     "bucket": "2–5",
+     "comps": 1,
+     "nodes": 2
+    },
+    {
+     "bucket": "6–50",
+     "comps": 1,
+     "nodes": 29
+    },
+    {
+     "bucket": "51–500",
+     "comps": 0,
+     "nodes": 0
+    },
+    {
+     "bucket": ">500",
+     "comps": 0,
+     "nodes": 0
+    }
+   ],
+   "hubList": [
+    {
+     "title": "Inter-American Commission",
+     "tpl": "organization",
+     "deg": 53
+    },
+    {
+     "title": "Case 11.137 (La Tablada)",
+     "tpl": "court_case",
+     "deg": 52
+    }
+   ]
+  }
+ },
+ "CEJIL": {
+  "name": "CEJIL",
+  "nodes": 4398,
+  "refs": 16998,
+  "pairs": 16585,
+  "dangling": 0,
+  "comps": 4,
+  "hist": [
+   {
+    "bucket": "1",
+    "comps": 3,
+    "nodes": 3
+   },
+   {
+    "bucket": "2–5",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": "6–50",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": "51–500",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": ">500",
+    "comps": 1,
+    "nodes": 4395
+   }
+  ],
+  "largest": 4395,
+  "largestShare": 0.9993178717598908,
+  "second": 1,
+  "third": 1,
+  "isolated": 3,
+  "nonTrivial": 1,
+  "avgDeg": 7.54206457480673,
+  "medianDeg": 4,
+  "types": [
+   {
+    "type": "(untyped)",
+    "refs": 5054,
+    "rels": 5054,
+    "nodes": 3035,
+    "maxDeg": 1066,
+    "maxNode": "Corte Interamericana de Derechos Humanos",
+    "shareOfRefs": 0.29732909754088716
+   },
+   {
+    "type": "Firmantes",
+    "refs": 3099,
+    "rels": 2868,
+    "nodes": 965,
+    "maxDeg": 236,
+    "maxNode": "Eduardo Ferrer Mac-Gregor Poisot",
+    "shareOfRefs": 0.18231556653723968
+   },
+   {
+    "type": "País",
+    "refs": 2835,
+    "rels": 2835,
+    "nodes": 2857,
+    "maxDeg": 462,
+    "maxNode": "Perú",
+    "shareOfRefs": 0.16678432756794917
+   },
+   {
+    "type": "CorteIDH",
+    "refs": 2302,
+    "rels": 2302,
+    "nodes": 2608,
+    "maxDeg": 23,
+    "maxNode": "Determinados Centros Penitenciarios",
+    "shareOfRefs": 0.1354276973761619
+   },
+   {
+    "type": "Mecanismo",
+    "refs": 1885,
+    "rels": 1885,
+    "nodes": 1887,
+    "maxDeg": 1459,
+    "maxNode": "Corte Interamericana de Derechos Humanos",
+    "shareOfRefs": 0.11089539945875986
+   },
+   {
+    "type": "CIDH",
+    "refs": 668,
+    "rels": 668,
+    "nodes": 946,
+    "maxDeg": 9,
+    "maxNode": "Diecisiete personas privadas de libertad",
+    "shareOfRefs": 0.039298741028356274
+   },
+   {
+    "type": "Geolocalización de los hechos del caso",
+    "refs": 334,
+    "rels": 334,
+    "nodes": 655,
+    "maxDeg": 4,
+    "maxNode": "Terrones Silva y otros",
+    "shareOfRefs": 0.019649370514178137
+   },
+   {
+    "type": "Votos separados",
+    "refs": 262,
+    "rels": 262,
+    "nodes": 429,
+    "maxDeg": 5,
+    "maxNode": "Granier y otros (RCTV). Sentencia de 22 de junio de 2015. Voto Ventura Robles",
+    "shareOfRefs": 0.015413578068008001
+   },
+   {
+    "type": "Relacionado a",
+    "refs": 203,
+    "rels": 203,
+    "nodes": 210,
+    "maxDeg": 196,
+    "maxNode": "Corte Interamericana de Derechos Humanos",
+    "shareOfRefs": 0.011942581480174137
+   },
+   {
+    "type": "Firmante Voto separado",
+    "refs": 171,
+    "rels": 146,
+    "nodes": 88,
+    "maxDeg": 47,
+    "maxNode": "Antonio A. Cançado Trindade",
+    "shareOfRefs": 0.010060007059654076
+   },
+   {
+    "type": "Medidas de Protección",
+    "refs": 81,
+    "rels": 81,
+    "nodes": 159,
+    "maxDeg": 2,
+    "maxNode": "Penal Miguel Castro Castro",
+    "shareOfRefs": 0.004765266501941405
+   },
+   {
+    "type": "Multi Select",
+    "refs": 57,
+    "rels": 49,
+    "nodes": 21,
+    "maxDeg": 11,
+    "maxNode": "José Jesús Orozco Henríquez",
+    "shareOfRefs": 0.003353335686551359
+   },
+   {
+    "type": "Paises",
+    "refs": 47,
+    "rels": 47,
+    "nodes": 31,
+    "maxDeg": 29,
+    "maxNode": "Comisión Interamericana de Derechos Humanos",
+    "shareOfRefs": 0.00276503118013884
+   }
+  ],
+  "top": [
+   {
+    "id": "100v6hugip7ousor",
+    "title": "Corte Interamericana de Derechos Humanos",
+    "tpl": "Organismo",
+    "deg": 2739,
+    "refs": 2739
+   },
+   {
+    "id": "fadar409221emi",
+    "title": "Perú",
+    "tpl": "País",
+    "deg": 711,
+    "refs": 711
+   },
+   {
+    "id": "4pwrpr60rlnjnhfr",
+    "title": "Comisión Interamericana de Derechos Humanos",
+    "tpl": "Organismo",
+    "deg": 704,
+    "refs": 704
+   },
+   {
+    "id": "q223u6ha4zsq0k9",
+    "title": "Guatemala",
+    "tpl": "País",
+    "deg": 511,
+    "refs": 511
+   },
+   {
+    "id": "o6z7bn0y03aw0zfr",
+    "title": "Colombia",
+    "tpl": "País",
+    "deg": 507,
+    "refs": 507
+   },
+   {
+    "id": "g5m6h51b8mnghkt9",
+    "title": "Eduardo Ferrer Mac-Gregor Poisot",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 417,
+    "refs": 440
+   },
+   {
+    "id": "wnwn0ej0xpzoxbt9",
+    "title": "Venezuela",
+    "tpl": "País",
+    "deg": 385,
+    "refs": 385
+   },
+   {
+    "id": "g383xaw9re6fxbt9",
+    "title": "Diego García-Sayán",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 360,
+    "refs": 387
+   },
+   {
+    "id": "17xs0grvmb0ozuxr",
+    "title": "Argentina",
+    "tpl": "País",
+    "deg": 339,
+    "refs": 339
+   },
+   {
+    "id": "5cskuzhmxyiizfr",
+    "title": "Humberto Antonio Sierra Porto",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 325,
+    "refs": 346
+   },
+   {
+    "id": "wyhk8vur8na8m2t9",
+    "title": "Ecuador",
+    "tpl": "País",
+    "deg": 316,
+    "refs": 316
+   },
+   {
+    "id": "624ew5vllp9l766r",
+    "title": "Sergio García Ramírez",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 312,
+    "refs": 349
+   },
+   {
+    "id": "evxdkpi24cp7gb9",
+    "title": "Antonio A. Cançado Trindade",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 311,
+    "refs": 356
+   },
+   {
+    "id": "o08ootmfxndpwrk9",
+    "title": "Manuel E. Ventura Robles",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 280,
+    "refs": 307
+   },
+   {
+    "id": "67u258uxreezh0k9",
+    "title": "Cecilia Medina Quiroga",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 217,
+    "refs": 235
+   },
+   {
+    "id": "9zocc708pibv5cdi",
+    "title": "Honduras",
+    "tpl": "País",
+    "deg": 200,
+    "refs": 200
+   },
+   {
+    "id": "bowntowd1frsh5mi",
+    "title": "Margarette May Macaulay",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 196,
+    "refs": 225
+   },
+   {
+    "id": "1q0ijgokph7aatt9",
+    "title": "México",
+    "tpl": "País",
+    "deg": 195,
+    "refs": 195
+   },
+   {
+    "id": "opddkxj195nlv7vi",
+    "title": "Brasil",
+    "tpl": "País",
+    "deg": 191,
+    "refs": 191
+   },
+   {
+    "id": "t2qxvim2so6crf6r",
+    "title": "Roberto de Figueiredo Caldas",
+    "tpl": "Juez y/o Comisionado",
+    "deg": 185,
+    "refs": 194
+   }
+  ],
+  "degDist": [
+   [
+    0,
+    4398
+   ],
+   [
+    1,
+    4395
+   ],
+   [
+    2,
+    4341
+   ],
+   [
+    3,
+    3961
+   ],
+   [
+    5,
+    1322
+   ],
+   [
+    10,
+    367
+   ],
+   [
+    25,
+    71
+   ],
+   [
+    50,
+    47
+   ],
+   [
+    100,
+    31
+   ],
+   [
+    250,
+    14
+   ],
+   [
+    500,
+    5
+   ]
+  ],
+  "tplCount": [
+   [
+    "Resolución de la CorteIDH",
+    1084
+   ],
+   [
+    "Voto Separado",
+    488
+   ],
+   [
+    "Resolución de Presidencia de la CorteIDH",
+    485
+   ],
+   [
+    "Sentencia de la CorteIDH",
+    409
+   ],
+   [
+    "Geolocalización de los hechos del caso",
+    343
+   ],
+   [
+    "Causa",
+    337
+   ],
+   [
+    "Informe de admisibilidad",
+    282
+   ],
+   [
+    "Audiencia",
+    257
+   ],
+   [
+    "Nota de envío a la CorteIDH",
+    187
+   ],
+   [
+    "Informe de Fondo",
+    161
+   ],
+   [
+    "Medida Provisional",
+    150
+   ],
+   [
+    "Juez y/o Comisionado",
+    137
+   ],
+   [
+    "País",
+    30
+   ],
+   [
+    "Informe de Admisibilidad y Fondo",
+    26
+   ],
+   [
+    "Resolución de la CIDH",
+    17
+   ],
+   [
+    "Organismo",
+    2
+   ],
+   [
+    "Perito/a",
+    2
+   ],
+   [
+    "Instrumento",
+    1
+   ]
+  ],
+  "tplPairs": [
+   [
+    "Juez y/o Comisionado — Resolución de la CorteIDH",
+    1987
+   ],
+   [
+    "Organismo — Resolución de la CorteIDH",
+    1084
+   ],
+   [
+    "País — Resolución de la CorteIDH",
+    1084
+   ],
+   [
+    "Juez y/o Comisionado — Sentencia de la CorteIDH",
+    737
+   ],
+   [
+    "Causa — Resolución de la CorteIDH",
+    668
+   ],
+   [
+    "Informe de admisibilidad — Juez y/o Comisionado",
+    592
+   ],
+   [
+    "Organismo — Voto Separado",
+    488
+   ],
+   [
+    "País — Voto Separado",
+    488
+   ],
+   [
+    "País — Resolución de Presidencia de la CorteIDH",
+    485
+   ],
+   [
+    "Organismo — Resolución de Presidencia de la CorteIDH",
+    485
+   ],
+   [
+    "Juez y/o Comisionado — Resolución de Presidencia de la CorteIDH",
+    428
+   ],
+   [
+    "Juez y/o Comisionado — Voto Separado",
+    410
+   ]
+  ],
+  "tplPairCount": 67,
+  "noHub": {
+   "threshold": 100,
+   "hubs": 31,
+   "hubEdgesRemoved": 10752,
+   "pairs": 5833,
+   "nodes": 4367,
+   "comps": 147,
+   "largest": 3817,
+   "largestShare": 0.8740554156171285,
+   "isolated": 80,
+   "hist": [
+    {
+     "bucket": "1",
+     "comps": 80,
+     "nodes": 80
+    },
+    {
+     "bucket": "2–5",
+     "comps": 26,
+     "nodes": 80
+    },
+    {
+     "bucket": "6–50",
+     "comps": 40,
+     "nodes": 390
+    },
+    {
+     "bucket": "51–500",
+     "comps": 0,
+     "nodes": 0
+    },
+    {
+     "bucket": ">500",
+     "comps": 1,
+     "nodes": 3817
+    }
+   ],
+   "hubList": [
+    {
+     "title": "Corte Interamericana de Derechos Humanos",
+     "tpl": "Organismo",
+     "deg": 2739
+    },
+    {
+     "title": "Perú",
+     "tpl": "País",
+     "deg": 711
+    },
+    {
+     "title": "Comisión Interamericana de Derechos Humanos",
+     "tpl": "Organismo",
+     "deg": 704
+    },
+    {
+     "title": "Guatemala",
+     "tpl": "País",
+     "deg": 511
+    },
+    {
+     "title": "Colombia",
+     "tpl": "País",
+     "deg": 507
+    },
+    {
+     "title": "Eduardo Ferrer Mac-Gregor Poisot",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 417
+    },
+    {
+     "title": "Venezuela",
+     "tpl": "País",
+     "deg": 385
+    },
+    {
+     "title": "Diego García-Sayán",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 360
+    },
+    {
+     "title": "Argentina",
+     "tpl": "País",
+     "deg": 339
+    },
+    {
+     "title": "Humberto Antonio Sierra Porto",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 325
+    },
+    {
+     "title": "Ecuador",
+     "tpl": "País",
+     "deg": 316
+    },
+    {
+     "title": "Sergio García Ramírez",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 312
+    },
+    {
+     "title": "Antonio A. Cançado Trindade",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 311
+    },
+    {
+     "title": "Manuel E. Ventura Robles",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 280
+    },
+    {
+     "title": "Cecilia Medina Quiroga",
+     "tpl": "Juez y/o Comisionado",
+     "deg": 217
+    }
+   ]
+  }
+ },
+ "Nepal": {
+  "name": "Nepal",
+  "nodes": 2124,
+  "refs": 5302,
+  "pairs": 4981,
+  "dangling": 0,
+  "comps": 168,
+  "hist": [
+   {
+    "bucket": "1",
+    "comps": 162,
+    "nodes": 162
+   },
+   {
+    "bucket": "2–5",
+    "comps": 5,
+    "nodes": 13
+   },
+   {
+    "bucket": "6–50",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": "51–500",
+    "comps": 0,
+    "nodes": 0
+   },
+   {
+    "bucket": ">500",
+    "comps": 1,
+    "nodes": 1949
+   }
+  ],
+  "largest": 1949,
+  "largestShare": 0.917608286252354,
+  "second": 5,
+  "third": 2,
+  "isolated": 162,
+  "nonTrivial": 6,
+  "avgDeg": 4.690207156308851,
+  "medianDeg": 3,
+  "types": [
+   {
+    "type": "reports_on",
+    "refs": 1450,
+    "rels": 1450,
+    "nodes": 1339,
+    "maxDeg": 45,
+    "maxNode": "45 victims of Gen Z protests declared martyrs [With Namelist]",
+    "shareOfRefs": 0.2734817050169747
+   },
+   {
+    "type": "concerns",
+    "refs": 495,
+    "rels": 495,
+    "nodes": 453,
+    "maxDeg": 63,
+    "maxNode": "Police fire on protesters at Parliament and New Baneshwar",
+    "shareOfRefs": 0.09336099585062241
+   },
+   {
+    "type": "supports",
+    "refs": 418,
+    "rels": 418,
+    "nodes": 486,
+    "maxDeg": 11,
+    "maxNode": "Curfew from 12 30 pm",
+    "shareOfRefs": 0.07883817427385892
+   },
+   {
+    "type": "involved",
+    "refs": 398,
+    "rels": 398,
+    "nodes": 270,
+    "maxDeg": 26,
+    "maxNode": "KP Sharma Oli",
+    "shareOfRefs": 0.07506601282534893
+   },
+   {
+    "type": "claimed_by",
+    "refs": 283,
+    "rels": 283,
+    "nodes": 413,
+    "maxDeg": 11,
+    "maxNode": "KP Sharma Oli",
+    "shareOfRefs": 0.05337608449641645
+   },
+   {
+    "type": "targets",
+    "refs": 277,
+    "rels": 277,
+    "nodes": 270,
+    "maxDeg": 21,
+    "maxNode": "Police fire on protesters at Parliament and New Baneshwar",
+    "shareOfRefs": 0.05224443606186345
+   },
+   {
+    "type": "disputes",
+    "refs": 247,
+    "rels": 247,
+    "nodes": 329,
+    "maxDeg": 6,
+    "maxNode": "Rajyalaxmi Chitrakar, wife of former prime minister Jhalanath Khanal, died on 9 September...",
+    "shareOfRefs": 0.04658619388909845
+   },
+   {
+    "type": "depicts",
+    "refs": 237,
+    "rels": 237,
+    "nodes": 191,
+    "maxDeg": 14,
+    "maxNode": "Federal Parliament building (International Convention Centre)",
+    "shareOfRefs": 0.04470011316484346
+   },
+   {
+    "type": "issued_by",
+    "refs": 224,
+    "rels": 224,
+    "nodes": 270,
+    "maxDeg": 21,
+    "maxNode": "Office of the Prime Minister and Council of Ministers",
+    "shareOfRefs": 0.042248208223311955
+   },
+   {
+    "type": "occurred_at",
+    "refs": 179,
+    "rels": 179,
+    "nodes": 205,
+    "maxDeg": 30,
+    "maxNode": "Kathmandu",
+    "shareOfRefs": 0.03376084496416447
+   },
+   {
+    "type": "in_response_to",
+    "refs": 145,
+    "rels": 145,
+    "nodes": 175,
+    "maxDeg": 30,
+    "maxNode": "Police fire on protesters at Parliament and New Baneshwar",
+    "shareOfRefs": 0.027348170501697473
+   },
+   {
+    "type": "held_office",
+    "refs": 112,
+    "rels": 97,
+    "nodes": 119,
+    "maxDeg": 23,
+    "maxNode": "Office of the Prime Minister and Council of Ministers",
+    "shareOfRefs": 0.021124104111655977
+   },
+   {
+    "type": "published_in",
+    "refs": 109,
+    "rels": 109,
+    "nodes": 211,
+    "maxDeg": 2,
+    "maxNode": "Euronews No Comment: Nepali army lifts curfew as it tries to regain control (11 September 2025)",
+    "shareOfRefs": 0.02055827989437948
+   },
+   {
+    "type": "part_of",
+    "refs": 102,
+    "rels": 102,
+    "nodes": 102,
+    "maxDeg": 23,
+    "maxNode": "Arson and looting wave across Nepal, 9 September 2025",
+    "shareOfRefs": 0.01923802338740098
+   },
+   {
+    "type": "casualty_of",
+    "refs": 102,
+    "rels": 102,
+    "nodes": 78,
+    "maxDeg": 50,
+    "maxNode": "Police fire on protesters at Parliament and New Baneshwar",
+    "shareOfRefs": 0.01923802338740098
+   },
+   {
+    "type": "located_in",
+    "refs": 96,
+    "rels": 96,
+    "nodes": 94,
+    "maxDeg": 38,
+    "maxNode": "Kathmandu",
+    "shareOfRefs": 0.018106374952847983
+   },
+   {
+    "type": "led_to",
+    "refs": 86,
+    "rels": 86,
+    "nodes": 97,
+    "maxDeg": 12,
+    "maxNode": "Police fire on protesters at Parliament and New Baneshwar",
+    "shareOfRefs": 0.016220294228592985
+   },
+   {
+    "type": "documents",
+    "refs": 62,
+    "rels": 62,
+    "nodes": 82,
+    "maxDeg": 5,
+    "maxNode": "Death toll: 19 killed on 8 Sep (as reported that night)",
+    "shareOfRefs": 0.011693700490380989
+   },
+   {
+    "type": "responded_by",
+    "refs": 60,
+    "rels": 60,
+    "nodes": 62,
+    "maxDeg": 26,
+    "maxNode": "Nepali Army",
+    "shareOfRefs": 0.011316484345529988
+   },
+   {
+    "type": "member_of",
+    "refs": 53,
+    "rels": 53,
+    "nodes": 81,
+    "maxDeg": 9,
+    "maxNode": "Nepali Congress",
+    "shareOfRefs": 0.00999622783855149
+   },
+   {
+    "type": "incident_at",
+    "refs": 39,
+    "rels": 39,
+    "nodes": 47,
+    "maxDeg": 17,
+    "maxNode": "New Baneshwar",
+    "shareOfRefs": 0.007355714824594493
+   },
+   {
+    "type": "treated_at",
+    "refs": 30,
+    "rels": 30,
+    "nodes": 39,
+    "maxDeg": 8,
+    "maxNode": "National Trauma Centre, Kathmandu",
+    "shareOfRefs": 0.005658242172764994
+   },
+   {
+    "type": "geolocated_by",
+    "refs": 29,
+    "rels": 29,
+    "nodes": 47,
+    "maxDeg": 6,
+    "maxNode": "Nepal: 'We went there to raise our voice, not to be killed': Nepal's deadly crackdown on protesters",
+    "shareOfRefs": 0.005469634100339495
+   },
+   {
+    "type": "succeeded",
+    "refs": 26,
+    "rels": 21,
+    "nodes": 31,
+    "maxDeg": 6,
+    "maxNode": "KP Sharma Oli",
+    "shareOfRefs": 0.004903809883062995
+   },
+   {
+    "type": "conflicts_with",
+    "refs": 18,
+    "rels": 18,
+    "nodes": 33,
+    "maxDeg": 3,
+    "maxNode": "14,555 inmates escaped",
+    "shareOfRefs": 0.0033949453036589967
+   },
+   {
+    "type": "geolocates",
+    "refs": 14,
+    "rels": 14,
+    "nodes": 25,
+    "maxDeg": 3,
+    "maxNode": "Federal Parliament building (International Convention Centre)",
+    "shareOfRefs": 0.002640513013956997
+   },
+   {
+    "type": "organised_by",
+    "refs": 11,
+    "rels": 11,
+    "nodes": 17,
+    "maxDeg": 3,
+    "maxNode": "Hami Nepal",
+    "shareOfRefs": 0.002074688796680498
+   }
+  ],
+  "top": [
+   {
+    "id": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+    "title": "Police fire on protesters at Parliament and New Baneshwar",
+    "tpl": "nepal_event",
+    "deg": 197,
+    "refs": 216
+   },
+   {
+    "id": "event:2025-09-08-gen-z-protests-kathmandu-and-other-cities",
+    "title": "Gen Z protests in Kathmandu and other cities, 8 September 2025",
+    "tpl": "nepal_event",
+    "deg": 106,
+    "refs": 107
+   },
+   {
+    "id": "person:kp-sharma-oli",
+    "title": "KP Sharma Oli",
+    "tpl": "nepal_person",
+    "deg": 106,
+    "refs": 118
+   },
+   {
+    "id": "event:2025-09-09-arson-and-attacks-on-state-buildings",
+    "title": "Arson and attacks on state buildings, 9 September 2025",
+    "tpl": "nepal_event",
+    "deg": 87,
+    "refs": 87
+   },
+   {
+    "id": "location:kathmandu",
+    "title": "Kathmandu",
+    "tpl": "nepal_location",
+    "deg": 76,
+    "refs": 76
+   },
+   {
+    "id": "organisation:nepal-police",
+    "title": "Nepal Police",
+    "tpl": "nepal_organisation",
+    "deg": 65,
+    "refs": 67
+   },
+   {
+    "id": "person:sushila-karki",
+    "title": "Sushila Karki",
+    "tpl": "nepal_person",
+    "deg": 65,
+    "refs": 66
+   },
+   {
+    "id": "organisation:nepali-army",
+    "title": "Nepali Army",
+    "tpl": "nepal_organisation",
+    "deg": 59,
+    "refs": 61
+   },
+   {
+    "id": "event:2025-09-09-prison-breaks",
+    "title": "Prison breaks",
+    "tpl": "nepal_event",
+    "deg": 53,
+    "refs": 54
+   },
+   {
+    "id": "organisation:office-of-the-prime-minister-and-council-of-ministers",
+    "title": "Office of the Prime Minister and Council of Ministers",
+    "tpl": "nepal_organisation",
+    "deg": 53,
+    "refs": 60
+   },
+   {
+    "id": "event:2025-09-09-nationwide-arson-wave",
+    "title": "Arson and looting wave across Nepal, 9 September 2025",
+    "tpl": "nepal_event",
+    "deg": 48,
+    "refs": 50
+   },
+   {
+    "id": "source:himalpress-2025-11-03-45-declared-martyrs-namelist",
+    "title": "45 victims of Gen Z protests declared martyrs [With Namelist]",
+    "tpl": "nepal_source",
+    "deg": 46,
+    "refs": 46
+   },
+   {
+    "id": "organisation:nepali-congress",
+    "title": "Nepali Congress",
+    "tpl": "nepal_organisation",
+    "deg": 41,
+    "refs": 44
+   },
+   {
+    "id": "person:ram-chandra-paudel",
+    "title": "Ram Chandra Paudel",
+    "tpl": "nepal_person",
+    "deg": 41,
+    "refs": 41
+   },
+   {
+    "id": "person:sudan-gurung",
+    "title": "Sudan Gurung",
+    "tpl": "nepal_person",
+    "deg": 41,
+    "refs": 42
+   },
+   {
+    "id": "action:2025-09-04-ministry-directs-nta-to-block-unregistered-platforms",
+    "title": "Ministry directs NTA to block unregistered platforms",
+    "tpl": "nepal_action",
+    "deg": 40,
+    "refs": 40
+   },
+   {
+    "id": "person:balendra-shah",
+    "title": "Balendra Shah",
+    "tpl": "nepal_person",
+    "deg": 40,
+    "refs": 41
+   },
+   {
+    "id": "organisation:cpn-uml",
+    "title": "CPN-UML",
+    "tpl": "nepal_organisation",
+    "deg": 39,
+    "refs": 43
+   },
+   {
+    "id": "event:2026-03-08-karki-commission-report-submitted",
+    "title": "Karki commission submits report on 8-9 September events",
+    "tpl": "nepal_event",
+    "deg": 38,
+    "refs": 40
+   },
+   {
+    "id": "location:new-baneshwar",
+    "title": "New Baneshwar",
+    "tpl": "nepal_location",
+    "deg": 35,
+    "refs": 35
+   }
+  ],
+  "degDist": [
+   [
+    0,
+    2124
+   ],
+   [
+    1,
+    1962
+   ],
+   [
+    2,
+    1588
+   ],
+   [
+    3,
+    1268
+   ],
+   [
+    5,
+    660
+   ],
+   [
+    10,
+    192
+   ],
+   [
+    25,
+    38
+   ],
+   [
+    50,
+    10
+   ],
+   [
+    100,
+    3
+   ],
+   [
+    250,
+    0
+   ],
+   [
+    500,
+    0
+   ]
+  ],
+  "tplCount": [
+   [
+    "nepal_source",
+    922
+   ],
+   [
+    "nepal_claim",
+    289
+   ],
+   [
+    "nepal_action",
+    184
+   ],
+   [
+    "nepal_event",
+    180
+   ],
+   [
+    "nepal_organisation",
+    151
+   ],
+   [
+    "nepal_person",
+    112
+   ],
+   [
+    "nepal_location",
+    109
+   ],
+   [
+    "nepal_media",
+    104
+   ],
+   [
+    "nepal_casualty",
+    73
+   ]
+  ],
+  "tplPairs": [
+   [
+    "nepal_claim — nepal_source",
+    689
+   ],
+   [
+    "nepal_event — nepal_source",
+    547
+   ],
+   [
+    "nepal_action — nepal_source",
+    270
+   ],
+   [
+    "nepal_claim — nepal_event",
+    263
+   ],
+   [
+    "nepal_action — nepal_organisation",
+    262
+   ],
+   [
+    "nepal_event — nepal_organisation",
+    252
+   ],
+   [
+    "nepal_event — nepal_person",
+    217
+   ],
+   [
+    "nepal_person — nepal_source",
+    190
+   ],
+   [
+    "nepal_event — nepal_location",
+    179
+   ],
+   [
+    "nepal_event — nepal_event",
+    176
+   ],
+   [
+    "nepal_claim — nepal_organisation",
+    162
+   ],
+   [
+    "nepal_organisation — nepal_source",
+    145
+   ]
+  ],
+  "tplPairCount": 37,
+  "noHub": {
+   "threshold": 50,
+   "hubs": 10,
+   "hubEdgesRemoved": 857,
+   "pairs": 4124,
+   "nodes": 2114,
+   "comps": 193,
+   "largest": 1865,
+   "largestShare": 0.8822138126773889,
+   "isolated": 173,
+   "hist": [
+    {
+     "bucket": "1",
+     "comps": 173,
+     "nodes": 173
+    },
+    {
+     "bucket": "2–5",
+     "comps": 14,
+     "nodes": 38
+    },
+    {
+     "bucket": "6–50",
+     "comps": 5,
+     "nodes": 38
+    },
+    {
+     "bucket": "51–500",
+     "comps": 0,
+     "nodes": 0
+    },
+    {
+     "bucket": ">500",
+     "comps": 1,
+     "nodes": 1865
+    }
+   ],
+   "hubList": [
+    {
+     "title": "Police fire on protesters at Parliament and New Baneshwar",
+     "tpl": "nepal_event",
+     "deg": 197
+    },
+    {
+     "title": "Gen Z protests in Kathmandu and other cities, 8 September 2025",
+     "tpl": "nepal_event",
+     "deg": 106
+    },
+    {
+     "title": "KP Sharma Oli",
+     "tpl": "nepal_person",
+     "deg": 106
+    },
+    {
+     "title": "Arson and attacks on state buildings, 9 September 2025",
+     "tpl": "nepal_event",
+     "deg": 87
+    },
+    {
+     "title": "Kathmandu",
+     "tpl": "nepal_location",
+     "deg": 76
+    },
+    {
+     "title": "Nepal Police",
+     "tpl": "nepal_organisation",
+     "deg": 65
+    },
+    {
+     "title": "Sushila Karki",
+     "tpl": "nepal_person",
+     "deg": 65
+    },
+    {
+     "title": "Nepali Army",
+     "tpl": "nepal_organisation",
+     "deg": 59
+    },
+    {
+     "title": "Prison breaks",
+     "tpl": "nepal_event",
+     "deg": 53
+    },
+    {
+     "title": "Office of the Prime Minister and Council of Ministers",
+     "tpl": "nepal_organisation",
+     "deg": 53
+    }
+   ]
+  }
+ }
+}

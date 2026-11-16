@@ -1,0 +1,403 @@
+[
+ {
+  "id": "occurred_at",
+  "label": "occurred at",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "location"
+  ],
+  "description": "Where the event took place.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "organised_by",
+  "label": "organised by",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "person",
+   "organisation"
+  ],
+  "description": "Who organised or called the event.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "involved",
+  "label": "involved",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "person",
+   "organisation"
+  ],
+  "description": "Who took part, was targeted or was present, as reported.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "responded_by",
+  "label": "response by",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "organisation"
+  ],
+  "description": "Security forces and authorities that acted at the event.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "led_to",
+  "label": "led to",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "event"
+  ],
+  "description": "Causal or sequential link to a later event.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "part_of",
+  "label": "part of",
+  "from": [
+   "event"
+  ],
+  "to": [
+   "event"
+  ],
+  "description": "Sub-event of a larger event or phase.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "member_of",
+  "label": "member of",
+  "from": [
+   "person"
+  ],
+  "to": [
+   "organisation"
+  ],
+  "description": "Membership or affiliation. Reference may carry a date range.",
+  "anchorOnSource": false,
+  "datedReference": true
+ },
+ {
+  "id": "held_office",
+  "label": "held office at",
+  "from": [
+   "person"
+  ],
+  "to": [
+   "organisation"
+  ],
+  "description": "Office or post held. The reference carries the start and end date.",
+  "anchorOnSource": false,
+  "datedReference": true
+ },
+ {
+  "id": "succeeded",
+  "label": "succeeded",
+  "from": [
+   "person"
+  ],
+  "to": [
+   "person"
+  ],
+  "description": "Took over an office from.",
+  "anchorOnSource": false,
+  "datedReference": true
+ },
+ {
+  "id": "part_of_org",
+  "label": "part of",
+  "from": [
+   "organisation"
+  ],
+  "to": [
+   "organisation"
+  ],
+  "description": "Body inside a larger body.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "located_in",
+  "label": "located in",
+  "from": [
+   "location"
+  ],
+  "to": [
+   "location"
+  ],
+  "description": "Containment: building in district, district in province.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "reports_on",
+  "label": "reports on",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "event",
+   "person",
+   "organisation",
+   "location",
+   "source",
+   "claim",
+   "action",
+   "casualty",
+   "media"
+  ],
+  "description": "The source reports this. Carries the anchor quote.",
+  "anchorOnSource": true,
+  "datedReference": false
+ },
+ {
+  "id": "supports",
+  "label": "supports",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "The source supports the claim. Carries the anchor quote.",
+  "anchorOnSource": true,
+  "datedReference": false
+ },
+ {
+  "id": "disputes",
+  "label": "disputes",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "The source disputes or debunks the claim. Carries the anchor quote.",
+  "anchorOnSource": true,
+  "datedReference": false
+ },
+ {
+  "id": "geolocates",
+  "label": "geolocates",
+  "from": [
+   "source"
+  ],
+  "to": [
+   "location"
+  ],
+  "description": "A media item verified to show this place.",
+  "anchorOnSource": true,
+  "datedReference": false
+ },
+ {
+  "id": "depicts",
+  "label": "shows",
+  "from": [
+   "media"
+  ],
+  "to": [
+   "event",
+   "person",
+   "organisation",
+   "location"
+  ],
+  "description": "What a photo, video or audio item shows or is about.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "documents",
+  "label": "documents",
+  "from": [
+   "media"
+  ],
+  "to": [
+   "claim",
+   "action",
+   "event",
+   "casualty"
+  ],
+  "description": "The item is evidence for, or the object of, this claim, action or event (including a fact-check of misattributed footage).",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "published_in",
+  "label": "published in",
+  "from": [
+   "media"
+  ],
+  "to": [
+   "source"
+  ],
+  "description": "The article or page the item appeared in.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "geolocated_by",
+  "label": "geolocated by",
+  "from": [
+   "media"
+  ],
+  "to": [
+   "source"
+  ],
+  "description": "The investigation or fact-check that established where or when it was recorded.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "claimed_by",
+  "label": "claimed by",
+  "from": [
+   "claim"
+  ],
+  "to": [
+   "person",
+   "organisation",
+   "source"
+  ],
+  "description": "Who made the claim.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "concerns",
+  "label": "concerns",
+  "from": [
+   "claim"
+  ],
+  "to": [
+   "event",
+   "person",
+   "organisation",
+   "location",
+   "source",
+   "claim",
+   "action",
+   "casualty",
+   "media"
+  ],
+  "description": "What the claim is about.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "conflicts_with",
+  "label": "conflicts with",
+  "from": [
+   "claim"
+  ],
+  "to": [
+   "claim"
+  ],
+  "description": "Two claims give incompatible accounts of the same fact. Stored once; shown from both ends. Different counting dates or scopes are not a conflict.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "issued_by",
+  "label": "issued by",
+  "from": [
+   "action"
+  ],
+  "to": [
+   "person",
+   "organisation"
+  ],
+  "description": "The body or official that took the action.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "targets",
+  "label": "concerns",
+  "from": [
+   "action"
+  ],
+  "to": [
+   "event",
+   "person",
+   "organisation",
+   "location",
+   "source",
+   "claim",
+   "action",
+   "casualty",
+   "media"
+  ],
+  "description": "Who or what the action applies to.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "in_response_to",
+  "label": "in response to",
+  "from": [
+   "action"
+  ],
+  "to": [
+   "event",
+   "action",
+   "claim"
+  ],
+  "description": "The trigger of the action.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "casualty_of",
+  "label": "casualty of",
+  "from": [
+   "casualty"
+  ],
+  "to": [
+   "event"
+  ],
+  "description": "The event in which the person was killed or injured.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "incident_at",
+  "label": "incident at",
+  "from": [
+   "casualty"
+  ],
+  "to": [
+   "location"
+  ],
+  "description": "Where the person was killed or injured, as reported.",
+  "anchorOnSource": false,
+  "datedReference": false
+ },
+ {
+  "id": "treated_at",
+  "label": "treated at",
+  "from": [
+   "casualty"
+  ],
+  "to": [
+   "location"
+  ],
+  "description": "Hospital or facility named in reporting.",
+  "anchorOnSource": false,
+  "datedReference": false
+ }
+]

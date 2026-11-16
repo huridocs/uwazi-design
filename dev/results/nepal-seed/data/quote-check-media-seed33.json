@@ -1,0 +1,388 @@
+{
+ "sampled": 54,
+ "summary": {
+  "found": 43,
+  "reachable-but-not-found": 6,
+  "unreachable": 5
+ },
+ "results": [
+  {
+   "ref": "ref:newschecker-india-2025-09-11-indonesia-video-linked-to-nepal-protest-reports_on-video-2025-09-13-indonesia-pati-gate-cli",
+   "url": "https://newschecker.in/fact-check/video-from-indonesia-falsely-linked-to-gen-z-protest-in-nepal",
+   "http": "200",
+   "found": true,
+   "quote": "Hence, we find that almost a-month-old video from Indonesia has been falsely linked to the Gen-Z protest in Nepal."
+  },
+  {
+   "ref": "ref:aud-2025-09-26-nordic-asia-podcast-gen-z-upr-reports-2025-09-12-karki-sworn-in-as-interim-pri",
+   "url": "https://the-nordic-asia-podcast.simplecast.com/episodes/gen-z-uprising-youth-protest-and-political-change-in-nepal-V3V0EkDL",
+   "http": "200",
+   "found": false,
+   "quote": "the prime minister and his government resigned, the army intervened, parliament was dissolved"
+  },
+  {
+   "ref": "ref:newschecker-2026-08-19-banepa-police-station-arson-video-reports_on-video-2025-09-09-banepa-police-station-a",
+   "url": "https://nepal.newschecker.co/en/uncategorized/police-house-torched-in-chitwan-after-a-traffic-police-imposed-a-fine-of-rs-25000-no-viral-video-shows-arson-attack-during-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "Viral video actually shows an arson attack on a police station in Banepa, Kavrepalanchok during the Gen Z protest on Sep"
+  },
+  {
+   "ref": "ref:aud-2025-12-19-sbs-nepali-amnesty-gen-z-prot-reports-2025-12-08-amnesty-report-unlawful-killi",
+   "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nep-iv-amnesty-nirajan-191225/xus97bwz4",
+   "http": "200",
+   "found": false,
+   "quote": "Amnesty International recently released its research briefing on Nepal's Gen Z protest that took place on September 8."
+  },
+  {
+   "ref": "ref:aud-2026-02-28-himal-conversations-nepal-ele-reports-2026-03-05-house-of-representatives-elec",
+   "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Nepal-Elections-2026-Parties--Power--and-the-Promise-of-Change--Himal-Conversations-e3fnvhq",
+   "http": "200",
+   "found": true,
+   "quote": "Nepal goes to the polls on 5 March 2026."
+  },
+  {
+   "ref": "ref:newschecker-india-2025-09-11-did-protesters-attack-pashupatinath-reports_on-video-2025-03-31-pashupatinath-gate-fest",
+   "url": "https://newschecker.in/fact-check/nepal-unrest-did-gen-z-protesters-attack-pashupatinath-temple",
+   "http": "200",
+   "found": true,
+   "quote": "The viral video does not show Gen-Z protesters attempting to break the gates of Pashupatinath Temple."
+  },
+  {
+   "ref": "ref:vera-files-2025-09-18-video-nepal-not-philippines-reports_on-video-2025-09-08-philippines-water-canno",
+   "url": "https://verafiles.org/articles/fact-check-video-shows-protest-in-nepal-not-in-ph",
+   "http": "200",
+   "found": true,
+   "quote": "The clip was taken from a longer video first posted by a TikTok user on Sept. 8, 2025 during a protest in Kathmandu, Nep"
+  },
+  {
+   "ref": "ref:alt-news-2025-09-12-indonesia-video-viral-as-nepalese-genz-reports_on-video-2025-08-30-indonesia-riot-shield-c",
+   "url": "https://www.altnews.in/nepal-protest-video-from-indonesia-viral-as-nepalese-genz-attacking-police/",
+   "http": "200",
+   "found": true,
+   "quote": "Alt News found that the video is from the protests in Indonesia that transpired in late August."
+  },
+  {
+   "ref": "ref:digiteye-india-2025-09-18-did-nepal-protesters-march-for-modi-reports_on-video-2025-05-29-sikkim-modi-welcome-ral",
+   "url": "https://digiteye.in/did-nepal-protesters-march-in-support-of-indian-pm-modi-fact-check/",
+   "http": "406",
+   "found": false,
+   "quote": "The footage which is being circulated originates from Sikkim during the state’s anniversary celebrations of statehood"
+  },
+  {
+   "ref": "ref:aud-2025-10-17-devpolicy-talks-youth-uprisin-reports-2025-09-08-police-fire-on-protesters-at-",
+   "url": "https://devpolicytalks.simplecast.com/episodes/youth-uprisings-understanding-the-protests-in-indonesia-and-nepal-aCNts9M1",
+   "http": "200",
+   "found": false,
+   "quote": "On 8 September, young protesters gathered peacefully at Maitighar in Kathmandu, but when they attempted to reach the par"
+  },
+  {
+   "ref": "ref:newschecker-nepal-2026-03-31-video-falsely-claims-balen-reinstate-mona-reports_on-video-2026-03-31-balen-monarchy-2013-rap",
+   "url": "https://nepal.newschecker.co/en/english/viral-video-falsely-claims-that-pm-balen-is-all-set-to-reinstate-monarchy",
+   "http": "200",
+   "found": true,
+   "quote": "the clip from 12:24 to 12:33 exactly matched the viral video"
+  },
+  {
+   "ref": "ref:newschecker-2025-09-27-nepal-video-linked-ladakh-reports_on-video-2025-09-27-ladakh-claim-chitwan-da",
+   "url": "https://newschecker.in/fact-check/video-from-nepal-falsely-linked-to-protests-in-ladakh",
+   "http": "200",
+   "found": true,
+   "quote": "The viral video does not show Ladakh protesters. It is footage of the September 2025 Gen-Z protests in Chitwan, Nepal."
+  },
+  {
+   "ref": "ref:boom-2025-09-15-nepal-rally-bharat-mata-ki-jai-video-reports_on-video-2025-09-12-sikkim-har-ghar-tiranga",
+   "url": "https://www.boomlive.in/fact-check/viral-video-nepal-people-rally-bharat-mata-ki-jai-pro-india-chant-claim-fact-check-29506",
+   "http": "200",
+   "found": true,
+   "quote": "The rally was held from MG Marg to Manan Kendra in the state capital, Gangtok."
+  },
+  {
+   "ref": "ref:aud-2026-03-02-karan-thapar-interview-nepal--reports-sushila-karki",
+   "url": "https://rss.com/podcasts/the-interview-with-karan-thapar/2927797",
+   "http": "200",
+   "found": true,
+   "quote": "the interim administration under former Chief Justice Sushila Karki has been a failure"
+  },
+  {
+   "ref": "ref:newschecker-nepal-2025-09-19-oli-interview-after-karki-clip-is-old-reports_on-video-2025-09-17-oli-2016-interview-clip",
+   "url": "https://nepal.newschecker.co/en/fact-check/kp-oli-appeared-in-interview-after-sushila-karkis-appointment-as-pm-viral-clip-is-old",
+   "http": "200",
+   "found": true,
+   "quote": "The viral video is from 2016 after Oli’s resignation as PM."
+  },
+  {
+   "ref": "ref:newschecker-nepal-2024-10-03-video-falsely-claims-oli-heart-attack-reports_on-video-2024-10-02-oli-heart-attack-2018-h",
+   "url": "https://nepal.newschecker.co/en/english/fact-check-viral-video-falsely-claims-prime-minister-oli-had-a-heart-attack",
+   "http": "200",
+   "found": true,
+   "quote": "The article indicated that the photo actually showed Prime Minister Oli in Tribhuvan University Teaching Hospital bed af"
+  },
+  {
+   "ref": "ref:boom-2025-09-10-video-not-pashupatinath-storming-reports_on-video-2025-03-31-pashupatinath-gate-fest",
+   "url": "https://www.boomlive.in/fact-check/no-this-video-does-not-show-nepal-protesters-storming-pashupatinathtemple-29473",
+   "http": "200",
+   "found": true,
+   "quote": "BOOM found that the video is from March, 2025 during the Basleshwari Jatra celebration in the Pashupatinath Temple."
+  },
+  {
+   "ref": "ref:aud-2026-03-07-the-hindu-in-focus-nepal-prot-reports-2026-03-05-house-of-representatives-elec",
+   "url": "https://podcasts.apple.com/us/podcast/from-protests-to-power-is-nepal-entering-a-new-political-era/id1494440867?i=1000753769696",
+   "http": "200",
+   "found": true,
+   "quote": "The Rastriya Swatantra Party, a relatively new political force, is heading towards a sweeping victory"
+  },
+  {
+   "ref": "ref:aud-2025-09-09-the-daily-aus-nepal-gen-z-pro-reports-death-toll-19-2025-09-08",
+   "url": "https://omny.fm/shows/the-daily-aus/nepals-gen-z-political-uprising",
+   "http": "200",
+   "found": true,
+   "quote": "after deadly protests swept through the country, killing 19 people"
+  },
+  {
+   "ref": "ref:aud-2026-02-16-pods-by-pei-beyond-the-ballot-reports-gen-z-movement",
+   "url": "https://podcasters.spotify.com/pod/show/policy-entrepreneurs-inc/episodes/Beyond-the-Ballot-Box-Alok-Bohara-on-Nepals-Gen-Z-Movement--Why-Institutions-Matter-e3f5arn",
+   "http": "200",
+   "found": true,
+   "quote": "how the current Gen Z movement is acting as a decentralized catalyst for institutional reform"
+  },
+  {
+   "ref": "ref:ratopati-2026-02-26-bbc-report-peter-one-orders-reports_on-video-2026-02-26-police-order-bbc-invest",
+   "url": "https://english.ratopati.com/story/50578/bbc-report-nepal-polices-peter-one-orders-then-massacre",
+   "http": "200",
+   "found": true,
+   "quote": "compiled using over 4,000 video clips obtained from protesters, journalists, and police sources, as well as police radio"
+  },
+  {
+   "ref": "ref:newschecker-nepal-2025-09-11-videos-falsely-claim-balen-shah-pm-reports_on-video-2025-09-10-balen-2022-mayor-oath-c",
+   "url": "https://nepal.newschecker.co/en/english/viral-videos-falsely-claim-balen-shah-appointed-new-prime-minister",
+   "http": "200",
+   "found": true,
+   "quote": "showed then chief election officer Rajkumar Khatiwada administering oath to Shah after he was elected as mayor of Kathma"
+  },
+  {
+   "ref": "ref:alt-news-2025-09-16-i-day-video-sikkim-falsely-viral-reports_on-video-2025-09-12-sikkim-har-ghar-tiranga",
+   "url": "https://www.altnews.in/nepal-unrest-i-day-video-from-sikkim-with-bharat-mata-ki-jai-slogans-falsely-viral/",
+   "http": "200",
+   "found": true,
+   "quote": "a video from an Independence Day rally in Gangtok, Sikkim"
+  },
+  {
+   "ref": "ref:alt-news-2025-09-22-pakistan-2022-tear-gas-video-shared-as-nepal-reports_on-video-2022-05-25-pakistan-2022-tear-gas-",
+   "url": "https://www.altnews.in/tear-gas-cannister-caught-by-protester-pakistan-video-from-2022-shared-as-nepal/",
+   "http": "200",
+   "found": true,
+   "quote": "a three-year-old video from Pakistan showing a protester catching a tear gas canister mid-air and throwing it back"
+  },
+  {
+   "ref": "ref:aud-2025-09-15-bbc-what-in-the-world-nepokid-reports-death-toll-72-2025-09-14",
+   "url": "https://www.bbc.co.uk/programmes/w3ct73pf",
+   "http": "200",
+   "found": true,
+   "quote": "officials say 72 people died in the unrest, including three police personnel"
+  },
+  {
+   "ref": "ref:aud-2026-08-28-npr-up-first-nepal-tibet-floo-reports-2026-08-bhotekoshi-trishuli-floods",
+   "url": "https://www.npr.org/2026/08/28/nx-s1-5947775/nepal-tibet-flood-rescue-fed-chair-speech-kennedy-center-renaming-hearing",
+   "http": "200",
+   "found": true,
+   "quote": "The flood disaster on the Nepal-Tibet border is far worse than first known"
+  },
+  {
+   "ref": "ref:fact-crescendo-2026-06-04-nepal-video-shared-as-chhattisgarh-protest-reports_on-video-2026-06-04-chhattisgarh-claim-brad",
+   "url": "https://english.factcrescendo.com/2026/06/04/gen-z-protest-video-from-nepal-shared-as-students-protest-in-chhattisgarh/",
+   "http": "200",
+   "found": true,
+   "quote": "The viral video doesn’t show a students’ protest in Chhattisgarh. This is from the Gen Z movement in Nepal in September "
+  },
+  {
+   "ref": "ref:dismislab-2025-09-29-video-nepal-khagrachhari-reports_on-video-2025-09-11-khagrachhari-claim-clip",
+   "url": "https://en.dismislab.com/?p=8704",
+   "http": "200",
+   "found": true,
+   "quote": "not from the ongoing conflict in Khagrachhari but from Guashala Police Circle on Ring Road in Kathmandu, Nepal"
+  },
+  {
+   "ref": "ref:aud-2026-09-15-kantipur-fireside-om-prakash--reports-2026-09-08-first-anniversary-gen-z-marty",
+   "url": "https://rss.com/podcasts/kantipur-fireside/3154457",
+   "http": "200",
+   "found": true,
+   "quote": "Marking one year since the historic Gen Z Movement of Bhadra 2082"
+  },
+  {
+   "ref": "ref:aud-2025-09-13-sbs-nepali-nepal-update-karki-reports-2025-09-12-sushila-karki-appointed-inter",
+   "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/%E0%A4%A8-%E0%A4%AA-%E0%A4%B2-%E0%A4%85%E0%A4%AA%E0%A4%A1-%E0%A4%9F-%E0%A4%85%E0%A4%A8-%E0%A4%A4%E0%A4%B0-%E0%A4%AE-%E0%A4%AA-%E0%A4%B0%E0%A4%A7-%E0%A4%A8%E0%A4%AE%E0%A4%A8-%E0%A4%A4-%E0%A4%B0-%E0%A4%95-%E0%A4%B0-%E0%A4%AA%E0%A4%AE-%E0%A4%B8-%E0%A4%B6-%E0%A4%B2-%E0%A4%95-%E0%A4%B0-%E0%A4%95-%E0%A4%95-%E0%A4%A8-%E0%A4%AF-%E0%A4%95-%E0%A4%A4-%E0%A5%A8%E0%A5%A6%E0%A5%A8%E0%A5%AC-%E0%A4%95-%E0%A4%AE-%E0%A4%B0-%E0%A4%9A-%E0%A5%AB-%E0%A4%AE-%E0%A4%A8-%E0%A4%B0-%E0%A4%B5-%E0%A4%9A%E0%A4%A8/308vjr9ut",
+   "http": "200",
+   "found": false,
+   "quote": "has named former Chief Justice Sushila Karki as the country's interim Prime Minister"
+  },
+  {
+   "ref": "ref:aud-2025-09-15-himal-state-of-southasia-32-g-reports-death-toll-19-2025-09-08",
+   "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/GenZ-hopes-for-an-inclusive-new-Nepal-State-of-Southasia-32-e38797f",
+   "http": "200",
+   "found": true,
+   "quote": "Police fired into the crowds and at least 19 people were killed on 8th September."
+  },
+  {
+   "ref": "ref:hrw-2025-11-19-unlawful-use-of-force-gen-z-protest-reports_on-video-2025-09-08-hrw-video-police-fire-m",
+   "url": "https://www.hrw.org/news/2025/11/20/nepal-unlawful-use-of-force-during-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "a video showing the Nepal Police and paramilitary Armed Police Force (APF) firing at protesters just in front of the mai"
+  },
+  {
+   "ref": "ref:amnesty-2025-12-08-we-went-there-to-raise-our-voice-reports_on-video-2025-09-08-setopati-drone-march-to",
+   "url": "https://www.amnesty.org/en/documents/asa31/0529/2025/en/",
+   "http": "403",
+   "found": false,
+   "quote": "Drone footage shows that the protest was peaceful and that the police initially accompanied it closely."
+  },
+  {
+   "ref": "ref:aud-2025-09-12-times-of-india-gen-z-forces-o-reports-2025-09-10-army-takes-control-of-kathman",
+   "url": "https://podcasters.spotify.com/pod/show/times-internet/episodes/Gen-Z-forces-out-Nepals-political-class--but-what-next-e384eor",
+   "http": "200",
+   "found": true,
+   "quote": "the Nepal Army is now in charge"
+  },
+  {
+   "ref": "ref:aud-2025-09-09-triplej-hack-nepal-social-med-reports-2025-09-08-gen-z-protests-kathmandu-and-",
+   "url": "https://www.abc.net.au/triplej/programs/hack/nepal-protests-social-media-ban-house-sitting/105728600",
+   "http": "200",
+   "found": true,
+   "quote": "A social media ban in Nepal has led to deadly protests."
+  },
+  {
+   "ref": "ref:alt-news-2025-09-19-pashupatinath-attack-video-is-ritual-reports_on-video-2025-03-31-pashupatinath-gate-fest",
+   "url": "https://www.altnews.in/pashupatinath-temple-attacked-during-nepal-genz-protest-no-viral-video-shows-ceremonial-ritual/",
+   "http": "200",
+   "found": true,
+   "quote": "a video showing a ritual during the Naxal Bhagwati Jatra has been falsely shown as young protestors attacking the Pashup"
+  },
+  {
+   "ref": "ref:aud-2024-03-18-kantipur-fireside-legacy-prac-reports-pushpa-kamal-dahal",
+   "url": "https://rss.com/podcasts/kantipur-fireside/3163428",
+   "http": "200",
+   "found": true,
+   "quote": "ending his alliance with the Nepali Congress and forming a new governing coalition with CPN-UML and the Rastriya Swatant"
+  },
+  {
+   "ref": "ref:aud-2025-09-18-this-is-not-a-drill-nepal-dis-reports-karki-was-chosen-through-a-discord-poll",
+   "url": "https://podcasts.apple.com/us/podcast/the-gen-z-protests-inside-nepals-discord-revolution/id1593634121?i=1000727217536",
+   "http": "200",
+   "found": true,
+   "quote": "and Nepal has a new Prime Minister, herself nominated via social media."
+  },
+  {
+   "ref": "ref:aud-2025-09-10-indian-express-3-things-nepal-reports-2025-09-09-oli-resigns-as-prime-minister",
+   "url": "https://www.spreaker.com/episode/nepal-pm-kp-oli-resigns-aap-mla-held-in-j-k-and-gst-s-impact-on-cars--67694214",
+   "http": "200",
+   "found": true,
+   "quote": "Prime Minister KP Sharma Oli has since resigned."
+  },
+  {
+   "ref": "ref:amnesty-2025-12-08-we-went-there-to-raise-our-voice-reports_on-video-2025-09-08-onlinekhabar-drone-parl",
+   "url": "https://www.amnesty.org/en/documents/asa31/0529/2025/en/",
+   "http": "403",
+   "found": false,
+   "quote": "Drone footage shows an officer firing an FN FAL at protesters who had climbed the parliament’s main entrance"
+  },
+  {
+   "ref": "ref:hrw-2025-11-19-unlawful-use-of-force-gen-z-protest-reports_on-video-2025-09-08-hrw-drone-footage-barri",
+   "url": "https://www.hrw.org/news/2025/11/20/nepal-unlawful-use-of-force-during-gen-z-protest",
+   "http": "200",
+   "found": true,
+   "quote": "based on drone footage verified by Human Rights Watch, the crowd toppled the police barricade"
+  },
+  {
+   "ref": "ref:newschecker-2025-09-12-video-not-minister-gurung-reports_on-video-2025-09-10-crying-man-not-minister",
+   "url": "https://newschecker.in/fact-check/nepal-unrest-viral-video-does-not-show-minister-prithvi-subba-gurung-pleading-with-protesters",
+   "http": "200",
+   "found": true,
+   "quote": "The man in the viral video is not Prithvi Subba Gurung."
+  },
+  {
+   "ref": "ref:aud-2025-09-10-the-hindu-in-focus-nepal-on-t-reports-2025-09-09-oli-resigns-as-prime-minister",
+   "url": "https://podcasts.apple.com/us/podcast/nepal-on-the-brink-will-the-old-guard-step-aside/id1494440867?i=1000725888749",
+   "http": "200",
+   "found": true,
+   "quote": "Prime Minister K. P. Sharma Oli resigned."
+  },
+  {
+   "ref": "ref:aud-2026-09-01-bbc-global-story-nepal-coveri-reports-2026-08-bhotekoshi-trishuli-floods",
+   "url": "https://www.bbc.co.uk/programmes/w3ct8mj0",
+   "http": "200",
+   "found": true,
+   "quote": "As the world watches the aftermath of devastating floods in Nepal"
+  },
+  {
+   "ref": "ref:aud-2025-04-14-himal-state-of-southasia-21-r-reports-2025-03-28-tinkune-pro-monarchy-protest-",
+   "url": "https://podcasters.spotify.com/pod/show/himal-southasian/episodes/Pranaya-Rana-on-Nepals-royalist-resurgence-State-of-Southasia-21-e31eqfi",
+   "http": "200",
+   "found": false,
+   "quote": "Pro-monarchy protesters destroyed vehicles, looted a department store and attacked the offices of two political parties."
+  },
+  {
+   "ref": "ref:alt-news-2025-09-12-media-misreport-chitrakar-death-reports_on-video-2025-09-11-khanal-interview-bbc-ne",
+   "url": "https://www.altnews.in/media-misreport-nepal-gen-z-protest-former-pm-jhalanath-khanal-wife-rajlaxmi-dies-in-the-fire/",
+   "http": "200",
+   "found": true,
+   "quote": "former Prime Minister Jhalanath Khanal spoke about the attack on his wife"
+  },
+  {
+   "ref": "ref:boom-2025-09-13-indonesia-video-linked-nepal-reports_on-video-2025-09-13-indonesia-pati-gate-cli",
+   "url": "https://www.boomlive.in/fact-check/fake-news-video-protesters-breaking-gates-nepal-gen-z-protests-unrelated-video-factcheck-29496",
+   "http": "200",
+   "found": true,
+   "quote": "The video is from Pati Square in Central Java, Indonesia."
+  },
+  {
+   "ref": "ref:aud-2025-10-14-bbc-the-inquiry-gen-z-new-nep-reports-26-platforms-were-blocked",
+   "url": "https://www.bbc.co.uk/programmes/w3ct7236",
+   "http": "200",
+   "found": true,
+   "quote": "The trigger for all of this had been a government ban on 26 social media platforms"
+  },
+  {
+   "ref": "ref:aud-2025-09-11-the-take-why-gen-z-protesting-reports-2025-09-08-police-fire-on-protesters-at-",
+   "url": "https://podcasts.apple.com/us/podcast/why-is-gen-z-protesting-in-nepal/id1438817292?i=1000726004898",
+   "http": "200",
+   "found": true,
+   "quote": "Security forces fired live rounds, killing at least 19."
+  },
+  {
+   "ref": "ref:aud-2026-03-06-sbs-nepali-nepal-election-202-reports-2026-03-05-house-of-representatives-elec",
+   "url": "https://www.sbs.com.au/language/nepali/ne/podcast-episode/nepal-election-pkg-060326/rzxcj8uno",
+   "http": "200",
+   "found": false,
+   "quote": "Listen to the Nepal election segment from our radio program on Thursday, 5 March"
+  },
+  {
+   "ref": "ref:amnesty-2025-12-08-we-went-there-to-raise-our-voice-reports_on-video-2025-09-08-facebook-police-rifles-",
+   "url": "https://www.amnesty.org/en/documents/asa31/0529/2025/en/",
+   "http": "403",
+   "found": false,
+   "quote": "Several videos show police officers in and around the parliament equipped with or firing lethal weapons"
+  },
+  {
+   "ref": "ref:vera-files-2025-10-02-slingshot-malacanang-video-false-reports_on-video-2025-10-02-philippines-malacanang-",
+   "url": "https://verafiles.org/articles/fact-check-video-of-slingshot-shooting-of-malacanang-false",
+   "http": "200",
+   "found": true,
+   "quote": "The original footage was taken during a protest in Nepal, and the supposed Malacañang Palace featured in it is Nepal’s P"
+  },
+  {
+   "ref": "ref:amnesty-2025-12-08-we-went-there-to-raise-our-voice-reports_on-video-2025-09-08-police-kill-17-ap",
+   "url": "https://www.amnesty.org/en/documents/asa31/0529/2025/en/",
+   "http": "403",
+   "found": false,
+   "quote": "Crisis Evidence Lab verified five videos and one picture showing water jets at high pressure being directed at individua"
+  },
+  {
+   "ref": "ref:aud-2026-03-22-bbc-documentary-nepal-shot-li-reports-2026-02-26-bbc-investigation-published",
+   "url": "https://www.bbc.co.uk/programmes/p0n7wkyq",
+   "http": "200",
+   "found": true,
+   "quote": "Drawing on more than 4000 videos filmed on the streets, testimony from police and protesters and an exclusive leaked rec"
+  }
+ ]
+}

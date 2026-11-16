@@ -1,0 +1,22 @@
+PASS | TED-78 | Case number with Hide label ticked and Save: first record field: value "11.481" shown, its label header is screen-reader-only (visually hidden)=true (text content "CASE NUMBER 11.481" includes the sr-only name). Unticked and Save: label visible again=true ("CASE NUMBER 11.481").
+FAIL | TED-79 | Victim ticked Required (pills after save ["Show in cards","Required"]) + Save: confirm note "Save template This change reaches the entities of this template: 4 entities will need a value for “Victim” the next time they are edited. Cancel Save". New Court Case form: Victim label shown as ["Victim"] (an asterisk would mark it required). Title and Description filled, Victim left empty, Save: form still open=false; aria-invalid=null; messages []. After filling Victim and Save: n/a.
+PASS | TED-80 | "Place of the incident" Show in cards ticked + Save: a Court Case card carries the line=true (card lines: PDF
+Case 11.137 (La Tablada)
+CASE NUMBER
+11.137
+VICTIM
+Angel Manfredo Velásquez Rodríguez
+RESPONDENT STATE
+State of Honduras
+COUNTRY
+Honduras
+PLACE OF THE INCIDENT
+Tegucigalpa, Honduras
+STATUS
+Decided
+DATE FILED
+1992
+DATE OF JUDGMENT
+1988/07/29
+DATE OF THE ATT). Rich text property "QA Rich cards" with Show in cards, entity "QA rich entity" created with a value and saved (card found=true): sh
+PASS | TED-84 | Court Case + Select "QA Column select" (and Image, Rich text, Preview properties) saved. List view Display menu COLUMNS offers "QA Column select"=true; state before toggling [["QA Column select","false"]] (off by default; headers ["TITLE","COUNTRY","DATE","RELATIONSHIPS"]); after toggling headers ["TITLE","COUNTRY","DATE","RELATIONSHIPS","QA COLUMN SELECT"]; after page reload headers ["TITLE","COUNTRY","DATE","RELATIONSHIPS"]. Image/Rich text/Preview offered as columns: false (columns offered: [

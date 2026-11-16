@@ -1,0 +1,3247 @@
+{
+ "entity_additions": [
+  {
+   "id": "claim:toll-one-dead-early-afternoon",
+   "properties": {
+    "figure": 1,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Civil Hospital, New Baneshwor",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "as_of_time": "early afternoon"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-08-one-killed-dozens-injured"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-two-dead-mid-afternoon",
+   "properties": {
+    "figure": 2,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "as_of_time": "mid-afternoon"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-08-two-gen-z-protesters-killed"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-six-dead",
+   "properties": {
+    "figure": 6,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "figure_more": "4 at the National Trauma Centre; 1 at Civil Hospital; 1 at Kathmandu Medical College"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:onlinekhabar-2025-09-08-death-toll-rises-to-6"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-eight-dead",
+   "properties": {
+    "figure": 8,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:himal-press-2025-09-08-at-least-eight-dead"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-14-2025-09-08",
+   "properties": {
+    "figure": 14,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "Kathmandu",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "as_of_time": "about 16:00",
+    "figure_more": "Counted from hospital reports"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-08-death-toll-climbs-to-14",
+      "source:kathmandupost-2025-09-08-14-killed-baneshwar",
+      "source:kathmandupost-2025-09-08-nhrc-urges-restraint-14-dead"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-fourteen-dead",
+   "properties": {
+    "figure": 14,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "not stated",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "as_of_time": "16:00"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time"
+     ],
+     "sources": [
+      "source:asia-news-network-2025-09-09-14-killed-police-open-fire"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-17-kathmandu-2025-09-08",
+   "properties": {
+    "figure": 17,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "Plus 2 outside the capital, in Itahari"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalpress-2025-09-08-death-toll-rises-to-17",
+      "source:hrw-2025-11-20-unlawful-use-of-force",
+      "source:insec-2025-09-09-nineteen-killed-453-injured"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-seventeen-dead-in-kathmandu",
+   "properties": {
+    "figure": 17,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:himal-press-2025-09-08-toll-rises-to-17-kathmandu",
+      "source:hrw-2025-11-19-unlawful-use-of-force-gen-z-protest",
+      "source:kathmandu-post-2025-09-08-home-minister-lekhak-resigns"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:hospital-split-8-3-3-2-1",
+   "properties": {
+    "figure": 17,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu hospitals",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "figure_more": "8 National Trauma Centre; 3 Everest Hospital; 3 Civil Hospital; 2 Kathmandu Medical College; 1 Tribhuvan University Teaching Hospital"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himal-press-2025-09-08-toll-rises-to-17-kathmandu",
+      "source:hrw-2025-11-19-unlawful-use-of-force-gen-z-protest",
+      "source:kathmandu-post-2025-09-08-19-dead-in-gen-z-protests",
+      "source:tribune-india-2025-09-08-death-toll-rises-to-19"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:hospital-split-himalpress-6-5-3-2-1",
+   "properties": {
+    "figure": 17,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu hospitals",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "figure_more": "6 National Trauma Centre; 5 Everest Hospital; 3 Civil Hospital; 2 Kathmandu Medical College; 1 Tribhuvan University Teaching Hospital"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himal-press-2025-09-08-toll-rises-to-17-kathmandu"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:valley-sixteen-and-itahari-two",
+   "properties": {
+    "figure": 16,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu Valley",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08",
+    "figure_more": "2 more in Itahari; forensic experts received 16 bodies for autopsy"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:air-news-2025-09-08-gen-z-toll-climbs-to-19",
+      "source:himal-press-2025-09-08-toll-rises-to-17-kathmandu",
+      "source:onlinekhabar-2025-09-09-generation-z-protest-escalates"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-18-2025-09-08",
+   "properties": {
+    "figure": 18,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "as_of_time": "evening",
+    "figure_more": "200 to 256 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-08-death-toll-rises-to-18",
+      "source:onlinekhabar-2025-09-08-18-dead-256-injured"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-19-2025-09-08",
+   "properties": {
+    "figure": 19,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "as_of_time": "night",
+    "figure_more": "17 in Kathmandu and 2 in Itahari"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time",
+      "figure_more"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-09-topple-this-government-resignations",
+      "source:cbc-2025-09-08-at-least-19-killed-nepal-protests",
+      "source:guardian-2025-09-09-pm-quits-after-protest-deaths",
+      "source:himalayan-times-2025-09-08-19-dead-over-300-injured",
+      "source:hrw-2025-09-09-police-fire-on-gen-z-protest",
+      "source:kathmandupost-2025-09-08-19-dead-across-nepal",
+      "source:setopati-2025-09-08-death-toll-rises-to-19"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-nineteen-nationwide",
+   "properties": {
+    "figure": 19,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "17 in Kathmandu and 2 in Itahari"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:air-news-2025-09-08-gen-z-toll-climbs-to-19",
+      "source:al-jazeera-2025-09-08-death-toll-climbs-parliament-stormed",
+      "source:al-jazeera-2025-09-09-nepal-protests-live-blog",
+      "source:kathmandu-post-2025-09-08-19-dead-in-gen-z-protests",
+      "source:tribune-india-2025-09-08-death-toll-rises-to-19"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:19-killed-in-kathmandu-on-8-september",
+   "properties": {
+    "figure": 19,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "Kathmandu",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:amnesty-international-2025-12-08-accountability-unlawful-killings",
+      "source:onlinekhabar-2026-02-26-police-directives-gen-z-deaths"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:two-8-september-deaths-were-in-jhapa",
+   "properties": {
+    "figure": 2,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Jhapa",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "19 demonstrators died on 8 September; 17 in Kathmandu"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandu-post-2026-03-26-leaked-report-oli-lekhak-liable"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:amnesty-19-killed-300-injured-at-kathmandu-assembly",
+   "properties": {
+    "figure": 19,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "Kathmandu assembly",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-08",
+    "figure_more": "more than 300 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:amnesty-international-2025-12-08-accountability-unlawful-killings"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-20-on-8-sep-pm-secretariat",
+   "properties": {
+    "figure": 20,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "37 on 9 September and 20 more in the following days, total 77"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ians-2025-12-11-genz-protests-77-dead-damages"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-21-on-8-sep",
+   "properties": {
+    "figure": 21,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "39 on 9 September and 12 over the next seven days"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:hamro-patro-2026-09-11-gen-z-rewrote-political-landscape",
+      "source:tribune-india-2025-09-16-dark-future-victims-families"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-29-dead-by-10-september",
+   "properties": {
+    "figure": 29,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-10"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:the-record-2025-09-10-nepal-lifts-social-media-ban-after-deadly-protests"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-30-2025-09-10",
+   "properties": {
+    "figure": 30,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-10",
+    "as_of_time": "evening"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-10-death-toll-rises-to-30"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-reported-on-11-september",
+   "properties": {
+    "figure": 30,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-11",
+    "figure_more": "31 (Al Jazeera, local media); 34 (The Tribune, citing the health ministry)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ada-derana-2025-09-11-no-consensus-on-interim-leader",
+      "source:al-jazeera-2025-09-11-army-talks-interim-leader",
+      "source:tribune-india-2025-09-12-gen-z-factions-clash"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-31-2025-09-11",
+   "properties": {
+    "figure": 31,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu Valley",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-11"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-11-death-toll-rises-to-31"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-more-than-50-dead-by-12-september",
+   "properties": {
+    "figure": 50,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:un-news-2025-09-12-nepal-first-woman-prime-minister-un-solidarity"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-at-least-51-on-12-september",
+   "properties": {
+    "figure": 51,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12",
+    "figure_more": "21 protesters, 9 prisoners, 3 police officers"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:afp-2025-09-12-nepal-seeks-new-leader",
+      "source:al-jazeera-2025-09-13-march-5-vote-curfew-lifted",
+      "source:ap-2025-09-12-president-appoints-karki"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-51-2025-09-12",
+   "properties": {
+    "figure": 51,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-12"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-12-nepal-appoints-first-female-pm",
+      "source:dw-2025-09-12-death-toll-rises-to-51",
+      "source:tribune-india-2025-09-13-mayor-pays-tribute-51-lives"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-breakdown-police-2025-09-12",
+   "properties": {
+    "figure": 51,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12",
+    "figure_more": "21 protesters; 9 prisoners; 3 police officers; 18 others"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-12-nepal-appoints-first-female-pm",
+      "source:dw-2025-09-12-death-toll-rises-to-51"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-breakdown-51-mohp-gunshot-2025-09-13",
+   "properties": {
+    "figure": 51,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-13",
+    "figure_more": "30 killed by gunshots; 21 died from burns, wounds and other injuries"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-13-mayor-pays-tribute-51-lives"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:official-death-toll-36-ministry-of-health-12-september",
+   "properties": {
+    "figure": 36,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12",
+    "figure_more": "1,760 injured nationwide"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:onlinekhabar-2025-09-12-genz-protests-death-toll-rises-to-36",
+      "source:onlinekhabar-2025-09-14-death-toll-rises-to-72"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-60-2025-09-14-republica",
+   "properties": {
+    "figure": 59,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-14",
+    "figure_more": "almost 60 after two protesters with head gunshot wounds died at Bir Hospital"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:myrepublica-2025-09-14-two-more-die-bir-hospital"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-72-2025-09-14",
+   "properties": {
+    "figure": 72,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-14",
+    "figure_more": "59 protesters; 10 prison inmates; 3 security personnel"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ada-derana-2025-09-14-72-dead-victims-declared-martyrs",
+      "source:himalayan-times-2025-09-14-six-charred-bodies-chucchepati",
+      "source:onlinekhabar-2025-09-14-death-toll-rises-to-72"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-73-2025-09-16",
+   "properties": {
+    "figure": 73,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-16"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:myrepublica-2025-09-17-body-koteshwor-bhatbhateni-74",
+      "source:onlinekhabar-2025-09-17-charred-body-koteshwor-74"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-74-2025-09-17",
+   "properties": {
+    "figure": 74,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-17",
+    "figure_more": "over 1,800 injured (Kathmandu Post, 19 September)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandupost-2025-09-19-196-injured-still-under-care",
+      "source:myrepublica-2025-09-17-body-koteshwor-bhatbhateni-74",
+      "source:onlinekhabar-2025-09-17-charred-body-koteshwor-74"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-72-to-74-by-21-september",
+   "properties": {
+    "figure": 74,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-21",
+    "figure_more": "72 on 14 September (Al Jazeera)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:al-jazeera-2025-09-14-karki-seeks-calm",
+      "source:kathmandu-post-2025-09-21-karki-five-new-ministers"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:74-deaths-nationwide",
+   "properties": {
+    "figure": 74,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-26",
+    "figure_more": "more than 2,000 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:reuters-2025-09-26-live-ammunition-forensics"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-75-2025-10",
+   "properties": {
+    "figure": 75,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-10-01"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:sopa-images-2025-10-a-month-after-gen-z-protest"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-breakdown-army-2025-10-17",
+   "properties": {
+    "figure": 76,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-10-17",
+    "figure_more": "22 protesters shot by police; 3 police officers; 10 prisoners; 41 others"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandupost-2025-11-04-45-declared-martyrs"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-76-2025-11",
+   "properties": {
+    "figure": 76,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-11-04"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:hrw-2025-11-20-unlawful-use-of-force",
+      "source:kathmandupost-2025-11-04-45-declared-martyrs"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-76-for-8-9-september",
+   "properties": {
+    "figure": 76,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-11-04"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:hamro-patro-2026-09-08-genz-martyrs-day-observed",
+      "source:hrw-2026-02-12-nepal-publish-reports-on-violent-crackdowns-on-protests",
+      "source:kathmandupost-2025-11-04-45-declared-martyrs",
+      "source:reuters-2026-03-26-panel-wants-prosecution-of-oli"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:toll-76-dead-over-8-9-september",
+   "properties": {
+    "figure": 76,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-11-19",
+    "figure_more": "more than 2,000 injured nationwide"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:amnesty-international-2025-12-08-accountability-unlawful-killings",
+      "source:hrw-2026-02-12-nepal-publish-reports-on-violent-crackdowns-on-protests",
+      "source:occrp-2026-05-29-nepal-rights-body-urges-charges-against-ex-pm-over-gen-z-protest-deaths"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:76-deaths-nationwide",
+   "properties": {
+    "figure": 76,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "unknown"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis"
+     ],
+     "sources": [
+      "source:amnesty-international-2025-12-08-accountability-unlawful-killings",
+      "source:civicus-monitor-2026-02-19-no-accountability-crackdown",
+      "source:hrw-2025-11-19-unlawful-use-of-force-gen-z-protest"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:77-deaths-nationwide",
+   "properties": {
+    "figure": 77,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "unknown"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis"
+     ],
+     "sources": [
+      "source:news24-2026-02-27-khapung-ordered-deadly-force"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-77-2025-12-11",
+   "properties": {
+    "figure": 77,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-12-11",
+    "figure_more": "2,429 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:hamro-patro-2026-09-11-gen-z-rewrote-political-landscape",
+      "source:ians-2025-12-11-genz-protests-77-dead-damages"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:death-toll-77-for-8-9-september",
+   "properties": {
+    "figure": 77,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2026-09-09"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:ians-2026-09-09-parties-treat-uprising-days-differently",
+      "source:kathmandu-post-2026-03-26-leaked-report-oli-lekhak-liable"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:martyr-list-45-2025-11-03",
+   "properties": {
+    "figure": 45,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-11-03",
+    "unit_detail": "declared martyrs by the Cabinet",
+    "figure_more": "further studies on more cases were to follow"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalpress-2025-11-03-45-declared-martyrs-namelist",
+      "source:insec-2025-11-05-45-protesters-martyrs-name-list",
+      "source:kathmandupost-2025-11-04-45-declared-martyrs"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:three-police-killed-by-mobs-2025-09-09",
+   "properties": {
+    "figure": 3,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-09"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:hrw-2025-11-20-unlawful-use-of-force",
+      "source:kathmandupost-2025-11-04-45-declared-martyrs",
+      "source:onlinekhabar-2025-09-14-death-toll-rises-to-72",
+      "source:tribune-india-2025-09-13-mayor-pays-tribute-51-lives"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:bhatbhateni-chuchhepati-six-bodies-2025-09-14",
+   "properties": {
+    "figure": 6,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Bhatbhateni Supermarket, Chuchhepati",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-14",
+    "figure_more": "charred human remains"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-14-six-charred-bodies-chucchepati",
+      "source:hrw-2025-11-20-unlawful-use-of-force"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:bhatbhateni-chuchhepati-seven-bodies-2025-09-17",
+   "properties": {
+    "figure": 7,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Bhatbhateni Supermarket, Chuchhepati",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-17",
+    "figure_more": "kept at Tribhuvan University Teaching Hospital"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:myrepublica-2025-09-17-body-koteshwor-bhatbhateni-74",
+      "source:onlinekhabar-2025-09-17-charred-body-koteshwor-74"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:naubasta-five-juvenile-inmates-killed-2025-09-09",
+   "properties": {
+    "figure": 5,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Naubasta juvenile correctional home, Banke",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-09",
+    "as_of_time": "night",
+    "figure_more": "4 more seriously injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time",
+      "figure_more"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-11-12-inmates-wounded-army-fire",
+      "source:tribune-india-2025-09-11-three-dead-jail-clashes-15000-escape"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:ramechhap-prison-three-killed-2025-09-11",
+   "properties": {
+    "figure": 3,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Ramechhap District Prison",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-11",
+    "figure_more": "13 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-11-three-dead-jail-clashes-15000-escape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:ramechhap-prison-two-killed-2025-09-11",
+   "properties": {
+    "figure": 2,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Ramechhap District Prison",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-11",
+    "figure_more": "12 injured"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-11-prison-break-attempts-foiled",
+      "source:setopati-2025-09-11-two-shot-dead-ramechhap-prison"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:33-protesters-killed-by-live-bullets",
+   "properties": {
+    "figure": 33,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "bodies examined at the TU Institute of Medicine forensic department",
+    "as_of_basis": "published",
+    "as_of": "2025-09-26",
+    "figure_more": "34 bodies with bullet wounds: 10 head; 18 chest; 4 stomach; 2 neck"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:reuters-2025-09-26-live-ammunition-forensics"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:hrw-35-gunshot-deaths-of-47-bodies",
+   "properties": {
+    "figure": 35,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "Kathmandu morgue (47 bodies received over the two days)",
+    "as_of_basis": "published",
+    "as_of": "2025-11-20"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:hrw-2025-11-20-unlawful-use-of-force"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-100-plus-2025-09-08",
+   "properties": {
+    "figure": 100,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "at least 19 dead"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:amnesty-2025-09-08-accountability-deadly-crackdown"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injured-more-than-100",
+   "properties": {
+    "figure": 100,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-09"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:al-jazeera-2025-09-09-protesters-torch-parliament-gallery",
+      "source:kathmandu-post-2025-09-08-19-dead-in-gen-z-protests"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-145-2025-09-08",
+   "properties": {
+    "figure": 145,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "figure_more": "including 28 officers"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:cbc-2025-09-08-at-least-19-killed-nepal-protests"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-256-2025-09-08",
+   "properties": {
+    "figure": 256,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:onlinekhabar-2025-09-08-18-dead-256-injured"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-300-plus-2025-09-08",
+   "properties": {
+    "figure": 300,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-08-19-dead-over-300-injured",
+      "source:hrw-2025-09-09-police-fire-on-gen-z-protest"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-347-2025-09-08",
+   "properties": {
+    "figure": 347,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-08",
+    "as_of_time": "evening"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "as_of_time"
+     ],
+     "sources": [
+      "source:himalayan-times-2025-09-08-19-dead-over-300-injured"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injured-347",
+   "properties": {
+    "figure": 347,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-08"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:insec-2025-09-08-gen-z-protest-itahari-report",
+      "source:kathmandu-post-2025-09-08-19-dead-in-gen-z-protests",
+      "source:onlinekhabar-2025-09-09-generation-z-protest-escalates",
+      "source:sharesansar-2025-09-08-lekhak-quits-after-protest-deaths"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-453-2025-09-09",
+   "properties": {
+    "figure": 453,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-09",
+    "figure_more": "hospital counts listed"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:insec-2025-09-09-nineteen-killed-453-injured"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-1033-2025-09-10",
+   "properties": {
+    "figure": 1033,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-10",
+    "figure_more": "713 already discharged"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-10-death-toll-rises-to-30"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-1300-2025-09-12",
+   "properties": {
+    "figure": 1300,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:aljazeera-2025-09-12-nepal-appoints-first-female-pm"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-1800-2025-09-19",
+   "properties": {
+    "figure": 1800,
+    "unit": "injured",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-19",
+    "figure_more": "196 still under care at 32 hospitals"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandupost-2025-09-19-196-injured-still-under-care"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:196-injured-still-under-care-at-32-hospitals",
+   "properties": {
+    "figure": 196,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "32 hospitals",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-19",
+    "figure_more": "28 at the National Trauma Centre"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandupost-2025-09-19-196-injured-still-under-care"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-2000-on-8-sep-hamro",
+   "properties": {
+    "figure": 2000,
+    "unit": "injured",
+    "qualifier": "about",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-08",
+    "figure_more": "21 killed"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:hamro-patro-2026-09-11-gen-z-rewrote-political-landscape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injuries-2429-2025-12-11",
+   "properties": {
+    "figure": 2429,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-12-11",
+    "figure_more": "17 under 13 years old; 1,433 between 13 and 28"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ians-2025-12-11-genz-protests-77-dead-damages"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:wounded-2522-in-commission-report",
+   "properties": {
+    "figure": 2522,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2026-03-26",
+    "figure_more": "76 killed"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:reuters-2026-03-26-panel-wants-prosecution-of-oli"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:injured-2660-verified-list",
+   "properties": {
+    "figure": 2660,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2026-05-01"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:rising-nepal-2026-05-01-govt-finalises-injured-list-2660"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:tinkune-injured-45",
+   "properties": {
+    "figure": 45,
+    "unit": "injured",
+    "qualifier": "exact",
+    "scope": "Tinkune",
+    "as_of_basis": "stated",
+    "as_of": "2025-03-28",
+    "figure_more": "2 dead"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandu-post-2025-03-28-two-dead-45-injured"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:2024-floods-death-toll-224",
+   "properties": {
+    "figure": 224,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2024-10-01",
+    "figure_more": "158 injured; 24 missing"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ksat-2024-10-01-nepal-floods-rescuers-search",
+      "source:peninsula-qatar-2024-10-01-nepal-floods-killed-224"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:2024-floods-death-toll-219",
+   "properties": {
+    "figure": 219,
+    "unit": "killed",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2024-10-02",
+    "figure_more": "over 12,000 families displaced"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:global-voices-2024-10-02-nepal-floods-festival-joy"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:2024-floods-death-toll-249",
+   "properties": {
+    "figure": 249,
+    "unit": "killed",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-05-05",
+    "figure_more": "177 injured; more than 10,000 families displaced"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:nepal-economic-forum-2025-05-05-price-of-unpreparedness"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:central-jail-sundhara-1400-escaped",
+   "properties": {
+    "figure": 1400,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "Central Prison, Sundhara",
+    "as_of_basis": "published",
+    "as_of": "2025-09-11",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:republica-2025-09-11-over-13000-inmates-escape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:central-jail-sundhara-3003-escaped",
+   "properties": {
+    "figure": 3003,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "Central Prison, Sundhara",
+    "as_of_basis": "published",
+    "as_of": "2025-09-12",
+    "unit_detail": "inmates escaped",
+    "figure_more": "from a capacity of about 3,800"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:insec-2025-09-12-jail-and-reform-home-escapes"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:lalitpur-jail-1280-escaped",
+   "properties": {
+    "figure": 1280,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "Lalitpur jail",
+    "as_of_basis": "published",
+    "as_of": "2025-09-12",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:insec-2025-09-12-jail-and-reform-home-escapes"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:nakkhu-prison-3300-escaped",
+   "properties": {
+    "figure": 3300,
+    "unit": "other",
+    "qualifier": "at-least",
+    "scope": "Nakkhu Prison",
+    "as_of_basis": "published",
+    "as_of": "2025-09-11",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:republica-2025-09-11-over-13000-inmates-escape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:nearly-900-inmates-escaped-two-western-prisons",
+   "properties": {
+    "figure": 900,
+    "unit": "other",
+    "qualifier": "about",
+    "scope": "two prisons in western Nepal",
+    "as_of_basis": "unknown",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:fox-news-2025-09-09-parliament-building-ablaze"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-escapes-over-13500-nepal-police",
+   "properties": {
+    "figure": 13500,
+    "unit": "other",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-10",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:khaleej-times-2025-09-10-13500-prisoners-escaped"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-escapes-14507-nepal-police",
+   "properties": {
+    "figure": 14507,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-11",
+    "unit_detail": "inmates escaped",
+    "figure_more": "573 detainees fled police custody"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:onlinekhabar-2025-09-11-over-14000-prisoners-escape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-escapes-over-15000-kathmandu-post",
+   "properties": {
+    "figure": 15000,
+    "unit": "other",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-11",
+    "unit_detail": "inmates escaped",
+    "figure_more": "from more than 25 prisons"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:tribune-india-2025-09-11-three-dead-jail-clashes-15000-escape"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prisoners-at-large-12533-on-12-sept",
+   "properties": {
+    "figure": 12533,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-12",
+    "unit_detail": "inmates still at large",
+    "figure_more": "about 13,500 had escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:al-jazeera-2025-09-12-12500-prisoners-on-the-run"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-department-says-13591-inmates-and-964-children-escaped",
+   "properties": {
+    "figure": 13591,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-19",
+    "unit_detail": "inmates escaped",
+    "figure_more": "of 29,212 inmates; 964 of 1,422 children escaped; 8,816 still unaccounted for"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:onlinekhabar-2025-09-11-over-14000-prisoners-escape",
+      "source:onlinekhabar-2025-09-19-over-8800-inmates-absconding"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-escapes-14549-department-of-prison-management",
+   "properties": {
+    "figure": 14549,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-26",
+    "unit_detail": "inmates escaped",
+    "figure_more": "from 37 facilities; 8,054 returned; 6,494 at large"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalpress-2025-09-26-6494-inmates-at-large"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prisoners-at-large-6494-on-26-sept",
+   "properties": {
+    "figure": 6494,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-26",
+    "unit_detail": "inmates still at large",
+    "figure_more": "5,872 from prisons; 622 from correction centres"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalpress-2025-09-26-6494-inmates-at-large"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prison-escapes-14558-department-of-prison-management",
+   "properties": {
+    "figure": 14558,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-28",
+    "unit_detail": "inmates escaped",
+    "figure_more": "7,735 returned; 6,813 still absconding"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:onmanorama-2025-09-29-over-7700-inmates-return",
+      "source:tribune-india-2025-09-28-over-7700-inmates-back-in-prisons"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:prisoners-at-large-6813-on-28-sept",
+   "properties": {
+    "figure": 6813,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-28",
+    "unit_detail": "inmates still at large",
+    "figure_more": "7,735 returned"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandu-post-2025-09-25-over-6800-inmates-at-large",
+      "source:onmanorama-2025-09-29-over-7700-inmates-return",
+      "source:tribune-india-2025-09-28-over-7700-inmates-back-in-prisons"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:14555-inmates-escaped",
+   "properties": {
+    "figure": 14555,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-09",
+    "unit_detail": "inmates escaped"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:ratopati-2026-03-26-commission-report-bhadra-violence"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:more-than-a-dozen-media-outlets-attacked-on-9-september",
+   "properties": {
+    "figure": 12,
+    "unit": "other",
+    "qualifier": "at-least",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-09",
+    "unit_detail": "media outlets attacked",
+    "figure_more": "three journalists' organisations also attacked"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:rsf-2025-09-12-political-crisis-in-nepal-media-outlets-targeted-journalists-injured"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:fnj-26-press-freedom-incidents-in-protest-days",
+   "properties": {
+    "figure": 26,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-08",
+    "unit_detail": "press-freedom incidents",
+    "figure_more": "more than 100 journalists and media institutions affected"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:fnj-2025-12-31-press-freedom-violations-in-2025"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:supreme-court-20000-case-files-lost",
+   "properties": {
+    "figure": 20000,
+    "unit": "other",
+    "qualifier": "about",
+    "scope": "Supreme Court",
+    "as_of_basis": "unknown",
+    "unit_detail": "case files lost",
+    "figure_more": "more than 450,000 court files burned overall"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:scmp-undated-nepal-protest-arson-suspicious"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:supreme-court-60000-case-files-burned",
+   "properties": {
+    "figure": 60000,
+    "unit": "other",
+    "qualifier": "at-least",
+    "scope": "Supreme Court",
+    "as_of_basis": "published",
+    "as_of": "2025-09-10",
+    "unit_detail": "case files burned"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:setopati-2025-09-10-field-report-kathmandu-destruction"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:crowdfunding-funds-slow-to-reach-victims",
+   "properties": {
+    "figure": 25870000,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-11-12",
+    "unit_detail": "NPR raised by crowdfunding campaigns",
+    "figure_more": "57 campaigns with a target of Rs102.8 million"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandu-post-2025-11-12-crowdfunding-for-gen-z-victims"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:26-platforms-were-blocked",
+   "properties": {
+    "figure": 26,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-04",
+    "unit_detail": "platforms blocked",
+    "figure_more": "about two dozen (AP); 27 (India Today)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:al-jazeera-2025-09-08-gen-z-protests-all-to-know",
+      "source:bbc-2025-09-08-19-dead-nepal-gen-z-protests",
+      "source:guardian-2025-09-08-19-killed-gen-z-protests-social-media-ban",
+      "source:onlinekhabar-2025-09-05-four-areas-affected-by-block"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:expected-turnout-was-about-8000",
+   "properties": {
+    "figure": 8000,
+    "unit": "other",
+    "qualifier": "about",
+    "scope": "Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-07",
+    "unit_detail": "expected protest attendance",
+    "figure_more": "6,000 to 7,000 (Oli); 3,500 to 5,000 (NID chief); 3,000 to 5,000 (Kathmandu SSP)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:himalpress-undated-nhrc-report-gurung-led-crowd",
+      "source:onlinekhabar-2026-09-08-security-apparatus-before-gen-z-protests"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:tinkune-turnout-hardly-5000",
+   "properties": {
+    "figure": 5000,
+    "unit": "other",
+    "qualifier": "about",
+    "scope": "Tinkune",
+    "as_of_basis": "derived",
+    "as_of": "2025-03-28",
+    "unit_detail": "protest attendance"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail"
+     ],
+     "sources": [
+      "source:kathmandu-post-2025-03-29-protest-leaders-incite-violence"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:ammunition-13182-rounds-over-two-days",
+   "properties": {
+    "figure": 13182,
+    "unit": "other",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "derived",
+    "as_of": "2025-09-09",
+    "unit_detail": "rounds fired by police",
+    "figure_more": "2,642 live bullets; 1,884 rubber rounds; 6,279 tear-gas shells"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:harvard-apl-2025-11-17-gen-z-uprising-three-part-analysis"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:bhat-bhateni-loss-10-85-billion",
+   "properties": {
+    "figure": 10850000000,
+    "unit": "damage-NPR",
+    "qualifier": "exact",
+    "scope": "Bhat-Bhateni",
+    "as_of_basis": "published",
+    "as_of": "2025-09-24"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:insec-2025-09-24-private-sector-losses"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:bhat-bhateni-loss-over-11-billion",
+   "properties": {
+    "figure": 11000000000,
+    "unit": "damage-NPR",
+    "qualifier": "at-least",
+    "scope": "Bhat-Bhateni",
+    "as_of_basis": "published",
+    "as_of": "2026-09-21",
+    "figure_more": "more than Rs500 million of goods looted"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:kathmandu-post-2026-09-21-bhat-bhateni-rebuilds"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:collateral-damage-3-trillion-economists",
+   "properties": {
+    "figure": 3000000000000,
+    "unit": "damage-NPR",
+    "qualifier": "about",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-14"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:kathmandu-post-2025-09-14-billions-lost-thousands-jobless"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:hilton-kathmandu-damage-8-billion",
+   "properties": {
+    "figure": 8000000000,
+    "unit": "damage-NPR",
+    "qualifier": "about",
+    "scope": "Hilton Kathmandu",
+    "as_of_basis": "published",
+    "as_of": "2025-09-14",
+    "figure_more": "about US$56 million (AFP)"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:gulf-news-2025-09-16-nepal-counts-cost",
+      "source:ians-2025-09-19-insurers-record-claims",
+      "source:insec-2025-09-24-private-sector-losses"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:insurance-claims-20-7-billion-by-16-sept",
+   "properties": {
+    "figure": 20700000000,
+    "unit": "damage-NPR",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "stated",
+    "as_of": "2025-09-16",
+    "unit_detail": "insurance claims received",
+    "figure_more": "1,984 claims"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:ians-2025-09-19-insurers-record-claims"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:insurance-claims-22-26-billion",
+   "properties": {
+    "figure": 22256500000,
+    "unit": "damage-NPR",
+    "qualifier": "exact",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-24",
+    "unit_detail": "insurance claims received",
+    "figure_more": "Bagmati Province Rs 17,977,200,000"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "unit_detail",
+      "figure_more"
+     ],
+     "sources": [
+      "source:insec-2025-09-24-private-sector-losses"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:major-business-damage-over-60-billion-cni",
+   "properties": {
+    "figure": 60000000000,
+    "unit": "damage-NPR",
+    "qualifier": "at-least",
+    "scope": "major business enterprises",
+    "as_of_basis": "published",
+    "as_of": "2025-09-19"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of"
+     ],
+     "sources": [
+      "source:ians-2025-09-19-insurers-record-claims"
+     ],
+     "verification": "single-source",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:private-sector-loss-80-to-100-billion-fnccii",
+   "properties": {
+    "figure": 80000000000,
+    "unit": "damage-NPR",
+    "qualifier": "about",
+    "scope": "private sector",
+    "as_of_basis": "published",
+    "as_of": "2025-09-21",
+    "figure_more": "FNCCI initial estimate NPR 80 to 100 billion; Kantipur about NPR 80 billion"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:b360-nepal-2025-09-21-private-sector-meets-karki",
+      "source:ekantipur-2025-09-21-private-sector-lost-80-billion",
+      "source:insec-2025-09-24-private-sector-losses"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  },
+  {
+   "id": "claim:total-losses-25-billion-afp",
+   "properties": {
+    "figure": 25000000000,
+    "unit": "damage-NPR",
+    "qualifier": "about",
+    "scope": "national",
+    "as_of_basis": "published",
+    "as_of": "2025-09-16",
+    "figure_more": "US$177 million; more than 2,000 workers affected"
+   },
+   "evidence": [
+    {
+     "property": [
+      "figure",
+      "unit",
+      "qualifier",
+      "scope",
+      "as_of_basis",
+      "as_of",
+      "figure_more"
+     ],
+     "sources": [
+      "source:gulf-news-2025-09-16-nepal-counts-cost"
+     ],
+     "verification": "disputed",
+     "note": "Figure read from the claim's statement and anchor quote (manual pass)."
+    }
+   ]
+  }
+ ]
+}

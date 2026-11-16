@@ -1,0 +1,16 @@
+import { launch, open, S, rows, shot, dialogs, notifTitles } from "./lib.mjs";
+import { arm } from "./dev.mjs";
+const b = await launch();
+const {page, errors} = await open(b, "languages");
+console.log(await arm(page,"Install or Uninstall","Disk full","Languages"));
+console.log(await page.evaluate(()=>document.querySelector("[data-testid=settings-content] h2")?.textContent));
+await S(page).getByRole("button",{name:"Install Language(s)"}).click(); await page.waitForTimeout(400);
+await page.getByRole("dialog").getByText("German (de)").click();
+await page.getByRole("dialog").getByRole("button",{name:/^Install \(1\)/}).click(); await page.waitForTimeout(500);
+console.log(await rows(page));
+await page.waitForTimeout(3500);
+console.log(await rows(page));
+console.log((await notifTitles(page)).slice(0,6));
+await shot(page,"probe-fail");
+console.log(errors);
+await b.close();

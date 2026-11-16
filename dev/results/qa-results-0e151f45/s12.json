@@ -1,0 +1,127 @@
+{
+ "light": {
+  "drawerW": 460,
+  "scrollW": 1440,
+  "cards": 36,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages"
+  ],
+  "chips": [
+   "Title0",
+   "Properties11",
+   "Document8"
+  ],
+  "exRightMin": 29,
+  "exRightMax": 29,
+  "lines": "3,3,4,3,3,3,2,3,1,3,1,3,1,3,3,4,3,3,3,3,4,1,3,1,3,3,3,4,2,1,3,2,4,3,3,4,3,3,3,3,4,3,3,3,3,4,3,3,4",
+  "sections": [
+   "Masacres de El Mozote. Sentenc",
+   "Gomes Lund y otros2 fieldsProp",
+   "Barrios Altos2 fieldsPropertie"
+  ],
+  "gutter": {
+   "pass": true,
+   "starts": [
+    12
+   ],
+   "ends": [
+    12
+   ],
+   "overflow": []
+  }
+ },
+ "drag": [
+  {
+   "w": 460,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 548,
+   "ex1": 162,
+   "sw": 1440
+  },
+  {
+   "dx": -60,
+   "w": 520,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 503,
+   "ex1": 162,
+   "sw": 1440
+  },
+  {
+   "dx": -140,
+   "w": 600,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 457,
+   "ex1": 162,
+   "sw": 1440
+  },
+  {
+   "dx": -260,
+   "w": 720,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 434,
+   "ex1": 162,
+   "sw": 1440
+  },
+  {
+   "dx": -460,
+   "w": 720,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 434,
+   "ex1": 162,
+   "sw": 1440
+  },
+  {
+   "up": true,
+   "w": 720,
+   "chipTop": 106,
+   "firstTop": 175,
+   "firstH": 434,
+   "ex1": 162,
+   "sw": 1440
+  }
+ ],
+ "dark": {
+  "drawerW": 460,
+  "scrollW": 1440,
+  "cards": 36,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages"
+  ],
+  "chips": [
+   "Title0",
+   "Properties11",
+   "Document8"
+  ],
+  "exRightMin": 29,
+  "exRightMax": 29,
+  "lines": "3,3,4,3,3,3,2,3,1,3,1,3,1,3,3,4,3,3,3,3,4,1,3,1,3,3,3,4,2,1,3,2,4,3,3,4,3,3,3,3,4,3,3,3,3,4,3,3,4",
+  "sections": [
+   "Masacres de El Mozote. Sentenc",
+   "Gomes Lund y otros2 fieldsProp",
+   "Barrios Altos2 fieldsPropertie"
+  ],
+  "gutter": {
+   "pass": true,
+   "starts": [
+    12
+   ],
+   "ends": [
+    12
+   ],
+   "overflow": []
+  }
+ }
+}

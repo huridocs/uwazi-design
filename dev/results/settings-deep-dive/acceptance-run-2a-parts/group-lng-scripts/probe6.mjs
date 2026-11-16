@@ -1,0 +1,15 @@
+import { launch, open, S, shot } from "./lib.mjs";
+import { lngRows, squash } from "./u.mjs";
+const b = await launch();
+const {page} = await open(b, "languages");
+console.log(await S(page).locator("[role=columnheader]").first().evaluate(e=>e.outerHTML.slice(0,500)));
+await S(page).locator("[role=columnheader]").first().click(); await page.waitForTimeout(300);
+console.log(await lngRows(page));
+await S(page).locator("[role=columnheader] button").first().click().catch(e=>console.log("nobtn")); await page.waitForTimeout(300);
+console.log(await lngRows(page));
+await S(page).getByRole("button",{name:"Install Language(s)"}).click(); await page.waitForTimeout(300);
+const d = page.locator("[role=dialog]:not([inert] *)").last();
+await d.getByRole("textbox").first().fill("zzz"); await page.waitForTimeout(500);
+console.log(squash(await d.innerText()));
+await shot(page,"probe-zzz");
+await b.close();

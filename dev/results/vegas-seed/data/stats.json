@@ -1,0 +1,65 @@
+{
+ "entities": 582,
+ "references": 1655,
+ "by_template": {
+  "organisation": 11,
+  "source": 22,
+  "place": 113,
+  "recording": 379,
+  "moment": 35,
+  "finding": 9,
+  "claim": 13
+ },
+ "by_reference_type": {
+  "captures": 733,
+  "synced_by": 195,
+  "geolocated_by": 374,
+  "recorded_at": 43,
+  "published_in": 79,
+  "derived_from": 140,
+  "fired_from": 12,
+  "occurred_at": 30,
+  "followed_by": 11,
+  "documents": 5,
+  "issued_by": 9,
+  "supports": 19,
+  "disputes": 1,
+  "supersedes": 1,
+  "contradicts": 3
+ },
+ "recording_kinds": {
+  "vehicle-video": 12,
+  "phone-video": 132,
+  "cctv": 8,
+  "body-camera": 63,
+  "aerial": 4,
+  "911-call": 155,
+  "911-compilation": 5
+ },
+ "sync_confidence": {
+  "one-or-two": 55,
+  "none": 33,
+  "anchored-consistent": 72,
+  "anchored-drift": 7,
+  "title-only": 52
+ },
+ "sync_flags": {
+  "title-mismatch": 19,
+  "qualified-annotation": 27,
+  "no-clock": 33,
+  "outlier": 2,
+  "drift": 7,
+  "date-inconsistent": 1,
+  "clock-note": 3
+ },
+ "moments": {
+  "single-shot": 10,
+  "first-shots": 1,
+  "corridor-shots": 1,
+  "ricochet": 4,
+  "bullet-pass": 2,
+  "volley": 12
+ },
+ "annotations": 735,
+ "recordings_with_clock": 186
+}

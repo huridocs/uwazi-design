@@ -1,0 +1,80 @@
+[
+ {
+  "id": "TRN-09",
+  "result": "FAIL",
+  "evidence": "breadcrumb button/link \"Translations\"=1, title=\"User Interface\"; column headers=[\"KEY\",\"English EN\",\"Español ES\",\"Français FR\",\"العربية AR\",\"Português PT\"] (autonym + code pill [\"en\",\"es\",\"fr\",\"ar\",\"pt\"]); source (English) column has no input=true; sample row has a Clear X on filled cells=4; header top before/after scrolling the grid by 1500px (a sticky header stays within 0-200px): 265px/-1235px (visible=true, last key rendered \"Add PDF\"); footer buttons=[\"Cancel\",\"Save\"]; word \"term\" on the editor=false",
+  "shot": "group-lng-TRN-09.png"
+ },
+ {
+  "id": "_errs-TD1",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-10",
+  "result": "PASS",
+  "evidence": "cleared the Spanish cell of \"Brazil\" with its X (value now \"\"); Save -> \"This field is required\" shown 1 time(s); footer alert=\"1 empty cell blocks saving\"; \"Translations saved\" entries before/after=0/0 (no write); after typing \"Valor\": errors=0, footer alert=\"\"",
+  "shot": ""
+ },
+ {
+  "id": "TRN-11",
+  "result": "FAIL",
+  "evidence": "source (default English) header pill class=bg-ink; Spanish cell for \"Brazil\" initially pill bg-vellum (Brazil in Spanish); after typing \"Brasil-XYZ\" before Save: pill bg-vellum, label \"Brazil in Spanish\"; after typing the exact source text \"Brazil\" back: pill bg-warning-light, label \"Brazil in Spanish, untranslated\"; a \"same as source\" mark/control on a cell (so an identical value can count as translated): 0 found, and the cell stays untranslated",
+  "shot": "group-lng-TRN-11.png"
+ },
+ {
+  "id": "_errs-TD2",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-12",
+  "result": "PASS",
+  "evidence": "editor head progress (one cell per target language, as built): [\"Spanish 8 of 23\",\"French 12 of 23\",\"Arabic 22 of 23\",\"Portuguese 0 of 23\"]; after translating \"Countries\": Spanish 9 of 23; after \"Argentina\": Spanish 10 of 23; after Save the list row reads \"Countries \\| Thesaurus \\| 23 \\| ES 43% \\| FR 52% \\| AR 96% \\| PT 0%\"",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TD3",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-13",
+  "result": "PASS",
+  "evidence": "toggle \"Untranslated only\" off by default=true; 23 keys; typed \"Valor oculto\" into es of key \"Argentina\" (es untranslated, ar translated); toggle on: 23 of 23 keys remain (Portuguese is untranslated everywhere, so every key has a non-translated language), each has an untranslated cell=true; language select options [\"All languages\",\"Español\",\"Français\",\"العربية\",\"Português\"]; picking Arabic leaves 1 key(s) with columns [\"KEY\",\"English EN\",\"العربية AR\"], \"Argentina\" hidden=true; Save while hidden -> \"Translations saved\" x1; All languages + toggle off: 23 keys, hidden cell value after Save=\"Valor oculto\"; explicit remaining-key count text on screen=[] (per-language \"x of y\" progress is shown)",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TD4",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-14",
+  "result": "PASS",
+  "evidence": "\"Account loc\" -> [\"Account locked\"]; value-only text \"Cuenta\" (Spanish value of key Account) -> 5 key(s) [\"Account\",\"Account locked\",\"Account unlocked successfully\",\"Account updated\"]; \"zzz\" -> \"2 \\| Portuguese \\| 0 of 412 \\| Untranslated only \\| All languages \\| KEY \\| English \\| EN \\| Español \\| ES \\| Français \\| FR \\| العربية \\| AR \\| Português \\| PT \\| Nothing matches “zzz” \\| Clear search \\| Cancel \\| Save\"; cleared -> 60 rendered rows; search row height 32/32/32px",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TD5",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ },
+ {
+  "id": "TRN-15",
+  "result": "PASS",
+  "evidence": "edited es \"Court Case\" and fr \"Title\", one Save: Beacon \"Translations saved\" entries=1 (immediately after click: 1); editor stayed open=true, Save disabled afterwards=true, footer line=\"Saved just now by admin\"; after reload and reopen es=\"ES-edit\" fr=\"FR-edit\"; Activity log lines=[\"Update admin Updated translations of “Court Case” Oct 5, 2026 - 10:37\"]",
+  "shot": ""
+ },
+ {
+  "id": "_errs-TD6",
+  "result": "PASS",
+  "evidence": "[]",
+  "shot": ""
+ }
+]

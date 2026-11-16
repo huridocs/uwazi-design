@@ -1,0 +1,37 @@
+{
+ "entities": 154,
+ "references": 622,
+ "by_template": {
+  "organisation": 11,
+  "source": 22,
+  "place": 6,
+  "recording": 62,
+  "moment": 31,
+  "finding": 9,
+  "claim": 13
+ },
+ "recording_kinds": {
+  "vehicle-video": 5,
+  "phone-video": 22,
+  "cctv": 4,
+  "body-camera": 16,
+  "aerial": 3,
+  "911-call": 8,
+  "911-compilation": 4
+ },
+ "volleys_covered": [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12"
+ ],
+ "flagged_recordings": 15
+}

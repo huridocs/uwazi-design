@@ -1,0 +1,74 @@
+{
+ "TPL-01": {
+  "id": "TPL-01",
+  "result": "PASS",
+  "evidence": "headers [\"Name\",\"Entities\",\"Set as default\"]; names [\"Country\",\"Court Case\",\"Document\",\"Hearing\",\"Judgment\",\"Organization\",\"Person\",\"Right\",\"Violation\"] ascending=true; Library Type facet [\"Person\",\"Country\",\"Violation\",\"Right\",\"Organization\",\"Hearing\",\"Court Case\",\"Judgment\",\"Document\"] setEqual=true",
+  "shot": "acceptance-run-2a-shots/TPL-01.png"
+ },
+ "TPL-02": {
+  "id": "TPL-02",
+  "result": "FAIL",
+  "evidence": "Hearing: list dot rgb(13, 148, 136), Library card dot rgb(13, 148, 136), coloured dots in the Library Type facet row: 0. List and card match; the facet row has no colour dot, so same colour in all three places cannot hold.",
+  "shot": "acceptance-run-2a-shots/TPL-02.png"
+ },
+ "TPL-06": {
+  "id": "TPL-06",
+  "result": "PASS",
+  "evidence": "Country: list 9, Library 9; Court Case: list 5, Library 5; Document: list 7, Library 7; Hearing: list 48, Library 48; Judgment: list 4, Library 4; Organization: list 5, Library 5; Person: list 13, Library 13; Right: list 7, Library 7; Violation: list 6, Library 6; mismatches []",
+  "shot": "acceptance-run-2a-shots/TPL-06.png"
+ },
+ "TPL-03": {
+  "id": "TPL-03",
+  "result": "PASS",
+  "evidence": "header state [[\"name1\",{\"sort\":\"descending\",\"svg\":\"lucide-chevron-down\",\"btn\":true}],[\"name2\",{\"sort\":\"ascending\",\"svg\":\"lucide-chevron-up\",\"btn\":true}],[\"ent1\",{\"sort\":\"descending\",\"svg\":\"lucide-chevron-down\",\"btn\":true}],[\"ent2\",{\"sort\":\"ascending\",\"svg\":\"lucide-chevron-up\",\"btn\":true}]]; Name starts ascending (default sort), click 1 gives Z-A and click 2 A-Z: true; aria-sort and chevron icon follow each click: true; Entities 1st click [48,13,9,7,7,6,5,5,4] (largest first=true); 2nd [4,5,5,6,7,7,9,13,48] (asc=true); with search \"o\" counts [5,5,6,7,9,13] sort held (ascending)=true",
+  "shot": "acceptance-run-2a-shots/TPL-03.png"
+ },
+ "TPL-04": {
+  "id": "TPL-04",
+  "result": "FAIL",
+  "evidence": "editor head lines [\"Templates\",\"/\",\"Court Case\",\"Template name\"]; list order before open [\"Judgment\",\"Court Case\",\"Organization\",\"Violation\"], after breadcrumb [\"Judgment\",\"Court Case\",\"Organization\",\"Violation\"] same=true (sort set to Entities desc before opening) \\| CONSOLE during this check: error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique ke",
+  "shot": "acceptance-run-2a-shots/TPL-04.png"
+ },
+ "TPL-05": {
+  "id": "TPL-05",
+  "result": "PASS",
+  "evidence": "light {\"dark\":false,\"n\":1,\"cls\":\"shrink-0 text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded-md w-fit\",\"color\":\"rgb(51, 51, 51)\",\"bg\":\"rgb(245, 238, 215)\",\"contrast\":{\"ratio\":10.89,\"fg\":\"51,51,51\",\"bg\":\"245,238,215\"}}; dark {\"dark\":true,\"n\":1,\"cls\":\"shrink-0 text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded-md w-fit\",\"color\":\"rgb(212, 205, 184)\",\"bg\":\"rgb(51, 51, 51)\",\"contrast\":{\"ratio\":7.96,\"fg\":\"212,205,184\",\"bg\":\"51,51,51\"}}; classes carbon-free=true",
+  "shot": "acceptance-run-2a-shots/TPL-05.png"
+ },
+ "X-08": {
+  "id": "X-08",
+  "result": "PASS",
+  "evidence": "Default badge contrast light 10.89 (fg 51,51,51 on 245,238,215), dark 7.96 (fg 212,205,184 on 51,51,51); need 4.5",
+  "shot": "acceptance-run-2a-shots/TPL-05-dark"
+ },
+ "TPL-07": {
+  "id": "TPL-07",
+  "result": "PASS",
+  "evidence": "Resolución de la CorteIDH cell lines [\"1.1k\"]; Sentencia de la CorteIDH [\"409\"]; 3k case not driveable in browser (no CEJIL template, per SD-3; checked as unit/story only)",
+  "shot": "acceptance-run-2a-shots/TPL-07.png"
+ },
+ "TPL-08": {
+  "id": "TPL-08",
+  "result": "PASS",
+  "evidence": "Court Case row controls [\"Edit Court Case\",\"Set as default\"]; <a> []; separate pencil buttons 0; keyboard Tab reaches \"Edit Court Case\": true; every row's primary action name [\"Edit Country\",\"Edit Court Case\",\"Edit Document\",\"Edit Hearing\",\"Edit Judgment\",\"Edit Organization\",\"Edit Person\",\"Edit Right\",\"Edit Violation\"]",
+  "shot": "acceptance-run-2a-shots/TPL-08.png"
+ },
+ "TPL-09": {
+  "id": "TPL-09",
+  "result": "PASS",
+  "evidence": "star states [[\"Country\",\"enabled\"],[\"Court Case\",\"enabled\"],[\"Document\",\"disabled\"],[\"Hearing\",\"enabled\"],[\"Judgment\",\"enabled\"],[\"Organization\",\"enabled\"],[\"Person\",\"enabled\"],[\"Right\",\"enabled\"],[\"Violation\",\"enabled\"]]; disabled: [\"Document\"]; accessible name \"Set as default\" on all",
+  "shot": "acceptance-run-2a-shots/TPL-09.png"
+ },
+ "TPL-13": {
+  "id": "TPL-13",
+  "result": "PASS",
+  "evidence": "lead button style {\"bg\":\"rgba(0, 0, 0, 0)\",\"border\":\"0px solid\",\"shadow\":\"none\",\"color\":\"rgb(26, 26, 26)\",\"cls\":\"inline-flex items-center justify-center font-medium rounded-md transition-colors cursor-pointer text-ink font-medium hov\"} noFill/noBorder=true; new editor name value \"\" placeholder present; colour rgb(37, 99, 235) / #2563EB; property rows (4) [\"DRAG SELECT PROPERTY TYPE OPTIONS REQUIRED FILTER CARDS ORDER\",\"Title Text\",\"Date added Date\",\"Date modified Date\"]; save button \"Create template\" disabled=true",
+  "shot": "acceptance-run-2a-shots/TPL-13.png"
+ },
+ "TPL-13b": {
+  "id": "TPL-13b",
+  "result": "PASS",
+  "evidence": "colour picker opens with 11 preset swatches; new template colour is a preset (rgb(37, 99, 235) / #2563EB)",
+  "shot": "acceptance-run-2a-shots/TPL-13-palette"
+ }
+}

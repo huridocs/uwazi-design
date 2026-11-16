@@ -1,0 +1,8 @@
+[
+ {
+  "id": "CSV-07",
+  "res": "FAIL",
+  "ev": "Settings > Templates (Sample) lists [\"Person\",\"Court Case\",\"Country\",\"Judgment\",\"Violation\",\"Right\",\"Organization\",\"Document\",\"Hearing\"]; after creating \"QA tpl\" it lists [\"Person\",\"Court Case\",\"Country\",\"Judgment\",\"Violation\",\"Right\",\"Organization\",\"Document\",\"Hearing\",\"QA tpl\"]. The New import Template select offers [\"Court Case\",\"Judgment\",\"Person\",\"Country\",\"Violation\",\"Right\",\"Organization\",\"Document\"]: the fixed list in data/imports.ts (no Hearing, different order, no \"QA tpl\").",
+  "shot": "acceptance-run-1-shots/CSV-07.png"
+ }
+]

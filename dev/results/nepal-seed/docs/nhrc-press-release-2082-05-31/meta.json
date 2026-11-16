@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-release-2082-05-31",
+ "title": "NHRC press release: meeting between NHRC officials and the Chief of Army Staff (Nepali, 31 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 736246,
+ "sha256": "a5e6bd879dca925d8a8f336c933c21083d702ee7acbf5c968875e78cf28d0074",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-31.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/844",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-16",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned or rasterised page; no usable text layer (any embedded text is OCR noise or legacy-font ASCII). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief",
+  "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1282
+}

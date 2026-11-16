@@ -1,0 +1,14 @@
+[
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "phone: scrollWidth 390 (no horizontal scroll), list and editor are card layouts (IXE-08), row delete reachable (1); the delete dialog is a centered card [16,311,358,222] (x,y,w,h), buttons [\":24x24\",\"Cancel:64x28\",\"Delete:61x28\"] (28px high), not a sheet or full screen",
+  "shot": "X-06-ixe-dialog.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone: scrollWidth 390; list rows are one-line cards (template, status, count), row is a full-width button; editor is a single column (PXE-07c.png); page has no dialogs; touch targets [\"Back to settings:26x26\",\"Edit Judgment extraction:358x43\",\"Edit Court Case extracti:358x43\",\"Edit Document extraction:358x44\",\"Add extraction:129x28\"]",
+  "shot": "PXE-07a.png"
+ }
+]

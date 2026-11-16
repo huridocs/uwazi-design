@@ -1,0 +1,86 @@
+[
+ {
+  "id": "USR-21",
+  "res": "FAIL",
+  "ev": "Columns=[\"GROUP\",\"MEMBERS\",\"\"] (spec: Name sortable, Members); rows=[\"Administrators 1\",\"Litigation 2\",\"Research 2\"] in seed order (Administrators, Litigation, Research); sortable controls=0; Members cell is a number (\"1\", \"2\", \"2\"), not one username pill per member (spec pills: Litigation mlopez+jnkemba, Research jnkemba+afarah, Administrators admin; \"1 member\"/\"2 members\" text)",
+  "shot": "USR-21.png"
+ },
+ {
+  "id": "USR-22",
+  "res": "FAIL",
+  "ev": "Editor \"New group\" ok; editor header=\"New group\" labels=[\"Group name\",\"AD admin admin@uwazi.io\",\"ML mlopez m.lopez@cejil.org\",\"JN jnkemba j.nkemba@example.org\",\"AF afarah a.farah@example.org\",\"TB tbuergenthal t.buergenthal@example.org\"], commit=\"Create group\" disabled=true ; name ab: new text=[] commit disabled=false ; name 51 chars: new text=[] commit disabled=false ; name litigation: new text=[] commit disabled=false ; name  LITIGATION : new text=[] commit disabled=false. \"Nothing selected\" placeholder=0, \"Select all\" in picker=0 (members are a checkbox list with a \"0 of 5 users.\" count). None of the validation messages (Name is required / too short / too long / Duplicated name) appear: commit is simply disabled and a duplicate name is not flagged (name \"litigation\" and \" LITIGATION \" leave commit enabled=true). Enter in Name submits=false. Created Ethics with tbuergenthal + admin: new Beacon=[\"Group created just now\"] (spec \"Group saved\"); Groups rows=[\"Administrators 1\",\"Litigation 2\",\"Research 2\",\"Ethics 2\"]; tabs=[\"Users 5\",\"Groups 4\"]; tbuergenthal row=\"TB tbuergenthal t.buergenthal@example.org Collaborator Ethics —\"",
+  "shot": "USR-22.png"
+ },
+ {
+  "id": "USR-23",
+  "res": "FAIL",
+  "ev": "Rename to \"Ethics board\" and remove admin: new Beacon=[\"Ethics board saved just now\"] (spec \"Group updated\"); after reload Groups rows=[\"Administrators 1\",\"Litigation 2\",\"Research 2\",\"Ethics board 1\"]; tbuergenthal row=\"TB tbuergenthal t.buergenthal@example.org Collaborator Ethics board —\" (keeps the group under the new name); admin row=\"AD admin(you) admin@uwazi.io Admin Administrators\" (no Ethics pill). State survives reload: behaviour correct, Beacon text differs",
+  "shot": ""
+ },
+ {
+  "id": "USR-25",
+  "res": "FAIL",
+  "ev": "Beacon texts observed: user create \"User invited\" (spec \"Added new user\" + welcome-email entry), user edit \"mlopez saved\" (spec \"User updated\"), user delete \"mlopez deleted\" (spec \"Deleted user\"), group create [\"Group created just now\"] (spec \"Group saved\"), group update [\"Ethics board saved just now\"] (spec \"Group updated\"); exactly one entry per action in each case. Reset 2FA: \"2FA reset for this user\" (spec \"Disabled 2FA\"); no Reset Password action. A forced failure of the mock cannot be produced (invalid saves are blocked before saving), so the \"An error occurred\" entry is never produced",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "Group editor closes on a successful Save (returns to the list; no Save button remains); a rail click right after the save raised dialogs=[] (none). User edits: same after USR-18/USR-10 saves (editor closed, list shown)",
+  "shot": ""
+ },
+ {
+  "id": "USR-24",
+  "res": "FAIL",
+  "ev": "No row checkbox/bulk \"Delete\"; per-row trash. Dialog: \"Delete group Delete the Litigation group? Its members keep their accounts. 2 members lose this group: mlopez and jnkemba. Cancel Delete\" (spec: title \"Delete\", warning \"Do you want to delete the following items?\" with \"Litigation\", impact \"2 members lose this group\", no password field; password inputs=0); after confirming new Beacon=[\"Litigation deleted just now\"] (spec \"Deleted user group\"); Groups rows=[\"Administrators 1\",\"Research 2\"]; mlopez and jnkemba rows afterwards [\"ML mlopez m.lopez@cejil.org Editor —\",\"JN jnkemba j.nkemba@example.org Editor Research —\"] (they keep their accounts and lose the Litigation pill)",
+  "shot": "USR-24.png"
+ },
+ {
+  "id": "X-05",
+  "res": "FAIL",
+  "ev": "Used object: user mlopez dialog says \"Member of Litigation.\" (impact stated as text, no count); group Litigation dialog: \"Delete group Delete the Litigation group? Its members keep their accounts. 2 members lose this group: mlopez and jnkemba. Cancel Delete\". Unused objects: empty group dialog \"Delete group Delete the Empty one group? It has no members. Cancel Delete\"; user without group dialog \"Delete user Delete tbuergenthal? They can no longer sign in to this collection. Cancel Delete\" -> neither states that nothing else changes; the Uwazi-style \"Used by N ...\" counts are absent",
+  "shot": "USR-24.png"
+ },
+ {
+  "id": "USR-27",
+  "res": "PASS",
+  "ev": "All groups deleted -> \"the groups that share access. Users 5 Groups 0 GROUP MEMBERS No groups yet A group shares access to entities among several users. Add group Add group\" (title naming the object \"No groups yet\", hint, \"Add group\" action count=2); Users with \"zzz\": \"Users 5 Groups 0 All roles USER ROLE GROUPS 2FA Nothing matches “zzz” Clear search Add use\" (no-results state with \"Clear search\")",
+  "shot": "USR-27.png"
+ },
+ {
+  "id": "X-10",
+  "res": "PASS",
+  "ev": "Zero-row Groups list shows title \"No groups yet\", the hint and an \"Add group\" action (not \"Nothing here yet.\")",
+  "shot": "USR-27.png"
+ },
+ {
+  "id": "USR-15",
+  "res": "FAIL",
+  "ev": "Users tab offers no row selection (0 checkboxes, no select-all, no \"Selected n of total\" bar, no Reset Password / Reset 2FA / Add to group / Change role / Delete bulk actions): see USR-02",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-16",
+  "res": "FAIL",
+  "ev": "Cannot tick afarah and jnkemba: no selection exists, so the \"Reset passwords\" and \"Reset 2FA\" bulk dialogs cannot be opened",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-17",
+  "res": "FAIL",
+  "ev": "Cannot tick users: no \"Add to group\" / \"Change role\" bulk actions exist; roles and groups can only be changed one user at a time in the editor",
+  "shot": "USR-01.png"
+ },
+ {
+  "id": "USR-26",
+  "res": "FAIL",
+  "ev": "Exits with a changed field: user/Cancel: no dialog ; user/Back: dialog 'Discard unsaved changes?' ; user/rail: dialog 'Discard unsaved changes?' ; user/datasource: dialog 'Discard unsaved changes?' ; user/navbar: dialog 'Discard unsaved changes?' ; group/Cancel: no dialog ; group/Back: dialog 'Discard unsaved changes?' ; group/rail: dialog 'Discard unsaved changes?' ; group/datasource: dialog 'Discard unsaved changes?' ; group/navbar: dialog 'Discard unsaved changes?'. The footer \"Cancel\" leaves the editor WITHOUT a dialog and drops the edit (user and group); Back, rail, data-source switch and navbar link do open a dialog. Expected a \"Discard changes?\" dialog for Cancel, Back and a rail click; \"Escape with the password modal open\" cannot be driven (no password modal, see USR-18)",
+  "shot": "USR-26.png"
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "Editors: user/Cancel: no dialog ; user/Back: dialog 'Discard unsaved changes?' ; user/rail: dialog 'Discard unsaved changes?' ; user/datasource: dialog 'Discard unsaved changes?' ; user/navbar: dialog 'Discard unsaved changes?' ; group/Cancel: no dialog ; group/Back: dialog 'Discard unsaved changes?' ; group/rail: dialog 'Discard unsaved changes?' ; group/datasource: dialog 'Discard unsaved changes?' ; group/navbar: dialog 'Discard unsaved changes?'. Footer Cancel with a changed field discards silently (no dialog). Wording check: dialog title is \"Discard unsaved changes?\" with buttons \"Keep editing\"/\"Discard\" (spec title \"Discard changes?\", body \"You have unsaved changes. Do you want to continue?\", buttons \"Cancel\"/\"Discard changes\")",
+  "shot": "USR-26.png"
+ }
+]

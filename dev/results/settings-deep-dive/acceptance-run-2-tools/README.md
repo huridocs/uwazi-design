@@ -1,0 +1,34 @@
+# Harness notes for the acceptance run (QA)
+
+Server: http://localhost:1438/ (Vite dev server at playground 73a13827, shared by all agents; state lives in each browser context's sessionStorage/localStorage, so parallel contexts do not interfere). Run ONE chromium at a time per agent.
+
+Copy `lib.mjs` and `h.mjs` from this folder to your own working dir (or import them by absolute path). They export:
+- `launch()`, `open(browser, section, "desktop"|"mobile", {source:"cejil"|"travesia"|"artworks"})`: new context at the given viewport, starting in Settings on `section` (`account dashboard users collection menu pages languages translations filters templates thesauri relationship-types preserve activitylog customisation uploads metadata-extraction paragraph-extraction`). The seed is clean for every new context. Returns `{ctx, page, errors}` (errors = console errors/warnings).
+- `S(p)` = the settings pane locator (`[data-testid=settings-content]`), `rows(p)` = table row texts, `rail(p,"Item")`, `title(p)`, `dialogs(p)` (open role=dialog names, ignoring inert), `shot(p,name)` saves a PNG to the acceptance-run-1-shots dir, `axe(p)` runs axe-core on the pane, `logEntries(p)` reads the session Activity log, `notifTitles(p)` reads Beacon notifications (they are `article` elements in the notifications drawer, which is in the DOM but inert; the Beacon button is `Notifications, N unread`).
+- h.mjs: `log(k, ok, evidence)`, `switchTo(p,"CEJIL"|"Sample"|"Best Artworks"|"Red Trav")`, `toSettings(p,"Rail item")`, `facet(p)`.
+
+Quirks learned in earlier runs:
+- Row buttons: every clickable row has a stretched "Edit X" button AND a pencil named "Edit X": use `.last()` for the pencil, or click the row. Scope locators to `S(p)`; the notifications drawer and other inert panels are in the DOM and contain buttons named Cancel/Delete/Undo.
+- Delete dialogs are `[data-component=ConfirmDelete]` or `[data-component=ConfirmDialog]`; unsaved-changes dialog is a ConfirmDialog.
+- A save is only real after `await page.waitForTimeout(300)`; state updates are async.
+- `beforeunload` check: `page.evaluate(()=>{const e=new Event("beforeunload",{cancelable:true}); window.dispatchEvent(e); return e.defaultPrevented})` (headless shows no native prompt).
+- To reload while staying on Settings use `page.reload()` (the harness only seeds the section on the first load). The Sample's relationship types and references live in memory only: a reload resets them; users, groups, collection, CSS, filters persist in sessionStorage.
+- Corpus switch: navbar button `button[aria-label^="Collection:"]` then `[data-part=collection-menu] [role=option]`.
+- Sign in as another seed user: set `sessionStorage.uwazi:appView` to `"login"`, reload, fill username (any password of 4+ chars), Enter; then set appView back to `"settings"` and reload. Users: admin, mlopez (editor), jnkemba (editor), afarah (collaborator), tbuergenthal (collaborator).
+- CEJIL and Travesia load their data lazily; wait several seconds, and visit the Library once if a usage count looks blank.
+- Clipboard: `ctx.grantPermissions(["clipboard-read","clipboard-write"])` then `navigator.clipboard.readText()`.
+
+## Run 2a changes (playground a009e643)
+
+- Row clicks: at this commit a row's pencil button may no longer exist, so `getByRole("button",{name:"Edit X"}).last()` can resolve to the stretched row button; click the row instead: `S(p).locator("[data-part=row]").filter({hasText:"X"}).first().click()`.
+- **Dev panel** (dev-only switches; component catalog, reached by clicking the logo in the navbar, or `sessionStorage["uwazi:appView"]="catalog"` before load): sections Role (signs in as the first seed account with that role), Features (four feature switches), "Fail next request" (choose scope Save / Delete / Import or Upload / Install or Uninstall / Run / Read, a reason, press Arm; the next matching action fails once, then it clears), "Slow load (2 s)" checkbox, "Zero rows" buttons (Empty templates / Empty thesauri / Empty relationship types / Empty activity log), and "Open thesaurus editor with a missing id". These switches are in-memory atoms: set them in the SAME page session as the check (do not reload between arming and acting); navigate from the catalog back to Settings by clicking the logo again or by setting `uwazi:appView`/`uwazi:settingsSection` through `page.evaluate` and using in-app navigation rather than `page.reload()`. "Settings > Dashboard > Reset demo data" clears them. Read `app/src/views/catalog/DevPanel.tsx` and `app/src/atoms/devSwitches.ts` for exact labels.
+- Seed changes (SD-2, SD-7, SD-8): `tbuergenthal` is seeded locked (lock icon, "Unlock account" in the editor); Translations "User Interface" has 412 keys; installable languages include Korean (`ko`, has a predefined file, marked `*`) and German (`de`, none).
+- Run 2a scope: Template editor + property dialog, Templates list, Thesauri, Users & Groups, Account, Filters, Relationship types, Languages, Translations, Uploads, Activity log, Navigation & role gating, and the X-01..X-13 checks on those pages. Schema steps M1..M8 have landed: checks with Needs M1..M8 are IN scope; only M9 (and `defer`/`drop`) is SKIP. The checklist's "Amendments for run 2" (A1..A6, SD-1..SD-8) change what counts as a pass: a check carrying an ‹An› or ‹SD-n› marker passes when the amended behaviour is present.
+
+
+## Run 2 changes (playground 956db631)
+
+- Scope: every page in acceptance-checklist.md EXCEPT Metadata extraction, Paragraph extraction, Preserve and Import CSV (those get a run 2b). Needs F1..F4 and M1..M8 are in scope; only M9, `defer`, `drop` are SKIP. Amendments A1..A6 and SD-1..SD-8 apply. No verdicts carry over from runs 1 or 2a.
+- Also drive these items earlier runs left undriven: COL-05..09 (favicon upload: use `page.setInputFiles` on the file input with a small PNG you generate, and a non-image / oversize file for the error paths), MEN-09/MEN-10 (drag moves with mouse events and keyboard moves), Pages Publish and Restore (PAG release flow), ACC-17 (enable 2FA flow; read the mock-valid code from the source/handoff).
+- Light AND dark: run X-07/X-08 and visually check each page's screenshot in dark mode (`document.documentElement.classList.add("dark")` or the navbar theme toggle) at least once at 1280 and once at 390.
+- Seed pages now include FR/AR; Menu is a tree; Pages read pagesStore; Users has a Protection column; Collection has a date format.

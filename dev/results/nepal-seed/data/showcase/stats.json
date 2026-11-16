@@ -1,0 +1,54 @@
+{
+ "entities": 740,
+ "by_template": {
+  "action": 40,
+  "casualty": 40,
+  "claim": 148,
+  "event": 110,
+  "location": 50,
+  "media": 67,
+  "organisation": 55,
+  "person": 70,
+  "source": 160
+ },
+ "references": 1862,
+ "by_type": {
+  "reports_on": 591,
+  "concerns": 198,
+  "involved": 193,
+  "supports": 192,
+  "claimed_by": 105,
+  "disputes": 97,
+  "occurred_at": 78,
+  "targets": 69,
+  "led_to": 52,
+  "part_of": 45,
+  "casualty_of": 38,
+  "incident_at": 33,
+  "responded_by": 30,
+  "issued_by": 27,
+  "in_response_to": 23,
+  "treated_at": 22,
+  "held_office": 17,
+  "member_of": 11,
+  "geolocated_by": 9,
+  "conflicts_with": 8,
+  "organised_by": 5,
+  "depicts": 4,
+  "geolocates": 4,
+  "located_in": 3,
+  "part_of_org": 3,
+  "documents": 3,
+  "succeeded": 2
+ },
+ "event_action_span": [
+  "2024-07-12",
+  "2026-10-05"
+ ],
+ "verification_share": {
+  "confirmed": 0.327,
+  "single-source": 0.52,
+  "disputed": 0.153
+ },
+ "references_with_anchor": 865
+}

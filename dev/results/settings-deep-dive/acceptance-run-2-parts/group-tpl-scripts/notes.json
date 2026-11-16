@@ -1,0 +1,31 @@
+{
+ "TPL": {
+  "TPL-02": "FAIL: the Templates list dot and the Library card dot agree (Hearing rgb(13, 148, 136) in both), but the Library Type facet rows have no colour dot (shot TPL-01-library-facet.png); expected the same colour in all three places. Owner Design.",
+  "TPL-04": "FAIL only for a console error; the behaviour passes (editor opens with breadcrumb Templates / Court Case, list order kept after Back). Opening the Court Case editor logs React 'Encountered two children with the same key, Judgment' from PropertyRow in TemplateEditor.tsx (reproduced with no other action). Owner Code.",
+  "TPL-17": "FAIL only for a console error; the behaviour passes (title Delete, text, Cancel / X keep the selection, Escape closes only the dialog). Every time the delete dialog opens React logs validateDOMNesting: <ul> cannot appear as a descendant of <p> (inside Modal). Owner Code.",
+  "TPL-18": "Plain case lists both pointing properties and the Filters entry; with an inherit path through T the delete is refused and the path is named. Copy defect noted under Additional findings.",
+  "TPL-20": "FAIL only for a console error; the behaviour passes (T gone from Filters, Court Case and QA Via lost the pointing properties, Library Type facet no longer offers T). Opening the Court Case editor logs the duplicate-key error again (see TPL-04). Owner Code.",
+  "TPL-22": "FAIL: the disabled checkbox names the rule and the count (48 entities use it) but the way forward is plain text (change their template first); no link or button in the tooltip and clicking the disabled checkbox opens nothing. Expected the existing Change template dialog with those entities selected. Owner Design with Code.",
+  "TPL-24": "FAIL: saw body 'Nothing matches “zzzz”' with Clear search and Add template; expected the object named ('No templates' wording) with the query and Add template. Owner Design (copy).",
+  "X-04": "FAIL (failure half only; the success half passes): with SD-1 Delete armed, confirming a template delete deleted it and added 'Template deleted.' with no error; with Save armed, saving a template added 'Template saved successfully.' with no error; after the delete attempt the Dev panel still read 'Armed'. The source references the switch only in the Pages delete dialog and the Pages code editor. Owner Code.",
+  "X-06": "FAIL only for the console error from the delete dialog (validateDOMNesting, see TPL-17); the phone layout passes (list rows, no horizontal scroll, Actions sheet, delete sheet confirmed by touch). Harness note: dialogs were driven after re-measuring --kb, see Additional findings 2.",
+  "X-07": "FAIL: (1) the 11 row stars all have the accessible name 'Set as default' (X-07 wants unique names; TPL-09 fixes that name, so 'Set as default: Hearing' satisfies both); (2) validateDOMNesting console error in the delete dialog. axe: no serious or critical; one moderate landmark-no-duplicate-banner in the dialog header. Owner Design (names), Code (nesting)."
+ },
+ "UPL": {
+  "UPL-12": "FAIL only for a console error; the behaviour passes (dialogs list 'Used in Methodology' and 'Used in Global CSS' and say the references will point to a missing file; unreferenced file lists no usage; after the allowed delete the preview image has naturalWidth 0 and nothing crashes). Opening a page editor preview throws pageerror \"Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag\" (reproduced on Pages alone). Owner Code (Pages preview).",
+  "UPL-15": "FAIL only for the same Pages-preview pageerror (sandboxed iframe reads sessionStorage); the behaviour passes (image and CSS url resolve, old URL still loads after rename, unknown name is a missing image). Owner Code (Pages preview).",
+  "UPL-17": "On the phone the row action icons are 26 x 26 px.",
+  "X-04": "FAIL (failure half only; the success half passes): SD-1 Import or Upload, Save and Delete armed in turn; each action then succeeded (b.txt added, rename saved with 'File updated', style-guide.pdf deleted with 'Deleted custom file') and no 'An error occurred' entry appeared. Owner Code.",
+  "X-07": "Axe: no serious or critical; the Import, Edit and Delete dialogs each report one moderate landmark-no-duplicate-banner (header inside the dialog).",
+  "X-06": "Dialogs were driven after re-measuring --kb, see Additional findings 2."
+ },
+ "ACT": {
+  "ACT-12": "FAIL: expected five new entries, saw four (Created page, Uploaded custom file, Registered CSV import, Updated settings). Preserve 'Add source' shows the Beacon 'Capture source added' but adds no row to the Preserve list and no Activity log entry. Owner Code.",
+  "ACT-13": "FAIL: the four entries that exist read as sentences in Uwazi wording, no request lines and no RAW pill; the Preserve entry the check names does not exist, so 'every new entry' cannot be read. Same cause as ACT-12. Owner Code.",
+  "ACT-17": "FAIL: SD-1 Read armed, then Activity log opened: the seven rows rendered, no error and no Retry; expected an error message and a Retry button. The error UI itself works (ACT-17b: a broken stored log shows the alert 'The activity log could not be loaded' and Retry reloads). The Read scope is not wired to the Activity log store. Owner Code.",
+  "ACT-18": "FAIL only for a console error; the behaviour passes (thesaurus footer 'Saved on Jun 13, 2026 by jnkemba'; after saving Court Case in this session 'Saved just now by admin'; Dashboard Recent activity matches). Opening the Court Case editor logs the duplicate-key error (see TPL-04). Owner Code.",
+  "X-09": "FAIL: Collection save, upload, page create and CSV import each appear with user admin in Uwazi-style wording; the Preserve token creation does not appear (see ACT-12). Owner Code.",
+  "X-10": "The page is read-only, so it has no create action; title names the object and a one-line hint is shown.",
+  "ACT-19": "Design note: on the phone the Date range controls wrap so 'To' ends one line and its input starts the next (shot ACT-visual-dark-phone.png)."
+ }
+}

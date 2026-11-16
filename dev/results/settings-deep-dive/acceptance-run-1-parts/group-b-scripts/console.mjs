@@ -1,0 +1,14 @@
+import { launch, open, S, rail } from "./lib.mjs";
+import { noise } from "./rec.mjs";
+const b = await launch();
+const out = {};
+const go = async (sec, f, vp) => { const { page, errors } = await open(b, sec, vp); try { await f(page); } catch (e) { errors.push("script: " + e.message.slice(0, 80)); } out[sec + (vp ? "-" + vp : "")] = noise(errors); await page.context().close(); };
+const save = (p) => S(p).getByRole("button", { name: "Save", exact: true }).click();
+await go("collection", async (p) => { await S(p).getByLabel("Collection name").fill("X"); await save(p); await p.waitForTimeout(500); await rail(p, "Menu"); await rail(p, "Collection"); await S(p).getByRole("radio", { name: "Map" }).check({ force: true }); await S(p).getByLabel("Collection name").fill("Y"); await rail(p, "Menu"); await p.waitForTimeout(500); });
+await go("collection", async (p) => { await p.waitForTimeout(500); }, "mobile");
+await go("customisation", async (p) => { await S(p).locator("textarea").first().fill("a{"); await save(p); await S(p).getByRole("tab", { name: "JS" }).click(); await S(p).locator("textarea").first().fill("x"); await S(p).getByRole("button", { name: /Reset/ }).click(); await p.waitForTimeout(400); });
+await go("menu", async (p) => { await S(p).getByRole("button", { name: "Add link" }).click(); await S(p).getByLabel("Label").fill("A"); await S(p).getByRole("button", { name: "Add item" }).click(); await p.waitForTimeout(300); await S(p).getByRole("button", { name: "Delete About" }).click(); await p.waitForTimeout(300); });
+await go("uploads", async (p) => { await S(p).getByRole("button", { name: "Copy URL for logo-iachr.svg" }).click(); await S(p).getByRole("button", { name: "Upload file" }).first().click(); await S(p).getByRole("button", { name: "Delete cover-banner.jpg" }).click(); await p.waitForTimeout(300); });
+await go("preserve", async (p) => { await S(p).getByRole("button", { name: "Add token" }).first().click(); await p.waitForTimeout(300); });
+console.log(JSON.stringify(out, null, 1));
+await b.close();

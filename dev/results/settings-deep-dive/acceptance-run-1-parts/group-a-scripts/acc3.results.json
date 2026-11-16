@@ -1,0 +1,32 @@
+[
+ {
+  "id": "X-01",
+  "res": "PASS",
+  "ev": "After Save, rail away and back: \"admin9@uwazi.io\"; after reload: \"admin9@uwazi.io\"; Reset demo data restoring the seed was verified in ACC-12",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Save adds 1 Beacon entry: [\"Profile saved just now\"] (page's quoted text is \"Account updated\"). No failure path exists, so \"An error occurred\" (once) cannot be produced: the duplicate-email case blocks Save inline (ACC-11)",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "PASS",
+  "ev": "Activity log after the profile Save: session entries=[\"UPDATE Updated user “admin” [admin]\"]; newest Activity log entry (action / description / user / time)=\"UPDATE / Updated user “admin” / admin / 2026-10-04 22:47 / UPDATE\" (acting user shown in the log entry: true)",
+  "shot": "X-09-account.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe on page: [\"color-contrast (serious) x1: .w-fit\",\"empty-table-header (minor) x1: th:nth-child(3)\"]; axe on revoke dialog: [\"landmark-no-duplicate-banner (moderate)\"]; dialog name={\"label\":\"Revoke key\",\"modal\":\"true\"}; focus stayed inside over 8 Tabs=true; Escape closed=true; focus after close on \"Revoke key uwz_live_••••3f9a\" (opener was the first Revoke key button); duplicate button names=[]; inputs without label=[]",
+  "shot": "X-07-account.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "\"Enabled\" 2FA status pill contrast: light 3.32:1, dark 2.58:1 (needs >= 4.5:1)",
+  "shot": "X-08-account-dark.png"
+ }
+]

@@ -1,0 +1,15 @@
+import { launch, open, S, rows, shot, rail } from "./lib.mjs";
+const b = await launch();
+const {page, errors} = await open(b, "dashboard");
+console.log((await S(page).innerText()).replace(/\s+/g," ").slice(0,600));
+await rail(page,"Pages"); await page.waitForTimeout(500);
+console.log((await S(page).innerText()).replace(/\s+/g," ").slice(0,600));
+console.log(await rows(page));
+await shot(page,"probe-pages");
+await rail(page,"Translations"); await page.waitForTimeout(500);
+console.log(await rows(page));
+await S(page).locator("[data-part=row]").filter({hasText:"User Interface"}).first().click(); await page.waitForTimeout(600);
+console.log((await S(page).innerText()).replace(/\s+/g," ").slice(0,900));
+console.log(await S(page).locator("[data-part=row]").count(), await S(page).locator("tr").count());
+await shot(page,"probe-ed");
+await b.close();

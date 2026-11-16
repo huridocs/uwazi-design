@@ -1,0 +1,8 @@
+[
+ {
+  "id": "COL-13",
+  "result": "PASS",
+  "evidence": "dd/MM/yyyy: Library card has \"08/05/2006\": true; filter placeholders [\"dd/mm/yyyy\"], typed \"08/05/2006\" reads back \"08/05/2006\"; entity Metadata tab shows \"08/05/2006\" and \"21/01/2010\": true; edit-form date inputs [\"dd/mm/yyyy:08/05/2006\",\"dd/mm/yyyy:21/01/2010\"]; MM-dd-yyyy: Library card has \"05-08-2006\": true; filter placeholders [\"mm-dd-yyyy\"], typed \"05-08-2006\" reads back \"05-08-2006\"; entity Metadata tab shows \"05-08-2006\" and \"01-21-2010\": true; edit-form date inputs [\"mm-dd-yyyy:05-08-2006\",\"mm-dd-yyyy:01-21-2010\"]; after reload the setting reads \"10-05-2026 (Month-Day-Year)\" and the card shows 05-08-2006",
+  "shot": "COL-13-meta-ddMMyyyy"
+ }
+]

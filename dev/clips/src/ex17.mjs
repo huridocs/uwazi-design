@@ -1,0 +1,17 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(1500);
+await p.getByRole("button", { name: /Collection/ }).click(); await p.getByText("CEJIL", {exact:false}).first().click();
+await p.getByText("4,398 entities").waitFor({timeout:20000}); await p.waitForTimeout(2500);
+await p.getByPlaceholder(/Search/).first().click();
+await p.keyboard.type("Caballero Delgado y Santana", {delay:20}); await p.keyboard.press("Enter"); await p.waitForTimeout(2500);
+await p.getByRole("button", {name:/^Caballero Delgado/}).first().click(); await p.waitForTimeout(1200);
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(2500);
+await p.getByRole("tab", {name:/^Relationships/}).first().click(); await p.waitForTimeout(2000);
+await p.screenshot({path:"s47.png"});
+await p.mouse.click(692,176); await p.waitForTimeout(1500);
+await p.screenshot({path:"s48.png"});
+await p.mouse.click(723,176); await p.waitForTimeout(3500);
+await p.screenshot({path:"s49.png"});
+await b.close();

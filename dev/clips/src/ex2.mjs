@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2500);
+await p.mouse.click(885,76); await p.waitForTimeout(600);
+await p.screenshot({ path: "s4.png" });
+await p.keyboard.press("Escape");
+await p.getByRole("button", { name: /Cards/ }).click(); await p.getByText("Timeline", {exact:true}).click(); await p.waitForTimeout(1500);
+await p.screenshot({ path: "s5.png" });
+console.log(await p.evaluate(()=>[...document.querySelectorAll("button[aria-label]")].map(b=>b.getAttribute("aria-label")).join(" | ")));
+await b.close();

@@ -1,0 +1,188 @@
+[
+ {
+  "id": "MEN-01",
+  "res": "FAIL",
+  "ev": "Title \"Menu\"; flat table rows [\"Library /library\",\"About /page/about\",\"Resources Group\",\"Methodology /page/methodology\",\"Contact /page/contact\"] with header LABEL/URL; selection checkboxes 0, grips 0; label text left offsets [304,304,304,304,304] (Methodology and Contact, which follow group Resources, are not indented); rows have edit controls: 5 (\"Edit <title>\" row button; no plain \"Edit\" label). Expected tree with checkbox, grip, indented group children",
+  "shot": "MEN-01"
+ },
+ {
+  "id": "MEN-02",
+  "res": "FAIL",
+  "ev": "Footer shows only \"Add link\" (no \"Add group\") and there is no ink \"Save\" (list page has no Save at all; Link/Group choice is a segmented switch in the editor panel)",
+  "shot": "MEN-01"
+ },
+ {
+  "id": "MEN-03",
+  "res": "FAIL",
+  "ev": "Add link opens a full editor page: \"Menu \\| / \\| New menu item \\| Type \\| Link \\| Group \\| Points at a URL. \\| Label \\| URL \\| An internal path (/page/about) or a full URL. \\| Cancel \\| Add item\"; footer buttons [\"Cancel\",\"Add item\"]. Expected panel \"NEW LINK\" with info band \"Using URLs\", fields Title, URL, Group (\"No Group\" first) and buttons \"Add\"/\"Cancel\". Saw field labels Label and URL, a Link/Group \"Type\" switch and no Group select",
+  "shot": "MEN-03"
+ },
+ {
+  "id": "MEN-04",
+  "res": "FAIL",
+  "ev": "Add item disabled with both empty true, with URL only (\"abc\") true, with title only false (an empty URL is accepted for a link); no visible message under empty required fields ([]). Expected the panel to stay open on click with a red message per empty required field",
+  "shot": "MEN-03"
+ },
+ {
+  "id": "MEN-15",
+  "res": "FAIL",
+  "ev": "Edit with a typed Label then rail click -> dialog \"Discard unsaved changes? Menu item edits haven't been saved. Leaving now will discard them. Keep editing Discard\" buttons [\"\",\"Keep editing\",\"Discard\"]. Expected \"Discard changes?\" / \"You have unsaved changes. Do you want to continue?\" / \"Cancel\" and \"Discard changes\". (Unsaved list-level draft cannot exist: the list has no draft or Save)",
+  "shot": ""
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "Guard works in the link editor (dialog opens on rail click while dirty) but copy differs: \"Discard unsaved changes? Menu item edits haven't been saved. Leaving now will discard them. Keep editing Discard\", buttons [\"\",\"Keep editing\",\"Discard\"]; the list page itself has no dirty state",
+  "shot": ""
+ },
+ {
+  "id": "MEN-05",
+  "res": "FAIL",
+  "ev": "Docs added at the end: [\"Contact /page/contact\",\"Docs /page/abc\"]; Ext added: [\"Docs /page/abc\",\"Ext http://www.uwazi.io\"] at top level (there is no Group select in the form (the only \"Group\" control is the Link/Group Type switch), so Ext cannot go under group G); no Save button exists (count 0) so \"not saved yet (Save enabled)\" does not apply",
+  "shot": "MEN-05"
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "added Docs and Ext, went to Collection and back: rows [\"Library /library\",\"About /page/about\",\"Resources Group\",\"Methodology /page/methodology\",\"Contact /page/contact\"] (the Menu list is component state; additions are lost on rail navigation, and there is no Save)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Beacon after adding two links: [\"Menu item added just now\",\"Menu item added just now\"]; expected an entry per Save/action with the page's quoted text (\"Updated\")",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity entries after adding links: [] (add/delete record with log:false)",
+  "shot": ""
+ },
+ {
+  "id": "MEN-06",
+  "res": "FAIL",
+  "ev": "Edit on \"About\" opens a page titled \"About\" (\"Menu \\| / \\| About \\| Type \\| Link \\| Group \\| Points at a URL. \\| Label \\| URL \\| An internal path (/page/about) or a full URL. \\| Cancel \\| Save\") with inputs [\"About\",\"/page/about\"]; footer [\"Cancel\",\"Save\"]; expected \"EDIT LINK\" panel with Title, URL and Group pre-filled and buttons \"Update\"/\"Cancel\". No Group field so a link cannot be moved to another group",
+  "shot": "MEN-06"
+ },
+ {
+  "id": "MEN-07",
+  "res": "FAIL",
+  "ev": "No \"Add group\" footer button (count 0); a group is made by switching Type to Group inside the Add link editor: \"Menu \\| / \\| New menu item \\| Type \\| Link \\| Group \\| Nests links in a dropdown. \\| Label \\| Sub-links \\| Add sub-link \\| No sub-links yet \\| Each sub-link is one entry in this group's dropdown. \\| Cancel \\| Add \" (inputs 1); that group form includes a \"Sub-links\" section with Add sub-link, not a bare Title",
+  "shot": "MEN-07"
+ },
+ {
+  "id": "MEN-08",
+  "res": "FAIL",
+  "ev": "Nesting rules cannot be driven as specified: the list has no drag grips and the editor has no Group select. A group's sub-links are edited inside the group's own form instead (local sample sub-links \"Methodology\" and \"Partners\" shown for any group)",
+  "shot": ""
+ },
+ {
+  "id": "MEN-09",
+  "res": "FAIL",
+  "ev": "List rows have no grips (drag handles 0) and no up/down buttons (0); Tab order reaches [\"\",\"Library\",\"Collection: Sample\",\"Tools\",\"Notifications, 3 unread\",\"Ask Bert\"]; no keyboard reorder and no Save to enable",
+  "shot": ""
+ },
+ {
+  "id": "MEN-10",
+  "res": "FAIL",
+  "ev": "List rows are not draggable (draggable elements 0); no drop indicator, no reorder, no navbar order to compare",
+  "shot": ""
+ },
+ {
+  "id": "MEN-11",
+  "res": "FAIL",
+  "ev": "No selection checkboxes on rows (count 0); no \"Selected n of total\" bar; \"Delete\" is a per-row action, so ticking A and E cannot be done",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "No row selection on Menu: checkboxes 0; footer keeps only \"Add link\"",
+  "shot": ""
+ },
+ {
+  "id": "MEN-12",
+  "res": "FAIL",
+  "ev": "Deleting group Resources opens a confirmation dialog (\"Delete menu link Remove “Resources” from the navigation menu? Its sub-links are removed with it. Cancel Delete\") (expected none); after confirming rows are [\"Library /library\",\"About /page/about\",\"Methodology /page/methodology\",\"Contact /page/contact\"] (Methodology and Contact stay: the group's children were never nested under it); Beacon entries [\"Resources removed just now\"], Undo buttons in them: 0; no Save to enable",
+  "shot": "MEN-12"
+ },
+ {
+  "id": "MEN-13",
+  "res": "FAIL",
+  "ev": "Beacon entry for the deleted group has 0 \"Undo\" buttons (expected an Undo that restores G, G1, G2); entries [\"Resources removed just now\"]",
+  "shot": ""
+ },
+ {
+  "id": "X-05",
+  "res": "FAIL",
+  "ev": "Deleting a group: dialog text \"Delete menu link Remove “Resources” from the navigation menu? Its sub-links are removed with it. Cancel Delete\" (it says \"Its sub-links are removed with it.\" although Methodology/Contact then stay in the list); a link states \"It links to <url>.\", which is not a usage count",
+  "shot": "MEN-12"
+ },
+ {
+  "id": "MEN-14",
+  "res": "FAIL",
+  "ev": "The Menu list has no Save button (count 0) and no \"Saved <time> by <user>\" line; footer text: \"ABEL \\| URL \\| Library \\| /library \\| About \\| /page/about \\| Resources \\| Group \\| Methodology \\| /page/methodology \\| Contact \\| /page/contact \\| Add link\". Reorder/save/dirty-revert states cannot be driven",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "FAIL",
+  "ev": "No footer Save on the Menu list to disable after saving (G11 asks for one footer Save); the editor closes on \"Add item\" instead",
+  "shot": ""
+ },
+ {
+  "id": "MEN-16",
+  "res": "FAIL",
+  "ev": "After renaming About to Alpha, adding Docs and deleting Contact the list reads [\"Library /library\",\"Alpha /page/about\",\"Resources Group\",\"Methodology /page/methodology\",\"Docs /page/docs\"]; the navbar reads \"Library \\| Sample \\| Tools\" before and \"Library \\| Sample \\| Tools\" after (it never shows menu items; hard-coded Library/Tools remain). Menu edits do not reach the navbar and there is no Save",
+  "shot": "MEN-16"
+ },
+ {
+  "id": "MEN-17",
+  "res": "FAIL",
+  "ev": "Settings > Translations lists contexts: \"Translations \\| Translate the interface and your collection's content across active languages. \\| All types \\| CONTEXT \\| TYPE \\| KEYS \\| User Interface \\| System \\| 412 \\| Court Case \\| Template \\| 12 \\| Person \\| Template \\| 8 \\| Violation types \\| Thesaurus \\| 24 \\| Menu \\| M\"; a \"Menu\" context exists: true. The Menu page has no Save and keeps no stored tree, so renaming A or deleting B cannot reach Translations",
+  "shot": ""
+ },
+ {
+  "id": "MEN-18",
+  "res": "FAIL",
+  "ev": "No Menu store exists to inspect: storage keys containing \"menu\": []; there is no Save, and the list is component state (ids are generated in memory as newSettingsId(\"m\")). Expected a stored menu with unique, stable ids and none starting with tmp_",
+  "shot": ""
+ },
+ {
+  "id": "MEN-19",
+  "res": "PASS",
+  "ev": "After deleting all five rows: \"Menu \\| Links shown in the top navigation. Groups nest links into a dropdown. \\| LABEL \\| URL \\| No menu links yet \\| Add the links readers see in the collection's top navigation. \\| Add link \\| Add link\" (title naming the object, hint and \"Add link\" action shown). Error-state half (corrupt store key) not driveable: Menu has no store key; \"Save\" does not exist",
+  "shot": "MEN-19"
+ },
+ {
+  "id": "X-10",
+  "res": "PASS",
+  "ev": "Empty state title \"No menu links yet\", hint \"Add the links readers see in the collection's top navigation.\" and \"Add link\" action",
+  "shot": "MEN-19"
+ },
+ {
+  "id": "MEN-20",
+  "res": "FAIL",
+  "ev": "phone 390: no horizontal scroll (390/390); rows are stacked cards with label and \"URL <path>\" on a second line and a delete icon (Edit is the whole card); no indented sub-links (Methodology and Contact sit flat under Resources); \"Edit\" opens a full-screen form (OK); a 78-char URL scrolls inside the input (scrollWidth 587 > clientWidth 356) rather than wrapping; Save at y=806.5 reachable; footer has \"Add link\" only. Fails on the missing indented sub-links",
+  "shot": "MEN-20"
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe list: empty-table-header (minor) x1: th:nth-child(3); with delete dialog [\"Delete menu link\"]: empty-table-header (minor) x1: th:nth-child(3) ; landmark-no-duplicate-banner (moderate) x1: header[data-testid=\"settings-content-header\"]; editor: none; focus after Escape on dialog: Delete About",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "res": "PASS",
+  "ev": "Sample rows [\"Library\",\"About\",\"Resources\",\"Methodology\",\"Contact\"]; CEJIL rows [\"Inicio\",\"Processes\",\"Provisional\",\"Documents\",\"Judge\",\"Contact\"]; back on Sample [\"Library\",\"About\",\"Resources\",\"Methodology\",\"Contact\"]",
+  "shot": ""
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone: no horizontal page scroll (390/390); list shows stacked rows (label, URL, delete), editor is single column and full screen; actions reachable by touch",
+  "shot": "MEN-20"
+ }
+]

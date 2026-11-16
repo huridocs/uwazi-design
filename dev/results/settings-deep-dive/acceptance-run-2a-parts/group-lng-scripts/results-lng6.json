@@ -1,0 +1,20 @@
+{
+ "LNG-19": {
+  "id": "LNG-19",
+  "result": "FAIL",
+  "evidence": "rows [\"Arabic (ar) العربية\",\"English (en) Default\",\"French (fr) Français\",\"Spanish (es) Español\"]; row-menu buttons=4, boxes [{\"x\":322,\"y\":284,\"w\":36,\"h\":36},{\"x\":322,\"y\":398,\"w\":36,\"h\":36},{\"x\":322,\"y\":341,\"w\":36,\"h\":36},{\"x\":322,\"y\":227,\"w\":36,\"h\":36}]; lead button {\"x\":16,\"y\":807,\"w\":155,\"h\":28}; horizontal overflow doc 390/390 pane [390,390]; tapped menu items [{\"t\":\"Make default\",\"x\":179,\"y\":441,\"w\":178,\"h\":32},{\"t\":\"Reset\",\"x\":179,\"y\":473,\"w\":178,\"h\":32},{\"t\":\"Uninstall\",\"x\":179,\"y\":505,\"w\":178,\"h\":32}] (menu box {\"x\":178,\"y\":440,\"w\":180,\"h\":98,\"sheet\":false}: an anchored popover 180px wide, items 32px tall, not a sheet=true); Reset dialog box {\"x\":0,\"y\":0,\"w\":390,\"h\":809} buttons [{\"n\":\"No, cancel\",\"bb\":{\"x\":224,\"y\":772,\"w\":85,\"h\":28}},{\"n\":\"Reset\",\"bb\":{\"x\":317,\"y\":772,\"w\":57,\"h\":28}}] typed CONFIRM by touch -> Reset enabled=true; install modal box {\"x\":0,\"y\":0,\"w\":390,\"h\":809}, Install button \"Install (1)\" {\"x\":297,\"y\":772,\"w\":77,\"h\":28}; install by tap -> German row \"German (de) Deutsch Installing\"; Uninstall dialog box {\"x\":0,\"y\":0,\"w\":390,\"h\":809} buttons [{\"n\":\"No, cancel\",\"bb\":{\"x\":207,\"y\":772,\"w\":85,\"h\":28}},{\"n\":\"Uninstall\",\"bb\":{\"x\":299,\"y\":772,\"w\":75,\"h\":28}}]; overflow after dialogs doc 390/390",
+  "shot": "LNG-19-reset.png"
+ },
+ "lng6-console": {
+  "id": "lng6-console",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ },
+ "X-06": {
+  "id": "X-06",
+  "result": "PASS",
+  "evidence": "Languages page at 390x844 with touch: no horizontal scroll (doc 390/390); rows list name/key/Default with a row menu; every action reached by tap (menu, install modal, Reset and Uninstall dialogs, row install)",
+  "shot": "LNG-19-list.png"
+ }
+}

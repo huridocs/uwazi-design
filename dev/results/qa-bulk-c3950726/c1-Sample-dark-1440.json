@@ -1,0 +1,62 @@
+[
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "'View entity' (Open entity) is hidden while the form is open",
+  "ok": true,
+  "detail": "absent"
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "Save leaves the form and the drawer shows the new title",
+  "ok": true,
+  "detail": "COURT CASE | Case 10.488 EDITED | Document | Metadata | Relationships | 8 | Files | 2 | CASE NUMBER | 10.488 | DATE FILED | 1993 | RESPONDENT STATE | El Salvado"
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "edited title shows in Cards",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "edited title shows in List",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "edited title shows in Timeline",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "edited title shows in Results",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "card + facet update (Status facet counts moved)",
+  "ok": true,
+  "detail": "card status: Decided => card status: Open"
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "old title no longer in the list",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "value persists after switching views",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "edit:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

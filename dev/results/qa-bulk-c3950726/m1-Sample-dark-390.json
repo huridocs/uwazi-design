@@ -1,0 +1,32 @@
+[
+ {
+  "area": "phone:Sample-dark-390",
+  "item": "Create entity / Upload PDF / Import CSV / Export CSV reachable on a phone",
+  "ok": false,
+  "detail": "bottom buttons: [\"Dismiss\",\"Dismiss\",\"Dismiss\",\"Show details\",\"Retry\",\"Clear all\",\"Close\",\"Library\"]"
+ },
+ {
+  "area": "phone:Sample-dark-390",
+  "item": "long press starts a selection (1 selected)",
+  "ok": false,
+  "detail": "{\"n\":0,\"bar\":null,\"text\":\"\",\"scrollW\":390}"
+ },
+ {
+  "area": "phone:Sample-dark-390",
+  "item": "no text selected and no horizontal overflow",
+  "ok": true,
+  "detail": "{\"n\":0,\"bar\":null,\"text\":\"\",\"scrollW\":390}"
+ },
+ {
+  "area": "phone:Sample-dark-390",
+  "item": "a long press on a card does not navigate away (it must not open the entity)",
+  "ok": false,
+  "detail": "{\"cards\":0,\"url\":\"/\"}"
+ },
+ {
+  "area": "phone:Sample-dark-390",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

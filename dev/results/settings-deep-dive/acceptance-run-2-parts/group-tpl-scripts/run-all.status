@@ -1,0 +1,14 @@
+tpl1 try 1 exit 0
+tpl2 try 1 exit 1
+tpl2 try 2 exit 0
+tpl3 try 1 exit 0
+tpl4 try 1 exit 0
+upl1 try 1 exit 0
+upl2 try 1 exit 0
+upl3 try 1 exit 0
+upl4 try 1 exit 1
+upl4 try 2 exit 0
+vis try 1 exit 0
+act1 try 1 exit 0
+act2 try 1 exit 0
+done

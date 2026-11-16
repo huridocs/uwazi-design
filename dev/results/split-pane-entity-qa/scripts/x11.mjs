@@ -1,0 +1,16 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const { browser, page, logs } = await launch({ sync: false });
+await page.locator('[role=separator]').focus(); await page.keyboard.press("End"); await page.waitForTimeout(800);
+const root = page.locator('[data-library-pane=left]');
+await root.getByRole("button", { name: /^Open$/ }).first().click(); await page.waitForTimeout(2000);
+console.log("wide left:", JSON.stringify(await state(page)));
+await page.screenshot({ path: OUT + "/left-wide-drawer.png" });
+await root.getByRole("tab", { name: /Relationships/ }).first().click(); await page.waitForTimeout(1500);
+await root.getByRole("button", { name: /^País/ }).first().click().catch(() => console.log("no País")); await page.waitForTimeout(600);
+const pills = await root.getByRole("button", { name: /^Open [A-ZÁÉÍÓÚ]/ }).evaluateAll(b => b.map(x => x.getAttribute("aria-label") + "|vis=" + (x.getClientRects().length > 0)));
+console.log(pills);
+await root.getByRole("button", { name: /^Open [A-ZÁÉÍÓÚ]/ }).first().click(); await page.waitForTimeout(2500);
+console.log(JSON.stringify(await page.evaluate(() => ({ openEntityBtn: [...document.querySelectorAll('button')].filter(b => /Open entity/.test(b.textContent)).map(b => ({ vis: b.getClientRects().length > 0, pane: b.closest('[data-library-pane]')?.dataset.libraryPane })) }))));
+await page.screenshot({ path: OUT + "/left-wide-pill.png" });
+console.log(logs);
+await browser.close();

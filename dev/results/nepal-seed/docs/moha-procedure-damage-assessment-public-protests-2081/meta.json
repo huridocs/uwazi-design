@@ -1,0 +1,31 @@
+{
+ "doc_id": "moha-procedure-damage-assessment-public-protests-2081",
+ "title": "Procedure for assessing damage caused by public demonstrations, strikes and protest programmes, 2081 (Nepali)",
+ "language": "ne",
+ "pages": 10,
+ "bytes": 4458783,
+ "sha256": "88f233754dba8ecacdd43204c8afe3b1dd57b456fd66ff320d44453e2c528d4e",
+ "source_url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%B8%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%B5%E0%A4%9C%E0%A4%A8%E0%A4%BF%E0%A4%95_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8_%E0%A4%B9%E0%A4%A1%E0%A4%A4%E0%A4%BE%E0%A4%B2_%E0%A4%A4%E0%A4%A5%E0%A4%BE_%E0%A4%B5%E0%A4%BF%E0%A4%B0%E0%A5%8B%E0%A4%A7%E0%A4%95%E0%A4%BE_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%95%E0%A5%8D%E0%A4%B0%E0%A4%AE%E0%A4%AC%E0%A4%BE%E0%A4%9F_%E0%A4%B9%E0%A5%81%E0%A4%A8%E0%A5%87_%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%A4%E0%A4%BF_%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%99%E0%A5%8D%E0%A4%95%E0%A4%A8.pdf",
+ "source_page": "https://moha.gov.np/post/sa-ra-vajana-ka-pa-rathara-shana-hadata-l-tatha-va-ra-thhaka-ka-ra-yaka-ramab-ta",
+ "retrieved": "2026-10-05",
+ "publisher": "Ministry of Home Affairs",
+ "published": "2024-05-01",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; no text layer. OCR was not run. Posted on the MoHA site on 2081-01-18 (1 May 2024), before the 2025 protests.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests",
+  "action:2024-05-01-moha-posts-procedure-for-assessing-damage-from-protests"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 14579
+}

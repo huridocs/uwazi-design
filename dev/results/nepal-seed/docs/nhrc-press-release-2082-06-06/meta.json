@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-release-2082-06-06",
+ "title": "NHRC press release: appeal for civil rights and normal life (Nepali, 6 Asoj 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 433613,
+ "sha256": "1dbd7c7c4ffe5d6557fd23c6d1cdf0cd79d165b3c75751dd515edab1466959d1",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-6-6.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/846",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-22",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Text layer present but in legacy Preeti-style ASCII encoding (unreadable as Unicode). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life",
+  "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 2174
+}

@@ -1,0 +1,32 @@
+[
+ {
+  "id": "PAG-14",
+  "res": "FAIL",
+  "ev": "Tabs in order: [\"HTML\",\"CSS\",\"JavaScript\"] (expected Configuration, HTML, Javascript, CSS; there is no Configuration tab and CSS comes before JavaScript). Banner line per tab: {\"HTML\":\" (invisible)\",\"CSS\":\" (invisible)\",\"JavaScript\":\"Runs on the public page. The preview runs it sandboxed, so an error shows here first.\"}. Expected HTML banner \"This page uses HTML only (Markdown is not processed)...\" with link \"Learn more about the components.\" and the three-line JS banner \"With great power comes great responsibility!\"; neither is present (HTML shows no banner; JS shows a different line). No Markdown toggle/banner (true) and no entity view toggle (true) present (ok).",
+  "shot": "acceptance-run-1-shots/PAG-14.png"
+ },
+ {
+  "id": "PAG-15",
+  "res": "FAIL",
+  "ev": "Plain textarea, Monaco editors 0, label \"HTML · English\" (ok). Tab inserted 2 spaces (ok). After Escape then Tab, focus is still on TEXTAREA and the text grew by 2 more characters (expected focus to move out). Text kept across tab and language switches: true. Computed font: page editor 12px/\"JetBrains Mono\", ui vs Global CSS & JS editor 14px/\"JetBrains Mono\", ui (expected equal).",
+  "shot": ""
+ },
+ {
+  "id": "::errs-pag14",
+  "res": "INFO",
+  "ev": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-31",
+  "res": "PASS",
+  "ev": "Footer before any save: \"Published Discard Save draft Publish\". After Save draft: \"Published · draft has changes Saved just now by admin Discard Save draft Publish\" (expected \"Saved just now by admin\" next to the Draft / Published status line).",
+  "shot": "acceptance-run-1-shots/PAG-31.png"
+ },
+ {
+  "id": "PAG-16",
+  "res": "FAIL",
+  "ev": "Save draft disabled when clean: true; enabled after edits: true. One Save stored the three edits; notification(s): [\"Draft saved — the public page is unchanged just now\"] (expected \"Saved successfully.\"). After rail Dashboard > Pages: {\"en\":true,\"es\":\"// es js\",\"fr\":\"/* fr css */\"}; after reload: {\"en\":false,\"es\":\"\",\"fr\":\"\"}; after Reset demo data: {\"en\":false,\"es\":\"\",\"fr\":\"\"}. Restore controls: 0 (no release list to compare).",
+  "shot": "acceptance-run-1-shots/PAG-16.png"
+ }
+]

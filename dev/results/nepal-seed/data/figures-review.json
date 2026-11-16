@@ -1,0 +1,198 @@
+{
+ "uncertain": [
+  [
+   "toll-one-dead-early-afternoon",
+   "Time of day only: 'early afternoon'."
+  ],
+  [
+   "toll-fourteen-dead",
+   "The statement names no place; the same count is Kathmandu in death-toll-14-2025-09-08."
+  ],
+  [
+   "hospital-split-8-3-3-2-1",
+   "Hospital split differs from hospital-split-himalpress-6-5-3-2-1 for the same 17."
+  ],
+  [
+   "hospital-split-himalpress-6-5-3-2-1",
+   "Hospital split differs from hospital-split-8-3-3-2-1 for the same 17."
+  ],
+  [
+   "valley-sixteen-and-itahari-two",
+   "The statement gives 16 + 2; the 18 total is not stated and not used as the figure."
+  ],
+  [
+   "19-killed-in-kathmandu-on-8-september",
+   "The statement puts all 19 in Kathmandu; other claims put 17 in Kathmandu and 2 in Itahari, so the scope is the statement's, not confirmed."
+  ],
+  [
+   "two-8-september-deaths-were-in-jhapa",
+   "Figure follows the claim title (two deaths in Jhapa); an earlier pass recorded the 19 nationwide. Other claims place the two outside the capital at Itahari."
+  ],
+  [
+   "amnesty-19-killed-300-injured-at-kathmandu-assembly",
+   "as_of derived from 'the 8 September assembly'; the Amnesty statement itself is dated 2025-12-08 in asserted_on."
+  ],
+  [
+   "death-toll-20-on-8-sep-pm-secretariat",
+   "A daily count, not the running total of that date."
+  ],
+  [
+   "death-toll-reported-on-11-september",
+   "Three sources, three figures, one statement: the first (Ada Derana) is the primary figure."
+  ],
+  [
+   "death-toll-51-2025-09-12",
+   "Statement says 'by 12 to 13 September'; 12 September used (the claim's asserted_on)."
+  ],
+  [
+   "death-breakdown-police-2025-09-12",
+   "51 is the sum of the four groups; the statement does not state a total."
+  ],
+  [
+   "official-death-toll-36-ministry-of-health-12-september",
+   "Ministry of Health, hospital data: 36 against police's 51 on the same date."
+  ],
+  [
+   "death-toll-60-2025-09-14-republica",
+   "The claim id says 60; the statement gives 59 rising to 'almost 60'. 59 used."
+  ],
+  [
+   "death-toll-73-2025-09-16",
+   "Date taken from 'before the Koteshwor body was found on 17 September'."
+  ],
+  [
+   "death-toll-72-to-74-by-21-september",
+   "Two counts in one statement; the later one is primary."
+  ],
+  [
+   "death-toll-75-2025-10",
+   "A retrospective photo-gallery caption; the count's own date is unknown, 'about a month after' used."
+  ],
+  [
+   "death-toll-76-2025-11",
+   "Sources are dated 4 November and 20 November; 4 November used."
+  ],
+  [
+   "76-deaths-nationwide",
+   "No date in the statement or the claim."
+  ],
+  [
+   "77-deaths-nationwide",
+   "No date in the statement or the claim."
+  ],
+  [
+   "death-toll-77-for-8-9-september",
+   "Retrospective article of September 2026; the count's date is not given."
+  ],
+  [
+   "martyr-list-45-2025-11-03",
+   "Counts people recognised, a subset of the dead, so unit other."
+  ],
+  [
+   "ramechhap-prison-three-killed-2025-09-11",
+   "Two sources give 3 killed / 13 injured and 2 killed / 12 injured for the same clash."
+  ],
+  [
+   "33-protesters-killed-by-live-bullets",
+   "as_of is the claim's date; the examination period is not given."
+  ],
+  [
+   "injuries-100-plus-2025-09-08",
+   "Place not stated (Kathmandu assembly or national)."
+  ],
+  [
+   "injured-347",
+   "Duplicate of injuries-347-2025-09-08 with no date of its own."
+  ],
+  [
+   "injuries-453-2025-09-09",
+   "INSEC reported on 9 September about the 8 September protests; the count is as of the report."
+  ],
+  [
+   "injuries-2000-on-8-sep-hamro",
+   "Retrospective article of September 2026; 'nearly 2,000' on 8 September is far above the 347 to 1,000 of 2025."
+  ],
+  [
+   "2024-floods-death-toll-249",
+   "Final toll of the 2024 floods; the count's own date is not given."
+  ],
+  [
+   "nearly-900-inmates-escaped-two-western-prisons",
+   "No date in the statement or the claim."
+  ],
+  [
+   "14555-inmates-escaped",
+   "Commission total for the unrest; date taken as 9 September, the day of the breaks, and escapes continued on 10 September."
+  ],
+  [
+   "more-than-a-dozen-media-outlets-attacked-on-9-september",
+   "'More than a dozen' read as at least 12."
+  ],
+  [
+   "fnj-26-press-freedom-incidents-in-protest-days",
+   "FNJ report dated 2025-12-31; 8 September is the protest day named."
+  ],
+  [
+   "supreme-court-20000-case-files-lost",
+   "Search-result summary of SCMP; no date."
+  ],
+  [
+   "26-platforms-were-blocked",
+   "Not a casualty-figure claim; a count with disagreeing sources."
+  ],
+  [
+   "expected-turnout-was-about-8000",
+   "Not a casualty-figure claim; an expectation, not a count."
+  ],
+  [
+   "tinkune-turnout-hardly-5000",
+   "Not a casualty-figure claim; 'hardly 5,000'."
+  ],
+  [
+   "ammunition-13182-rounds-over-two-days",
+   "Period count for 8 and 9 September; the sum of the three types (10,805) is below the total, the remainder is not itemised."
+  ],
+  [
+   "collateral-damage-3-trillion-economists",
+   "Economists' estimate of collateral damage."
+  ],
+  [
+   "private-sector-loss-80-to-100-billion-fnccii",
+   "A range; the low end is the figure."
+  ]
+ ],
+ "skipped": [
+  [
+   "chitrakar-died-on-9-september",
+   "one named individual; not a figure"
+  ],
+  [
+   "chitrakar-survived-with-burn-injuries",
+   "one named individual; not a figure"
+  ],
+  [
+   "child-among-the-dead",
+   "an age, not a count"
+  ],
+  [
+   "one-indian-national-killed-2025-09-09",
+   "one named individual; not a figure"
+  ],
+  [
+   "early-deaths-from-rubber-bullets",
+   "a cause, not a count"
+  ],
+  [
+   "police-fired-live-ammunition-on-8-september",
+   "an act, not a count"
+  ],
+  [
+   "thousands-of-prisoners-freed",
+   "'thousands' has no integer"
+  ],
+  [
+   "tinkune-injured-hundreds",
+   "'hundreds' has no integer"
+  ]
+ ]
+}

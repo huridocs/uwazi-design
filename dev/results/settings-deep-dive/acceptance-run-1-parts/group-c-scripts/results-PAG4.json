@@ -1,0 +1,80 @@
+[
+ {
+  "id": "PAG-18",
+  "res": "FAIL",
+  "ev": "Saved Global CSS & JS (reopened: CSS \"body { background: rgb(255, 255, 204); }...\", JS \"window.__globalJs = 1;\"). Methodology preview, Draft: body rgb(251, 250, 247), h1 rgb(28, 28, 28); Published: body rgb(251, 250, 247), h1 rgb(28, 28, 28) (expected cream and red). Shell body background rgb(245, 240, 232) -> rgb(245, 240, 232) (unchanged), <style> with that CSS in the shell: false. typeof window.__globalJs in shell: undefined; in preview frame: undefined. The list has no View.",
+  "shot": "acceptance-run-1-shots/PAG-18.png"
+ },
+ {
+  "id": "PAG-19",
+  "res": "FAIL",
+  "ev": "Page CSS \"h1 { font-style: italic; }\": preview h1 font-style = italic (ok). Page JS \"window.__pageJs = 1;\": typeof window.__pageJs in the preview frame = number (expected \"undefined\": stored, never run; the editor says the preview \"runs it sandboxed\"), in the shell = undefined.",
+  "shot": "acceptance-run-1-shots/PAG-19.png"
+ },
+ {
+  "id": "PAG-20",
+  "res": "FAIL",
+  "ev": "Clicked Publish on Partners (clean): no \"Publish release\" modal and no \"Release message\" field (dialogs open [], release message fields 0); the page was published at once (notifications [\"Partners published just now\"]; footer now \"Published Saved just now by admin Discard Save draft Publish\"). Expected a modal with a Release message textarea and Cancel/Publish. On a new unsaved page Publish is also enabled (PAG-05).",
+  "shot": "acceptance-run-1-shots/PAG-20.png"
+ },
+ {
+  "id": "PAG-21::n",
+  "res": "INFO",
+  "ev": "[\"Partners published just now\"]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-21",
+  "res": "FAIL",
+  "ev": "Publish with an unsaved ES edit and no message step: notifications [\"Partners published just now\"] (expected \"Page published successfully.\"); the unsaved ES edit was saved with it (Save draft disabled afterwards: true), footer \"Published Saved just now by admin Discard Save draft Publish\", list row [\"Partners /page/partners Published\"]; Published preview shows \"Published version — what visitors see now IC Inter-American Cases ES borrador ES\". No release message and no Restore list (Restore controls 0), so the release with \"First release\" and today's date cannot be listed.",
+  "shot": "acceptance-run-1-shots/PAG-21.png"
+ },
+ {
+  "id": "PAG-23",
+  "res": "FAIL",
+  "ev": "No Restore button on the editor or list after two publishes of Partners (Restore controls: 0); \"Restore previous version\" modal, release list with message/date, \"No releases yet\" and the one-row selection rule cannot be driven.",
+  "shot": ""
+ },
+ {
+  "id": "PAG-24",
+  "res": "FAIL",
+  "ev": "No Restore flow exists (Restore controls: 0), so the confirm text \"every language's draft will be overwritten\", Cancel, Confirm and \"Draft restored from release.\" cannot be driven.",
+  "shot": ""
+ },
+ {
+  "id": "PAG-22",
+  "res": "FAIL",
+  "ev": "After a Publish and a later edit + Save draft: the editor reads \"Published · draft has changes Saved just now by admin\" and the list reads \"Partners /page/partners Published · edited\" (expected the same wording in both; they differ: \"Published · draft has changes\" vs \"Published · edited\"). Published preview keeps the release (contains \"later edit\": false), Draft preview shows the edit (true). Never-published pages read Draft in the list: []; no View control exists.",
+  "shot": "acceptance-run-1-shots/PAG-22.png"
+ },
+ {
+  "id": "::errs-pag20",
+  "res": "INFO",
+  "ev": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-25",
+  "res": "FAIL",
+  "ev": "Sequence of Beacon notifications: [[\"Save\",[\"Draft saved — the public page is unchanged just now\"]],[\"Save again\",[\"Draft saved — the public page is unchanged just now\"]],[\"Publish\",[\"QA page published just now\"]],[\"Delete\",[\"Case law deleted just now\"]]] (expected \"Saved successfully.\", \"Saved successfully.\", \"Page published successfully.\", \"Draft restored from release.\", \"Deleted successfully.\"; Restore controls 0, so the restore step cannot run). Activity log entries (summary, newest first): [\"UPDATE Updated page “QA page” [admin]\",\"UPDATE Updated page “QA page” [admin]\",\"UPDATE Updated page “QA page” [admin]\"] (expected \"Created page\", \"Updated page\", \"Published page release\", \"Restored page draft from release\", \"Deleted page\"; the delete is not logged: DELETE passes log:false in PageDelete).",
+  "shot": "acceptance-run-1-shots/PAG-25.png"
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Each save/publish/delete adds one Beacon entry, but the wording differs from the quoted Uwazi text ([\"Draft saved — the public page is unchanged just now\",\"Draft saved — the public page is unchanged just now\",\"QA page published just now\",\"Case law deleted just now\"]); a failure adds no \"An error occurred\" entry (see PAG-26).",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Log after create/save/publish/delete of a page: [\"UPDATE Updated page “QA page” [admin]\",\"UPDATE Updated page “QA page” [admin]\",\"UPDATE Updated page “QA page” [admin]\"]: every Save and Publish logs \"Updated page “QA page”\" (the first save is not \"Created page\", Publish is not \"Published page release\"), the delete is not logged at all.",
+  "shot": ""
+ },
+ {
+  "id": "PAG-26",
+  "res": "FAIL",
+  "ev": "Forced every storage write to throw (Storage.setItem patched to throw QuotaExceededError). Save draft: notifications [], editor still dirty afterwards: false. Publish: []. Delete Contact: [\"Contact deleted just now\"], rows left 3. Entries titled \"An error occurred\": 0. Uncaught/console errors: [\"pageerror: quota exceeded\",\"pageerror: quota exceeded\",\"pageerror: quota exceeded\",\"pageerror: quota exceeded\"].",
+  "shot": "acceptance-run-1-shots/PAG-26.png"
+ }
+]

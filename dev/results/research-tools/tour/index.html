@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Tools Tour</title>
+<style>
+:root {
+  --bg: #fbf9f5; --paper: #ffffff; --ink: #1c1712; --ink-2: #4a433b; --ink-3: #776e64;
+  --border: #e4ddd2; --warm: #f5f0e8; --carbon: #1d7fb8; --amber: #a86a00; --seal: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161411; --paper: #1f1c18; --ink: #f1ece4; --ink-2: #cfc7bb; --ink-3: #9d958a;
+    --border: #37322b; --warm: #2a2620; --carbon: #6cb8e6; --amber: #e0a43a; --seal: #ef7a72;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161411; --paper: #1f1c18; --ink: #f1ece4; --ink-2: #cfc7bb; --ink-3: #9d958a;
+  --border: #37322b; --warm: #2a2620; --carbon: #6cb8e6; --amber: #e0a43a; --seal: #ef7a72;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, sans-serif; }
+main { max-width: 76rem; margin: 0 auto; padding: 3rem 1rem 5rem; }
+header { max-width: 46rem; margin-bottom: 2.5rem; }
+h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 .75rem; font-weight: 650; }
+h2 { font-size: 1.125rem; margin: 0 0 .5rem; font-weight: 650; text-wrap: balance; }
+p, li, figcaption { text-wrap: pretty; }
+p { margin: 0 0 .75rem; color: var(--ink-2); }
+.meta { font-size: .875rem; color: var(--ink-3); }
+code { font: .85em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--warm); padding: .05em .3em; border-radius: 4px; }
+.note { background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 0 0 2.5rem; max-width: 46rem; }
+.note p:last-child { margin: 0; }
+ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+ol.steps > li { counter-increment: step; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 2rem 0; border-top: 1px solid var(--border); }
+@media (min-width: 64rem) { ol.steps > li { grid-template-columns: 17rem minmax(0, 1fr); gap: 2rem; } }
+.text h2::before { content: counter(step, decimal-leading-zero); display: block; font-size: .75rem; letter-spacing: .08em; color: var(--ink-3); font-weight: 600; margin-bottom: .25rem; }
+.text .q { font-size: .8125rem; color: var(--ink-3); }
+figure { margin: 0; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--paper); }
+figure + figure { margin-top: .75rem; }
+figcaption { font-size: .8125rem; color: var(--ink-3); margin-top: .375rem; }
+.phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+.phones img { max-width: 20rem; }
+section { padding-top: 2.5rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+.defects { padding-left: 1.25rem; max-width: 52rem; }
+.defects li { margin-bottom: .6rem; color: var(--ink-2); }
+.defects b { color: var(--ink); font-weight: 600; }
+.tag { display: inline-block; font-size: .7rem; font-weight: 600; letter-spacing: .04em; padding: 0 .4rem; border-radius: 6px; margin-right: .35rem; vertical-align: .1em; }
+.tag.wrong { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+.tag.data { color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent); }
+.tag.ui { color: var(--carbon); background: color-mix(in srgb, var(--carbon) 12%, transparent); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Research tools on Nepal: a review tour</h1>
+  <p>The OSINT workflow on the Nepal protests collection, in fourteen steps. Each step shows one surface at 1440 (light) and says which question it answers; the numbers refer to the twenty questions in <code>gap-analysis.md</code>.</p>
+  <p class="meta">Branch <code>f5-on-f7-wip</code> at <code>32bae2de</code>: playground <code>db2c6a44</code> (F1–F4, F6, F7, Content card, drawer Filters tab), F5 cherry-picked on top (<code>78d44197</code>, <code>882d7741</code>, <code>ba9ea163</code>), and the saved-views fix below. Headless Chromium, light theme only; dark mode was not checked. 6&nbsp;October 2026.</p>
+</header>
+
+<div class="note">
+  <h2>Before the tour: saved views keep F5's state</h2>
+  <p>F5 replaced the Country and Descriptor AND/OR switches with a Match mode per facet and added ranges and groups, so F7's <code>atoms/savedViews.ts</code> no longer compiled. Commit <code>32bae2de</code> puts <code>match</code>, <code>ranges</code> and <code>groups</code> in the <code>LibrarySnapshot</code>, writes them back on apply, and counts them in <code>snapshotFilterCount</code> the way the filter badge does. The keys are optional: a view or link saved before F5 opens with the defaults, and an old "AND" opens as <code>all</code>.</p>
+  <p>Checked on Nepal with Casualty record, Verification <i>none</i> of Disputed, Age 18–30 and an OR group of Cause and Age (25 results, five chips): saved view after a reload, search history after a reload, and the <code>#view=</code> link in a fresh load all restore the same 25 results, chips, Match mode, bounds and group. An old-format view opens with defaults and is marked current. tsc and build pass.</p>
+</div>
+
+<ol class="steps">
+  <li>
+    <div class="text">
+      <h2>The collection and the Content card</h2>
+      <p>2,124 records on the 2024–2026 protests. The Content card counts what records carry: 51 with a document, 29 images, 50 videos, 25 audio. "More" opens where it is stored, language, length and quoted passages.</p>
+      <p class="q">Starting point for every question.</p>
+    </div>
+    <figure><img src="img/01-library.png" alt="Library on the Nepal collection with the Content card in the filters"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>Event › Where = Kathmandu District</h2>
+      <p>The Where chain filters events by the place they happened at, or any place that place is in. Kathmandu District returns 85 events, including those tied only to a building inside it. The Who chain below narrows the same set by person or organisation.</p>
+      <p class="q">Questions 7 and 8, place half.</p>
+    </div>
+    <figure><img src="img/02-chain.png" alt="Where chain facet with Kathmandu District ticked, 85 events"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>Match modes and an OR group</h2>
+      <p>Each facet has a Match row (any, none, missing); Age is a range. Casualty records, Verification <i>none</i> of Disputed, and a group joining Cause = Burns or fire with Age 18–30 by OR: 25 records. The group shows as one chip, "Cause as reported or Age".</p>
+      <p class="q">Questions 4, 5 and 18.</p>
+    </div>
+    <div>
+      <figure><img src="img/03b-group.png" alt="Group card joining Cause and Age with either, and five active filter chips"></figure>
+      <figure><img src="img/03-match-group.png" alt="Cause and Age facets with their Match rows"><figcaption>The Cause and Age cards with their Match rows.</figcaption></figure>
+    </div>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A date and hour range, on the brush and the map</h2>
+      <p>Events in Kathmandu District from 12:00 on 8 September to 18:00 on 9 September: 45, matched when the event's span overlaps the range. The brush and the map read the same filter; 42 are located, 3 have no geolocation.</p>
+      <p class="q">Question 7.</p>
+    </div>
+    <figure><img src="img/04-range-map.png" alt="Map of Kathmandu with 42 located events, range set on the brush and in the Date facet"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A timed event and "Why we believe this"</h2>
+      <p>"Police fire on protesters at Parliament and New Baneshwar" is timed 12:37 to 16:00. Every field shows how many sources stand behind it. On When, the popover lists the six sources, marks the value Disputed and says the start time and the order are contested.</p>
+      <p class="q">Question 4.</p>
+    </div>
+    <figure><img src="img/05-why.png" alt="Event record with the Why we believe this popover open on When"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>Status chips and the drawer Filters tab</h2>
+      <p>Ministry of Home Affairs, Relationships, with Verification and As of in the drawer. Each row carries its status and tenure. As of 9 September 2025 with "held office at" should answer who was Home Minister that day; it returns Lekhak "since 2024", which is wrong (defect 1).</p>
+      <p class="q">Questions 1 and 2.</p>
+    </div>
+    <figure><img src="img/06-asof.png" alt="Relationships filtered As of 2025/09/09 and held office at, one row: Ramesh Lekhak since 2024"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>Connect A to B</h2>
+      <p>From Rabi Lamichhane to "Parliament gate vandalised and set on fire": seven shortest paths of four hops, sources excluded as intermediate hops, each link with its status. Shared neighbours is the second tab.</p>
+      <p class="q">Questions 9 and 10.</p>
+    </div>
+    <figure><img src="img/07-connect.png" alt="Connections dialog listing paths from Lamichhane to the gate fire"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>The path in the graph</h2>
+      <p>"Show in graph" draws path 1 over Lamichhane's graph: the NHRC report, the NHRC claim, the 8 September protests, the gate fire. The strip at the bottom names the path and clears it.</p>
+      <p class="q">Questions 9 and 13.</p>
+    </div>
+    <figure><img src="img/08-graph.png" alt="Graph view with the four-hop path highlighted"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A claim's evidence, with its figure</h2>
+      <p>"19 killed in Kathmandu on 8 September" leads with its figure (at least 19, Kathmandu, as of 8 Sep) and the claim it disagrees with (17). Below, publishers against Supports and Disputes, each with the quote, date and status.</p>
+      <p class="q">Questions 3, 6 and 17.</p>
+    </div>
+    <figure><img src="img/09-claim.png" alt="Claim evidence block with figure, disagreement and the publisher matrix"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>The Library Evidence view</h2>
+      <p>Claims of type casualty or injury figure, in the Evidence view: the figure in the left column, the claims each one disagrees with, and a strength bar of supporting against disputing publishers. Wire copies count once.</p>
+      <p class="q">Question 6.</p>
+    </div>
+    <figure><img src="img/10-evidence.png" alt="Library Evidence view of casualty-figure claims"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A misattributed video</h2>
+      <p>A Kathmandu water-cannon clip shared as a protest in the Philippines. The record opens with the Misattributed note and the VERA Files fact-check, and keeps the distressing footage covered. The drawer shows the claim it was used for and the source that geolocated it.</p>
+      <p class="q">Question 11.</p>
+    </div>
+    <figure><img src="img/11-misattributed.png" alt="Media record with the Misattributed note, covered content and its relationships"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A geolocated photo</h2>
+      <p>A Commons photo of the Chitwan District Court fire, with attribution and licence under the picture. Place shown gives the coordinates; "How place and time were established" says they come from the uploader and were not independently geolocated.</p>
+      <p class="q">Question 12.</p>
+    </div>
+    <div>
+      <figure><img src="img/12-geolocated-b.png" alt="Photo record fields: place shown with coordinates, how place and time were established, established by"></figure>
+      <figure><img src="img/12-geolocated.png" alt="Photo record with the image and its credit line"><figcaption>The same record, top: the bundled photo with its credit and licence.</figcaption></figure>
+    </div>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A government PDF and a page jump</h2>
+      <p>The Bhadra 2082 cabinet decisions, a Government of Nepal PDF with OCR text. The reference to "Cabinet decisions: martyr status, mourning day and relief" carries p.&nbsp;7; the page tag scrolls the document to page 7 and labels it.</p>
+      <p class="q">Question 19.</p>
+    </div>
+    <figure><img src="img/13-pdf.png" alt="Source record with references tagged p.4 and p.7, PDF scrolled to page 7"></figure>
+  </li>
+  <li>
+    <div class="text">
+      <h2>A saved view and a case with citations</h2>
+      <p>The disputed casualty-figure filter saved as a view (Evidence, 3 filters), above the search history. Four pinned records make the case; Citations lists 32 quotes with publisher, date, URL, status and page, and exports as text, Markdown or CSV.</p>
+      <p class="q">Question 20.</p>
+    </div>
+    <div>
+      <figure><img src="img/14a-views.png" alt="Views menu with the saved view and search history"></figure>
+      <figure><img src="img/14c-citations.png" alt="Case panel Citations tab with copied state"><figcaption>Citations tab after "Copy citations".</figcaption></figure>
+      <figure><img src="img/14b-case.png" alt="Case panel with four pinned records"><figcaption>Pinned tab: each record with its status and quote count.</figcaption></figure>
+    </div>
+  </li>
+</ol>
+
+<section>
+  <h2>On a phone (390)</h2>
+  <p>The filter sheet with the Where chain, the Evidence view, and a claim's evidence.</p>
+  <div class="phones">
+    <figure><img src="img/p1-filters.png" alt="Phone filter sheet with Kathmandu District ticked"><figcaption>Filters sheet, Event › Where.</figcaption></figure>
+    <figure><img src="img/p2-evidence.png" alt="Phone Evidence view"><figcaption>Evidence view, disputed casualty figures.</figcaption></figure>
+    <figure><img src="img/p3-claim.png" alt="Phone claim relationships with the evidence block"><figcaption>Claim record, Relationships.</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Defects and rough edges seen on the way</h2>
+  <p class="meta">Not fixed. <span class="tag wrong">wrong</span> gives a wrong answer, <span class="tag data">data</span> is in the corpus or its build, <span class="tag ui">ui</span> is presentation.</p>
+  <ol class="defects">
+    <li><span class="tag wrong">wrong</span><span class="tag data">data</span><b>As of answers wrongly.</b> Ministry of Home Affairs, As of 2025-09-09, held office at: Ramesh Lekhak "since 2024". Ref <code>bg24-411</code> is an open-ended copy of the tenure that <code>8sep-112</code> closes on 2025-09-08, so the open one wins. The build should close or merge duplicate tenures.</li>
+    <li><span class="tag ui">ui</span><b>Hours are never shown.</b> The event above is timed 12:37–16:00 and "Time precision" reads Hour, but When shows "2025/09/08 – 2025/09/08". Cards show "09/09/2025 – 09/09/2025" for one day and "05/10/2026 –" with a dangling dash.</li>
+    <li><span class="tag ui">ui</span><b>Five date formats on one screen</b> (step 4): 2025/09/08 in the field, "2025-09-08 12:00 → 2025-…" in the truncated chip, "8 Sep 2025, 12:00" on the brush, "12:00 PM" in the 12-hour time input, 09/09/2025 on cards.</li>
+    <li><span class="tag ui">ui</span><b>The map and brush do not fit the filter.</b> With Kathmandu District and a 30-hour range the map opens on all of northern India (one click on the cluster to reach Kathmandu), and the range is a 2px sliver on a quarterly brush.</li>
+    <li><span class="tag ui">ui</span><b>"Why we believe this" covers the value it explains</b>, and its note cites claims by slug (<code>first-shots-at-12-37</code>, <code>peter-one-radio-order-12-40</code>) instead of titles or links.</li>
+    <li><span class="tag ui">ui</span><b>The drawer opens on an empty Document tab</b> ("No document") for records with no file once another record set it (Lamichhane, the claim, the Ministry), leaving half the screen blank.</li>
+    <li><span class="tag ui">ui</span><b>The Relationships view is global.</b> Graph chosen on Lamichhane opened the claim in graph at 217%, which hides the claim's Evidence block; the block shows only in List.</li>
+    <li><span class="tag ui">ui</span><b>Connect to:</b> the search field is not focused when the dialog opens. Path 2 runs through the "Kathmandu" location hub, the trivial path the gap analysis warned about; the gap analysis measured 3 hops, the tool finds 4.</li>
+    <li><span class="tag ui">ui</span><b>Graph path:</b> the label "NHRC submits report recomme…" sits on top of the "targets" group label; the highlighted edges carry no relation names.</li>
+    <li><span class="tag data">data</span><b>Claim status against its matrix.</b> "2,660 verified injured" and "2,522 wounded per the commission report" are Disputed yet "none disputes it". "Two of the 19 deaths on 8 September were in Jhapa" carries figure 19, Nationwide, not 2 in Jhapa.</li>
+    <li><span class="tag ui">ui</span><b>Evidence view has no figure sort.</b> It lists by Date added, so 2,000 injured, 2,660 injured, 19 killed, 2,522 injured follow each other; the meta line wraps as "Nationwide ·" with the separator at the line end.</li>
+    <li><span class="tag ui">ui</span><b>Citations drop the stance.</b> The claim's disputing quotes ("killing 17 people") are listed as citations for "19 killed" with nothing saying they dispute it.</li>
+    <li><span class="tag ui">ui</span><b>Add group starts on the wrong members.</b> It picks the first two narrowing facets ("Type or Verification"), so both pickers need changing. A value the current results lack cannot be ticked, so Burns had to be ticked before Age narrowed the list.</li>
+    <li><span class="tag ui">ui</span><b>PDF jump is page-level.</b> The quoted passage on page 7 is not highlighted, and the reference label and the "No translation in EN. Showing NE." notice cover the top lines of the page.</li>
+    <li><span class="tag ui">ui</span><b>Search highlights inside words.</b> Query words "on" and "at" mark "wat<u>er</u>", "cann<u>on</u>", "K<u>at</u>hmandu", "Internati<u>on</u>al".</li>
+    <li><span class="tag ui">ui</span><b>Search history doubles quotes</b> for a quoted query: “"Ministry of Home Affairs"”.</li>
+    <li><span class="tag ui">ui</span><b>Phone: Filters is behind the bottom bar's "…" menu</b>; the toolbar has no filter control. A quote in the claim matrix leaves "8.”" alone on its line.</li>
+    <li><span class="tag ui">ui</span><b>Verification is not the leading facet</b>, as CLAUDE.md says it is: it comes after Status, Template and Content.</li>
+  </ol>
+</section>
+</main>
+</body>
+</html>

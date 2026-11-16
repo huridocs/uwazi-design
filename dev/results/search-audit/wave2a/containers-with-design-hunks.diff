@@ -1,0 +1,615 @@
+diff --git a/app/src/components/library/ResultsSnippets/ResultsBody.tsx b/app/src/components/library/ResultsSnippets/ResultsBody.tsx
+index ff057ccd..1d900eed 100644
+--- a/app/src/components/library/ResultsSnippets/ResultsBody.tsx
++++ b/app/src/components/library/ResultsSnippets/ResultsBody.tsx
+@@ -1,4 +1,4 @@
+-import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
++import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+ import type { Entity } from "../../../data/entities";
+ import type { Language } from "../../../atoms/language";
+ import type { DataSource } from "../../../utils/libraryFacets";
+@@ -8,8 +8,11 @@ import {
+   librarySearchMatchAtom,
+   librarySearchScopeAtom,
+   matchTypeFiltersAtom,
++  type LibraryPageSize,
+   type MatchTypeFilters,
+ } from "../../../atoms/library";
++import { breakpointAtom } from "../../../atoms/viewport";
++import { LibraryPageEnd } from "../LibraryPagination";
+ import { ListInfoRow } from "../../shared/ListInfoRow";
+ import { ToggleChip } from "../../shared/ToggleChip";
+ import { CollapseControls } from "../../relationships/CollapseControls";
+@@ -19,13 +22,15 @@ import {
+   NoSearchState,
+   ResultEvidence,
+   ResultRecord,
+-  ResultsBlank,
+-  WarmButton,
++  ZeroResults,
+   passageOwners,
+   type EvidenceHandlers,
+   type SelectHandler,
+ } from "./ResultRecord";
+ import { useSettledWidth } from "../../../hooks/useSettledWidth";
++import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
++
++const NO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
+ import type { RelevanceBreakdown } from "../../../utils/relevance";
+ 
+ type MatchType = keyof MatchTypeFilters;
+@@ -35,10 +40,6 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
+   { key: "document", label: "Document" },
+ ];
+ 
+-/** How many entity cards to render before "Show more" (the drawer is narrow and
+- *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
+-const RESULTS_STEP = 40;
+-
+ /** What a snippet's text column loses to its surroundings inside the lane:
+  *  the pane gutter both sides (24), the card's border and padding (26) and the
+  *  line's own padding (16). */
+@@ -71,6 +72,14 @@ interface Props {
+   /** LibraryView's per-query breakdown cache. Its identity changes only with the
+    *  query (it is memoised there), so it doesn't defeat this component's memo. */
+   relevanceOf: (e: Entity) => RelevanceBreakdown;
++  /** The page shown, on the Library's page state: the same records the main
++   *  pane's page holds where it pages, and a pager of its own at the end. */
++  page: number;
++  pageSize: LibraryPageSize;
++  onPage: (page: number) => void;
++  pageLabel: string;
++  /** With no result, the switches that would bring results back. */
++  zeroSuggestions?: readonly ZeroResultSuggestion[];
+ }
+ 
+ /** The Results-tab evidence view: per matched record, WHERE the term hit (which
+@@ -104,8 +113,16 @@ export const ResultsBody = memo(function ResultsBody({
+   matchTypeCounts,
+   totalMatches,
+   relevanceOf,
++  page,
++  pageSize,
++  onPage,
++  pageLabel,
++  zeroSuggestions = NO_SUGGESTIONS,
+ }: Props) {
+-  const [visible, setVisible] = useState(RESULTS_STEP);
++  const compact = useAtomValue(breakpointAtom) === "mobile";
++  const pageStart = (page - 1) * pageSize;
++  const pageEntities = useMemo(() => entities.slice(pageStart, pageStart + pageSize), [entities, pageStart, pageSize]);
++  const pageCount = Math.max(1, Math.ceil(entities.length / pageSize));
+   // The chips are FILTER state (they narrow the left pane too — see
+   // `matchTypeFiltersAtom`), so `entities` already reflects them.
+   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
+@@ -139,14 +156,13 @@ export const ResultsBody = memo(function ResultsBody({
+   const measured = laneW > 0;
+   const capped = useMemo(
+     () =>
+-      (measured ? entities : [])
+-        .slice(0, visible)
++      (measured ? pageEntities : [])
+         .map((e) => ({
+           entity: e,
+           snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx, scope, match }),
+         }))
+         .filter((x) => x.snippets.count > 0),
+-    [measured, entities, visible, trimmed, language, source, ctx, scope, match],
++    [measured, pageEntities, trimmed, language, source, ctx, scope, match],
+   );
+ 
+   // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
+@@ -179,11 +195,20 @@ export const ResultsBody = memo(function ResultsBody({
+     [onFocusProperty, onSelectSnippet, onSelect],
+   );
+ 
++  // A new page starts at the top of the lane, its cards open.
++  const scrollRef = useRef<HTMLDivElement | null>(null);
++  const setLane = useCallback(
++    (el: HTMLDivElement | null) => {
++      scrollRef.current = el;
++      laneRef(el);
++    },
++    [laneRef],
++  );
+   useEffect(() => {
+-    setVisible(RESULTS_STEP);
+     setExpandedMap({});
+     setShowAllMap({});
+-  }, [entities, trimmed, language, source]);
++    scrollRef.current?.scrollTo({ top: 0 });
++  }, [pageEntities, trimmed, language, source]);
+ 
+   const isExpanded = (id: string) => expandedMap[id] ?? true;
+   const expandedCount = rendered.filter((x) => isExpanded(x.entity.id)).length;
+@@ -213,15 +238,7 @@ export const ResultsBody = memo(function ResultsBody({
+   if (totalMatches === 0) {
+     return (
+       <Shell>
+-        <ResultsBlank>
+-          {/* Whole phrase is English; `dir="ltr"` keeps it from reordering in an
+-              RTL drawer (isolating only the digit wasn't enough). */}
+-          <span dir="ltr" className="text-sm text-ink-tertiary">
+-            No matches for{" "}
+-            <span className="font-medium text-ink-secondary">“{trimmed}”</span>
+-          </span>
+-          <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
+-        </ResultsBlank>
++        <ZeroResults query={trimmed} scope={scope} suggestions={zeroSuggestions} onClearSearch={onClearSearch} />
+       </Shell>
+     );
+   }
+@@ -274,13 +291,17 @@ export const ResultsBody = memo(function ResultsBody({
+           `overflow-hidden`, so in a flex column that overflows they'd shrink to
+           their header height and clip their own content. Block flow keeps each
+           card at its natural height and lets this container scroll. */}
+-      <div ref={laneRef} data-part="results" className="bleed flex-1 overflow-auto py-3 space-y-2">
++      <div
++        ref={setLane}
++        data-part="results"
++        className="bleed flex-1 overflow-auto py-3 space-y-2"
++      >
+         {entities.length === 0 && (
+           <p data-part="empty" className="pt-2 text-xs text-ink-tertiary">
+             No results for the selected match types.
+           </p>
+         )}
+-        {/* The list, and only the list: the empty line and "Show more" sit
++        {/* The list, and only the list: the empty line and the pager sit
+             beside it in the lane, since neither is a result. */}
+         <ul data-part="list" className="space-y-2">
+         {rendered.map(({ entity, snippets }) => (
+@@ -309,12 +330,15 @@ export const ResultsBody = memo(function ResultsBody({
+           </li>
+         ))}
+         </ul>
+-        {visible < entities.length && (
+-          <div className="flex justify-center pt-1">
+-            <WarmButton onClick={() => setVisible((n) => n + RESULTS_STEP)}>
+-              Show more ({(entities.length - visible).toLocaleString()})
+-            </WarmButton>
+-          </div>
++        {pageCount > 1 && (
++          <LibraryPageEnd
++            total={entities.length}
++            page={page}
++            pageSize={pageSize}
++            onPage={onPage}
++            compact={compact}
++            label={pageLabel}
++          />
+         )}
+       </div>
+     </Shell>
+diff --git a/app/src/components/library/ResultsSnippets/ResultsMainView.tsx b/app/src/components/library/ResultsSnippets/ResultsMainView.tsx
+index 20d637a3..d7d627df 100644
+--- a/app/src/components/library/ResultsSnippets/ResultsMainView.tsx
++++ b/app/src/components/library/ResultsSnippets/ResultsMainView.tsx
+@@ -1,5 +1,4 @@
+-import { Children, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+-import { FULL_TEXT_MIN, SEARCH_SCOPE_LABEL } from "../../../utils/searchScope";
++import { Children, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+ import { useAtomValue, useSetAtom } from "jotai";
+ import { breakpointAtom } from "../../../atoms/viewport";
+ import { ChevronDown, FileText, Tag } from "lucide-react";
+@@ -24,9 +23,10 @@ import {
+   libraryResultsLayoutAtom,
+   librarySearchMatchAtom,
+   librarySearchScopeAtom,
+-  librarySearchScopeInputAtom,
++  type LibraryPageSize,
+   type ResultsLayout,
+ } from "../../../atoms/library";
++import { LibraryPageEnd } from "../LibraryPagination";
+ import { entityTime } from "../../../utils/timeline";
+ import { SectionLabel } from "../../shared/SectionLabel";
+ import { TimeSpine, SpineDate } from "../TimeSpine";
+@@ -39,6 +39,9 @@ import { CountBadge } from "../../shared/CountBadge";
+ import { MatchedTerms } from "../MatchedTerms";
+ import type { RelevanceBreakdown } from "../../../utils/relevance";
+ import { AdvancedSearchBar } from "./AdvancedSearchBar";
++import type { ZeroResultSuggestion } from "../../../utils/zeroResultSuggestions";
++
++const NO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
+ import {
+   CorpusLoadState,
+   HiddenByFilters,
+@@ -46,10 +49,9 @@ import {
+   RankedEvidence,
+   ResultEvidence,
+   ResultRecord,
+-  ResultsBlank,
+   SharedLines,
+   SnippetLine,
+-  WarmButton,
++  ZeroResults,
+   mixesTemplates,
+   passageKey,
+   passageOwners,
+@@ -73,9 +75,6 @@ import {
+  *  strip stays mounted so toggling a chip can't shift the results; the count
+  *  lives in the toolbar masthead only. */
+ 
+-/** Entities rendered per page. Lower than the drawer's 40 because each card here
+- *  is bigger, and every layout pays the same windowing cost per entity. */
+-const STEP = 24;
+ /** Passages excerpts more per record (it IS the passage list) but still a
+  *  bounded number; the surplus is reported, never silently dropped. */
+ const PASSAGES_PER_ENTITY = 8;
+@@ -135,6 +134,21 @@ interface Props {
+   /** The relevance breakdown LibraryView already computes once per entity per
+    *  query. Read for attribution only (`MatchedTerms`); never printed as a score. */
+   relevanceOf: (e: Entity) => RelevanceBreakdown;
++  /** The page of `entities` drawn, on the Library's page state (the one Cards
++   *  and List use, so the same records are on page N in every view). */
++  page: number;
++  pageSize: LibraryPageSize;
++  onPage: (page: number) => void;
++  /** The pager's accessible name ("Pages, left pane" in Split). */
++  pageLabel: string;
++  /** The scroller, for the Library's page scroll: a new page starts at the
++   *  top, and Back from a record puts `restoreScroll` back once the page is
++   *  built. */
++  laneRef: (el: HTMLDivElement | null) => void;
++  restoreScroll: number;
++  onScrollTop: (top: number) => void;
++  /** With no result, the switches that would bring results back. */
++  zeroSuggestions?: readonly ZeroResultSuggestion[];
+ }
+ 
+ export function ResultsMainView({
+@@ -154,6 +168,14 @@ export function ResultsMainView({
+   onClearFilters,
+   totalMatches,
+   relevanceOf,
++  page,
++  pageSize,
++  onPage,
++  pageLabel,
++  laneRef,
++  restoreScroll,
++  onScrollTop,
++  zeroSuggestions = NO_SUGGESTIONS,
+ }: Props) {
+   const layout = useAtomValue(libraryResultsLayoutAtom);
+   // A Shift range runs in the ranked order these results are drawn in.
+@@ -164,13 +186,13 @@ export function ResultsMainView({
+   const setMatchTypes = useSetAtom(matchTypeFiltersAtom);
+   useEffect(() => setMatchTypes(ALL_MATCH_TYPES), [setMatchTypes]);
+   const scope = useAtomValue(librarySearchScopeAtom);
+-  const setScope = useSetAtom(librarySearchScopeInputAtom);
+   const narrow = useAtomValue(breakpointAtom) === "mobile";
+   const match = useAtomValue(librarySearchMatchAtom);
+   const hasQuotes = useAtomValue(libraryHasQuotesAtom);
+-  const [visible, setVisible] = useState(STEP);
+-  // The page this view draws, for "select all loaded".
+-  const drawnIds = useMemo(() => rankedIds.slice(0, visible), [rankedIds, visible]);
++  const pageStart = (page - 1) * pageSize;
++  const pageEntities = useMemo(() => entities.slice(pageStart, pageStart + pageSize), [entities, pageStart, pageSize]);
++  // The page this view draws, for "select all" on the page.
++  const drawnIds = useMemo(() => pageEntities.map((e) => e.id), [pageEntities]);
+   useDrawnIds(drawnIds);
+   /* Pane width, quantised to 64px and held while the drawer divider is dragged
+      (`useSettledWidth`). It feeds the re-snippeting memo below, so it must only
+@@ -182,9 +204,8 @@ export function ResultsMainView({
+   const trimmed = query.trim();
+ 
+   useEffect(() => {
+-    setVisible(STEP);
+     setShowAll({});
+-  }, [entities, trimmed, language, source, layout]);
++  }, [pageEntities, trimmed, language, source, layout]);
+ 
+   const budget = excerptBudget(layout, paneW);
+ 
+@@ -192,8 +213,7 @@ export function ResultsMainView({
+   const measured = paneW > 0;
+   const cappedResults = useMemo<Result[]>(
+     () =>
+-      (measured ? entities : [])
+-        .slice(0, visible)
++      (measured ? pageEntities : [])
+         .map((e) => ({
+           entity: e,
+           snippets: buildSnippetsFor(e, trimmed, language, source, {
+@@ -204,7 +224,7 @@ export function ResultsMainView({
+           }),
+         }))
+         .filter((r) => r.snippets.count > 0),
+-    [measured, entities, visible, trimmed, language, source, layout, budget.ctx, scope, match],
++    [measured, pageEntities, trimmed, language, source, layout, budget.ctx, scope, match],
+   );
+ 
+   // Only the cards the user expanded are re-derived uncapped — the windowing
+@@ -228,6 +248,40 @@ export function ResultsMainView({
+     [cappedResults, showAll, trimmed, language, source, budget.ctx, scope, match],
+   );
+ 
++  // Spine's axis spans every dated result, not only this page's.
++  const spineDomain = useMemo(() => {
++    if (layout !== "spine") return undefined;
++    let min = Infinity;
++    let max = -Infinity;
++    let count = 0;
++    for (const e of entities) {
++      const t = entityTime(e);
++      if (t === null) continue;
++      count++;
++      if (t < min) min = t;
++      if (t > max) max = t;
++    }
++    return count ? { min, max, count } : undefined;
++  }, [entities, layout]);
++
++  // Back from a record: the scroll goes back once the page is built (the
++  // scroller is empty until the pane is measured).
++  const scrollerRef = useRef<HTMLDivElement | null>(null);
++  const pendingScroll = useRef(restoreScroll);
++  useLayoutEffect(() => {
++    if (!results.length || pendingScroll.current <= 0 || !scrollerRef.current) return;
++    scrollerRef.current.scrollTop = pendingScroll.current;
++    pendingScroll.current = 0;
++  }, [results]);
++  const setScroller = useCallback(
++    (el: HTMLDivElement | null) => {
++      scrollerRef.current = el;
++      bodyRef(el);
++      laneRef(el);
++    },
++    [bodyRef, laneRef],
++  );
++
+   // Template · country · year on each head only where the set mixes templates.
+   const facts = useMemo(() => mixesTemplates(entities), [entities]);
+   // Who shows each passage first, in the order Grouped and Tree draw them.
+@@ -247,7 +301,6 @@ export function ResultsMainView({
+     );
+   }
+ 
+-  const scopeLabel = SEARCH_SCOPE_LABEL[scope];
+   // The toolbar heads every state below, the empty ones included: it can build
+   // a query from nothing, and widening a scope is the way out of "No matches".
+   const bar = (
+@@ -276,33 +329,23 @@ export function ResultsMainView({
+   if (totalMatches === 0) {
+     return (
+       <Frame bar={bar}>
+-        <ResultsBlank>
+-          <span dir="ltr" className="text-sm font-medium text-ink-secondary">
+-            No matches for “{trimmed}”{scope === "all" ? "" : ` in ${scopeLabel}`}
+-          </span>
+-          {/* Document bodies are scanned from three characters (`fullTextSearch`),
+-              so a shorter query in Full text can only come back empty. */}
+-          {scope === "fulltext" && trimmed.length < FULL_TEXT_MIN && (
+-            <span className="text-xs text-ink-tertiary">
+-              Full text search needs at least {FULL_TEXT_MIN}&nbsp;characters.
+-            </span>
+-          )}
+-          <span className="flex items-center gap-2">
+-            {scope !== "all" && <WarmButton onClick={() => setScope("all")}>Search everywhere</WarmButton>}
+-            <WarmButton onClick={onClearSearch}>Clear search</WarmButton>
+-          </span>
+-        </ResultsBlank>
++        <ZeroResults query={trimmed} scope={scope} suggestions={zeroSuggestions} onClearSearch={onClearSearch} />
+       </Frame>
+     );
+   }
+ 
+-  const capped = entities.length > results.length + (entities.length - visible);
++  const pageCount = Math.max(1, Math.ceil(entities.length / pageSize));
+ 
+   return (
+     <Frame bar={bar} layout={layout}>
+       {/* Hosted by the Library main pane (a gutter host): the card lane is a
+           `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
+-      <div ref={bodyRef} data-part="results" className="@container bleed flex-1 min-h-0 overflow-auto">
++      <div
++        ref={setScroller}
++        data-part="results"
++        onScroll={(e) => onScrollTop(e.currentTarget.scrollTop)}
++        className="@container bleed flex-1 min-h-0 overflow-auto"
++      >
+         {entities.length === 0 ? (
+           <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
+             No results with the current filters.
+@@ -339,20 +382,21 @@ export function ResultsMainView({
+             selectedId={selectedId}
+             onSelect={onSelect}
+             onSelectSnippet={onSelectSnippet}
++            domain={spineDomain}
++            undatedTotal={spineDomain ? entities.length - spineDomain.count : 0}
+           />
+         )}
+ 
+-        {visible < entities.length && (
+-          <div data-part="show-more" className="flex justify-center py-4">
+-            <WarmButton onClick={() => setVisible((n) => n + STEP)}>
+-              Show more — {(entities.length - visible).toLocaleString()} remaining
+-            </WarmButton>
+-          </div>
+-        )}
+-        {capped && visible >= entities.length && (
+-          <p data-part="end" className="py-4 text-center text-meta text-ink-tertiary">
+-            Showing every result for this query.
+-          </p>
++        {/* The pager again under the last record, as under Cards and List. */}
++        {pageCount > 1 && (
++          <LibraryPageEnd
++            total={entities.length}
++            page={page}
++            pageSize={pageSize}
++            onPage={onPage}
++            compact={narrow}
++            label={pageLabel}
++          />
+         )}
+       </div>
+     </Frame>
+@@ -726,12 +770,19 @@ function SpineBody({
+   selectedId,
+   onSelect,
+   onSelectSnippet,
++  domain,
++  undatedTotal,
+ }: {
+   results: Result[];
+   query: string;
+   selectedId: string | null;
+   onSelect: SelectHandler;
+   onSelectSnippet: (id: string, page: number) => void;
++  /** Every dated result's extent: the axis keeps the whole set's shape while
++   *  the rows are one page. */
++  domain?: { min: number; max: number; count: number };
++  /** Results across every page with no date, for the note under the axis. */
++  undatedTotal: number;
+ }) {
+   const { dated, owners } = useMemo(() => {
+     const dated = results
+@@ -742,12 +793,14 @@ function SpineBody({
+     const byTime = [...dated].sort((a, b) => a.t - b.t).map((d) => d.item);
+     return { dated, owners: passageOwners(byTime) };
+   }, [results]);
+-  const undated = results.length - dated.length;
++  const undated = undatedTotal;
+ 
+   if (!dated.length) {
+     return (
+       <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
+-        None of these results carries a date, so there is no axis to place them on.
++        {domain
++          ? "None of the results on this page carries a date."
++          : "None of these results carries a date, so there is no axis to place them on."}
+       </p>
+     );
+   }
+@@ -759,6 +812,7 @@ function SpineBody({
+           `SPINE_ROW_H` stretches the axis and can break eliding. */}
+       <TimeSpine
+         rows={dated}
++        domain={domain}
+         rowHeight={SPINE_ROW_H}
+         dotColor={({ entity }) => getEntityType(entity.typeId)?.color ?? "#6B7280"}
+         dotActive={({ entity }) => selectedId === entity.id}
+@@ -794,7 +848,10 @@ function SpineBody({
+                   isn't cut to a few words. */}
+               <span className="flex items-center gap-2 min-w-0 h-4">
+                 <span aria-hidden className="shrink-0 w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
+-                <SpineDate t={t} />
++                {/* A record timed to the hour or the second (`span.hour`,
++                    `span.seconds`) prints its time: on Vegas every row is the
++                    same day. A day-only date keeps the day. */}
++                <SpineDate t={t} withTime={!!(entity.span?.seconds || entity.span?.hour)} />
+                 <span className="min-w-0 max-w-[18rem] truncate text-xs font-medium text-ink">
+                   <HighlightedText text={entity.title} query={query} fieldKey="title" />
+                 </span>
+diff --git a/app/src/views/LibraryView.tsx b/app/src/views/LibraryView.tsx
+index 50e626ea..c2b3497b 100644
+--- a/app/src/views/LibraryView.tsx
++++ b/app/src/views/LibraryView.tsx
+@@ -181,6 +181,9 @@ import { SavedViewsPanel } from "../components/library/SavedViewsMenu";
+ import { createPortal } from "react-dom";
+ import { identityOf, sharedPass } from "../utils/sharedPass";
+ import { paneHoldsEvent, useLibraryPane, useMastheadFold, usePaneResultCount, useSplitFooter, useSplitShared, type LibraryPaneSide, type PaneResults } from "../components/library/libraryPane";
++import { zeroResultSuggestions, type ZeroResultSuggestion } from "../utils/zeroResultSuggestions";
++
++const NO_ZERO_SUGGESTIONS: readonly ZeroResultSuggestion[] = [];
+ 
+ const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
+ 
+@@ -934,6 +937,16 @@ export function LibraryView() {
+     [entities, filterState, q],
+   );
+ 
++  // With no result, the switches that would bring some back (the Results
++  // bodies' zero state). Counted only while the result is empty.
++  const zeroSuggestions = useMemo(
++    () =>
++      q && matchTypeBase.length === 0
++        ? zeroResultSuggestions(entities, filterState, { query, match: searchMatch })
++        : NO_ZERO_SUGGESTIONS,
++    [q, matchTypeBase.length, entities, filterState, query, searchMatch],
++  );
++
+   // Everything but the map's area: what the map draws, so panning brings pins
+   // in and out of the area without rebuilding the map. `filtered` narrows it
+   // by the area with the same test the `map` node compiles to.
+@@ -1094,11 +1107,13 @@ export function LibraryView() {
+     return () => setPreviewCount(null);
+   }, [withPreview, total, setPreviewCount]);
+ 
+-  // Cards and List show one page of the results (`LibraryPagination` in the
+-  // footer). The page belongs to the results it was chosen for: a new key
+-  // (collection, filters, query, sort, map area) reads as page 1, and coming
++  // Cards, List and Adv. Search show one page of the results
++  // (`LibraryPagination` in the footer), and the drawer's Results tab pages on
++  // the same state. The page belongs to the results it was chosen for: a new
++  // key (collection, filters, query, sort, map area) reads as page 1, and coming
+   // Back from a record rebuilds the same key, so the page and its scroll hold.
+-  const paged = viewMode === "cards" || viewMode === "list";
++  // Adv. Search scrolls inside its own body, which registers itself as the lane.
++  const paged = viewMode === "cards" || viewMode === "list" || viewMode === "results";
+   // `passKey` without the chain templates' identity, which is new on every
+   // mount and would turn Back into a new key, and without the language, so a
+   // language switch keeps the page.
+@@ -1151,6 +1166,14 @@ export function LibraryView() {
+       pendingScroll.current = 0;
+     }
+   }, []);
++  const setResultsLane = useCallback((el: HTMLDivElement | null) => {
++    laneRef.current = el;
++    // `ResultsMainView` restores the scroll itself, once its page is built.
++    if (el) pendingScroll.current = 0;
++  }, []);
++  const keepPageScroll = useCallback((top: number) => {
++    pageScroll.current.top = top;
++  }, []);
+   useEffect(
+     () => () => {
+       const { key, page: p, top } = pageScroll.current;
+@@ -1822,8 +1845,8 @@ export function LibraryView() {
+           groundDown.current = { x: e.clientX, y: e.clientY };
+         }}
+         onClick={clearOnGround}
+-        ref={setLane}
+-        onScroll={paged ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
++        ref={viewMode === "results" ? undefined : setLane}
++        onScroll={paged && viewMode !== "results" ? (e) => void (pageScroll.current.top = e.currentTarget.scrollTop) : undefined}
+         // Only a real tap opens an item here, never the end of a scroll.
+         data-tap-guard
+         // A canvas lane spans the pane on purpose: `__gutter()` lists it and
+@@ -1910,6 +1933,14 @@ export function LibraryView() {
+               onClearFilters={() => clearFacets()}
+               totalMatches={matchTypeBase.length}
+               relevanceOf={scoreOf}
++              zeroSuggestions={zeroSuggestions}
++              page={page}
++              pageSize={pageSize}
++              onPage={goToPage}
++              pageLabel={paneSide ? `Pages, ${paneSide} pane` : "Pages"}
++              laneRef={setResultsLane}
++              restoreScroll={pendingScroll.current}
++              onScrollTop={keepPageScroll}
+             />
+           </div>
+         ) : viewMode === "network" ? (
+@@ -1995,7 +2026,7 @@ export function LibraryView() {
+           />
+         )}
+         {/* The pager again under the last card or row (`LibraryPageEnd`). */}
+-        {paged && !overview && !cejilLoading && filtered.length > 0 && pageCount > 1 && (
++        {paged && viewMode !== "results" && !overview && !cejilLoading && filtered.length > 0 && pageCount > 1 && (
+           <LibraryPageEnd
+             total={filtered.length}
+             page={page}
+@@ -2115,6 +2146,11 @@ export function LibraryView() {
+       matchTypeCounts={matchTypeCounts}
+       totalMatches={matchTypeBase.length}
+       relevanceOf={scoreOf}
++      zeroSuggestions={zeroSuggestions}
++      page={page}
++      pageSize={pageSize}
++      onPage={goToPage}
++      pageLabel={paneSide ? `Results pages, ${paneSide} pane` : "Results pages"}
+     />
+     </SearchMarkProvider>
+   );

@@ -1,0 +1,31 @@
+{
+ "doc_id": "mocit-notice-social-media-listing-2081-10-21",
+ "title": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 3 February 2025)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 818064,
+ "sha256": "b17d3647c2c4329fd2b36431e3f160c3cdbdeff464f02ad97050bd41a095afc1",
+ "source_url": "https://giwmscdnone.gov.np/media/pdf_upload/np_lbvhbni.pdf",
+ "source_page": "https://www.mocit.gov.np/content/12999/information-and-information-notice-of-the-family/",
+ "retrieved": "2026-10-05",
+ "publisher": "Ministry of Communication and Information Technology",
+ "published": "2025-02-03",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; the embedded OCR layer is unusable. OCR was not run. The scan also shows an English text through the paper from the reverse side.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:mocit-2025-02-03-notice-social-media-listing-2081",
+  "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1927
+}

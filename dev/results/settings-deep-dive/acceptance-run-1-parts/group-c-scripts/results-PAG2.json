@@ -1,0 +1,62 @@
+[
+ {
+  "id": "PAG-03",
+  "res": "FAIL",
+  "ev": "Edited Partners: Title \"Partners and funders\" + Save draft (editor Save button reads \"Save draft\"; there is no Configuration tab, title is above the code area). Clicking \"Pages\" in the rail while the editor is open leaves the editor open (editor still shown: 1). After rail > Dashboard > Pages the list row reads [\"Partners /page/partners Draft\"] (expected \"Partners and funders\" with a new slug); status stays Draft. Reopening the editor after the rail round trip shows Title \"Partners and funders\"; after a tab reload the list reads [\"Partners /page/partners Draft\"] and the editor shows Title \"Partners\" (the saved edit is gone after reload). Dialogs on rail click: [].",
+  "shot": "acceptance-run-1-shots/PAG-03.png"
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "Persistence: after Save draft the edited title shows in the reopened editor after a rail round trip (\"Partners and funders\") but the list row keeps the seed title [\"Partners /page/partners Draft\"]; after a tab reload both the editor (\"Partners\") and the list [\"Partners /page/partners Draft\"] are back to the seed, so the saved edit does not survive reload (PAG-16 shows the same for HTML/JS/CSS). The Pages list is local state, not the stored record.",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "After \"Save draft\" the Save draft and Discard buttons are disabled (footer: Draft · not published Saved just now by admin Discard Save draft Publish) and the rail click opened no dialog (dialogs []). Editing again re-enables Save draft (see PAG-16).",
+  "shot": ""
+ },
+ {
+  "id": "::errs-pag03",
+  "res": "INFO",
+  "ev": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\",\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-09",
+  "res": "FAIL",
+  "ev": "The list has no View button (View buttons 0). In the editor, the Published toggle on Methodology shows the last release, not the unsaved edit: \"Published version — what visitors see now IC Inter-American Cases EN Methodology Who keeps this collection, what is in it, and how to use it. What you'll find J\" (ok). Partners (never published): Published toggle reads \"Published version — what visitors see now IC Inter-American Cases EN This page has never been published. Powered by Uwaz\" (a \"never been published\" notice, ok). The \"Open\" next to Preview is a non-interactive span (title \"Opens the draft on its own (not in this mock)\"). Expected View per list row.",
+  "shot": "acceptance-run-1-shots/PAG-09-methodology.png"
+ },
+ {
+  "id": "PAG-10",
+  "res": "FAIL",
+  "ev": "Cleared EN title: \"This field is required\" not shown; Save draft was enabled and saved the empty title (notifications [\"Draft saved — the public page is unchanged just now\"]; page header became \"Untitled page\"). After \"Methodology notes\" (EN) and \"Metodología\" (ES) + Save: EN field \"Methodology notes\", ES field \"Metodología\" (stored separately, ok).",
+  "shot": "acceptance-run-1-shots/PAG-10.png"
+ },
+ {
+  "id": "PAG-11",
+  "res": "FAIL",
+  "ev": "URL field value \"methodology\" (expected \"/en/page/<id>/<kebab-title>\"); readonly=null; typing changed it to \"methodologyx\" (expected read-only); copy buttons 0; \"View page\" link 0; after Title \"Method notes\" the field stays \"methodology\" (expected slug to follow the title); with ES selected the preview path reads \"Preview /es/page/methodology Desktop Phone Open\".",
+  "shot": "acceptance-run-1-shots/PAG-11.png"
+ },
+ {
+  "id": "PAG-12",
+  "res": "PASS",
+  "ev": "Radio group \"Page language\" (EN ES FR AR) at x=995, y=144 (top right of the form). EN title \"Methodology\" / HTML \"<section class=\"u-hero\">\n  <h1>Methodolo\"; ES title \"Methodology\" / HTML \"<section class=\"u-hero\">\n  <h1>Methodolo\". Typed ES HTML, CSS and JS; back on EN: title \"Methodology\", HTML \"<section class=\"u-hero\">\n  <h1>Methodolo\", JS \"\", CSS unchanged: true; ES kept HTML \"<p>solo ES</p>\" and CSS \"/* es css */\". \"Hidden when only one language is installed\": see PAG-13.",
+  "shot": "acceptance-run-1-shots/PAG-12.png"
+ },
+ {
+  "id": "PAG-13",
+  "res": "FAIL",
+  "ev": "Languages page (Sample) has English, Spanish, French, Arabic and Portuguese installed. The page editor's selector offers [\"EN\",\"ES\",\"FR (empty)\",\"AR (empty)\"] (Portuguese missing although installed; the list is a fixed EN/ES/FR/AR). After uninstalling Spanish, French, Arabic and Portuguese (Languages left: [\"LanguageTransl\",\"EnglishEnglish\"]) the editor selector is [\"EN\",\"ES\",\"FR\\n(empty)\",\"AR\\n(empty)\"] (expected hidden with one language).",
+  "shot": "acceptance-run-1-shots/PAG-13.png"
+ },
+ {
+  "id": "PAG-12::hidden",
+  "res": "INFO",
+  "ev": "Selector with one language installed: [\"EN\",\"ES\",\"FR\\n(empty)\",\"AR\\n(empty)\"]",
+  "shot": ""
+ }
+]

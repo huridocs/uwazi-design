@@ -1,0 +1,32 @@
+{
+ "TRN-18": {
+  "id": "TRN-18",
+  "result": "PASS",
+  "evidence": "Cites (1 key) translated in es, fr, ar and saved; \"Untranslated only\" on shows \"There are no untranslated terms\"=true (rows 0, not a blank area). The second half (a context with no keys) is not reachable: contexts are built from keys, so a template, thesaurus or relationship type always has at least its name key and Menu/Filters vanish at zero links; the \"This context has no keys\" empty state exists in code but no seed or Dev panel action reaches it",
+  "shot": "TRN-18.png"
+ },
+ "TRN-19": {
+  "id": "TRN-19",
+  "result": "PASS",
+  "evidence": "context lists 412 keys; rows in the DOM at the top=60 (\"Showing 60 of 412 keys\"); scrolling to the end adds rows in steps [60,120,180,240,300,360,412] to 412; last key \"Duplicated email\"; reopened (top rows 60) and searched \"Done extracting files\" (an off-screen key, index ~400) -> [\"Done extracting files\"]",
+  "shot": "TRN-19.png"
+ },
+ "TRN-20": {
+  "id": "TRN-20",
+  "result": "PASS",
+  "evidence": "phone: 9 cards for 9 keys; first card text \"Person English EN Person Español ES ES Français FR FR العربية AR AR\", inputs=3 stacked vertically=true (y [418,450,482]), card width 358px, labels [\"Person in Spanish, untranslated\",\"Person in French, untranslated\",\"Person in Arabic, untranslated\"]; no horizontal overflow doc 390/390 pane [390,390]; typed by touch \"Person movil\"; Save at {\"x\":322.265625,\"y\":806.5,\"width\":51.734375,\"height\":28} Cancel at {\"x\":250.609375,\"y\":806.5,\"width\":63.65625,\"height\":28}; Save enabled then disabled after tap=true/true",
+  "shot": "TRN-20.png"
+ },
+ "X-06": {
+  "id": "X-06",
+  "result": "PASS",
+  "evidence": "Translations at 390x844 with touch: list is cards (see TRN-20 shot), editor is single column of cards, no horizontal scroll (doc 390/390), Save and Cancel reachable by tap",
+  "shot": "TRN-20.png"
+ },
+ "trn4-console-m": {
+  "id": "trn4-console-m",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ }
+}

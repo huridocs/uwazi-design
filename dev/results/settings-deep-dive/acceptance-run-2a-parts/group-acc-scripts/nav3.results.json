@@ -1,0 +1,104 @@
+[
+ {
+  "id": "NAV-12",
+  "res": "FAIL",
+  "ev": "Rail label \"Global CSS & JS\" with the flag on, \"Global CSS & JS\" off; Global CSS & JS tabs flag on=[\"CSS\",\"JS\"], flag off=[\"CSS\",\"JS\"] (spec: JS tab absent when off); page text off=\"Global CSS & JS Custom styles and scripts injected into the public-facing collection. CSS \"; flag persisted in sessionStorage after reload=false, tabs after reload=[\"CSS\",\"JS\"]; Collection page has a custom-JS control=false (mentions of JS on the page=false)",
+  "shot": "NAV-12-off.png"
+ },
+ {
+  "id": "NAV-13",
+  "res": "FAIL",
+  "ev": "Item \"Documentation\" at rail bottom (top 752 of 800) with 2 svg icons (leading + external-link), href=https://uwazi.io/page/9852italrtk/support, target=_blank; click opened a new tab=true (chrome-error://chromewebdata/); current page unchanged (\"Account\" -> \"Account\"); present for roles [\"Editor=1\",\"Collaborator=1\"] plus admin",
+  "shot": "NAV-13.png"
+ },
+ {
+  "id": "NAV-16",
+  "res": "PASS",
+  "ev": "Phone 390: Settings opened on the page (back chevron true); chevron returns to the rail (rail visible true, 390px of 390); group labels reached by scrolling the lane: [\"User\",\"Collection\",\"Content model\",\"Languages\",\"People\",\"Tools\",\"ML tools\"] (the spec's five labels are superseded by A2's User, Collection, Content model, Languages, People, Tools, ML tools; \"System\" is sr-only); tapping \"Languages\" opens \"Languages\" with a back chevron=true; chevron returns to the rail=true; rail item heights 36-36px",
+  "shot": "NAV-16-rail.png"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "Phone 390 rail and a page: horizontal overflow 0px; rail items 36-36px tall (touch targets), rail is the full width (390px)",
+  "shot": "NAV-16-rail.png"
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe on the rail: []; duplicate item names=[]; headings [\"H2:User\",\"H2:System\",\"H3:Collection\",\"H3:Content model\",\"H3:Languages\",\"H3:People\",\"H2:Tools\",\"H3:ML tools\"]; keyboard Enter on a focused rail item opens \"Languages\"; the rail opens no dialogs (dialogs of the blocked page checked in NAV-06/NAV-08: none)",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "PASS",
+  "ev": "The rail has no status pills or badges; active item text contrast light 15:1, dark 11.14:1; group label (h2) light 7.46:1, dark 6.5:1; shelf label (h3) light 7.46:1, dark 6.5:1 (need >= 4.5:1)",
+  "shot": "X-08-rail-dark.png"
+ },
+ {
+  "id": "X-01",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-01 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-02",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-02 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-03",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-03 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-04 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-05",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-05 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-09 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-10",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-10 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-11",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-11 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-12 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "X-13",
+  "res": "N/A",
+  "ev": "Navigation \"Applies:\" lists only X-06, X-07, X-08; X-13 does not apply to the rail",
+  "shot": ""
+ },
+ {
+  "id": "NAV3-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

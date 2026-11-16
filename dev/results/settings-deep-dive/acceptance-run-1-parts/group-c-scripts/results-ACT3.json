@@ -1,0 +1,44 @@
+[
+ {
+  "id": "ACT-02",
+  "res": "FAIL",
+  "ev": "Injected 101 entries into sessionStorage uwazi:settings:activity (log total 108 with the 7 seed rows; used a storage write because a 101-save loop was not practical). The page renders all 108 rows in one list with footer \"108 events\"; no paginator (controls matching pagination/Next page: 0). Expected page 1 = 100 rows, \"Showing 1-100 of 108\", and a paginator.",
+  "shot": "acceptance-run-1-shots/ACT-02.png"
+ },
+ {
+  "id": "ACT-03",
+  "res": "FAIL",
+  "ev": "axe color-contrast on the page: light [\"UPDATE fg #00b4f0 on #ddf3fd = 2.08:1\",\"CREATE fg #059669 on #d1fae5 = 3.32:1\",\"MIGRATE fg #f59e0b on #fef3c7 = 1.92:1\"]; dark [\"CREATE fg #059669 on #064e3b = 2.57:1\",\"MIGRATE fg #f59e0b on #78350f = 4.22:1\"]. Pill labels on rows: [\"UPDATE\",\"CREATE\",\"DELETE\",\"MIGRATE\"] vs Action filter wording \"CREATE/UPDATE/DELETE/MIGRATE\" (same wording, upper case).",
+  "shot": "acceptance-run-1-shots/ACT-03-dark.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "Action pills (CREATE/UPDATE/DELETE/MIGRATE) contrast, axe color-contrast in light [\"UPDATE fg #00b4f0 on #ddf3fd = 2.08:1\",\"CREATE fg #059669 on #d1fae5 = 3.32:1\",\"MIGRATE fg #f59e0b on #fef3c7 = 1.92:1\"] and dark [\"CREATE fg #059669 on #064e3b = 2.57:1\",\"MIGRATE fg #f59e0b on #78350f = 4.22:1\"].",
+  "shot": "acceptance-run-1-shots/ACT-03-dark.png"
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe on page: [\"color-contrast (serious) x6: li:nth-child(1) > .gap-3.w-full.py-2\\\\.5 > .bg-carbon-tint.py-0\\\\.5.w-fit | li:nth-child(2) > .gap-3.w-full.py-2\\\\.5 > .bg-success-light.text-success.py-0\\\\.5 | li:nth-child(3) > .gap-3.w-full.py-2\\\\.5 > .bg-success-light.text-success.py-0\\\\.5\"]; with Action filter list open: [\"color-contrast (serious) x6: li:nth-child(1) > .gap-3.w-full.py-2\\\\.5 > .bg-carbon-tint.py-0\\\\.5.w-fit | li:nth-child(2) > .gap-3.w-full.py-2\\\\.5 > .bg-success-light.text-success.py-0\\\\.5 | li:nth-child(3) > .gap-3.w-full.py-2\\\\.5 > .bg-success-light.text-success.py-0\\\\.5\"]. Row button names unique: true (names are the whole row text, e.g. \"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42\"). Input labels [\"Search activity\"]. No dialogs on this page. Console errors: [].",
+  "shot": "acceptance-run-1-shots/X-07-act.png"
+ },
+ {
+  "id": "ACT-17",
+  "res": "FAIL",
+  "ev": "Set sessionStorage uwazi:settings:activity to \"{not json\" and reloaded. Page shows 7 rows (seed fallback) with no error message and no Retry (Retry buttons in the page 0, role=alert in the page 0). Page text: \"Activity log Every change made to the collection, newest first. Open an entry to see the request behind it. All actions All users UPDATE Updated entity “Velásqu\". Console errors: [].",
+  "shot": "acceptance-run-1-shots/ACT-17.png"
+ },
+ {
+  "id": "ACT-18::t",
+  "res": "INFO",
+  "ev": "thesaurus footer: Saved on Jun 13, 2026 by jnkemba Cancel Save",
+  "shot": ""
+ },
+ {
+  "id": "ACT-18",
+  "res": "FAIL",
+  "ev": "Thesaurus \"Violation types\" editor footer: \"Saved on Jun 13, 2026 by jnkemba Cancel Save\" (matches \"Saved on Jun 13, 2026 by jnkemba\": true). Template Person editor footer before save: \"Cancel Save\"; Save returns to the list (footer \"Add template\"); reopening Person: footer \"Cancel Save\" (expected \"Saved just now by admin\"). Dashboard Recent activity matched the Activity log's newest entries in the same order (see ACT-12 run).",
+  "shot": "acceptance-run-1-shots/ACT-18-template.png"
+ }
+]

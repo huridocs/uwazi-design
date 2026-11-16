@@ -1,0 +1,181 @@
+[
+ {
+  "where": "Library drawer preview, Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Library drawer preview, Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "download": "Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "label": "Download Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 513010,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "preview block: click first Download",
+  "downloadEvent": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "url": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf"
+ },
+ {
+  "where": "Entity view, drawer Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Entity view, drawer Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "download": "Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "label": "Download Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 513010,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Entity view, main Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Entity view, main Metadata tab (block)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "download": "Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "label": "Download Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "text": "",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 513010,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "View dialog (entity view)",
+  "tag": "A",
+  "role": null,
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "text": "Download",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "View dialog: click Download",
+  "downloadEvent": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "url": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf"
+ },
+ {
+  "where": "Entity Files tab, row menu",
+  "tag": "A",
+  "role": "menuitem",
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "text": "Download",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Phone 390, preview sheet (block)",
+  "tag": "A",
+  "href": "/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1618606666589vu45gnrt0e.pdf",
+  "download": "Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "label": "Download Cordero Bernal. Sentencia de 16 de febrero de 2021.pdf",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 521722,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Phone 390, preview sheet (block)",
+  "tag": "A",
+  "href": "/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "abs": "http://localhost:1430/cejil-docs/1625694050986sv9zhb8xnrj.pdf",
+  "download": "Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "label": "Download Cordero Bernal. Judgment. February 16, 2021.pdf",
+  "status": 200,
+  "ctype": "application/pdf",
+  "len": 513010,
+  "head": "%PDF-",
+  "nameOk": true,
+  "real": true
+ },
+ {
+  "where": "Phone 390: block Download target size (CSS px)",
+  "sizes": [
+   [
+    32,
+    32
+   ],
+   [
+    32,
+    32
+   ]
+  ]
+ }
+]

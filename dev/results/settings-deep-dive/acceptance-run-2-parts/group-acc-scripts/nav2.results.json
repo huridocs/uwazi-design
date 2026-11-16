@@ -1,0 +1,56 @@
+[
+ {
+  "id": "NAV-05",
+  "res": "PASS",
+  "ev": "Admin: Dashboard: opens \"Dashboard\"; Users & Groups: opens \"Users & Groups\"; Collection: opens \"Collection\"; Menu: opens \"Menu\"; Pages: opens \"Pages\"; Languages: opens \"Languages\"; Translations: opens \"Translations\"; Filters: opens \"Filters\"; Templates: opens \"Templates\"; Thesauri: opens \"Thesauri\"; Relationship types: opens \"Relationship types\"; Activity log: opens \"Activity log\"; Uploads: opens \"Uploads\"; Global CSS: opens \"Global CSS & JS\"; Import CSV: opens (rail still shown=true)",
+  "shot": ""
+ },
+ {
+  "id": "NAV-15",
+  "res": "FAIL",
+  "ev": "Import CSV view: rail shown with 19 items, active=[\"Import CSV\"] (bg rgb(252, 250, 248), weight 500); Back controls=0; after Back lands on \"(no Back control)\" (page it came from: Global CSS & JS)",
+  "shot": "NAV-15.png"
+ },
+ {
+  "id": "NAV-06",
+  "res": "PASS",
+  "ev": "Editor via Dev panel with Templates open: rail items=[\"Account\",\"Metadata extraction\",\"Paragraph extraction\"], headings=[\"User\",\"Tools\",\"ML tools\"] (only groups with a visible item); Templates pane text=\"This page is not available. Templates is open to admins only. You are signed in as an editor, and your role cannot open it. Go to Account\"; link \"Go to Account\"",
+  "shot": "NAV-06.png"
+ },
+ {
+  "id": "NAV-08",
+  "res": "PASS",
+  "ev": "Blocked page text=\"This page is not available. Templates is open to admins only. You are signed in as an editor, and your role cannot open it. Go to Account\" names the cause (role)=true; link \"Go to Account\" opens \"Account\" (page text now \"Account General Information Username Use\"); focus on the blocked page when it opened={\"tag\":\"H2\",\"text\":\"This page is not available.\",\"isHeading\":true} (spec: focus moves to the page heading \"This page is not available.\"); \"cloning roadmap\" wording absent=true",
+  "shot": "NAV-06.png"
+ },
+ {
+  "id": "NAV-07",
+  "res": "PASS",
+  "ev": "Collaborator: rail items=[\"Account\"], headings=[\"User\"] (no empty Content model/Tools headings); stored Users & Groups page text=\"This page is not available. Users & Groups is open to admins only. You are signed in as a \"; after the link, Account works=true (role field \"Collaborator\")",
+  "shot": "NAV-07.png"
+ },
+ {
+  "id": "NAV-09",
+  "res": "PASS",
+  "ev": "Editor, flag on: \"Metadata extraction\" opens=true, in rail=true; flag off: in rail for editor=false, open page replaced by \"This page is not available. Metadata extraction is switched off for this collection. The metadata-extraction feature is off, so nobody can open it. Go to Account\" (link \"Go to Account\"); admin with flag off: in rail=false; flag on again: admin rail has it=true (page text now \"Metadata extraction Train extractors to \"), editor rail has it=true",
+  "shot": "NAV-09-off.png"
+ },
+ {
+  "id": "NAV-10",
+  "res": "PASS",
+  "ev": "Editor, flag on: \"Paragraph extraction\" opens=true, in rail=true; flag off: in rail for editor=false, open page replaced by \"This page is not available. Paragraph extraction is switched off for this collection. The paragraphExtraction feature is off, so nobody can open it. Go to Account\" (link \"Go to Account\"); admin with flag off: in rail=false; flag on again: admin rail has it=true (page text now \"Paragraph extraction Split documents int\"), editor rail has it=true",
+  "shot": "NAV-10-off.png"
+ },
+ {
+  "id": "NAV-11",
+  "res": "PASS",
+  "ev": "Admin: Preserve page \"Preserve\" in rail=true; preserve.host off: in rail=false, open page replaced by \"This page is not available. Preserve is switched off for this collection. The preserve.host feature is off, so nobody can open it. Go to Account\" (link \"Go to Account\"); on again: in rail=true (page text now \"Preserve Capture and archive w\"); editor rail has Preserve=false",
+  "shot": "NAV-11-off.png"
+ },
+ {
+  "id": "NAV2-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

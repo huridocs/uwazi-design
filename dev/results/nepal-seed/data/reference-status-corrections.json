@@ -1,0 +1,28 @@
+{
+ "about": "References that kept `disputed` after the dispute review set them to the status their own sources give (read by merge.py once the hook in merge-patch-reference-corrections.diff is applied). `recompute`: ref id -> reason. `kept_disputed` is informational: references that stay disputed because a source now disputes the claim.",
+ "checked": "2026-10-13",
+ "recompute": {
+  "ref:aftermath-358": "Checked 2026-10-13: no source found that says the 2,660 list is wrong. The Kathmandu Post of 7 Sep 2026 gives 2,638 injured without attribution; The Rising Nepal says 22 names were added in the 1 May update.",
+  "ref:aftermath-396": "Checked 2026-10-13: no outlet found gives a different injured figure for the commission's report; the Himalayan Times (26 Mar 2026) and the Kathmandu Post (8 Mar 2026) print no casualty totals for it. The 2,660 list of 1 May 2026 is a later update.",
+  "ref:claimed-by-injuries-100-plus-2025-09-08-0": "Checked 2026-10-13: no source found that says Amnesty did not report 'over 100 injured' on 8 Sep 2025. Other counts of that week are higher running totals (for example the Himalayan Times headline 'Health Ministry reports over 1,300 injured').",
+  "ref:concerns-injuries-100-plus-2025-09-08-0": "Checked 2026-10-13: no source found that says Amnesty did not report 'over 100 injured' on 8 Sep 2025. Other counts of that week are higher running totals (for example the Himalayan Times headline 'Health Ministry reports over 1,300 injured').",
+  "ref:t1014-310": "Checked 2026-10-13: the Nepali Times (12 Sep 2025) is the only account found that says both declined; the Kathmandu Post (30 Sep 2025) says Shah backed Karki and 'all other options were set aside'. No source found says either accepted. Reports of 11 Sep that Ghising was the likely pick predate it.",
+  "ref:t1014-311": "Checked 2026-10-13: the Nepali Times (12 Sep 2025) is the only account found that says both declined; the Kathmandu Post (30 Sep 2025) says Shah backed Karki and 'all other options were set aside'. No source found says either accepted. Reports of 11 Sep that Ghising was the likely pick predate it.",
+  "ref:t1014-319": "Checked 2026-10-13: the figures 30, 31 and 34 are tallies of 11 Sep 2025 given by different outlets at different hours; no source found disputes that each outlet reported its figure. The seed's later tolls (51 on 12 Sep, then 76 and 77) supersede them.",
+  "ref:t1014-320": "Checked 2026-10-13: the figures 30, 31 and 34 are tallies of 11 Sep 2025 given by different outlets at different hours; no source found disputes that each outlet reported its figure. The seed's later tolls (51 on 12 Sep, then 76 and 77) supersede them.",
+  "ref:t1014-321": "Checked 2026-10-13: the figures 30, 31 and 34 are tallies of 11 Sep 2025 given by different outlets at different hours; no source found disputes that each outlet reported its figure. The seed's later tolls (51 on 12 Sep, then 76 and 77) supersede them.",
+  "ref:t1014-327": "Checked 2026-10-13: 72 on 14 Sep and 74 on 21 Sep are successive counts; no source found disputes either report. The seed's later totals (76 and 77) are updates.",
+  "ref:t1014-328": "Checked 2026-10-13: 72 on 14 Sep and 74 on 21 Sep are successive counts; no source found disputes either report. The seed's later totals (76 and 77) are updates.",
+  "ref:t1014-331": "Checked 2026-10-13: the Kathmandu Post (15 Sep 2025) gives one million rupees to each family plus Rs 500,000 for other expenses, Rs 1.5 million in all, the same package Setopati reports. No source found gives another amount.",
+  "ref:t1014-332": "Checked 2026-10-13: the Kathmandu Post (15 Sep 2025) gives one million rupees to each family plus Rs 500,000 for other expenses, Rs 1.5 million in all, the same package Setopati reports. No source found gives another amount.",
+  "ref:vm-188": "Checked 2026-10-13: Reuters's 74 of 26 Sep 2025 is an earlier tally than the army's 76 and the committee's 77; no source found says Reuters did not report it.",
+  "ref:vm-210": "Checked 2026-10-13: reports give 13,000 to 15,000 escaped (Tribune/PTI of 11 Sep 2025, citing the Kathmandu Post and police); no source found disputes 'thousands'. HRW gives no count."
+ },
+ "kept_disputed": {
+  "ref:bg24-219": "source:himal-press-2025-04-22-bhattarai-resigned-due-to-health-issues",
+  "ref:t1014-260": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+  "ref:t1014-261": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+  "ref:t1014-262": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament",
+  "ref:t1014-263": "source:annapurna-express-2025-11-07-will-nepals-apex-court-revive-parliament"
+ }
+}

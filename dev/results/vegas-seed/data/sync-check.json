@@ -1,0 +1,502 @@
+{
+ "volleys": [
+  {
+   "volley": 1,
+   "annotations": 19,
+   "median": "22:06:06",
+   "min_off": -6.0,
+   "max_off": 1.0,
+   "spread": 7.0,
+   "stdev": 1.41,
+   "mad": 0.0,
+   "within1": 18,
+   "within2": 18,
+   "outliers": [
+    [
+     "recording:yt-zKFQCdHNQSA",
+     -6.0
+    ]
+   ]
+  },
+  {
+   "volley": 2,
+   "annotations": 27,
+   "median": "22:06:53",
+   "min_off": -1.0,
+   "max_off": 1.0,
+   "spread": 2.0,
+   "stdev": 0.33,
+   "mad": 0.0,
+   "within1": 27,
+   "within2": 27,
+   "outliers": []
+  },
+  {
+   "volley": 3,
+   "annotations": 34,
+   "median": "22:07:21",
+   "min_off": -1.0,
+   "max_off": 0.0,
+   "spread": 1.0,
+   "stdev": 0.5,
+   "mad": 0.0,
+   "within1": 34,
+   "within2": 34,
+   "outliers": []
+  },
+  {
+   "volley": 4,
+   "annotations": 38,
+   "median": "22:07:50",
+   "min_off": -1.0,
+   "max_off": 1.0,
+   "spread": 2.0,
+   "stdev": 0.49,
+   "mad": 0.0,
+   "within1": 38,
+   "within2": 38,
+   "outliers": []
+  },
+  {
+   "volley": 5,
+   "annotations": 43,
+   "median": "22:09:47",
+   "min_off": -1.0,
+   "max_off": 9.0,
+   "spread": 10.0,
+   "stdev": 1.78,
+   "mad": 0.0,
+   "within1": 40,
+   "within2": 40,
+   "outliers": [
+    [
+     "recording:yt-3qAD39vv6Cg",
+     3.0
+    ],
+    [
+     "recording:yt-3qAD39vv6Cg",
+     7.0
+    ],
+    [
+     "recording:yt-3qAD39vv6Cg",
+     9.0
+    ]
+   ]
+  },
+  {
+   "volley": 6,
+   "annotations": 46,
+   "median": "22:10:59",
+   "min_off": -2.0,
+   "max_off": 1.0,
+   "spread": 3.0,
+   "stdev": 0.83,
+   "mad": 1.0,
+   "within1": 43,
+   "within2": 46,
+   "outliers": []
+  },
+  {
+   "volley": 7,
+   "annotations": 49,
+   "median": "22:11:34",
+   "min_off": -2.0,
+   "max_off": 2.0,
+   "spread": 4.0,
+   "stdev": 0.93,
+   "mad": 1.0,
+   "within1": 41,
+   "within2": 49,
+   "outliers": []
+  },
+  {
+   "volley": 8,
+   "annotations": 50,
+   "median": "22:12:08",
+   "min_off": -1.0,
+   "max_off": 2.0,
+   "spread": 3.0,
+   "stdev": 0.82,
+   "mad": 0.5,
+   "within1": 47,
+   "within2": 50,
+   "outliers": []
+  },
+  {
+   "volley": 9,
+   "annotations": 48,
+   "median": "22:12:34",
+   "min_off": -1.0,
+   "max_off": 2.0,
+   "spread": 3.0,
+   "stdev": 0.86,
+   "mad": 1.0,
+   "within1": 43,
+   "within2": 48,
+   "outliers": []
+  },
+  {
+   "volley": 10,
+   "annotations": 51,
+   "median": "22:13:30",
+   "min_off": -2.0,
+   "max_off": 2.0,
+   "spread": 4.0,
+   "stdev": 0.95,
+   "mad": 1.0,
+   "within1": 44,
+   "within2": 51,
+   "outliers": []
+  },
+  {
+   "volley": 11,
+   "annotations": 38,
+   "median": "22:14:50",
+   "min_off": -2.0,
+   "max_off": 1.0,
+   "spread": 3.0,
+   "stdev": 0.78,
+   "mad": 1.0,
+   "within1": 35,
+   "within2": 38,
+   "outliers": []
+  },
+  {
+   "volley": 12,
+   "annotations": 39,
+   "median": "22:15:16",
+   "min_off": -1.0,
+   "max_off": 2.0,
+   "spread": 3.0,
+   "stdev": 0.7,
+   "mad": 0.0,
+   "within1": 38,
+   "within2": 39,
+   "outliers": []
+  }
+ ],
+ "intervals": [
+  {
+   "volley": 2,
+   "seconds": 47.0
+  },
+  {
+   "volley": 3,
+   "seconds": 28.0
+  },
+  {
+   "volley": 4,
+   "seconds": 29.0
+  },
+  {
+   "volley": 5,
+   "seconds": 117.0
+  },
+  {
+   "volley": 6,
+   "seconds": 72.0
+  },
+  {
+   "volley": 7,
+   "seconds": 35.0
+  },
+  {
+   "volley": 8,
+   "seconds": 34.0
+  },
+  {
+   "volley": 9,
+   "seconds": 26.0
+  },
+  {
+   "volley": 10,
+   "seconds": 56.0
+  },
+  {
+   "volley": 11,
+   "seconds": 80.0
+  },
+  {
+   "volley": 12,
+   "seconds": 26.0
+  }
+ ],
+ "intervals_over_60": [
+  {
+   "volley": 5,
+   "seconds": 117.0
+  },
+  {
+   "volley": 6,
+   "seconds": 72.0
+  },
+  {
+   "volley": 11,
+   "seconds": 80.0
+  }
+ ],
+ "residuals": {
+  "n": 482,
+  "within1": 448,
+  "within2": 478,
+  "over2": 4,
+  "median_abs": 0.0,
+  "p95_abs": 2.0
+ },
+ "by_kind": {
+  "vehicle-video": {
+   "n": 23,
+   "median": 0.0,
+   "median_abs": 1.0,
+   "over2": 3
+  },
+  "phone-video": {
+   "n": 267,
+   "median": 0.0,
+   "median_abs": 0.0,
+   "over2": 0
+  },
+  "body-camera": {
+   "n": 192,
+   "median": 0.0,
+   "median_abs": 0.0,
+   "over2": 1
+  }
+ },
+ "title_mismatch": [
+  {
+   "id": "recording:yt-GcIQgyFKcUA",
+   "kind": "vehicle-video",
+   "index": 0,
+   "title": "22:09:48",
+   "implied": "22:09:44",
+   "diff": -4.0
+  },
+  {
+   "id": "recording:yt-WRhJbYZ4xMI",
+   "kind": "phone-video",
+   "index": 53,
+   "title": "22:03:40",
+   "implied": "22:03:02",
+   "diff": -38.0
+  },
+  {
+   "id": "recording:yt--6PvJsQq1Ow",
+   "kind": "phone-video",
+   "index": 55,
+   "title": "22:10:04",
+   "implied": "22:09:57",
+   "diff": -7.0
+  },
+  {
+   "id": "recording:yt-MYY8mE5KaaI",
+   "kind": "phone-video",
+   "index": 58,
+   "title": "22:06:44",
+   "implied": "22:06:38",
+   "diff": -6.0
+  },
+  {
+   "id": "recording:yt-6w_4Zlovr4o",
+   "kind": "phone-video",
+   "index": 59,
+   "title": "22:02:44",
+   "implied": "22:02:28",
+   "diff": -16.0
+  },
+  {
+   "id": "recording:yt-6Lf6uJEAGdE",
+   "kind": "phone-video",
+   "index": 60,
+   "title": "22:02:29",
+   "implied": "22:02:13",
+   "diff": -16.0
+  },
+  {
+   "id": "recording:yt-vdwfYHvKfHE",
+   "kind": "phone-video",
+   "index": 70,
+   "title": "22:06:08",
+   "implied": "22:05:58",
+   "diff": -10.0
+  },
+  {
+   "id": "recording:yt-nBmQmDwZiYc",
+   "kind": "phone-video",
+   "index": 71,
+   "title": "22:10:26",
+   "implied": "22:09:50",
+   "diff": -36.0
+  },
+  {
+   "id": "recording:yt-w7-nJ7Cjudc",
+   "kind": "phone-video",
+   "index": 74,
+   "title": "22:09:01",
+   "implied": "22:08:48",
+   "diff": -13.0
+  },
+  {
+   "id": "recording:yt-8nbhvNP8GjI",
+   "kind": "phone-video",
+   "index": 75,
+   "title": "22:12:48",
+   "implied": "22:12:38",
+   "diff": -10.0
+  },
+  {
+   "id": "recording:yt-_-QwAjrIdtg",
+   "kind": "phone-video",
+   "index": 79,
+   "title": "22:10:50",
+   "implied": "22:10:43",
+   "diff": -7.0
+  },
+  {
+   "id": "recording:yt-xKzRAOxc9IU",
+   "kind": "phone-video",
+   "index": 99,
+   "title": "22:09:31",
+   "implied": "22:08:56",
+   "diff": -35.0
+  },
+  {
+   "id": "recording:yt-WZdxuzKfgpo",
+   "kind": "phone-video",
+   "index": 105,
+   "title": "22:03:45",
+   "implied": "22:09:53",
+   "diff": 368.0
+  },
+  {
+   "id": "recording:yt-3Ud5jzv3Wvw",
+   "kind": "phone-video",
+   "index": 108,
+   "title": "22:02:52",
+   "implied": "22:02:46",
+   "diff": -6.0
+  },
+  {
+   "id": "recording:yt-ifVN_Iz1xTg",
+   "kind": "phone-video",
+   "index": 113,
+   "title": "22:04:20",
+   "implied": "22:03:47",
+   "diff": -33.0
+  },
+  {
+   "id": "recording:yt-3z7FgFATv5w",
+   "kind": "phone-video",
+   "index": 114,
+   "title": "22:05:59",
+   "implied": "22:05:27",
+   "diff": -32.0
+  },
+  {
+   "id": "recording:ph-116",
+   "kind": "phone-video",
+   "index": 116,
+   "title": "22:14:43",
+   "implied": "22:13:17",
+   "diff": -86.0
+  },
+  {
+   "id": "recording:yt-36_mXwckuEw",
+   "kind": "phone-video",
+   "index": 118,
+   "title": "21:41:56",
+   "implied": "21:40:56",
+   "diff": -60.0
+  },
+  {
+   "id": "recording:yt-8h9UhlkM7rw",
+   "kind": "phone-video",
+   "index": 127,
+   "title": "22:06:00",
+   "implied": "22:05:22",
+   "diff": -38.0
+  }
+ ],
+ "drift": [
+  {
+   "id": "recording:yt-teJNnSkdfHc",
+   "kind": "phone-video",
+   "anchors": 15,
+   "spread": 50.0
+  },
+  {
+   "id": "recording:yt-BEeONM21NBQ",
+   "kind": "phone-video",
+   "anchors": 4,
+   "spread": 65.0
+  },
+  {
+   "id": "recording:yt-HlPvYBjXY3Y",
+   "kind": "phone-video",
+   "anchors": 4,
+   "spread": 151.0
+  },
+  {
+   "id": "recording:ph-129",
+   "kind": "phone-video",
+   "anchors": 10,
+   "spread": 61.0
+  },
+  {
+   "id": "recording:yt-yjMjoH5xB3A",
+   "kind": "body-camera",
+   "anchors": 8,
+   "spread": 291.0
+  },
+  {
+   "id": "recording:yt-dDYW0yG-oSQ",
+   "kind": "body-camera",
+   "anchors": 17,
+   "spread": 60.0
+  },
+  {
+   "id": "recording:yt-zKFQCdHNQSA",
+   "kind": "body-camera",
+   "anchors": 18,
+   "spread": 336.0
+  }
+ ],
+ "outliers": [
+  {
+   "id": "recording:yt-3qAD39vv6Cg",
+   "kind": "vehicle-video",
+   "residual": -1.0
+  },
+  {
+   "id": "recording:yt-zKFQCdHNQSA",
+   "kind": "body-camera",
+   "residual": -1.0
+  }
+ ],
+ "clock_notes": [
+  {
+   "id": "recording:yt-QPxwv5hmpm8",
+   "note": "Note: Timestamp on Body Cam Video :10 Ahead of Correct Time",
+   "error": 10,
+   "residual": -0.5,
+   "annotations": 8
+  },
+  {
+   "id": "recording:yt-pRgRu_hZu0w",
+   "note": "Note: Timestamp on video is ~ :20 ahead of real time",
+   "error": 20,
+   "residual": -1.0,
+   "annotations": 1
+  },
+  {
+   "id": "recording:yt-9KV7G2yXpmg",
+   "note": "Note: Video's timestamp ahead by 23 secs.",
+   "error": 23,
+   "residual": 0.0,
+   "annotations": 11
+  }
+ ],
+ "first_shots_map": "22:05:27",
+ "volley1": "22:06:06",
+ "volley12": "22:15:16"
+}

@@ -1,0 +1,38 @@
+{
+ "LNG-15": {
+  "id": "LNG-15",
+  "result": "FAIL",
+  "evidence": "edited System key \"\"the status\"~5\" es \"\"el estado\"~5\" -> \"\"el estado\"~5 EDITED\" (saved); Person \"Person\" es -> \"Persona EDITED\"; after Reset es + CONFIRM: Beacon \"Language reset success\" entries=1 [\"Language reset success just now\"]; System key now \"\"el estado\"~5 EDITED\" (expected predefined \"\"el estado\"~5\"); template key now \"Persona EDITED\" (expected unchanged \"Persona EDITED\"); Languages table unchanged=true; activity [\"UPDATE Reset language “Spanish” [admin]\"]",
+  "shot": "LNG-15.png"
+ },
+ "lng4-console-a": {
+  "id": "lng4-console-a",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ },
+ "LNG-16": {
+  "id": "LNG-16",
+  "result": "FAIL",
+  "evidence": "fr cell edited to \"Personne EDITED\" and saved; after Uninstall + CONFIRM: row gone=true; Beacon while pending [\"Uninstalling language… Running French 0%\"]; after 2.2 s \"Language uninstalled successfully\" entries=1, still pending=0; Person editor headers [\"KEY\",\"English EN\",\"Español ES\",\"العربية AR\"]; Translations list shows fr progress=false; Dashboard language count 4 -> 3; after reinstalling French the Person fr cell reads \"Personne EDITED\" (expected default text \"Person\"); headers [\"KEY\",\"English EN\",\"Español ES\",\"Français FR\",\"العربية AR\"]",
+  "shot": "LNG-16.png"
+ },
+ "LNG-17": {
+  "id": "LNG-17",
+  "result": "FAIL",
+  "evidence": "armed through the Dev panel, then: Make default Spanish with scope \"Save\": 0 \"An error occurred\" entries; other new Beacon entries [\"Default language change success just now\"] | Reset Spanish with scope \"Save\": 0 \"An error occurred\" entries; other new Beacon entries [\"Language reset success just now\"] | Reset Spanish with scope \"Install or Uninstall\": 0 \"An error occurred\" entries; other new Beacon entries [\"Language reset success just now\"] | Uninstall French with scope \"Install or Uninstall\": 0 \"An error occurred\" entries; other new Beacon entries [\"Language uninstalled successfully French just now\"]. (grep of the source: consumeFailureAtom is called only by SettingsDeletes and CodePageEditor, not by the Languages actions)",
+  "shot": "LNG-17-uninstall.png"
+ },
+ "LNG-18": {
+  "id": "LNG-18",
+  "result": "PASS",
+  "evidence": "Save buttons=0; after install dialogs=0; rail click to Dashboard dialogs=0; German row present after returning=true; Escape with Korean selected: dialogs=0, \"Discard changes?\"=0; reopened: selected rows=0; rail round trip dialogs=0",
+  "shot": ""
+ },
+ "LNG-PO3": {
+  "id": "LNG-PO3",
+  "result": "PASS",
+  "evidence": "installed German, made it default (rows [\"Arabic (ar)العربية\",\"English (en)\",\"French (fr)Français\",\"German (de)DeutschDefault\",\"Spanish (es)Español\"]), edited System key \"\"the status\"~5\" in es and saved. Navbar text (Beacon excluded) before/after identical=true [Library Sample Tools Settings Tools / Library Sample Tools Settings Tools]; rail text identical=true; Languages title \"Languages\"; header language pickers before/after []/[]; Dashboard language count 5 (4 seed + German = 5)",
+  "shot": "LNG-PO3.png"
+ }
+}

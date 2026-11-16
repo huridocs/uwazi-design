@@ -1,0 +1,74 @@
+[
+ {
+  "id": "ACT-01",
+  "res": "FAIL",
+  "ev": "Heading \"Activity log\" ok; 7 rows newest first ok (first row \"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42\"). Missing vs expected: column headers (found 0: it is a list of rows, not a table with Action/User/Description/Timestamp columns); timestamp reads \"2026-06-15 18:42\" (expected \"Jun 15, 2026 - 18:42\"); footer reads \"7 events\" (expected \"Showing 1-7 of 7\"); expand control is the whole row button (aria-expanded=false, (no aria-label; name from content)).",
+  "shot": "acceptance-run-1-shots/ACT-01.png"
+ },
+ {
+  "id": "ACT-04",
+  "res": "FAIL",
+  "ev": "Action filter options [\"All actions\",\"CREATE\",\"UPDATE\",\"DELETE\",\"MIGRATE\"]: upper-case (expected sentence case Create, Update, Delete, Migrate), plus \"All actions\"; single-select (listbox aria-multiselectable=null), so \"Create and Delete\" together cannot be chosen; CREATE alone shows [\"l2\",\"l3\"]; no Warning option (ok). \"All actions\" restores 7 rows.",
+  "shot": "acceptance-run-1-shots/ACT-04.png"
+ },
+ {
+  "id": "ACT-05",
+  "res": "PASS",
+  "ev": "User options [\"All users\",\"admin\",\"jnkemba\",\"mlopez\",\"system\"]; mlopez shows [\"l2\",\"l3\",\"l7\"]; with Action CREATE also [\"l2\",\"l3\"].",
+  "shot": "acceptance-run-1-shots/ACT-05.png"
+ },
+ {
+  "id": "ACT-08",
+  "res": "FAIL",
+  "ev": "Filters are inline and apply live (the list changed on selection; Apply buttons: 0; side panels: 0), but with Action CREATE and User mlopez set the page has no \"Clear filters\" action (buttons matching /clear/: []); filters must be reset one by one (via \"All actions\"/\"All users\").",
+  "shot": "acceptance-run-1-shots/ACT-08.png"
+ },
+ {
+  "id": "ACT-06",
+  "res": "FAIL",
+  "ev": "Placeholder \"Search summary, user…\" (expected \"by ids, methods, keywords, etc.\"). Results: {\"relationship\":[\"l2\",\"l5\"],\"THESAURUS\":[\"l6\"],\"delete\":[\"l4\"]} (expected relationship l2+l5, THESAURUS l6, delete l4); clearing restores 7 rows.",
+  "shot": "acceptance-run-1-shots/ACT-06.png"
+ },
+ {
+  "id": "ACT-07",
+  "res": "FAIL",
+  "ev": "No Date range control: toolbar has only Search, \"All actions\" and \"All users\" (date inputs found: 0; Today buttons: 0), so From/To, inclusive end date, Today and Clear cannot be driven.",
+  "shot": "acceptance-run-1-shots/ACT-07.png"
+ },
+ {
+  "id": "ACT-09",
+  "res": "FAIL",
+  "ev": "No column headers and no sort controls (columnheader/th/aria-sort count 0); the list is fixed newest first [\"l1\",\"l2\",\"l3\",\"l4\",\"l5\",\"l6\",\"l7\"] with no Action/User/Timestamp sorting and no aria-sort.",
+  "shot": "acceptance-run-1-shots/ACT-09.png"
+ },
+ {
+  "id": "ACT-10",
+  "res": "FAIL",
+  "ev": "Expanded l6: \"UPDATE Updated thesaurus “Violation types” jnkemba 2026-06-13 11:48 Action UPDATE Summary Updated thesaurus “Violation types” User jnkemba Time 2026-06-13 11:48 REQUEST (EXAMPLE) PATCH /api/entities { sharedId: \"00000d4aa1b2\", title: \"Violation types\", user: \"jnkemba\" }\"; l1: \"UPDATE Updated entity “Velásquez-Rodríguez v. Honduras” admin 2026-06-15 18:42 Action UPDATE Summary Updated entity “Velásquez-Rodríguez v. Honduras” User admin Time 2026-06-15 18:42 REQUEST (EXAMPLE) PATCH /api/entities { sharedId: \"00000d45a1b2\", title: \"Velásquez-Rodríguez v. Honduras\", user: \"admin\" }\". Both show description, pill, User and Time, but also a \"Request (example)\" block with a made-up request line (e.g. PATCH /api/entities { sharedId ... }); expected \"No details recorded\" for seed entries and no request line, Query or Body. The made-up value is labelled \"example\" (that part matches). Expanding l1 did not collapse l6 (single-open accordion).",
+  "shot": "acceptance-run-1-shots/ACT-10.png"
+ },
+ {
+  "id": "ACT-14",
+  "res": "PASS",
+  "ev": "Edit/delete/clear controls on rows or footer: []; after Delete and Backspace on the focused first row the list still has 7 rows.",
+  "shot": "acceptance-run-1-shots/ACT-14.png"
+ },
+ {
+  "id": "ACT-15",
+  "res": "FAIL",
+  "ev": "No \"Export CSV\" button on the page (count 0); footer content is \"7 events\".",
+  "shot": "acceptance-run-1-shots/ACT-15.png"
+ },
+ {
+  "id": "ACT-16",
+  "res": "FAIL",
+  "ev": "Search \"zzz\": empty state reads \"Nothing matches “zzz” Clear search\" (expected “No activity matches “zzz”” with \"Clear filters\"); footer reads \"0 events\" (expected \"0 of 0\"); \"Clear filters\" buttons: 0, \"Clear search\" buttons: 1; clicking Clear search restores 7 rows.",
+  "shot": "acceptance-run-1-shots/ACT-16.png"
+ },
+ {
+  "id": "::errs",
+  "res": "INFO",
+  "ev": "[]",
+  "shot": ""
+ }
+]

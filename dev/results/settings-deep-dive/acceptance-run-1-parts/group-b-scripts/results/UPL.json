@@ -1,0 +1,164 @@
+[
+ {
+  "id": "UPL-01",
+  "res": "FAIL",
+  "ev": "Heading \"Uploads\". List columns [\"FILE\",\"URL\",\"SIZE\",\"\"] (expected Preview, Name, URL, Action); rows [\"logo-iachr.svg /uploads/logo-iachr.svg 12 KB\",\"cover-banner.jpg /uploads/cover-banner.jpg 248 KB\",\"style-guide.pdf /uploads/style-guide.pdf 1.4 MB\",\"Inter-brand.woff2 /uploads/Inter-brand.woff2 64 KB\"] (URL cells read /uploads/..., not /assets/...); thumbnail <img> in list 0, in grid 0 (type icons for every row incl. the svg and jpg; expected real thumbnails)",
+  "shot": "UPL-01"
+ },
+ {
+  "id": "UPL-02",
+  "res": "FAIL",
+  "ev": "header \"File\" (not \"Name\") has sortable control: 0; aria-sort after 1st click [null,null,null,null] order [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"], after 2nd [null,null,null,null] order [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\"]; after clicking URL [null,null,null,null]. Rows are never reordered (header is not sortable)",
+  "shot": ""
+ },
+ {
+  "id": "UPL-03",
+  "res": "FAIL",
+  "ev": "search \"logo\" -> 1 row; \"/assets/cover\" -> 0 rows (URLs are /uploads/..., \"/uploads/cover\" -> 1); type Images -> 2 rows; All types -> 4 rows",
+  "shot": ""
+ },
+ {
+  "id": "X-11",
+  "res": "PASS",
+  "ev": "search field present (label \"null\"), typing \"logo\" filtered to 1 row, clearing restored 4; fixed-height row not measured",
+  "shot": ""
+ },
+ {
+  "id": "UPL-04",
+  "res": "FAIL",
+  "ev": "No \"Import asset\" button (count 0); the footer action is \"Upload file\" and opens no modal (dialogs []); it only adds a Beacon entry [\"Upload is not built in the prototype. No file was added. just now\"]. No dropzone, no file list, no Add/Cancel",
+  "shot": "UPL-04"
+ },
+ {
+  "id": "UPL-06",
+  "res": "FAIL",
+  "ev": "Cannot add files: \"Upload file\" only shows \"Upload is not built in the prototype. No file was added.\" (Beacon [\"Upload is not built in the prototype. No file was added. just now\"]); no Beacon task \"Uploading... <file> N% (M remaining files)\", no \"Uploaded custom file\"",
+  "shot": ""
+ },
+ {
+  "id": "UPL-07",
+  "res": "FAIL",
+  "ev": "Cannot add files (no import modal, no file input): no per-file cap refusal, no \"Uploaded custom file\", no \"An error occurred\" entries",
+  "shot": ""
+ },
+ {
+  "id": "UPL-05",
+  "res": "FAIL",
+  "ev": "Dragging a file over the page shows a drop target: false. Dropping adds nothing (no upload handler, no modal)",
+  "shot": "UPL-05"
+ },
+ {
+  "id": "UPL-08",
+  "res": "FAIL",
+  "ev": "Copy button named \"Copy URL for logo-iachr.svg\" (count 1); clipboard holds \"/uploads/logo-iachr.svg\" (expected \"/assets/logo-iachr.svg\"); confirmation: Beacon [\"URL copied just now\"]",
+  "shot": ""
+ },
+ {
+  "id": "UPL-09",
+  "res": "FAIL",
+  "ev": "Row actions are [\"Copy URL for logo-iachr.svg\",\"Delete logo-iachr.svg\"]; no Edit action (count 0), so the \"Edit File\" dialog with \"File name\" cannot be opened and a file cannot be renamed",
+  "shot": ""
+ },
+ {
+  "id": "UPL-10",
+  "res": "FAIL",
+  "ev": "No \"Edit File\" dialog exists (no Edit action), so \"File name\" required validation and Escape/focus-return cannot be driven",
+  "shot": ""
+ },
+ {
+  "id": "UPL-11",
+  "res": "FAIL",
+  "ev": "dialog text \"Delete upload Delete \u201cstyle-guide.pdf\u201d? Cancel Delete\" (expected \"Do you want to delete the following items?\" with the file name, saying nothing else changes); Cancel kept 4 rows; confirm -> 3 rows; Beacon [\"style-guide.pdf deleted just now\"] (expected \"Deleted custom file\"); after reload 4 rows (expected 3)",
+  "shot": "UPL-11"
+ },
+ {
+  "id": "X-01",
+  "res": "FAIL",
+  "ev": "deleted style-guide.pdf; after reload 4 rows shown (Uploads list is component state, deletion not persisted: expected 3)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "res": "FAIL",
+  "ev": "Beacon after delete: [\"style-guide.pdf deleted just now\"] (checklist quotes \"Deleted custom file\")",
+  "shot": ""
+ },
+ {
+  "id": "X-09",
+  "res": "FAIL",
+  "ev": "Activity log after delete: [] (delete recorded with log:false; expected e.g. \"Deleted file\" with user admin)",
+  "shot": ""
+ },
+ {
+  "id": "UPL-12",
+  "res": "FAIL",
+  "ev": "Methodology HTML saved with /assets/cover-banner.jpg and Global CSS saved with /assets/Inter-brand.woff2. Delete cover-banner.jpg dialog: \"Delete upload Delete \u201ccover-banner.jpg\u201d? Cancel Delete\"; delete Inter-brand.woff2 dialog: \"Delete upload Delete \u201cInter-brand.woff2\u201d? Cancel Delete\". (Seed URLs are /uploads/..., so neither reference matches the file URL; the Global CSS store is not scanned at all)",
+  "shot": "UPL-12"
+ },
+ {
+  "id": "X-05",
+  "res": "FAIL",
+  "ev": "delete dialogs: \"Delete upload Delete \u201ccover-banner.jpg\u201d? Cancel Delete\" / \"Delete upload Delete \u201cInter-brand.woff2\u201d? Cancel Delete\" (usage counts or references not listed)",
+  "shot": "UPL-12"
+ },
+ {
+  "id": "UPL-13",
+  "res": "FAIL",
+  "ev": "No row selection (checkboxes 0, no header checkbox); footer keeps \"Upload file\"; no \"Selected n of total\" and no bulk Delete",
+  "shot": ""
+ },
+ {
+  "id": "X-12",
+  "res": "FAIL",
+  "ev": "No selection on Uploads: checkboxes 0",
+  "shot": ""
+ },
+ {
+  "id": "UPL-14",
+  "res": "FAIL",
+  "ev": "empty: \"Uploads \\| Assets you can reference from pages, custom CSS, or templates. \\| All types \\| No uploads yet \\| Upload images, fonts or files to use in pages and custom CSS. \\| Upload file \\| Upload file\" (title \"No uploads yet\" and hint present; action reads [\"Upload file\",\"Upload file\"] not \"Import asset\"); clicking it adds nothing (still empty: true); search \"zzz\" on empty list shows: \"Uploads \\| Assets you can reference from pages, custom CSS, or templates. \\| All types \\| Nothing matches \u201czzz\u201d \\| Clear search \\| Upload file\" (expected \"No uploads match \u201czzz\u201d\" with clear control)",
+  "shot": "UPL-14"
+ },
+ {
+  "id": "X-10",
+  "res": "PASS",
+  "ev": "empty list shows title \"No uploads yet\", hint \"Upload images, fonts or files to use in pages and custom CSS.\" and an upload action (named \"Upload file\")",
+  "shot": "UPL-14"
+ },
+ {
+  "id": "UPL-15",
+  "res": "FAIL",
+  "ev": "Cannot upload qa.png (no import flow). With the seed file referenced in the Pages preview: [[\"http://localhost:1438/assets/logo-iachr.svg\",0],[\"http://localhost:1438/uploads/logo-iachr.svg\",0]] (naturalWidth 0 = does not load; seed files are metadata only). Rename is unavailable so old-URL redirection cannot be checked",
+  "shot": "UPL-15"
+ },
+ {
+  "id": "UPL-16",
+  "res": "FAIL",
+  "ev": "Upload not possible, rename not possible; delete only: Beacon [\"Upload is not built in the prototype. No file was added. just now\",\"style-guide.pdf deleted just now\"] (expected \"Uploaded custom file\", \"File updated\", \"Deleted custom file\"); Activity log entries [] (expected \"Uploaded custom file\", \"Updated file\", \"Deleted file\" with file name and admin)",
+  "shot": ""
+ },
+ {
+  "id": "UPL-17",
+  "res": "FAIL",
+  "ev": "phone: grid has 2 columns (matches the expected 2); scrollWidth grid 390/390, list 390/390; no Import asset modal or Edit dialog exist to open as sheets; the file picker does not exist",
+  "shot": "UPL-17-list"
+ },
+ {
+  "id": "X-06",
+  "res": "PASS",
+  "ev": "phone: no horizontal page scroll in grid (390/390) or list (390/390); first row text \"logo-iachr.svg 12 KB Copy URL\"; row actions reachable",
+  "shot": "UPL-17-list"
+ },
+ {
+  "id": "X-07",
+  "res": "PASS",
+  "ev": "axe grid: none; list: empty-table-header (minor) x1: th:nth-child(4); delete dialog [\"Delete upload\"]: empty-table-header (minor) x1: th:nth-child(4) ; landmark-no-duplicate-banner (moderate) x1: header[data-testid=\"settings-content-header\"]; focus after Escape: \"Delete logo-iachr.svg\"",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "PASS",
+  "ev": "dark mode (:root.dark) axe on Uploads grid: no violations; the page has no status pills or role badges to measure",
+  "shot": "X-08-UPL"
+ }
+]

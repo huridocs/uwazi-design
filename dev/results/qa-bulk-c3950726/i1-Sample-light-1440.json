@@ -1,0 +1,44 @@
+[
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "step 1 lists same-type candidates with matching-field counts",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "step 2 lists current -> incoming per property with all/none and a live count",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "unticking a property updates the count and the button ('Copy 3 properties')",
+  "ok": true,
+  "detail": "3 of 4 selected / Copy 3 properties"
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "copied values land in the form (Case number 11.481, Date filed 2006), the unticked one stays",
+  "ok": true,
+  "detail": "[\"11.481\",\"2006\",\"El Salvador\",\"\",\"\"]"
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "Copy From never saves: the card still shows the old value while the form is open",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "Cancel discards the staged copy",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "copy-from:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

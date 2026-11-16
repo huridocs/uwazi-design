@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+p.on("pageerror", e => console.log("pageerror:", e.message));
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(1500);
+await p.getByRole("button", { name: /Collection/ }).click(); await p.getByText("CEJIL", {exact:false}).first().click();
+await p.getByText("4,398 entities").waitFor({timeout:20000}); await p.waitForTimeout(2500);
+await p.getByPlaceholder(/Search/).first().click();
+await p.keyboard.type("El Mozote", {delay:30}); await p.keyboard.press("Enter"); await p.waitForTimeout(2500);
+await p.mouse.click(885,76); await p.getByText("Passages", {exact:true}).click(); await p.keyboard.press("Escape"); await p.waitForTimeout(1500);
+await p.locator("button", { hasText: /^p\.33$/ }).first().click(); await p.waitForTimeout(4000);
+await p.screenshot({path:"s90.png"});
+await b.close();

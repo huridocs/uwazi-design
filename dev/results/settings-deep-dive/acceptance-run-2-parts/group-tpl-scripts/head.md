@@ -1,0 +1,7 @@
+# Settings acceptance run 2: Templates list, Uploads, Activity log (group-tpl)
+
+Target: playground 956db631, served at http://localhost:1438/ (the server runs from a separate worktree at that commit, clean). Date 2026-10-05. Driven with Playwright (harness from acceptance-run-2-tools, scripts in `acceptance-run-2-parts/group-tpl-scripts/`; `run-all.sh` runs them, `compile.py` builds this file from the saved `*.results.json`). Screenshots are in `acceptance-run-2-shots/` (paths relative to the checklist folder). Every result below was produced by driving the app; nothing is from code reading. Amendments A1 to A6 and SD-1 to SD-8 applied. Desktop 1280x800 unless the check says phone (390x844, touch). X-07/X-08 and a visual look were done in light and dark at 1280 and at 390 on all three pages. A check that failed only because of a console error says so; its behaviour is described in the same row. The Jotai atomFamily warning is excluded.
+
+No check in these three sections was SKIP: the Needs entries are `-`, F1 to F4, M2 or M8, all in scope. The gap-matrix rows marked defer or drop (TPL-03, TPL-13, TPL-14 as rows; UPL-10; ACT-13 as a row) have no check of that id.
+
+Switches and seeds used: SD-1 (Fail next request) for Save, Delete, Import or Upload and Read; SD-3 (CEJIL "Resolución de la CorteIDH" 1,084 shows `1.1k`); SD-5 (Empty templates, Empty activity log). SD-1 is only partly wired, see the X-04 rows and ACT-17.

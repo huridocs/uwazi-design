@@ -1,0 +1,18 @@
+import { launch, open, S, shot } from "./lib.mjs";
+import { openCtx, cell, squash } from "./u.mjs";
+const b = await launch(); const {page}=await open(b,"translations");
+const dl = ()=>page.evaluate(()=>[...document.querySelectorAll("[role=dialog],[role=alertdialog]")].filter(e=>!e.closest("[inert]")).map(e=>e.innerText.replace(/\s+/g," ").trim()));
+await openCtx(page,"User Interface");
+const sb = S(page).locator('input[placeholder^="Search keys"]').first();
+await sb.fill("zzz"); await page.waitForTimeout(600);
+console.log(squash(await S(page).innerText()).slice(0,500));
+await sb.fill(""); await page.waitForTimeout(300);
+await page.getByRole("button",{name:"Cancel",exact:true}).click().catch(()=>{});
+await openCtx(page,"Person");
+await cell(page,"Person","Spanish").fill("Edit1");
+await page.getByRole("button",{name:"Cancel",exact:true}).click(); await page.waitForTimeout(500);
+console.log("cancel:", await dl());
+const d = page.locator("[role=dialog]:not([inert] *)");
+console.log(await d.count(), await page.evaluate(()=>[...document.querySelectorAll("[role=dialog],[role=alertdialog]")].map(e=>({inert:!!e.closest("[inert]"), t:e.innerText.slice(0,40)}))));
+await shot(page,"probe-discard");
+await b.close();

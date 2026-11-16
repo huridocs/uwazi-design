@@ -1,0 +1,44 @@
+[
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "Import CSV routes to the import page",
+  "ok": true,
+  "detail": "{\"url\":\"/\",\"h\":[\"Uwazi\",\"Notifications\",\"Tasks · 2\",\"New\"],\"txt\":\"Uwazi | Library | Sample | Tools | 2 tasks running | 54% | Notifications | 3 | Mark all read | All | 7 | Unread | 3 | TASKS · 2 | Uploading document batch… | Running | velasquez-corpus"
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "Export CSV of results downloads a file",
+  "ok": true,
+  "detail": "uwazi-mock-2026-09-21.csv, 54 rows"
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "header starts Title,Template,Language,Date added",
+  "ok": false,
+  "detail": "﻿Title,Template,Language,Date added,Case number,Description,Region,Ratified ACHR,Accepts Court jurisdiction,Date filed,R"
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "multi-value cells are \"|\"-joined",
+  "ok": true,
+  "detail": "1 rows contain \"|\""
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "formula-like cells neutralised",
+  "ok": true,
+  "detail": "'=1+1 QA formula,Court Case,en,2026-09-21,\"'=HYPERLINK(\"\"http://x\"\")\",'@SUM(A1) +cmd -2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "no raw cell starts with = + - @",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "csv:Sample-dark-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

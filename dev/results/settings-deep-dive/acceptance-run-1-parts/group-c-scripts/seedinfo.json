@@ -1,0 +1,135 @@
+{
+ "hearings-2026.csv": {
+  "disabled": true
+ },
+ "locations.csv": {
+  "status": "Processing",
+  "stepper": "Upload 2 Process 3 Complete",
+  "footer": [
+   "Back to list",
+   "Delete import"
+  ],
+  "cards": [
+   "Entities created",
+   "Rows processed",
+   "Rows failed",
+   "Thesauri touched",
+   "Relationships"
+  ],
+  "hasDesc": false,
+  "dlBtn": 0,
+  "failureCard": false,
+  "banner": [],
+  "meta": "Template: Country Created by: maria Created 02/19/2026 — 10:08 AM Source: CSV • 98 KB",
+  "progress": "Progress 290 / 332 rows",
+  "headings": [
+   "Progress",
+   "Extraction details"
+  ],
+  "tableHeads": [],
+  "cancelBtn": 2
+ },
+ "cases.csv": {
+  "status": "Completed",
+  "stepper": null,
+  "footer": [
+   "Back to list",
+   "Delete import"
+  ],
+  "cards": [
+   "Entities created",
+   "Rows processed",
+   "Rows failed",
+   "Thesauri touched",
+   "Relationships"
+  ],
+  "hasDesc": false,
+  "dlBtn": 0,
+  "failureCard": false,
+  "banner": [],
+  "meta": "Template: Court Case Created by: santi Created 02/18/2026 — 3:24 PM Source: CSV • 245 KB",
+  "progress": "Progress 932 / 932 rows",
+  "headings": [
+   "Progress",
+   "Extraction details",
+   "CREATED ENTITIES (932 total — showing first 20)"
+  ],
+  "tableHeads": [
+   "TITLE",
+   "TEMPLATE",
+   "CREATED",
+   "OPEN"
+  ],
+  "cancelBtn": 2
+ },
+ "judges-import.zip": {
+  "status": "Failed",
+  "stepper": null,
+  "footer": [
+   "Back to list",
+   "Delete import"
+  ],
+  "cards": [
+   "Entities created",
+   "Rows processed",
+   "Rows failed",
+   "Thesauri touched",
+   "Relationships"
+  ],
+  "hasDesc": false,
+  "dlBtn": 0,
+  "failureCard": false,
+  "banner": [
+   "Import failed — 3 errors encountered. Review the issues below and re-import the file."
+  ],
+  "meta": "Template: Judge Created by: santi Created 02/17/2026 — 4:51 PM Source: ZIP • 1,240 KB",
+  "progress": "Progress 89 / 101 rows",
+  "headings": [
+   "Progress",
+   "Extraction details",
+   "ISSUES (3)"
+  ],
+  "tableHeads": [
+   "FIELD",
+   "ISSUE",
+   "TYPE",
+   "DATE"
+  ],
+  "cancelBtn": 1
+ },
+ "witnesses.csv": {
+  "status": "Warnings",
+  "stepper": null,
+  "footer": [
+   "Back to list",
+   "Delete import"
+  ],
+  "cards": [
+   "Entities created",
+   "Rows processed",
+   "Rows failed",
+   "Thesauri touched",
+   "Relationships"
+  ],
+  "hasDesc": false,
+  "dlBtn": 0,
+  "failureCard": false,
+  "banner": [
+   "3 warnings detected — review the issues below. Entities were imported but some fields may need attention."
+  ],
+  "meta": "Template: Person Created by: santi Created 02/15/2026 — 9:42 AM Source: CSV • 68 KB",
+  "progress": "Progress 156 / 158 rows",
+  "headings": [
+   "Progress",
+   "Extraction details",
+   "ISSUES (3)"
+  ],
+  "tableHeads": [
+   "FIELD",
+   "ISSUE",
+   "TYPE",
+   "DATE"
+  ],
+  "cancelBtn": 1
+ }
+}

@@ -1,0 +1,14 @@
+import { launch, state, OUT } from "./lib2.mjs";
+const side = process.argv[2], sync = process.argv[3] === "on";
+const { browser, page, logs } = await launch({ sync, port: Number(process.argv[4] || 1437) });
+const root = page.locator(`[data-library-pane=${side}]`);
+await root.getByRole("button", { name: /^Open$/ }).first().click(); await page.waitForTimeout(1800);
+await root.getByRole("tab", { name: /Relationships/ }).first().click(); await page.waitForTimeout(1500);
+await root.getByRole("button", { name: /^País/ }).first().click(); await page.waitForTimeout(600);
+const pill = root.getByRole("button", { name: /^Open [A-ZÁÉÍÓÚ]/ }).first(); const lbl = await pill.getAttribute("aria-label");
+await pill.click(); await page.waitForTimeout(2500);
+const r = await page.evaluate(() => ({ openEntityBtn: [...document.querySelectorAll('button')].filter(b => /Open entity/.test(b.textContent)).map(b => ({ vis: b.getClientRects().length > 0, inert: !!b.closest('[inert]') })), slide: [...document.querySelectorAll('[data-component*=SlideOver], [data-part*=slide]')].map(e => e.dataset.component + "|" + e.dataset.state) }));
+console.log(side, sync ? "sync on" : "sync off", lbl, JSON.stringify(r));
+await page.screenshot({ path: OUT + `/slideover-pill-${side}-${sync ? "on" : "off"}.png` });
+console.log(logs);
+await browser.close();

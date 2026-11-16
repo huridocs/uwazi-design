@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+p.on("pageerror", e => console.log("pageerror:", e.message));
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(2000);
+await p.getByRole("button", { name: /^View:/ }).click(); await p.getByRole("option", { name: "List" }).click(); await p.waitForTimeout(800);
+await p.getByText("Velásquez Rodríguez Judgment", {exact:true}).first().click(); await p.waitForTimeout(1200);
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(3000);
+await p.screenshot({path:"s91.png"});
+await p.mouse.click(925,876); await p.waitForTimeout(2000);
+await p.screenshot({path:"s92.png"});
+console.log(await p.evaluate(()=>[...document.querySelectorAll("textarea,input")].filter(e=>e.getBoundingClientRect().x>880).map(e=>e.id+"|"+(e.getAttribute("aria-label")||"")).join(", ")));
+await p.getByLabel(/Description/).first().click(); await p.waitForTimeout(600);
+await p.mouse.move(1150,400); await p.mouse.down(); await p.mouse.move(1350,420,{steps:10}); await p.mouse.up(); await p.waitForTimeout(800);
+await p.screenshot({path:"s93.png"});
+await b.close();

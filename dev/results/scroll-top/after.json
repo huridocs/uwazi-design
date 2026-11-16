@@ -1,0 +1,377 @@
+[
+  {
+    "name": "drawer library Cards→List",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 929,
+        "max": 1858,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 3
+  },
+  {
+    "name": "drawer library List→Cards",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 929,
+        "max": 1858,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 64
+  },
+  {
+    "name": "drawer library Cards→Timeline",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 929,
+        "max": 1858,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 3
+  },
+  {
+    "name": "drawer library Timeline→Cards",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 929,
+        "max": 1858,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 64
+  },
+  {
+    "name": "drawer library Cards→Overview",
+    "stale": [],
+    "scrollers": 25
+  },
+  {
+    "name": "drawer library Overview→List",
+    "stale": [],
+    "scrollers": 3
+  },
+  {
+    "name": "drawer library Cards→Adv. Search",
+    "stale": [],
+    "scrollers": 53
+  },
+  {
+    "name": "drawer library Adv. Search→List",
+    "stale": [],
+    "scrollers": 37
+  },
+  {
+    "name": "drawer drawer Results→Filters",
+    "stale": [],
+    "scrollers": 0
+  },
+  {
+    "name": "drawer drawer Filters→Results",
+    "stale": [],
+    "scrollers": 0
+  },
+  {
+    "name": "full library Cards→List",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "full library List→Cards",
+    "stale": [],
+    "scrollers": 60
+  },
+  {
+    "name": "full library Cards→Timeline",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "full library Timeline→Cards",
+    "stale": [],
+    "scrollers": 60
+  },
+  {
+    "name": "full library Cards→Overview",
+    "stale": [],
+    "scrollers": 25
+  },
+  {
+    "name": "full library Overview→List",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "full library Cards→Adv. Search",
+    "stale": [],
+    "scrollers": 54
+  },
+  {
+    "name": "full library Adv. Search→List",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "full rail Filters→Results",
+    "stale": [
+      {
+        "name": "LibraryFullWidth > .content > .lane-host",
+        "top": 406,
+        "max": 812,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 37
+  },
+  {
+    "name": "full rail Results→Notebook",
+    "stale": [
+      {
+        "name": "LibraryFullWidth > .content > .lane-host",
+        "top": 406,
+        "max": 812,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 2
+  },
+  {
+    "name": "drawer nepal Cards→Evidence",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 1807,
+        "max": 3614,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 3
+  },
+  {
+    "name": "drawer nepal Evidence→Cards",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 1807,
+        "max": 3614,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 4
+  },
+  {
+    "name": "drawer vegas Cards→Sync",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 1900,
+        "max": 3800,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 2
+  },
+  {
+    "name": "drawer vegas Sync→List",
+    "stale": [
+      {
+        "name": ".drawer > LibraryFilters > .facets",
+        "top": 1900,
+        "max": 3800,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 3
+  },
+  {
+    "name": "library Cards→record",
+    "stale": [],
+    "scrollers": 1
+  },
+  {
+    "name": "record Document→Metadata",
+    "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: /^Document/ }).first()\u001b[22m\n"
+  },
+  {
+    "name": "record Metadata→Relationships",
+    "stale": [],
+    "scrollers": 0
+  },
+  {
+    "name": "record Relationships→Files",
+    "stale": [],
+    "scrollers": 0
+  },
+  {
+    "name": "record Files→Metadata",
+    "stale": [],
+    "scrollers": 1
+  },
+  {
+    "name": "record Metadata→Document",
+    "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: /^Document/ }).first()\u001b[22m\n"
+  },
+  {
+    "name": "record drawer tabs Relationships→Metadata",
+    "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: /^Document/ }).first()\u001b[22m\n"
+  },
+  {
+    "name": "record drawer tabs Metadata→Relationships",
+    "stale": [],
+    "scrollers": 0
+  },
+  {
+    "name": "settings Account→Dashboard",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 1
+  },
+  {
+    "name": "settings Dashboard→Collection",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 1
+  },
+  {
+    "name": "settings Collection→Menu",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 1
+  },
+  {
+    "name": "settings Menu→Pages",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 1
+  },
+  {
+    "name": "settings Pages→Templates",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 2
+  },
+  {
+    "name": "settings Templates→Thesauri",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 1
+  },
+  {
+    "name": "settings Thesauri→Relationship types",
+    "stale": [
+      {
+        "name": ".view > SettingsNav > .groups",
+        "top": 79,
+        "max": 158,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 2
+  },
+  {
+    "name": "split left Cards→List",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "split left List→Timeline",
+    "stale": [],
+    "scrollers": 2
+  },
+  {
+    "name": "phone Overview→Cards",
+    "stale": [
+      {
+        "name": "MobileBottomSheet.sheet > .body",
+        "top": 44,
+        "max": 88,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 91
+  },
+  {
+    "name": "phone Cards→List",
+    "stale": [
+      {
+        "name": "MobileBottomSheet.sheet > .body",
+        "top": 44,
+        "max": 88,
+        "overflow": "auto"
+      },
+      {
+        "name": "MobileBottomSheet.sheet > .body",
+        "top": 524,
+        "max": 4760,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 3
+  },
+  {
+    "name": "phone sheet Results→Filters",
+    "stale": [
+      {
+        "name": ".view > AdaptiveSplitView > .content",
+        "top": 713,
+        "max": 1426,
+        "overflow": "auto"
+      },
+      {
+        "name": "MobileBottomSheet.sheet > .body",
+        "top": 44,
+        "max": 88,
+        "overflow": "auto"
+      },
+      {
+        "name": "MobileBottomSheet.sheet > .body",
+        "top": 2424,
+        "max": 4848,
+        "overflow": "auto"
+      }
+    ],
+    "scrollers": 4
+  }
+]

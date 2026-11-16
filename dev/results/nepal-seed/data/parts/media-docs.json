@@ -1,0 +1,2007 @@
+{
+ "topic": "media-docs",
+ "entities": [
+  {
+   "id": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+   "template": "source",
+   "title": "Decisions of the Council of Ministers, Bhadra 2082 (Nepali; meetings of Bhadra 2, 9, 13, 23 and 30)",
+   "properties": {
+    "publisher": "Office of the Prime Minister and Council of Ministers",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2026-01-07",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/BHADRA%20CABINET%202082_uk0h2ym.pdf",
+     "label": "Decisions of the Council of Ministers, Bhadra 2082 (Nepali; meetings of Bhadra 2, 9, 13, 23 and 30)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "template": "source",
+   "title": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)",
+   "properties": {
+    "publisher": "Office of the Prime Minister and Council of Ministers",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2026-01-07",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20ASOJ_7uide2h.pdf",
+     "label": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-21-cabinet-forms-loss-and-damage-assessment-committee",
+   "template": "action",
+   "title": "Cabinet forms a committee to assess loss and damage from the 23-24 Bhadra protests",
+   "properties": {
+    "action_type": "cabinet-decision",
+    "date": "2025-09-21",
+    "precision": "day",
+    "status": "completed",
+    "description": "Item 3 of the cabinet meeting of Asoj 5, 2082 forms a five-member committee, convened by the secretary of the National Planning Commission, to assess loss and damage to public property, physical infrastructure and private institutions in the Bhadra 23 and 24 protests and to prepare a reconstruction plan. Item 2 of the same meeting allows public bodies to make urgent special-circumstance procurement to restore offices and services.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20ASOJ_7uide2h.pdf",
+     "label": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-09-25-cabinet-decides-financial-aid-for-families-of-identified-dead",
+   "template": "action",
+   "title": "Cabinet decides financial assistance for families of the identified dead",
+   "properties": {
+    "action_type": "relief",
+    "date": "2025-09-25",
+    "precision": "day",
+    "status": "completed",
+    "description": "Item 12 of the cabinet meeting of Asoj 9, 2082 provides each family of an identified Nepali citizen who died in the Bhadra 23 and 24 protests with Rs 10 lakh in financial assistance plus Rs 5 lakh for funeral, food and transport costs. Prisoners and juvenile-home inmates who died while escaping during the unrest are excluded in the text.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20ASOJ_7uide2h.pdf",
+     "label": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "template": "action",
+   "title": "Cabinet decides identification, treatment and relief measures for the injured",
+   "properties": {
+    "action_type": "relief",
+    "date": "2025-09-28",
+    "precision": "day",
+    "status": "completed",
+    "description": "Item 7 of the cabinet meeting of Asoj 12, 2082 directs the home ministry to issue identity documents to the injured in the Bhadra 23 and 24 protests, the health ministry to designate hospitals for follow-up care with Gen-Z clinics and free travel, to set up a hotline, to form a technical committee to classify the injured, and to give an interim Rs 20,000 per injured person through the district administration offices.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20ASOJ_7uide2h.pdf",
+     "label": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+   "template": "source",
+   "title": "Decisions of the Council of Ministers, Kartik 2082 (Nepali; meetings of Kartik 12, 17 and 24)",
+   "properties": {
+    "publisher": "Office of the Prime Minister and Council of Ministers",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2026-01-07",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20KARTIK_kvl6cyv.pdf",
+     "label": "Decisions of the Council of Ministers, Kartik 2082 (Nepali; meetings of Kartik 12, 17 and 24)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+   "template": "source",
+   "title": "Decisions of the Council of Ministers, Chaitra 2082 (Nepali; meetings of Chaitra 1, 13, 16, 22 and 24)",
+   "properties": {
+    "publisher": "Office of the Prime Minister and Council of Ministers",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2026-06-09",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20chaitra_veoiplv.pdf",
+     "label": "Decisions of the Council of Ministers, Chaitra 2082 (Nepali; meetings of Chaitra 1, 13, 16, 22 and 24)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+   "template": "action",
+   "title": "Cabinet receives the inquiry commission report on the 23-24 Bhadra protests",
+   "properties": {
+    "action_type": "cabinet-decision",
+    "date": "2026-03-15",
+    "precision": "day",
+    "status": "completed",
+    "description": "Item 29 of the cabinet meeting of Chaitra 1, 2082 records that the Council of Ministers accepts (receives) the report submitted by the inquiry commission formed to investigate the Bhadra 23 and 24 protests.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20chaitra_veoiplv.pdf",
+     "label": "Decisions of the Council of Ministers, Chaitra 2082 (Nepali; meetings of Chaitra 1, 13, 16, 22 and 24)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:mocit-2023-12-01-notice-social-media-listing-2080",
+   "template": "source",
+   "title": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 1 December 2023)",
+   "properties": {
+    "publisher": "Ministry of Communication and Information Technology",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2023-12-01",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/app/public/22/posts/1701416487_66.pdf",
+     "label": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 1 December 2023)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2023-12-01-mocit-notice-social-media-platforms-must-list-within-three-months",
+   "template": "action",
+   "title": "Ministry notice: social media platforms must list within three months under the 2080 directive",
+   "properties": {
+    "action_type": "directive",
+    "date": "2023-12-01",
+    "precision": "day",
+    "status": "unknown",
+    "description": "Notice posted on the ministry site on 15 Mangsir 2080 (1 Dec 2023) on the Directive for Regulating the Use of Social Media 2080, approved by the cabinet on 2080/7/23 and published in the Nepal Gazette on 2080/08/11. Social media platforms operating at the time of the directive must list with the ministry within three months of the notice and those without an office in Nepal must set up an office or contact point within three months; the ministry may stop operation in Nepal of platforms that do not list. The directive in Nepali and English is said to be on the ministry website.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/app/public/22/posts/1701416487_66.pdf",
+     "label": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 1 December 2023)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:mocit-2023-12-01-notice-social-media-listing-2080"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:mocit-2025-02-03-notice-social-media-listing-2081",
+   "template": "source",
+   "title": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 3 February 2025)",
+   "properties": {
+    "publisher": "Ministry of Communication and Information Technology",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2025-02-03",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/np_lbvhbni.pdf",
+     "label": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 3 February 2025)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point",
+   "template": "action",
+   "title": "Ministry notice: platforms to list with the ministry and name a contact point in Nepal (3 Feb 2025)",
+   "properties": {
+    "action_type": "directive",
+    "date": "2025-02-03",
+    "precision": "day",
+    "status": "unknown",
+    "description": "Notice posted on the ministry site on 21 Magh 2081 (3 Feb 2025). It tells persons, companies and organisations that operate or wish to operate social media platforms to list with the ministry and to provide a point of contact in Nepal as required by clauses 3 and 6 of the Directive for Regulating the Use of Social Media 2080, and states that the ministry can stop operation in Nepal of a platform that does not comply.",
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/np_lbvhbni.pdf",
+     "label": "Notice on regulating the use of social media, Ministry of Communication and Information Technology (Nepali, 3 February 2025)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:mocit-2025-02-03-notice-social-media-listing-2081"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:federal-parliament-secretariat-2025-01-28-social-media-bill-2081",
+   "template": "source",
+   "title": "Bill on operation, use and regulation of social media (Social Media Bill 2081), registered in the National Assembly (Nepali)",
+   "properties": {
+    "publisher": "Federal Parliament Secretariat",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2025-01-28",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://na.parliament.gov.np/uploads/attachments/0qbicazidgmddi9n.pdf",
+     "label": "Bill on operation, use and regulation of social media (Social Media Bill 2081), registered in the National Assembly (Nepali)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+   "template": "source",
+   "title": "NHRC press release: reconsider the decision to close social media (Nepali, 20 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-05",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release_2082-5-20.pdf",
+     "label": "NHRC press release: reconsider the decision to close social media (Nepali, 20 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+   "template": "action",
+   "title": "NHRC urges the government to reconsider the decision to close social media",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-05",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 20 Bhadra 2082 (5 Sep 2025), signed by the NHRC spokesperson, expresses serious concern about the government decision to close social media platforms, says it restricts freedom of expression and access to information under the Constitution and international covenants, and directs the government to reconsider and adopt alternative means of regulation and management.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release_2082-5-20.pdf",
+     "label": "NHRC press release: reconsider the decision to close social media (Nepali, 20 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+   "template": "source",
+   "title": "NHRC press release: stop excessive force against protesters (Nepali, 23 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-08",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-23.pdf",
+     "label": "NHRC press release: stop excessive force against protesters (Nepali, 23 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring",
+   "template": "source",
+   "title": "NHRC press release: continued monitoring after the events of Bhadra 23 and 24 (Nepali, 25 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-10",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-25.pdf",
+     "label": "NHRC press release: continued monitoring after the events of Bhadra 23 and 24 (Nepali, 25 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-10-nhrc-continues-monitoring-after-8-9-september",
+   "template": "action",
+   "title": "NHRC continues monitoring after the 23-24 Bhadra events and appeals for calm",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-10",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 25 Bhadra 2082 (10 Sep 2025) says the Commission continues monitoring the human rights situation and the condition of the families of the dead and the injured during the curfew, asks all parties to help rights defenders, journalists and essential service providers move freely, calls for non-violence, and urges a political way out through democratic processes.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-25.pdf",
+     "label": "NHRC press release: continued monitoring after the events of Bhadra 23 and 24 (Nepali, 25 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en",
+   "template": "source",
+   "title": "NHRC press release: a solution should be sought on human rights, democratic values and the rule of law (English, 12 September 2025)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-12",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Press_Release_2082-5-27_eng.pdf",
+     "label": "NHRC press release: a solution should be sought on human rights, democratic values and the rule of law (English, 12 September 2025)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "template": "action",
+   "title": "NHRC tells the President a solution should rest on human rights, democratic values and the rule of law",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-12",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release dated Bhadra 27, 2082 (12 Sep 2025) says the Commission is in communication with President Ram Chandra Poudel, has conveyed that a solution grounded in human rights, democratic values and the rule of law would be appropriate, and is in contact with other stakeholders. Published in Nepali and English.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Press_Release_2082-5-27_eng.pdf",
+     "label": "NHRC press release: a solution should be sought on human rights, democratic values and the rule of law (English, 12 September 2025)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-ne",
+   "template": "source",
+   "title": "NHRC press release: a solution should be sought on human rights, democratic values and the rule of law (Nepali, 27 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-12",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Press_Release_2082-5-27.pdf",
+     "label": "NHRC press release: a solution should be sought on human rights, democratic values and the rule of law (Nepali, 27 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons",
+   "template": "source",
+   "title": "NHRC press release: prisoners to return to jail and return seized weapons (Nepali, 28 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-13",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-28.pdf",
+     "label": "NHRC press release: prisoners to return to jail and return seized weapons (Nepali, 28 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned",
+   "template": "action",
+   "title": "NHRC urges escaped prisoners to return to jail and those holding seized weapons to return them",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-13",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 28 Bhadra 2082 (13 Sep 2025) appeals to prisoners who left jails during the Bhadra 23 and 24 protests to return, and to those who took weapons from security forces to return them. It says the Commission received information that the escapes caused fear and insecurity in society and that inmates of juvenile reform homes also left.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-28.pdf",
+     "label": "NHRC press release: prisoners to return to jail and return seized weapons (Nepali, 28 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-15-appeal-30-bhadra",
+   "template": "source",
+   "title": "NHRC appeal (Nepali, 30 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-15",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/Appeal-NHRC_Nepal-2082-5-30.pdf",
+     "label": "NHRC appeal (Nepali, 30 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief",
+   "template": "source",
+   "title": "NHRC press release: meeting between NHRC officials and the Chief of Army Staff (Nepali, 31 Bhadra 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-16",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-31.pdf",
+     "label": "NHRC press release: meeting between NHRC officials and the Chief of Army Staff (Nepali, 31 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel",
+   "template": "action",
+   "title": "NHRC officials meet Chief of the Army Staff Ashok Raj Sigdel",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-16",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 31 Bhadra 2082 (16 Sep 2025) says NHRC officials met Chief of the Army Staff Ashok Raj Sigdel at the Commission and discussed peace and security and the condition of those under the protection of the Nepali Army, and that the Commission advised the Army to act within democracy, human rights and the rule of law. It also states that the Commission is in continuing contact with Gen-Z representatives, families of the dead, the injured and others affected.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-31.pdf",
+     "label": "NHRC press release: meeting between NHRC officials and the Chief of Army Staff (Nepali, 31 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life",
+   "template": "source",
+   "title": "NHRC press release: appeal for civil rights and normal life (Nepali, 6 Asoj 2082)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2025-09-22",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-6-6.pdf",
+     "label": "NHRC press release: appeal for civil rights and normal life (Nepali, 6 Asoj 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life",
+   "template": "action",
+   "title": "NHRC appeals to stakeholders to protect civil rights and restore normal life after the Gen-Z protests",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-22",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 6 Asoj 2082 (22 Sep 2025) says damage to public and private property and state structures in the Gen-Z movement poses a serious challenge to the rule of law and rights. It calls for urgent reconstruction and repair of offices of security bodies, courts, prisons, juvenile reform homes and district administration offices, and for fair and quick assessment of damage and compensation.",
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-6-6.pdf",
+     "label": "NHRC press release: appeal for civil rights and normal life (Nepali, 6 Asoj 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations",
+   "template": "source",
+   "title": "NHRC press note: recommendations of the Gen-Z movement investigation report sent to the government (Nepali, 13 Jestha 2083)",
+   "properties": {
+    "publisher": "National Human Rights Commission, Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "statement",
+    "published": "2026-05-27",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Note-2083-2-13.pdf",
+     "label": "NHRC press note: recommendations of the Gen-Z movement investigation report sent to the government (Nepali, 13 Jestha 2083)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+   "template": "source",
+   "title": "Supreme Court press release: condolences, arson at courts, habeas corpus hearings to resume (Nepali, 26 Bhadra 2082)",
+   "properties": {
+    "publisher": "Supreme Court of Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "court-record",
+    "published": "2025-09-11",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-26pressbigyapti.pdf",
+     "label": "Supreme Court press release: condolences, arson at courts, habeas corpus hearings to resume (Nepali, 26 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+   "template": "action",
+   "title": "Supreme Court press release on arson at courts; habeas corpus hearings to resume from 29 Bhadra",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-11",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 26 Bhadra 2082 (11 Sep 2025), signed by Chief Justice Prakash Man Singh Raut, expresses sorrow for the deaths and wishes the injured a quick recovery, regrets the arson, vandalism and looting at courts on 24 Bhadra that destroyed documents, equipment and vehicles, and states that the Supreme Court will begin registering and regularly hearing habeas corpus petitions from 29 Bhadra, as decided by an emergency full-court meeting.",
+    "document_url": {
+     "url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-26pressbigyapti.pdf",
+     "label": "Supreme Court press release: condolences, arson at courts, habeas corpus hearings to resume (Nepali, 26 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082",
+   "template": "source",
+   "title": "Supreme Court press release: Zoom meeting with the bar on reviving destroyed case files (Nepali, 27 Bhadra 2082)",
+   "properties": {
+    "publisher": "Supreme Court of Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "court-record",
+    "published": "2025-09-12",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-27prssbijapti.pdf",
+     "label": "Supreme Court press release: Zoom meeting with the bar on reviving destroyed case files (Nepali, 27 Bhadra 2082)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files",
+   "template": "action",
+   "title": "Supreme Court meets the bar by video on reviving case files destroyed by arson",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-12",
+    "precision": "day",
+    "status": "completed",
+    "description": "Press release of 27 Bhadra 2082 (12 Sep 2025) says a Zoom meeting was held between the Chief Justice, the justices, the Nepal Bar Association, the Supreme Court Bar Association, senior advocates, the Chief Registrar and registrars on the damage of 24 Bhadra, covering revival of destroyed case files, running benches, security of justices, lawyers and staff, and rebuilding IT services; the Chief Justice also instructed court staff in a separate discussion.",
+    "document_url": {
+     "url": "https://supremecourt.gov.np/web/assets/downloads/onwards24/5-27prssbijapti.pdf",
+     "label": "Supreme Court press release: Zoom meeting with the bar on reviving destroyed case files (Nepali, 27 Bhadra 2082)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24",
+   "template": "source",
+   "title": "Supreme Court full-court decision of 2 Baisakh 2083 on the deadlock arising from the events of Bhadra 23 and 24, 2082, with covering letter of 10 Baisakh 2083 (Nepali)",
+   "properties": {
+    "publisher": "Supreme Court of Nepal",
+    "publisher_type": "court-or-commission",
+    "medium": "court-record",
+    "published": "2026-04-23",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://supremecourt.gov.np/court/public/media/2026_04/d57f1efa934ada7bdb31893bf2087bf8.pdf",
+     "label": "Supreme Court full-court decision of 2 Baisakh 2083 on the deadlock arising from the events of Bhadra 23 and 24, 2082, with covering letter of 10 Baisakh 2083 (Nepali)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events",
+   "template": "action",
+   "title": "Supreme Court full court decides how courts handle case files lost in the 23-24 Bhadra events",
+   "properties": {
+    "action_type": "court-order",
+    "date": "2026-04-15",
+    "precision": "day",
+    "status": "completed",
+    "description": "Decision of the Supreme Court full court meeting of 2 Baisakh 2083 (15 Apr 2026) titled \"deadlock arising from the events of Bhadra 23 and 24, 2082\". The decision sets out how courts should proceed on case files that were destroyed or cannot be recovered, on missing criminal-fine and penalty records, and on seized property, with the first item referring to the 2082 directive on recovery and certification of destroyed case files. A covering letter dated 10 Baisakh 2083 (23 Apr 2026) from the registrar sends the certified decision to all courts.",
+    "document_url": {
+     "url": "https://supremecourt.gov.np/court/public/media/2026_04/d57f1efa934ada7bdb31893bf2087bf8.pdf",
+     "label": "Supreme Court full-court decision of 2 Baisakh 2083 on the deadlock arising from the events of Bhadra 23 and 24, 2082, with covering letter of 10 Baisakh 2083 (Nepali)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured",
+   "template": "source",
+   "title": "Procedure for classification of the injured in the Gen-Z protest 2082 (Nepali)",
+   "properties": {
+    "publisher": "Ministry of Home Affairs",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2025-11-11",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%9C%E0%A5%87%E0%A4%A8%E0%A4%9C%E0%A5%80_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8%E0%A4%95%E0%A4%BE_%E0%A4%98%E0%A4%BE%E0%A4%87%E0%A4%A4%E0%A5%87%E0%A4%B9%E0%A4%B0%E0%A5%82%E0%A4%95%E0%A5%8B_%E0%A4%B5%E0%A4%B0%E0%A5%8D%E0%A4%97%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3_%E0%A4%B8%E0%A4%AE%E0%A5%8D%E0%A4%AC%E0%A4%A8%E0%A5%8D%E0%A4%A7%E0%A5%80_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%B5%E0%A4%BF%E0%A4%A7%E0%A4%BF_%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8.pdf",
+     "label": "Procedure for classification of the injured in the Gen-Z protest 2082 (Nepali)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest",
+   "template": "action",
+   "title": "Home ministry site publishes the procedure for classifying people injured in the Gen-Z protest",
+   "properties": {
+    "action_type": "directive",
+    "date": "2025-11-11",
+    "precision": "day",
+    "status": "unknown",
+    "description": "Procedure titled \"Procedure for classification of the injured in the Gen-Z protest, 2082\", issued under the Public Health Service Act 2075, for assessing, classifying and documenting people injured in the Gen-Z protest and movement of 2082/5/23 and 24 by severity of injury so that treatment and relief can be prioritised. It refers to a technical committee formed by the Council of Ministers on 2082/6/12 (28 Sep 2025). Date shown is the posting date on the MoHA website.",
+    "document_url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%9C%E0%A5%87%E0%A4%A8%E0%A4%9C%E0%A5%80_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8%E0%A4%95%E0%A4%BE_%E0%A4%98%E0%A4%BE%E0%A4%87%E0%A4%A4%E0%A5%87%E0%A4%B9%E0%A4%B0%E0%A5%82%E0%A4%95%E0%A5%8B_%E0%A4%B5%E0%A4%B0%E0%A5%8D%E0%A4%97%E0%A5%80%E0%A4%95%E0%A4%B0%E0%A4%A3_%E0%A4%B8%E0%A4%AE%E0%A5%8D%E0%A4%AC%E0%A4%A8%E0%A5%8D%E0%A4%A7%E0%A5%80_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%B5%E0%A4%BF%E0%A4%A7%E0%A4%BF_%E0%A5%A8%E0%A5%A6%E0%A5%AE%E0%A5%A8.pdf",
+     "label": "Procedure for classification of the injured in the Gen-Z protest 2082 (Nepali)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured",
+   "template": "source",
+   "title": "Procedure for providing relief assistance to persons injured in the Gen-Z protest and movement of Bhadra 23 and 24, 2082 (Nepali)",
+   "properties": {
+    "publisher": "Ministry of Home Affairs",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2026-03-26",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/GenZ.pdf",
+     "label": "Procedure for providing relief assistance to persons injured in the Gen-Z protest and movement of Bhadra 23 and 24, 2082 (Nepali)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured",
+   "template": "action",
+   "title": "Home ministry site publishes the procedure for relief assistance to people injured in the Gen-Z protest",
+   "properties": {
+    "action_type": "relief",
+    "date": "2026-03-26",
+    "precision": "day",
+    "status": "unknown",
+    "description": "Procedure titled \"Procedure for providing relief assistance to persons injured in the Gen-Z protest and movement of Bhadra 23 and 24, 2082\", issued by the Ministry of Home Affairs. The cover page carries the title and the ministry seal only; its provisions could not be read as text. Date shown is the posting date on the MoHA website (2082-12-12).",
+    "document_url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/GenZ.pdf",
+     "label": "Procedure for providing relief assistance to persons injured in the Gen-Z protest and movement of Bhadra 23 and 24, 2082 (Nepali)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests",
+   "template": "source",
+   "title": "Procedure for assessing damage caused by public demonstrations, strikes and protest programmes, 2081 (Nepali)",
+   "properties": {
+    "publisher": "Ministry of Home Affairs",
+    "publisher_type": "government",
+    "medium": "official-notice",
+    "published": "2024-05-01",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%B8%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%B5%E0%A4%9C%E0%A4%A8%E0%A4%BF%E0%A4%95_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8_%E0%A4%B9%E0%A4%A1%E0%A4%A4%E0%A4%BE%E0%A4%B2_%E0%A4%A4%E0%A4%A5%E0%A4%BE_%E0%A4%B5%E0%A4%BF%E0%A4%B0%E0%A5%8B%E0%A4%A7%E0%A4%95%E0%A4%BE_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%95%E0%A5%8D%E0%A4%B0%E0%A4%AE%E0%A4%AC%E0%A4%BE%E0%A4%9F_%E0%A4%B9%E0%A5%81%E0%A4%A8%E0%A5%87_%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%A4%E0%A4%BF_%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%99%E0%A5%8D%E0%A4%95%E0%A4%A8.pdf",
+     "label": "Procedure for assessing damage caused by public demonstrations, strikes and protest programmes, 2081 (Nepali)"
+    },
+    "language": "ne"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2024-05-01-moha-posts-procedure-for-assessing-damage-from-protests",
+   "template": "action",
+   "title": "Home ministry posts the 2081 procedure for assessing damage from public protests",
+   "properties": {
+    "action_type": "directive",
+    "date": "2024-05-01",
+    "precision": "day",
+    "status": "unknown",
+    "description": "Procedure titled \"Procedure for assessing damage caused by public demonstrations, strikes and protest programmes, 2081\", posted on the MoHA website on 2081-01-18 (1 May 2024). Its provisions could not be read as text.",
+    "document_url": {
+     "url": "https://moha.gov.np/upload/e66443e81e8cc9c4fa5c099a1fb1bb87/files/%E0%A4%B8%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%B5%E0%A4%9C%E0%A4%A8%E0%A4%BF%E0%A4%95_%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8_%E0%A4%B9%E0%A4%A1%E0%A4%A4%E0%A4%BE%E0%A4%B2_%E0%A4%A4%E0%A4%A5%E0%A4%BE_%E0%A4%B5%E0%A4%BF%E0%A4%B0%E0%A5%8B%E0%A4%A7%E0%A4%95%E0%A4%BE_%E0%A4%95%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%AF%E0%A4%95%E0%A5%8D%E0%A4%B0%E0%A4%AE%E0%A4%AC%E0%A4%BE%E0%A4%9F_%E0%A4%B9%E0%A5%81%E0%A4%A8%E0%A5%87_%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A4%A4%E0%A4%BF_%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%99%E0%A5%8D%E0%A4%95%E0%A4%A8.pdf",
+     "label": "Procedure for assessing damage caused by public demonstrations, strikes and protest programmes, 2081 (Nepali)"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests"
+     ],
+     "verification": "single-source",
+     "note": "The document itself is the only source retrieved for this action. Date is the document date or posting date as stated in the description."
+    }
+   ]
+  },
+  {
+   "id": "source:un-nepal-2025-09-09-statement-by-the-united-nations-in-nepal",
+   "template": "source",
+   "title": "Statement by the United Nations in Nepal, 9 September 2025",
+   "properties": {
+    "publisher": "United Nations in Nepal",
+    "publisher_type": "un",
+    "medium": "statement",
+    "published": "2025-09-09",
+    "accessed": "2026-10-05",
+    "url": {
+     "url": "https://nepal.un.org/sites/default/files/2025-09/Statement%20by%20the%20United%20Nations%20in%20Nepal.pdf",
+     "label": "Statement by the United Nations in Nepal, 9 September 2025 (PDF, 1 page)"
+    },
+    "language": "en"
+   },
+   "evidence": []
+  },
+  {
+   "id": "action:2025-09-09-un-in-nepal-statement-on-protest-violence",
+   "template": "action",
+   "title": "UN in Nepal statement: pained by loss of lives, calls for proportionate policing and prompt independent investigation",
+   "properties": {
+    "action_type": "statement",
+    "date": "2025-09-09",
+    "precision": "day",
+    "status": "completed",
+    "description": "One-page statement dated 9 September 2025, Kathmandu. The UN in Nepal says it is deeply pained by the loss of lives and rising tensions, calls on protesters to exercise freedom of expression and assembly peacefully, urges authorities to keep law enforcement proportionate and in line with international human rights standards, and says all allegations of excessive use of force should be investigated promptly, independently, transparently and impartially.",
+    "document_url": {
+     "url": "https://nepal.un.org/sites/default/files/2025-09/Statement%20by%20the%20United%20Nations%20in%20Nepal.pdf",
+     "label": "Statement by the United Nations in Nepal, 9 September 2025"
+    },
+    "verification": "single-source"
+   },
+   "evidence": [
+    {
+     "property": [
+      "action_type",
+      "date",
+      "precision",
+      "status",
+      "description",
+      "document_url",
+      "verification"
+     ],
+     "sources": [
+      "source:un-nepal-2025-09-09-statement-by-the-united-nations-in-nepal"
+     ],
+     "verification": "single-source",
+     "note": "Read from the PDF on nepal.un.org (not bundled; UN copyright)."
+    }
+   ]
+  }
+ ],
+ "entity_additions": [
+  {
+   "id": "action:2025-08-25-cabinet-directs-platforms-to-register-within-one-week",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/BHADRA%20CABINET%202082_uk0h2ym.pdf",
+     "label": "Decisions of the Council of Ministers, Bhadra 2082 (Nepali; meetings of Bhadra 2, 9, 13, 23 and 30)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-09-15-cabinet-decisions-martyrs-mourning-day-and-relief",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/BHADRA%20CABINET%202082_uk0h2ym.pdf",
+     "label": "Decisions of the Council of Ministers, Bhadra 2082 (Nepali; meetings of Bhadra 2, 9, 13, 23 and 30)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-09-21-karki-inquiry-commission-formed",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20ASOJ_7uide2h.pdf",
+     "label": "Decisions of the Council of Ministers, Asoj 2082 (Nepali; meetings of Asoj 5, 9, 12, 23 and 30)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-11-03-cabinet-declares-45-gen-z-martyrs",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20KARTIK_kvl6cyv.pdf",
+     "label": "Decisions of the Council of Ministers, Kartik 2082 (Nepali; meetings of Kartik 12, 17 and 24)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2025-11-10-cabinet-appoints-dan-bahadur-karki-police-chief",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20KARTIK_kvl6cyv.pdf",
+     "label": "Decisions of the Council of Ministers, Kartik 2082 (Nepali; meetings of Kartik 12, 17 and 24)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2026-03-27-cabinet-decides-to-implement-commission-report",
+   "properties": {
+    "document_url": {
+     "url": "https://giwmscdnone.gov.np/media/pdf_upload/CABINET%202082%20chaitra_veoiplv.pdf",
+     "label": "Decisions of the Council of Ministers, Chaitra 2082 (Nepali; meetings of Chaitra 1, 13, 16, 22 and 24)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (Office of the Prime Minister and Council of Ministers)."
+    }
+   ]
+  },
+  {
+   "id": "action:2026-05-27-nhrc-submits-report-recommending-action-against-oli",
+   "properties": {
+    "document_url": {
+     "url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Note-2083-2-13.pdf",
+     "label": "NHRC press note: recommendations of the Gen-Z movement investigation report sent to the government (Nepali, 13 Jestha 2083)"
+    }
+   },
+   "evidence": [
+    {
+     "property": "document_url",
+     "sources": [
+      "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations"
+     ],
+     "verification": "single-source",
+     "note": "Official document that records this decision (National Human Rights Commission, Nepal)."
+    }
+   ]
+  }
+ ],
+ "references": [
+  {
+   "id": "ref:md-001",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+   "to": "action:2025-08-25-cabinet-directs-platforms-to-register-within-one-week",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Item 13 of the meeting of Bhadra 9, 2082 (25 Aug 2025) directs the communications ministry to publicly call on social media operators to register within seven days and, after that period, to instruct the Nepal Telecommunications Authority to deactivate unregistered platforms and reactivate them once registered."
+  },
+  {
+   "id": "ref:md-002",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+   "to": "action:2025-09-15-cabinet-decisions-martyrs-mourning-day-and-relief",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Items 1 and 2 of the meeting of Bhadra 30, 2082 (15 Sep 2025): declare as martyrs those who died in the Bhadra 23 and 24 protests, national mourning on Asoj 1, financial assistance per family, free treatment for the injured, a Gen-Z memorial park, and a judicial inquiry commission."
+  },
+  {
+   "id": "ref:md-003",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "to": "action:2025-09-21-karki-inquiry-commission-formed",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Item 12 of the meeting of Asoj 5, 2082 (21 Sep 2025) forms an inquiry commission under Gauri Bahadur Karki with two members and approves its terms of reference, to establish the physical and human harm in the Bhadra 23 and 24 protests."
+  },
+  {
+   "id": "ref:md-004",
+   "from": "action:2025-09-21-cabinet-forms-loss-and-damage-assessment-committee",
+   "to": "organisation:office-of-the-prime-minister-and-council-of-ministers",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-005",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "to": "action:2025-09-21-cabinet-forms-loss-and-damage-assessment-committee",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-006",
+   "from": "action:2025-09-21-cabinet-forms-loss-and-damage-assessment-committee",
+   "to": "event:2025-09-09-arson-and-attacks-on-state-buildings",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-007",
+   "from": "action:2025-09-25-cabinet-decides-financial-aid-for-families-of-identified-dead",
+   "to": "organisation:office-of-the-prime-minister-and-council-of-ministers",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-008",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "to": "action:2025-09-25-cabinet-decides-financial-aid-for-families-of-identified-dead",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-009",
+   "from": "action:2025-09-25-cabinet-decides-financial-aid-for-families-of-identified-dead",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-010",
+   "from": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "to": "organisation:office-of-the-prime-minister-and-council-of-ministers",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-011",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "to": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-012",
+   "from": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "to": "event:2025-09-08-police-fire-on-protesters-at-parliament-and-new-baneshwar",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-013",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+   "to": "action:2025-11-03-cabinet-declares-45-gen-z-martyrs",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082"
+   ],
+   "verification": "single-source",
+   "note": "Item 6 of the meeting of Kartik 17, 2082 (3 Nov 2025) declares as martyrs on behalf of the state 45 persons who died in the protests of Bhadra 23 and 24 by the Gen-Z generation."
+  },
+  {
+   "id": "ref:md-014",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+   "to": "action:2025-11-10-cabinet-appoints-dan-bahadur-karki-police-chief",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082"
+   ],
+   "verification": "single-source",
+   "note": "Item 9 of the meeting of Kartik 24, 2082 (10 Nov 2025) promotes Additional IGP Dan Bahadur Karki to Inspector General of Nepal Police from Kartik 27. Item 6 of the same meeting gives the inquiry commission formed on Asoj 5 fifteen more staff."
+  },
+  {
+   "id": "ref:md-015",
+   "from": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+   "to": "organisation:office-of-the-prime-minister-and-council-of-ministers",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-016",
+   "from": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+   "to": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-017",
+   "from": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+   "to": "organisation:gauri-bahadur-karki-commission",
+   "type": "targets",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-018",
+   "from": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+   "to": "action:2026-03-27-cabinet-decides-to-implement-commission-report",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Item 4 of the meeting of Chaitra 13, 2082 (27 Mar 2026): for immediate implementation of the commission report, a study committee is to be formed for the recommendations concerning security forces, and the relevant bodies are to be directed to implement the other recommendations. Item 3 pays tribute to those who died in the Gen-Z movement and earlier movements."
+  },
+  {
+   "id": "ref:md-019",
+   "from": "action:2023-12-01-mocit-notice-social-media-platforms-must-list-within-three-months",
+   "to": "organisation:ministry-of-communication-and-information-technology",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:mocit-2023-12-01-notice-social-media-listing-2080"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-020",
+   "from": "source:mocit-2023-12-01-notice-social-media-listing-2080",
+   "to": "action:2023-12-01-mocit-notice-social-media-platforms-must-list-within-three-months",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:mocit-2023-12-01-notice-social-media-listing-2080"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-021",
+   "from": "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point",
+   "to": "organisation:ministry-of-communication-and-information-technology",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:mocit-2025-02-03-notice-social-media-listing-2081"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-022",
+   "from": "source:mocit-2025-02-03-notice-social-media-listing-2081",
+   "to": "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:mocit-2025-02-03-notice-social-media-listing-2081"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-023",
+   "from": "source:federal-parliament-secretariat-2025-01-28-social-media-bill-2081",
+   "to": "action:2025-01-29-social-media-bill-tabled",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:federal-parliament-secretariat-2025-01-28-social-media-bill-2081"
+   ],
+   "verification": "single-source",
+   "note": "Text of the bill as registered in the National Assembly by Communication and Information Technology Minister Prithvi Subba Gurung (statement of objectives dated 13 Magh 2081). The Assembly bill page records registration on 2081-10-15, passage by the National Assembly on 2082-05-13 and withdrawal on 2082-10-26 (9 Feb 2026)."
+  },
+  {
+   "id": "ref:md-024",
+   "from": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-025",
+   "from": "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+   "to": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-026",
+   "from": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+   "to": "action:2025-09-04-ministry-directs-nta-to-block-unregistered-platforms",
+   "type": "targets",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-027",
+   "from": "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+   "to": "action:2025-09-08-nhrc-urges-restraint-and-relief",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force"
+   ],
+   "verification": "single-source",
+   "note": "NHRC press release of 23 Bhadra 2082 (8 Sep 2025): says its monitoring teams were formed, reports that police fired at protesters near the parliament with more than a dozen deaths and many injured, and calls on the government to avoid excessive force, address the demands of the younger generation, give relief to the families of the dead, free treatment to the injured, and conduct a credible investigation."
+  },
+  {
+   "id": "ref:md-028",
+   "from": "action:2025-09-10-nhrc-continues-monitoring-after-8-9-september",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-029",
+   "from": "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring",
+   "to": "action:2025-09-10-nhrc-continues-monitoring-after-8-9-september",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-030",
+   "from": "action:2025-09-10-nhrc-continues-monitoring-after-8-9-september",
+   "to": "event:2025-09-09-nationwide-arson-wave",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-10-press-release-continued-monitoring"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-031",
+   "from": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-032",
+   "from": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en",
+   "to": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-033",
+   "from": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "to": "organisation:office-of-the-president-of-nepal",
+   "type": "targets",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-034",
+   "from": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-ne",
+   "to": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-ne"
+   ],
+   "verification": "single-source",
+   "note": "Nepali version of the same press release."
+  },
+  {
+   "id": "ref:md-035",
+   "from": "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-036",
+   "from": "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons",
+   "to": "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-037",
+   "from": "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned",
+   "to": "event:2025-09-09-prison-breaks",
+   "type": "targets",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-038",
+   "from": "source:nhrc-nepal-2025-09-15-appeal-30-bhadra",
+   "to": "action:2025-09-15-nhrc-statement-relief-and-return-to-calm",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-15-appeal-30-bhadra"
+   ],
+   "verification": "single-source",
+   "note": "NHRC appeal of 30 Bhadra 2082 (15 Sep 2025) to all concerned: post-mortems, cremations and relief for the families of those who died in the protests, restraint, peaceful and orderly expression of demands, controlling hoarding, assessing damage and supporting reconstruction."
+  },
+  {
+   "id": "ref:md-039",
+   "from": "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-040",
+   "from": "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief",
+   "to": "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-041",
+   "from": "action:2025-09-16-nhrc-officials-meet-army-chief-ashok-raj-sigdel",
+   "to": "organisation:nepali-army",
+   "type": "targets",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-16-press-release-meeting-army-chief"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-042",
+   "from": "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life",
+   "to": "organisation:nhrc-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-043",
+   "from": "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life",
+   "to": "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-044",
+   "from": "action:2025-09-22-nhrc-appeals-for-reconstruction-and-restoration-of-normal-life",
+   "to": "event:2025-09-09-arson-and-attacks-on-state-buildings",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2025-09-22-press-release-restore-normal-life"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-045",
+   "from": "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations",
+   "to": "action:2026-05-27-nhrc-submits-report-recommending-action-against-oli",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:nhrc-nepal-2026-05-27-press-note-gen-z-investigation-recommendations"
+   ],
+   "verification": "single-source",
+   "note": "NHRC press note of 13 Jestha 2083 (27 May 2026): the Commission, at its meeting of 2083/2/12, decided to recommend to the Government of Nepal, the Prime Minister and Council of Ministers office, and others to implement its decisions and recommendations on the human rights violations in the Gen-Z (navayuva) movement of Bhadra 23 and 24, 2082, and says detailed decisions and recommendations will be annexed. The note does not itself name individuals."
+  },
+  {
+   "id": "ref:md-046",
+   "from": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+   "to": "organisation:supreme-court-of-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-047",
+   "from": "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+   "to": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-048",
+   "from": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+   "to": "event:2025-09-09-supreme-court-set-on-fire",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-049",
+   "from": "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files",
+   "to": "organisation:supreme-court-of-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-050",
+   "from": "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082",
+   "to": "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-051",
+   "from": "action:2025-09-12-supreme-court-meets-bar-on-reviving-destroyed-case-files",
+   "to": "event:2025-09-09-supreme-court-set-on-fire",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-12-press-release-27-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-052",
+   "from": "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events",
+   "to": "organisation:supreme-court-of-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-053",
+   "from": "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24",
+   "to": "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-054",
+   "from": "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events",
+   "to": "event:2025-09-09-supreme-court-set-on-fire",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-055",
+   "from": "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest",
+   "to": "organisation:ministry-of-home-affairs",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-056",
+   "from": "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured",
+   "to": "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-057",
+   "from": "action:2025-11-11-moha-publishes-procedure-for-classifying-the-injured-in-the-gen-z-protest",
+   "to": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2025-11-11-procedure-classification-of-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-058",
+   "from": "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured",
+   "to": "organisation:ministry-of-home-affairs",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-059",
+   "from": "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured",
+   "to": "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-060",
+   "from": "action:2026-03-26-moha-publishes-procedure-for-relief-assistance-to-the-gen-z-injured",
+   "to": "action:2025-09-28-cabinet-decides-treatment-and-relief-measures-for-injured",
+   "type": "in_response_to",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2026-03-26-procedure-relief-for-gen-z-injured"
+   ],
+   "verification": "single-source",
+   "note": "Link drawn from the content of the document."
+  },
+  {
+   "id": "ref:md-061",
+   "from": "action:2024-05-01-moha-posts-procedure-for-assessing-damage-from-protests",
+   "to": "organisation:ministry-of-home-affairs",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the document or the site that hosts it."
+  },
+  {
+   "id": "ref:md-062",
+   "from": "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests",
+   "to": "action:2024-05-01-moha-posts-procedure-for-assessing-damage-from-protests",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:moha-nepal-2024-05-01-procedure-damage-assessment-public-protests"
+   ],
+   "verification": "single-source",
+   "note": "The document is the primary record of this action."
+  },
+  {
+   "id": "ref:md-063",
+   "from": "action:2025-09-09-un-in-nepal-statement-on-protest-violence",
+   "to": "organisation:un-nepal",
+   "type": "issued_by",
+   "date": null,
+   "sources": [
+    "source:un-nepal-2025-09-09-statement-by-the-united-nations-in-nepal"
+   ],
+   "verification": "single-source",
+   "note": "Issuing body as shown on the statement."
+  },
+  {
+   "id": "ref:md-064",
+   "from": "source:un-nepal-2025-09-09-statement-by-the-united-nations-in-nepal",
+   "to": "action:2025-09-09-un-in-nepal-statement-on-protest-violence",
+   "type": "reports_on",
+   "date": null,
+   "sources": [
+    "source:un-nepal-2025-09-09-statement-by-the-united-nations-in-nepal"
+   ],
+   "verification": "single-source",
+   "note": "The statement is the primary record of this action."
+  }
+ ]
+}

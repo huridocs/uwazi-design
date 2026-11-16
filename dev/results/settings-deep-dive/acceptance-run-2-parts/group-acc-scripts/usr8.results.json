@@ -1,0 +1,14 @@
+[
+ {
+  "id": "X-05",
+  "res": "FAIL",
+  "ev": "Used user: \"Delete user Delete mlopez? They can no longer sign in to this collection. Member of Litigation. Cancel Delete\"; used group: \"Delete group Delete the Litigation group? Its members keep their accounts. 2 members lose this group: mlopez and jnkemba. Cancel Delete\" (both state what changes); unused user (no group): \"Delete user Delete tbuergenthal? They can no longer sign in to this collection. Cancel Delete\" (no \"nothing else changes\" statement); unused group: \"Delete group Delete the Empty one group? It has no members. Cancel Delete\" (\"no members\" implies it)",
+  "shot": "X-05.png"
+ },
+ {
+  "id": "USR8-console",
+  "res": "PASS",
+  "ev": "[]",
+  "shot": ""
+ }
+]

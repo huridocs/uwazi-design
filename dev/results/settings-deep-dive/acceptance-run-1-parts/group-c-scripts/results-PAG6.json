@@ -1,0 +1,26 @@
+[
+ {
+  "id": "PAG-30",
+  "res": "FAIL",
+  "ev": "390x844 touch. List: no horizontal scroll (0px), rows stack title, \"URL /page/<slug>\", \"Status <pill>\" with a delete icon; the whole row is the Edit target; buttons [\"Back to settings\",\"Edit About this collection\",\"Delete About this collection\",\"Edit Methodology\",\"Delete Methodology\"]...; no per-row View (expected View and Edit). Footer \"Add page\" reachable at y=807. Editor: overflow 0px, layout single column; Code / Preview switch present (1) and works (Preview shows 1 preview frame, 0 textareas); footer buttons [\"Discard\",\"Save draft\",\"Publish\"]: Publish, Save draft and Discard stay visible on both panes; no Restore exists. Discard confirm opens as a centred card; Publish has no dialog (PAG-20) and Restore does not exist (PAG-23).",
+  "shot": "acceptance-run-1-shots/PAG-30-editor.png"
+ },
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "Phone 390x844: no horizontal scroll on the list or the editor, rows show name, URL, status and a delete action, editor is one column with a Code / Preview switch, all actions reachable by tap. Fails: the Discard confirm opens as a centred card (about 358 px wide, vertically centred), not a sheet or full screen; while the page has unsaved edits the footer status pill \"Published · draft has changes\" overlaps the Discard label (see PAG-30-discard shot); the Publish/Restore dialogs do not exist.",
+  "shot": "acceptance-run-1-shots/PAG-30-discard.png"
+ },
+ {
+  "id": "::errs",
+  "res": "INFO",
+  "ev": "[\"pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.\"]",
+  "shot": ""
+ },
+ {
+  "id": "PAG-17::phone",
+  "res": "INFO",
+  "ev": "Code / Preview switch 1; Code pane textarea 1; Preview pane textarea 0, frames 1",
+  "shot": ""
+ }
+]

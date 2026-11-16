@@ -1,0 +1,20 @@
+{
+ "TRN-01": {
+  "id": "TRN-01",
+  "result": "PASS",
+  "evidence": "title \"Translations\"; h3 [\"System translations\",\"Content translations\"]; column headers [\"NAME\",\"TYPE\",\"KEYS\",\"TRANSLATED\"]; System rows [\"Menu Menu\",\"User Interface User interface\"] (User Interface, Menu present; Filters context is absent because the Sample has no filter group, see TRN-07); Content rows 27 = 9 templates + 6 thesauri + 12 relationship types (27): true",
+  "shot": "TRN-01.png"
+ },
+ "TRN-02": {
+  "id": "TRN-02",
+  "result": "PASS",
+  "evidence": "Content group default order ascending=true; Name header click reverses=true; Type header click sorts=true ([\"Relationship type\",\"Template\",\"Thesaurus\"]); separate \"Translate\" buttons=0; pills [\"Menu\",\"User interface\",\"Relationship type\",\"Template\",\"Thesaurus\"] (\"Uwazi UI\" shown=false); distinct pill classes=1; row click opens editor=true",
+  "shot": "TRN-02.png"
+ },
+ "trn1-console": {
+  "id": "trn1-console",
+  "result": "INFO",
+  "evidence": "[]",
+  "shot": ""
+ }
+}

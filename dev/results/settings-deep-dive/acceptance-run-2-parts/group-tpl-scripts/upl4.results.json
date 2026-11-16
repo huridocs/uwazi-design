@@ -1,0 +1,50 @@
+{
+ "UPL-15": {
+  "id": "UPL-15",
+  "result": "FAIL",
+  "evidence": "uploaded qa.png; Pages preview (HTML <img src=\"/assets/qa.png\">, Global CSS url(/assets/qa.png)): image naturalWidth 8, CSS background url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA; /assets/nope.png naturalWidth 0 (missing, page still renders=true); after renaming to qa2 (rows [\"logo-iachr.svg\",\"cover-banner.jpg\",\"style-guide.pdf\",\"Inter-brand.woff2\",\"qa2.png\"]) the old URL still loads: naturalWidth 8, CSS url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA \\| CONSOLE during this check: pageerror: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the 'allow-same-origin' flag.",
+  "shot": "acceptance-run-2-shots/UPL-15.png"
+ },
+ "UPL-16": {
+  "id": "UPL-16",
+  "result": "PASS",
+  "evidence": "Beacon new entries [\"Some fields could not be validated. Check highlighted fields and try again. 21 min ago\",\"A new version of Uwazi is available. 4 min ago\",\"Deleted custom file just now\",\"File updated just now\",\"Uploaded custom file qa.png just now\",\"Processing PDFs complete. 12 items processed. 1 min ago\"]; Activity log top rows [\"Delete admin Deleted file “qa-renamed.png” Oct 5, 2026 - 10:36\",\"Update admin Updated file “qa-renamed.png” Oct 5, 2026 - 10:36\",\"Create admin Uploaded custom file “qa.png” Oct 5, 2026 - 10:36\",\"Update admin Updated entity “Velásquez-Rodríguez v. Honduras” Jun 15, 2026 - 18:42\"]",
+  "shot": "acceptance-run-2-shots/UPL-16.png"
+ },
+ "X-09": {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "upload, rename and delete each logged with file name and user admin: [\"Delete admin Deleted file “qa-renamed.png” Oct 5, 2026 - 10:36\",\"Update admin Updated file “qa-renamed.png” Oct 5, 2026 - 10:36\",\"Create admin Uploaded custom file “qa.png” Oct 5, 2026 - 10:36\"]",
+  "shot": "acceptance-run-2-shots/UPL-16"
+ },
+ "X-07": {
+  "id": "X-07",
+  "result": "PASS",
+  "evidence": "axe page []; Import dialog axe [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[32rem\\\\] > .border-b\"] info {\"role\":\"dialog\",\"name\":\"Import asset\",\"modal\":\"true\"} trapped=true Escape closed=true focus to \"Import asset\"; Edit dialog axe [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\"] info {\"role\":\"dialog\",\"name\":\"Edit File\",\"modal\":\"true\"} trapped=true closed=true focus \"Edit logo-iachr.svg\"; Delete dialog axe [\"landmark-no-duplicate-banner (moderate) x1: .md\\\\:max-w-\\\\[28rem\\\\] > .border-b\"] info {\"role\":\"dialog\",\"name\":\"Delete\",\"modal\":\"true\"} trapped=true closed=true focus \"Delete logo-iachr.svg\"; duplicate row-button names []; inputs without label []",
+  "shot": "acceptance-run-2-shots/X-07"
+ },
+ "X-08": {
+  "id": "X-08",
+  "result": "PASS",
+  "evidence": "Uploads has no status pills or badges (the type is shown by thumbnail); contrast of every text node in the pane below 4.5: light [], dark []; axe in dark: []; visual look light/dark: X-08-light.png, X-08-dark.png",
+  "shot": "acceptance-run-2-shots/X-08-dark"
+ },
+ "UPL-17": {
+  "id": "UPL-17",
+  "result": "PASS",
+  "evidence": "list layout=true table=false; first row \"logo-iachr.svg /assets/logo-iachr.svg\" thumbnail=true; row buttons [label,right,width,height] [[\"Edit logo-iachr.svg\",298,26,26],[\"Copy URL for logo-iachr.svg\",328,26,26],[\"Delete logo-iachr.svg\",358,26,26]]; page scroll width 390/390; grid columns 2 (card lefts [16,201,16,201]), grid scroll 390/390; Import dialog [{\"w\":390,\"h\":844,\"top\":0,\"file\":true}] dropzone box {\"x\":16,\"y\":64,\"width\":358,\"height\":148} filechooser opened by tap=true; Edit dialog [{\"w\":390,\"h\":258,\"top\":587}]; --kb read 1189px at load and was re-measured before driving (see Notes)",
+  "shot": "acceptance-run-2-shots/UPL-17-list"
+ },
+ "X-06": {
+  "id": "X-06",
+  "result": "PASS",
+  "evidence": "rows not a table; no horizontal scroll (list 390/390, grid 390/390, after dialogs 390/390); row actions visible inside 390px [[\"Edit logo-iachr.svg\",298,26,26],[\"Copy URL for logo-iachr.svg\",328,26,26],[\"Delete logo-iachr.svg\",358,26,26]]; dialogs [{\"w\":390,\"h\":844,\"top\":0,\"file\":true}] [{\"w\":390,\"h\":258,\"top\":587}] (sheet or full width); file picker by touch true",
+  "shot": "acceptance-run-2-shots/UPL-17-list"
+ },
+ "X-08-phone": {
+  "id": "X-08-phone",
+  "result": "PASS",
+  "evidence": "dark phone look captured (UPL-visual-dark-phone.png); see X-08 for the contrast numbers",
+  "shot": "acceptance-run-2-shots/UPL-visual-dark-phone"
+ }
+}

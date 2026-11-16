@@ -1,0 +1,10 @@
+PASS | ACC-21 | Desktop: pane 1030px, input widths [314,314,640,314,314,517] (max 640px = 40.0rem, limit ~40rem), password modal input 478px; Phone: horizontal overflow 0px, input left edges [16] (single column=true), modal input 16+358 of 390px | ACC-21-phone.png
+INFO | X-06-phone-acc | phone overflow=0 
+PASS | ACC-22 | fresh panel="ci: copy this key now. You won't see this again. uwz_live_f8cd5e06c55eb967c48aa6d6bd93a624 Copy key Done"; clipboard after Copy key equals full key=true (pasted into field: true); after Done list row shows masked "uwz_live_••••a624" (last4 matches=true); full key anywhere on page=false | ACC-22.png
+PASS | ACC-23 | Revoke opens dialog=["Revoke API key"] ("Revoke API key Revoke “ci”? Anything that signs in with it stops working. Cancel Revoke"); Cancel keeps key=true; confirm removes=true; Beacon "API key revoked" entries=1; gone after reload=true; Activity log shows generate=true revoke=true; session log entries=["DELETE Revoked API key “ci” [admin]","CREATE Generated API key “ci” [admin]"] | ACC-23.png
+PASS | X-03 | After Update: Update disabled=true; rail click showed dialogs=0; editing again re-enables=true | X-03.png
+PASS | X-09 | Activity entries after the save: ["UPDATE Updated account “admin” [admin]"] 
+PASS | X-01 | Saved persist@x.org; after leaving and returning="persist@x.org"; after reload="persist@x.org"; after Reset demo data (dialog buttons ["","Cancel","Reset"])="admin@uwazi.io" (ACC-12 reset half: expects admin@uwazi.io) 
+PASS | ACC-console-3 | [] 
+PASS | X-02 | No change: rail click dialogs=0; dirty + navbar Library link: dialogs=["Discard changes?"] text="Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes"; Discard changes navigated to Library=true; edit gone on return: email="admin@uwazi.io" (rail item, logout, data-source paths shown in ACC-20) | X-02.png
+PASS | ACC3-console | console errors/warnings (atomFamily baseline excluded): [] 

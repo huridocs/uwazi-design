@@ -1,0 +1,6580 @@
+[
+ {
+  "id": "organisation:lvmpd",
+  "template": "organisation",
+  "title": "Las Vegas Metropolitan Police Department",
+  "properties": {
+   "org_type": "police",
+   "website": {
+    "url": "https://www.lvmpd.com/",
+    "label": "Las Vegas Metropolitan Police Department"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:clark-county-fire-department",
+  "template": "organisation",
+  "title": "Clark County Fire Department",
+  "properties": {
+   "org_type": "fire"
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:clark-county-coroner",
+  "template": "organisation",
+  "title": "Clark County Coroner",
+  "properties": {
+   "org_type": "coroner"
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:fbi-behavioral-analysis-unit",
+  "template": "organisation",
+  "title": "FBI Behavioral Analysis Unit",
+  "properties": {
+   "org_type": "federal-agency",
+   "website": {
+    "url": "https://www.fbi.gov/",
+    "label": "FBI Behavioral Analysis Unit"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:fema-national-exercise-division",
+  "template": "organisation",
+  "title": "FEMA National Exercise Division",
+  "properties": {
+   "org_type": "federal-agency"
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:mgm-resorts",
+  "template": "organisation",
+  "title": "MGM Resorts International",
+  "properties": {
+   "org_type": "company"
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:the-new-york-times",
+  "template": "organisation",
+  "title": "The New York Times",
+  "properties": {
+   "org_type": "news",
+   "website": {
+    "url": "https://www.nytimes.com/",
+    "label": "The New York Times"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:forensic-architecture",
+  "template": "organisation",
+  "title": "Forensic Architecture (Goldsmiths, University of London)",
+  "properties": {
+   "org_type": "academic"
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:carnegie-mellon-university",
+  "template": "organisation",
+  "title": "Carnegie Mellon University",
+  "properties": {
+   "org_type": "academic",
+   "website": {
+    "url": "https://vera.cs.cmu.edu/",
+    "label": "Carnegie Mellon University"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:internet-archive",
+  "template": "organisation",
+  "title": "Internet Archive",
+  "properties": {
+   "org_type": "archive",
+   "website": {
+    "url": "https://archive.org/",
+    "label": "Internet Archive"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "organisation:vegas-map-project-team",
+  "template": "organisation",
+  "title": "Vegas Map Project Team (VegasShootingMap.com)",
+  "properties": {
+   "org_type": "community",
+   "website": {
+    "url": "https://vegasshootingmap.com/",
+    "label": "Vegas Map Project Team (VegasShootingMap.com)"
+   }
+  },
+  "evidence": []
+ },
+ {
+  "id": "source:vegasshootingmap-2026-10-07-google-my-map",
+  "template": "source",
+  "title": "VegasShootingMap.com (Google My Maps, 'Vegas Shooting Map')",
+  "properties": {
+   "publisher": "Vegas Map Project Team",
+   "publisher_type": "community-map",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://vegasshootingmap.com/",
+    "label": "VegasShootingMap.com (Google My Maps, 'Vegas Shooting Map')"
+   },
+   "licence": "None stated. The map description says it is 'meant for research purposes'. Used under the project owner's decision of 2026-10-07 that the map is public; the maintainers have not been asked (see README).",
+   "language": "en",
+   "read_status": "read",
+   "contact": "VegasMapProjectTeam@googlegroups.com"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Contact for corrections and additions: VegasMapProjectTeam@googlegroups.com. KML export downloaded once on 2026-10-07; the Victims folder was removed and never read into this seed."
+   }
+  ]
+ },
+ {
+  "id": "source:lvmpd-2018-08-03-criminal-investigative-report",
+  "template": "source",
+  "title": "LVMPD Criminal Investigative Report, 1 October Mass Casualty Shooting",
+  "properties": {
+   "publisher": "Las Vegas Metropolitan Police Department",
+   "publisher_type": "police",
+   "published": "2018-08-03",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.lvmpd.com/home/showpublisheddocument/134/638298568313170000",
+    "label": "LVMPD Criminal Investigative Report, 1 October Mass Casualty Shooting"
+   },
+   "language": "en",
+   "read_status": "not-read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "PDF not yet downloaded (the LVMPD server blocks automated requests). Facts below come from Wikipedia's summary and news summaries."
+   }
+  ]
+ },
+ {
+  "id": "source:lvmpd-2018-01-18-preliminary-investigative-report",
+  "template": "source",
+  "title": "LVMPD Preliminary Investigative Report, 1 October Mass Casualty Shooting (FIT report, 81 pages)",
+  "properties": {
+   "publisher": "Las Vegas Metropolitan Police Department",
+   "publisher_type": "police",
+   "published": "2018-01-18",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.lvmpd.com/en-us/Documents/1_October_FIT_Report_01-18-2018_Footnoted.pdf",
+    "label": "LVMPD Preliminary Investigative Report, 1 October Mass Casualty Shooting (FIT report, 81 pages)"
+   },
+   "pages": 81,
+   "language": "en",
+   "read_status": "not-read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:lvmpd-2018-01-18-preliminary-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "PDF not yet downloaded. A mirror exists at workingwithcrowds.com (see README)."
+   }
+  ]
+ },
+ {
+  "id": "source:after-action-report-2018-08-24-1-october",
+  "template": "source",
+  "title": "1 October After-Action Report",
+  "properties": {
+   "publisher": "Clark County Fire Department, LVMPD and FEMA National Exercise Division",
+   "publisher_type": "police",
+   "published": "2018-08-24",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.policinginstitute.org/wp-content/uploads/2018/09/1OctoberAfterActionReport.pdf",
+    "label": "1 October After-Action Report"
+   },
+   "pages": 61,
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october"
+    ],
+    "verification": "single-source",
+    "note": "61 pages per a Review-Journal summary. Not read at source."
+   }
+  ]
+ },
+ {
+  "id": "source:fbi-2019-01-bau-report",
+  "template": "source",
+  "title": "FBI Behavioral Analysis Unit report on the 1 October attack (three-page synopsis)",
+  "properties": {
+   "publisher": "FBI",
+   "publisher_type": "federal-agency",
+   "published": "2019-01-29",
+   "accessed": "2026-10-07",
+   "pages": 3,
+   "language": "en",
+   "read_status": "not-read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:fbi-2019-01-bau-report"
+    ],
+    "verification": "single-source",
+    "note": "No address found in phase 1. Findings come from news coverage (NPR and others)."
+   }
+  ]
+ },
+ {
+  "id": "source:npr-2019-01-29-fbi-analysis-ends-without-clear-motive",
+  "template": "source",
+  "title": "NPR: FBI analysis of Las Vegas shooting ends without a clear motive identified",
+  "properties": {
+   "publisher": "NPR",
+   "publisher_type": "news-media",
+   "published": "2019-01-29",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.npr.org/2019/01/29/689760960/fbi-analysis-of-las-vegas-shooting-ends-without-a-clear-motive-identified",
+    "label": "NPR: FBI analysis of Las Vegas shooting ends without a clear motive identified"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:npr-2019-01-29-fbi-analysis-ends-without-clear-motive"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary."
+   }
+  ]
+ },
+ {
+  "id": "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+  "template": "source",
+  "title": "Wikipedia: 2017 Las Vegas shooting",
+  "properties": {
+   "publisher": "Wikipedia",
+   "publisher_type": "encyclopedia",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://en.wikipedia.org/wiki/2017_Las_Vegas_shooting",
+    "label": "Wikipedia: 2017 Las Vegas shooting"
+   },
+   "licence": "CC BY-SA",
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting"
+    ],
+    "verification": "single-source",
+    "note": "First 100,000 characters read on 2026-10-07. Living page: published date empty, accessed date set."
+   }
+  ]
+ },
+ {
+  "id": "source:arxiv-2019-05-26-vera-video-event-reconstruction",
+  "template": "source",
+  "title": "Technical Report of the Video Event Reconstruction and Analysis (VERA) System: Shooter Localization, Models, Interface, and Beyond",
+  "properties": {
+   "publisher": "arXiv (Liang, Aronson, Hauptmann, Carnegie Mellon University)",
+   "publisher_type": "academic",
+   "published": "2019-05-26",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://arxiv.org/abs/1905.13313",
+    "label": "Technical Report of the Video Event Reconstruction and Analysis (VERA) System: Shooter Localization, Models, Interface, and Beyond"
+   },
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:arxiv-2019-05-26-vera-video-event-reconstruction"
+    ],
+    "verification": "single-source",
+    "note": "Abstract read. Code: github.com/JunweiLiang/VERA_Shooter_Localization. Live system: vera.cs.cmu.edu."
+   }
+  ]
+ },
+ {
+  "id": "source:goldsmiths-2017-11-15-forensic-architecture-nyt-las-vegas",
+  "template": "source",
+  "title": "Goldsmiths: how Forensic Architecture influenced the Las Vegas shooting reports",
+  "properties": {
+   "publisher": "Goldsmiths, University of London",
+   "publisher_type": "academic",
+   "published": "2017-11-15",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://gold.ac.uk/news/forensic-architecture-nyt",
+    "label": "Goldsmiths: how Forensic Architecture influenced the Las Vegas shooting reports"
+   },
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:goldsmiths-2017-11-15-forensic-architecture-nyt-las-vegas"
+    ],
+    "verification": "single-source",
+    "note": "Describes the New York Times video-forensics method: eyewitness video, geolocation, landmarks and the moon used to synchronise videos."
+   }
+  ]
+ },
+ {
+  "id": "source:cbs-news-2017-10-nyt-develops-timeline-of-las-vegas-shooting",
+  "template": "source",
+  "title": "CBS News: The New York Times develops timeline of Las Vegas shooting",
+  "properties": {
+   "publisher": "CBS News",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.cbsnews.com/news/the-new-york-times-develops-timeline-las-vegas-shooting/",
+    "label": "CBS News: The New York Times develops timeline of Las Vegas shooting"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:cbs-news-2017-10-nyt-develops-timeline-of-las-vegas-shooting"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary; publication date not shown (October 2017)."
+   }
+  ]
+ },
+ {
+  "id": "source:knpr-2017-10-new-york-times-analysis-new-shooting-timeline",
+  "template": "source",
+  "title": "KNPR: New York Times analysis, new shooting timeline",
+  "properties": {
+   "publisher": "KNPR",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://knpr.org/knpr/2017-10/new-york-times-analysis-new-shooting-timeline",
+    "label": "KNPR: New York Times analysis, new shooting timeline"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:knpr-2017-10-new-york-times-analysis-new-shooting-timeline"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary; October 2017."
+   }
+  ]
+ },
+ {
+  "id": "source:threadreader-2017-10-23-nyt-reporter-thread-on-the-timeline",
+  "template": "source",
+  "title": "NYT reporter's thread on the Las Vegas timeline analysis (Threadreader copy)",
+  "properties": {
+   "publisher": "The New York Times (reporter's thread, copied by Threadreader)",
+   "publisher_type": "news-media",
+   "published": "2017-10-23",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://threadreaderapp.com/thread/922568572643155968.html",
+    "label": "NYT reporter's thread on the Las Vegas timeline analysis (Threadreader copy)"
+   },
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:threadreader-2017-10-23-nyt-reporter-thread-on-the-timeline"
+    ],
+    "verification": "single-source",
+    "note": "Read. States 12 main bursts, three intervals over a minute, one burst of about 40 seconds below the gunman's position, six clock sources within a 3-second window. No burst times."
+   }
+  ]
+ },
+ {
+  "id": "source:las-vegas-sun-2017-12-21-coroner-58-deaths-gunshot",
+  "template": "source",
+  "title": "Las Vegas Sun: Coroner, 58 deaths during Vegas mass shooting due to gunshot wounds",
+  "properties": {
+   "publisher": "Las Vegas Sun",
+   "publisher_type": "news-media",
+   "published": "2017-12-21",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://m.lasvegassun.com/news/2017/dec/21/coroner-58-deaths-during-vegas-mass-shooting-due-t/",
+    "label": "Las Vegas Sun: Coroner, 58 deaths during Vegas mass shooting due to gunshot wounds"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:las-vegas-sun-2017-12-21-coroner-58-deaths-gunshot"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary only."
+   }
+  ]
+ },
+ {
+  "id": "source:las-vegas-review-journal-60th-victim",
+  "template": "source",
+  "title": "Las Vegas Review-Journal: Las Vegas woman becomes 60th victim of October 2017 mass shooting",
+  "properties": {
+   "publisher": "Las Vegas Review-Journal",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://develop.reviewjournal.com/?p=1948799",
+    "label": "Las Vegas Review-Journal: Las Vegas woman becomes 60th victim of October 2017 mass shooting"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:las-vegas-review-journal-60th-victim"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary only; publication date not shown."
+   }
+  ]
+ },
+ {
+  "id": "source:washington-times-2020-10-01-las-vegas-marks-third-year",
+  "template": "source",
+  "title": "Associated Press (via The Washington Times): Las Vegas marks third year since deadliest US mass shooting",
+  "properties": {
+   "publisher": "Associated Press",
+   "publisher_type": "news-media",
+   "published": "2020-10-01",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.washingtontimes.com/news/2020/oct/1/las-vegas-marks-3rd-year-since-deadliest-us-mass-s/",
+    "label": "Associated Press (via The Washington Times): Las Vegas marks third year since deadliest US mass shooting"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:washington-times-2020-10-01-las-vegas-marks-third-year"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary: the sheriff raised the official toll to 60 after the Review-Journal's reporting."
+   }
+  ]
+ },
+ {
+  "id": "source:nevada-independent-2017-10-sheriff-revises-timeline",
+  "template": "source",
+  "title": "The Nevada Independent: Sheriff revises shooting timeline and says death toll may rise",
+  "properties": {
+   "publisher": "The Nevada Independent",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://thenevadaindependent.com/article/sheriff-revises-shooting-timeline-and-says-death-toll-may-rise",
+    "label": "The Nevada Independent: Sheriff revises shooting timeline and says death toll may rise"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:nevada-independent-2017-10-sheriff-revises-timeline"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary only; October 2017."
+   }
+  ]
+ },
+ {
+  "id": "source:philadelphia-inquirer-2017-10-13-no-six-minute-gap",
+  "template": "source",
+  "title": "The Philadelphia Inquirer: Las Vegas police now say there was no six-minute gap between first shots and concert massacre",
+  "properties": {
+   "publisher": "The Philadelphia Inquirer",
+   "publisher_type": "news-media",
+   "published": "2017-10-13",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://inquirer.com/philly/news/nation_world/las-vegas-police-now-say-there-was-no-6-minute-gap-between-first-shots-concert-massacre-20171013.html",
+    "label": "The Philadelphia Inquirer: Las Vegas police now say there was no six-minute gap between first shots and concert massacre"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:philadelphia-inquirer-2017-10-13-no-six-minute-gap"
+    ],
+    "verification": "single-source",
+    "note": "Headline and search-result summary only."
+   }
+  ]
+ },
+ {
+  "id": "source:voa-news-sheriff-gunman-fired-more-than-1100-rounds",
+  "template": "source",
+  "title": "VOA News: Sheriff: Las Vegas gunman fired more than 1,100 rounds",
+  "properties": {
+   "publisher": "Voice of America",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.voanews.com/a/sheriff-las-vegas-gunman-fired-more-than-1100-rounds/4132724.html",
+    "label": "VOA News: Sheriff: Las Vegas gunman fired more than 1,100 rounds"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:voa-news-sheriff-gunman-fired-more-than-1100-rounds"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary only; publication date not shown."
+   }
+  ]
+ },
+ {
+  "id": "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+  "template": "source",
+  "title": "ClickOnDetroit: Las Vegas police release timeline of events for mass shooting",
+  "properties": {
+   "publisher": "ClickOnDetroit",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://clickondetroit.com/news/las-vegas-police-release-timeline-of-events-for-mass-shooting",
+    "label": "ClickOnDetroit: Las Vegas police release timeline of events for mass shooting"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary only; publication date not shown. Gives timeline entries from the LVMPD."
+   }
+  ]
+ },
+ {
+  "id": "source:wmar-2018-06-latest-release-of-mass-shooting-materials",
+  "template": "source",
+  "title": "WMAR: Latest release of Las Vegas mass shooting materials contains hours of video, 911 calls",
+  "properties": {
+   "publisher": "WMAR",
+   "publisher_type": "news-media",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://www.wmar2news.com/news/las-vegas-shooting/latest-release-of-las-vegas-mass-shooting-materials-contains-hours-of-video-911-calls",
+    "label": "WMAR: Latest release of Las Vegas mass shooting materials contains hours of video, 911 calls"
+   },
+   "language": "en",
+   "read_status": "summary-only"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:wmar-2018-06-latest-release-of-mass-shooting-materials"
+    ],
+    "verification": "single-source",
+    "note": "Search-result summary: about 30 video files and about 500 911 recordings released on 13 June 2018 after a media lawsuit."
+   }
+  ]
+ },
+ {
+  "id": "source:internet-archive-2018-06-06-lvmpd-batch-5-911-calls",
+  "template": "source",
+  "title": "Internet Archive item: Vegas Shooting Evidence (Batch 5) 911 Calls (518)",
+  "properties": {
+   "publisher": "Internet Archive (community upload, credited to LVMPD)",
+   "publisher_type": "archive",
+   "published": "2018-06-06",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://archive.org/details/LasVegasShooting911Calls",
+    "label": "Internet Archive item: Vegas Shooting Evidence (Batch 5) 911 Calls (518)"
+   },
+   "licence": "None stated on the item",
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:internet-archive-2018-06-06-lvmpd-batch-5-911-calls"
+    ],
+    "verification": "single-source",
+    "note": "Item metadata read through the Internet Archive metadata API on 2026-10-07; no file downloaded. Uploader account not recorded here."
+   }
+  ]
+ },
+ {
+  "id": "source:internet-archive-2018-06-20-lvmpd-batch-7-911-calls",
+  "template": "source",
+  "title": "Internet Archive item: Vegas Shooting Evidence (Batch 7) 911 Calls (130)",
+  "properties": {
+   "publisher": "Internet Archive (community upload, credited to LVMPD)",
+   "publisher_type": "archive",
+   "published": "2018-06-20",
+   "accessed": "2026-10-07",
+   "url": {
+    "url": "https://archive.org/details/Vegas_Shoooting_Batch_7-911Calls",
+    "label": "Internet Archive item: Vegas Shooting Evidence (Batch 7) 911 Calls (130)"
+   },
+   "licence": "None stated on the item",
+   "language": "en",
+   "read_status": "read"
+  },
+  "evidence": [
+   {
+    "property": "read_status",
+    "sources": [
+     "source:internet-archive-2018-06-20-lvmpd-batch-7-911-calls"
+    ],
+    "verification": "single-source",
+    "note": "Item metadata read through the Internet Archive metadata API on 2026-10-07; no file downloaded. Uploader account not recorded here."
+   }
+  ]
+ },
+ {
+  "id": "place:las-vegas-village",
+  "template": "place",
+  "title": "Las Vegas Village",
+  "properties": {
+   "place_type": "venue-area",
+   "geolocation": {
+    "lat": 36.095582,
+    "lon": -115.171563
+   },
+   "coordinate_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "place:mandalay-bay-hotel",
+  "template": "place",
+  "title": "Mandalay Bay Hotel",
+  "properties": {
+   "place_type": "hotel-casino",
+   "geolocation": {
+    "lat": 36.091977,
+    "lon": -115.174833
+   },
+   "coordinate_basis": "map-estimate",
+   "footprint": "{\"type\":\"Polygon\",\"coordinates\":[[[-115.1747095,36.0928817],[-115.1747873,36.0929467],[-115.1748731,36.0929467],[-115.1749429,36.0928817],[-115.1749375,36.0921838],[-115.174959,36.0921274],[-115.1749992,36.0920711],[-115.1750421,36.0920255],[-115.1750984,36.0919887],[-115.175828,36.0916462],[-115.1758495,36.0915964],[-115.1758575,36.0915032],[-115.1757958,36.0914317],[-115.1757127,36.0914078],[-115.1749536,36.0917459],[-115.1748946,36.0917611],[-115.1748302,36.0917676],[-115.1747632,36.0917654],[-115.1747149,36.0917611],[-115.1739263,36.0914122],[-115.1738432,36.0914338],[-115.1737976,36.0914945],[-115.1738003,36.0915769],[-115.1738459,36.0916614],[-115.1746157,36.0920299],[-115.1746612,36.0920754],[-115.1746961,36.0921361],[-115.1747149,36.0921924],[-115.1747095,36.0928817],[-115.1747095,36.0928817]]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "place:turf-east",
+  "template": "place",
+  "title": "Turf (East)",
+  "properties": {
+   "place_type": "venue-feature",
+   "geolocation": {
+    "lat": 36.094596,
+    "lon": -115.171518
+   },
+   "coordinate_basis": "map-estimate",
+   "footprint": "{\"type\":\"Polygon\",\"coordinates\":[[[-115.1716304,36.0948648],[-115.171617,36.0947001],[-115.1715767,36.0946828],[-115.1715714,36.0942384],[-115.1714131,36.0942384],[-115.1712535,36.0943143],[-115.171452,36.094868],[-115.1716304,36.0948648],[-115.1716304,36.0948648]]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "place:turf-west",
+  "template": "place",
+  "title": "Turf (West)",
+  "properties": {
+   "place_type": "venue-feature",
+   "geolocation": {
+    "lat": 36.094593,
+    "lon": -115.171815
+   },
+   "coordinate_basis": "map-estimate",
+   "footprint": "{\"type\":\"Polygon\",\"coordinates\":[[[-115.1717095,36.0948605],[-115.1719241,36.0948626],[-115.1720649,36.0943045],[-115.1718745,36.0942341],[-115.1717632,36.0942352],[-115.1717672,36.0946849],[-115.1717068,36.094699],[-115.1717095,36.0948605],[-115.1717095,36.0948605]]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "place:ada-seating",
+  "template": "place",
+  "title": "ADA Seating",
+  "properties": {
+   "place_type": "venue-feature",
+   "geolocation": {
+    "lat": 36.094459,
+    "lon": -115.171
+   },
+   "coordinate_basis": "map-estimate",
+   "footprint": "{\"type\":\"Polygon\",\"coordinates\":[[[-115.1709732,36.0943479],[-115.1709759,36.0946242],[-115.1710403,36.0946231],[-115.1710397,36.0943495],[-115.1709732,36.0943479],[-115.1709732,36.0943479]]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "place:west-bathrooms-porta-potties",
+  "template": "place",
+  "title": "West Bathrooms (Porta Potties)",
+  "properties": {
+   "place_type": "venue-feature",
+   "geolocation": {
+    "lat": 36.095757,
+    "lon": -115.17242
+   },
+   "coordinate_basis": "map-estimate",
+   "footprint": "{\"type\":\"Polygon\",\"coordinates\":[[[-115.1725625,36.0958477],[-115.1725638,36.0956234],[-115.172203,36.095618],[-115.1722097,36.0958477],[-115.1725625,36.0958477],[-115.1725625,36.0958477]]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "place_type",
+     "geolocation",
+     "footprint"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-GcIQgyFKcUA",
+  "template": "recording",
+  "title": "From a car along Mandalay Bay Road · 22:09:44",
+  "properties": {
+   "map_label": "From a car along Mandalay Bay Road",
+   "media_kind": "vehicle-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=GcIQgyFKcUA",
+    "label": "From a car along Mandalay Bay Road"
+   },
+   "platform": "youtube",
+   "availability": "available",
+   "availability_checked": "2026-10-07",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:09:44-07:00",
+   "sync_offset_seconds": 584,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:09:48-07:00",
+   "clock_start_implied": "2017-10-01T22:09:44-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 2,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "title-mismatch",
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "5",
+    "6"
+   ],
+   "annotation_count": 3,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093658,
+    "lon": -115.171789
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-w521wgOV1YM",
+  "template": "recording",
+  "title": "Sitting in traffic Vegas BlvdxReno Ave (last volley and 2 shots) · 22:15:08",
+  "properties": {
+   "map_label": "Sitting in traffic Vegas BlvdxReno Ave (last volley and 2 shots)",
+   "media_kind": "vehicle-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=w521wgOV1YM",
+    "label": "Sitting in traffic Vegas BlvdxReno Ave (last volley and 2 shots)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:15:08-07:00",
+   "sync_offset_seconds": 908,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:15:08-07:00",
+   "clock_start_implied": "2017-10-01T22:15:08-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 3,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "12"
+   ],
+   "annotation_count": 3,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09779,
+    "lon": -115.173085
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-3qAD39vv6Cg",
+  "template": "recording",
+  "title": "Taxi dash video · 22:09:50",
+  "properties": {
+   "map_label": "Taxi dash video",
+   "media_kind": "vehicle-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=3qAD39vv6Cg",
+    "label": "Taxi dash video"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:09:50-07:00",
+   "sync_offset_seconds": 590,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:09:50-07:00",
+   "clock_start_implied": "2017-10-01T22:09:50-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 11,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -1.0,
+   "sync_flags": [
+    "outlier"
+   ],
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 11,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.092728,
+    "lon": -115.174329
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.174329,36.092728],[-115.174318,36.092171],[-115.174077,36.091943],[-115.17376,36.091809],[-115.173642,36.09206],[-115.173924,36.09265],[-115.174098,36.093361],[-115.174731,36.093421],[-115.174964,36.093384],[-115.175155,36.093408],[-115.175246,36.093638],[-115.171995,36.093551],[-115.170901,36.09359],[-115.170472,36.093969],[-115.170472,36.094485],[-115.170504,36.096551],[-115.1703,36.097019],[-115.169699,36.097262],[-115.168251,36.097245]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-4rvWdAAfNko",
+  "template": "recording",
+  "title": "Picking up people running from scene (mostly audio) · 22:08:45",
+  "properties": {
+   "map_label": "Picking up people running from scene (mostly audio)",
+   "media_kind": "vehicle-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=4rvWdAAfNko",
+    "label": "Picking up people running from scene (mostly audio)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:08:45-07:00",
+   "sync_offset_seconds": 525,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:08:45-07:00",
+   "clock_start_implied": "2017-10-01T22:08:45-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 9,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 1.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "8",
+    "10"
+   ],
+   "annotation_count": 9,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09732,
+    "lon": -115.169283
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.169283,36.09732],[-115.169807,36.097322]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-KRFXMXj6fOg",
+  "template": "recording",
+  "title": "SW Corner of Reno Ave. & Las Vegas Blvd. (1 of 2) · 22:10:49",
+  "properties": {
+   "map_label": "SW Corner of Reno Ave. & Las Vegas Blvd. (1 of 2)",
+   "media_kind": "vehicle-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=KRFXMXj6fOg",
+    "label": "SW Corner of Reno Ave. & Las Vegas Blvd. (1 of 2)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:10:49-07:00",
+   "sync_offset_seconds": 649,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:10:49-07:00",
+   "clock_start_implied": "2017-10-01T22:10:49-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 2,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "6",
+    "7"
+   ],
+   "annotation_count": 2,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.097281,
+    "lon": -115.173395
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-Wvy5aUFETCw",
+  "template": "recording",
+  "title": "Raw video from Las Vegas shooting · 22:13:29",
+  "properties": {
+   "map_label": "Raw video from Las Vegas shooting",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=Wvy5aUFETCw",
+    "label": "Raw video from Las Vegas shooting"
+   },
+   "platform": "youtube",
+   "availability": "unavailable",
+   "availability_checked": "2026-10-07",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:13:29-07:00",
+   "sync_offset_seconds": 809,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:13:29-07:00",
+   "clock_start_implied": "2017-10-01T22:13:29-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 1,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "10"
+   ],
+   "annotation_count": 1,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094414,
+    "lon": -115.171366
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-x96Kem0ZYag",
+  "template": "recording",
+  "title": "Raw Footage Shooting Las Vegas People at Bus Stop Below gunman · 22:12:33",
+  "properties": {
+   "map_label": "Raw Footage Shooting Las Vegas People at Bus Stop Below gunman",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=x96Kem0ZYag",
+    "label": "Raw Footage Shooting Las Vegas People at Bus Stop Below gunman"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:12:33-07:00",
+   "sync_offset_seconds": 753,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:12:33-07:00",
+   "clock_start_implied": "2017-10-01T22:12:33-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 6,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -1.0,
+   "volleys_covered": [
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 6,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.092886,
+    "lon": -115.173163
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-teJNnSkdfHc",
+  "template": "recording",
+  "title": "Phone video, venue · 22:07:02",
+  "properties": {
+   "map_label": "Phone video, venue",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=teJNnSkdfHc",
+    "label": "Phone video, venue"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:02-07:00",
+   "sync_offset_seconds": 422,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:01-07:00",
+   "clock_start_implied": "2017-10-01T22:07:02-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-drift",
+   "sync_anchor_count": 15,
+   "sync_spread_seconds": 50.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "drift",
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "2",
+    "3",
+    "4",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "annotation_count": 16,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094045,
+    "lon": -115.170751
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.170751,36.094045],[-115.170719,36.094127],[-115.170709,36.094187],[-115.170709,36.094347],[-115.170714,36.0946],[-115.170714,36.09472],[-115.17069,36.094753],[-115.170659,36.09477],[-115.170629,36.094783],[-115.170589,36.094792],[-115.170539,36.094772],[-115.170542,36.094739],[-115.17055,36.094728],[-115.170354,36.094411],[-115.170165,36.09441],[-115.170111,36.094256],[-115.170063,36.09409],[-115.170017,36.093908],[-115.170006,36.093853],[-115.169958,36.093837],[-115.169894,36.093828],[-115.169788,36.093819],[-115.169782,36.093794],[-115.169763,36.093702],[-115.169786,36.093631],[-115.16983,36.093564],[-115.16992,36.09356],[-115.170087,36.093553],[-115.170622,36.093568],[-115.169839,36.093498],[-115.169828,36.093234]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-l-IEme0aGMA",
+  "template": "recording",
+  "title": "Raw Video Route 91 Festival - Las Vegas Shooting (FRONT ROW) · 22:07:32",
+  "properties": {
+   "map_label": "Raw Video Route 91 Festival - Las Vegas Shooting (FRONT ROW)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=l-IEme0aGMA",
+    "label": "Raw Video Route 91 Festival - Las Vegas Shooting (FRONT ROW)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:32-07:00",
+   "sync_offset_seconds": 452,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:32-07:00",
+   "clock_start_implied": "2017-10-01T22:07:32-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 13,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "annotation_count": 13,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09422,
+    "lon": -115.171695
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-7J9HWtz3QC8",
+  "template": "recording",
+  "title": "Vegas Route 91 Shooting front left side of venue · 22:06:20",
+  "properties": {
+   "map_label": "Vegas Route 91 Shooting front left side of venue",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=7J9HWtz3QC8",
+    "label": "Vegas Route 91 Shooting front left side of venue"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:06:20-07:00",
+   "sync_offset_seconds": 380,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:20-07:00",
+   "clock_start_implied": "2017-10-01T22:06:20-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 6,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "2",
+    "3",
+    "4"
+   ],
+   "annotation_count": 6,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094267,
+    "lon": -115.171492
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-WE7TA5rVGeY",
+  "template": "recording",
+  "title": "Fleeing from Venue to Airport Route 91 festival Oct 1,2017 · 22:07:29",
+  "properties": {
+   "map_label": "Fleeing from Venue to Airport Route 91 festival Oct 1,2017",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=WE7TA5rVGeY",
+    "label": "Fleeing from Venue to Airport Route 91 festival Oct 1,2017"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:29-07:00",
+   "sync_offset_seconds": 449,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:12-07:00",
+   "clock_start_implied": "2017-10-01T22:07:29-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 14,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 1.0,
+   "sync_flags": [
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 15,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09478,
+    "lon": -115.171263
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.171263,36.09478],[-115.171242,36.095018],[-115.170952,36.095091],[-115.170878,36.095158],[-115.17095,36.095234],[-115.170859,36.095308],[-115.170754,36.095315],[-115.170655,36.095333],[-115.170507,36.095364],[-115.170174,36.09549],[-115.169386,36.09548],[-115.169004,36.094971],[-115.168932,36.094774],[-115.168767,36.094708],[-115.168553,36.09469],[-115.168373,36.09471],[-115.168315,36.094774],[-115.168323,36.094924],[-115.168346,36.095022],[-115.168351,36.095121],[-115.168378,36.095344],[-115.168368,36.09546],[-115.168304,36.095567],[-115.164525,36.095483]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-IYCtkDOKA5k",
+  "template": "recording",
+  "title": "Crowd Laying Down · 22:08:36",
+  "properties": {
+   "map_label": "Crowd Laying Down",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=IYCtkDOKA5k",
+    "label": "Crowd Laying Down"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:08:36-07:00",
+   "sync_offset_seconds": 516,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:08:36-07:00",
+   "clock_start_implied": "2017-10-01T22:08:36-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 12,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -0.5,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "annotation_count": 12,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094533,
+    "lon": -115.17152
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-BEeONM21NBQ",
+  "template": "recording",
+  "title": "Eastern Side of Venue (Elevated) · 22:10:44",
+  "properties": {
+   "map_label": "Eastern Side of Venue (Elevated)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=BEeONM21NBQ",
+    "label": "Eastern Side of Venue (Elevated)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:10:44-07:00",
+   "sync_offset_seconds": 644,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:09:39-07:00",
+   "clock_start_implied": "2017-10-01T22:10:44-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-drift",
+   "sync_anchor_count": 4,
+   "sync_spread_seconds": 65.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "drift",
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+   ],
+   "annotation_count": 5,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094538,
+    "lon": -115.170893
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-WRhJbYZ4xMI",
+  "template": "recording",
+  "title": "Behind the stage catwalk, first shots · 22:03:02",
+  "properties": {
+   "map_label": "Behind the stage catwalk, first shots",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=WRhJbYZ4xMI",
+    "label": "Behind the stage catwalk, first shots"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:03:02-07:00",
+   "sync_offset_seconds": 182,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:03:40-07:00",
+   "clock_start_implied": "2017-10-01T22:03:02-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 1,
+   "sync_spread_seconds": 0.0,
+   "sync_flags": [
+    "title-mismatch"
+   ],
+   "volleys_covered": [
+    "1"
+   ],
+   "annotation_count": 1,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094267,
+    "lon": -115.17159
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-QCrNsC0mTBg",
+  "template": "recording",
+  "title": "First shots · 22:02:15",
+  "properties": {
+   "map_label": "First shots",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=QCrNsC0mTBg",
+    "label": "First shots"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:02:15-07:00",
+   "sync_offset_seconds": 135,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:02:15-07:00",
+   "clock_start_implied": "2017-10-01T22:02:15-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 22,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 22,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094743,
+    "lon": -115.170945
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-a-FgTV0EhiI",
+  "template": "recording",
+  "title": "Michael Jackson Theater on Lockdown",
+  "properties": {
+   "map_label": "Michael Jackson Theater on Lockdown",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=a-FgTV0EhiI",
+    "label": "Michael Jackson Theater on Lockdown"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01",
+   "clock_precision": "day",
+   "clock_start_basis": "title",
+   "sync_confidence": "none",
+   "sync_anchor_count": 0,
+   "sync_flags": [
+    "no-clock"
+   ],
+   "annotation_count": 0,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093166,
+    "lon": -115.177075
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-2PPkvxFvShM",
+  "template": "recording",
+  "title": "Crowd Escaping Venue and Entering Tropicana Hotel · 22:07:16",
+  "properties": {
+   "map_label": "Crowd Escaping Venue and Entering Tropicana Hotel",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=2PPkvxFvShM",
+    "label": "Crowd Escaping Venue and Entering Tropicana Hotel"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:16-07:00",
+   "sync_offset_seconds": 436,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:16-07:00",
+   "clock_start_implied": "2017-10-01T22:07:16-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 11,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 1.0,
+   "volleys_covered": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "annotation_count": 11,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095901,
+    "lon": -115.171196
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.171196,36.095901],[-115.171207,36.096009],[-115.171426,36.096781],[-115.171786,36.098419]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-eB4MBH9XWoo",
+  "template": "recording",
+  "title": "East Venue Then Walking Toward Exit · 22:06:01",
+  "properties": {
+   "map_label": "East Venue Then Walking Toward Exit",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=eB4MBH9XWoo",
+    "label": "East Venue Then Walking Toward Exit"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:06:01-07:00",
+   "sync_offset_seconds": 361,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:01-07:00",
+   "clock_start_implied": "2017-10-01T22:06:01-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 11,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ],
+   "annotation_count": 11,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094409,
+    "lon": -115.1715
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-9vJcu1jaeIQ",
+  "template": "recording",
+  "title": "Along Las Vegas Blvd. From Exit 2B · 22:07:39",
+  "properties": {
+   "map_label": "Along Las Vegas Blvd. From Exit 2B",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=9vJcu1jaeIQ",
+    "label": "Along Las Vegas Blvd. From Exit 2B"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:39-07:00",
+   "sync_offset_seconds": 459,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:39-07:00",
+   "clock_start_implied": "2017-10-01T22:07:39-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 15,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 15,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095989,
+    "lon": -115.172654
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-ndM6bmj1nzE",
+  "template": "recording",
+  "title": "Wheel Chair Corral (East Side of Venue) · 22:06:15",
+  "properties": {
+   "map_label": "Wheel Chair Corral (East Side of Venue)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=ndM6bmj1nzE",
+    "label": "Wheel Chair Corral (East Side of Venue)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:06:15-07:00",
+   "sync_offset_seconds": 375,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:15-07:00",
+   "clock_start_implied": "2017-10-01T22:06:15-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 8,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.5,
+   "sync_flags": [
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+   ],
+   "annotation_count": 9,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094546,
+    "lon": -115.171035
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.171035,36.094546],[-115.171018,36.094619],[-115.170992,36.094678],[-115.171009,36.094737],[-115.171115,36.094834],[-115.170863,36.094806]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-Ss_DxodOwLA",
+  "template": "recording",
+  "title": "Live stream inside Luxor (3 of 3)",
+  "properties": {
+   "map_label": "Live stream inside Luxor (3 of 3)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=Ss_DxodOwLA",
+    "label": "Live stream inside Luxor (3 of 3)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01",
+   "clock_precision": "day",
+   "clock_start_basis": "title",
+   "sync_confidence": "none",
+   "sync_anchor_count": 0,
+   "sync_flags": [
+    "no-clock"
+   ],
+   "annotation_count": 0,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095459,
+    "lon": -115.174946
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-OJxaKuGAoCg",
+  "template": "recording",
+  "title": "East Side of Venue \"It's Electrical\" (Alternative View) · 22:06:07",
+  "properties": {
+   "map_label": "East Side of Venue \"It's Electrical\" (Alternative View)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=OJxaKuGAoCg",
+    "label": "East Side of Venue \"It's Electrical\" (Alternative View)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:06:07-07:00",
+   "sync_offset_seconds": 367,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:07-07:00",
+   "clock_start_implied": "2017-10-01T22:06:07-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 7,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+   ],
+   "annotation_count": 8,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094668,
+    "lon": -115.171526
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-ojjcS6bvkWg",
+  "template": "recording",
+  "title": "Raw Footage Las Vegas Shooting Country Concert (Vendor Area) · 22:08:19",
+  "properties": {
+   "map_label": "Raw Footage Las Vegas Shooting Country Concert (Vendor Area)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=ojjcS6bvkWg",
+    "label": "Raw Footage Las Vegas Shooting Country Concert (Vendor Area)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:08:19-07:00",
+   "sync_offset_seconds": 499,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:08:19-07:00",
+   "clock_start_implied": "2017-10-01T22:08:19-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 8,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 1.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 8,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095636,
+    "lon": -115.171207
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:fb-10214432927921813",
+  "template": "recording",
+  "title": "West venue · 22:06:02",
+  "properties": {
+   "map_label": "West venue",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.facebook.com/watch/?v=10214432927921813",
+    "label": "West venue"
+   },
+   "platform": "facebook",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:06:02-07:00",
+   "sync_offset_seconds": 362,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:02-07:00",
+   "clock_start_implied": "2017-10-01T22:06:02-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 2,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "1",
+    "2"
+   ],
+   "annotation_count": 2,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094289,
+    "lon": -115.171791
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-E-eLObZD-TA",
+  "template": "recording",
+  "title": "Near Front Stage Barricade West (2 of 2) · 22:07:41",
+  "properties": {
+   "map_label": "Near Front Stage Barricade West (2 of 2)",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=E-eLObZD-TA",
+    "label": "Near Front Stage Barricade West (2 of 2)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:07:41-07:00",
+   "sync_offset_seconds": 461,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:41-07:00",
+   "clock_start_implied": "2017-10-01T22:07:41-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 12,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 12,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094251,
+    "lon": -115.171689
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:fb-10214725286234861",
+  "template": "recording",
+  "title": "Far stage left · 22:04:49",
+  "properties": {
+   "map_label": "Far stage left",
+   "media_kind": "phone-video",
+   "embed": {
+    "url": "https://www.facebook.com/watch/?v=10214725286234861",
+    "label": "Far stage left"
+   },
+   "platform": "facebook",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:04:49-07:00",
+   "sync_offset_seconds": 289,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:04:49-07:00",
+   "clock_start_implied": "2017-10-01T22:04:49-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 2,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "1"
+   ],
+   "annotation_count": 2,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094244,
+    "lon": -115.172111
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:ph-131",
+  "template": "recording",
+  "title": "Luxor parking lot · 22:10:54",
+  "properties": {
+   "map_label": "Luxor parking lot",
+   "media_kind": "phone-video",
+   "platform": "none",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T22:10:54-07:00",
+   "sync_offset_seconds": 654,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:10:54-07:00",
+   "clock_start_implied": "2017-10-01T22:10:54-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "one-or-two",
+   "sync_anchor_count": 2,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "date-inconsistent"
+   ],
+   "volleys_covered": [
+    "6",
+    "7"
+   ],
+   "annotation_count": 2,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094169,
+    "lon": -115.173364
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-AJ95BG9Hj2k",
+  "template": "recording",
+  "title": "Security camera, parking lot · 21:57:53",
+  "properties": {
+   "map_label": "Security camera, parking lot",
+   "media_kind": "cctv",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=AJ95BG9Hj2k",
+    "label": "Security camera, parking lot"
+   },
+   "platform": "youtube",
+   "availability": "unavailable",
+   "availability_checked": "2026-10-07",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T21:57:53-07:00",
+   "sync_offset_seconds": -127,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T21:57:53-07:00",
+   "clock_start_basis": "title",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095654,
+    "lon": -115.167929
+   },
+   "position_basis": "map-estimate-flagged"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position; marked as a best estimate on the map."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-CRhbvJoC0Ww",
+  "template": "recording",
+  "title": "\"mandalay bay ne\" 9:50pm-3:00am · 21:50:00",
+  "properties": {
+   "map_label": "\"mandalay bay ne\" 9:50pm-3:00am",
+   "media_kind": "cctv",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=CRhbvJoC0Ww",
+    "label": "\"mandalay bay ne\" 9:50pm-3:00am"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T21:50:00-07:00",
+   "clock_precision": "minute",
+   "clock_end": "2017-10-02T03:00:00-07:00",
+   "clock_start_basis": "title-window",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093747,
+    "lon": -115.17265
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-2V11c3EERaA",
+  "template": "recording",
+  "title": "\"reno sw\" 9:50pm-3:00am · 21:50:00",
+  "properties": {
+   "map_label": "\"reno sw\" 9:50pm-3:00am",
+   "media_kind": "cctv",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=2V11c3EERaA",
+    "label": "\"reno sw\" 9:50pm-3:00am"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T21:50:00-07:00",
+   "clock_precision": "minute",
+   "clock_end": "2017-10-02T03:00:00-07:00",
+   "clock_start_basis": "title-window",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.097227,
+    "lon": -115.173218
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-qF_IuZr5LbM",
+  "template": "recording",
+  "title": "\"mandalay bay sc\" 9:50pm-3:00am · 21:50:00",
+  "properties": {
+   "map_label": "\"mandalay bay sc\" 9:50pm-3:00am",
+   "media_kind": "cctv",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=qF_IuZr5LbM",
+    "label": "\"mandalay bay sc\" 9:50pm-3:00am"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-01T21:50:00-07:00",
+   "clock_precision": "minute",
+   "clock_end": "2017-10-02T03:00:00-07:00",
+   "clock_start_basis": "title-window",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09338,
+    "lon": -115.172958
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-HnfgzRi2VyE",
+  "template": "recording",
+  "title": "LVMPD release 6, item 8 · 22:07:39",
+  "properties": {
+   "map_label": "LVMPD release 6, item 8",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=HnfgzRi2VyE",
+    "label": "LVMPD release 6, item 8"
+   },
+   "platform": "youtube",
+   "availability": "available",
+   "availability_checked": "2026-10-07",
+   "provenance": "official-release-reupload",
+   "release_batch": "6",
+   "clock_start": "2017-10-01T22:07:39-07:00",
+   "sync_offset_seconds": 459,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:39-07:00",
+   "clock_start_implied": "2017-10-01T22:07:39-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 6,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+   ],
+   "annotation_count": 6,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093764,
+    "lon": -115.172709
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-MsPGBkgc7Ts",
+  "template": "recording",
+  "title": "LVMPD release 6, item 9 · 22:06:19",
+  "properties": {
+   "map_label": "LVMPD release 6, item 9",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=MsPGBkgc7Ts",
+    "label": "LVMPD release 6, item 9"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "6",
+   "clock_start": "2017-10-01T22:06:19-07:00",
+   "sync_offset_seconds": 379,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:19-07:00",
+   "clock_start_implied": "2017-10-01T22:06:19-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 13,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.5,
+   "volleys_covered": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+   ],
+   "annotation_count": 13,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095662,
+    "lon": -115.17221
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.17221,36.095662],[-115.172116,36.095205],[-115.17251,36.095146],[-115.172589,36.094925],[-115.172615,36.094722],[-115.172703,36.09551]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-cypFsbgPX-I",
+  "template": "recording",
+  "title": "LVMPD release 6, item 27 · 22:05:57",
+  "properties": {
+   "map_label": "LVMPD release 6, item 27",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=cypFsbgPX-I",
+    "label": "LVMPD release 6, item 27"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "6",
+   "clock_start": "2017-10-01T22:05:57-07:00",
+   "sync_offset_seconds": 357,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:05:57-07:00",
+   "clock_start_implied": "2017-10-01T22:05:57-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 17,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 17,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095537,
+    "lon": -115.171491
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.171491,36.095537],[-115.171545,36.095329],[-115.17185,36.095207],[-115.172178,36.095125],[-115.172317,36.09509],[-115.172322,36.094986],[-115.172424,36.094882]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-KuYFiCOKwI0",
+  "template": "recording",
+  "title": "LVMPD release 7, item 18 · 22:06:52",
+  "properties": {
+   "map_label": "LVMPD release 7, item 18",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=KuYFiCOKwI0",
+    "label": "LVMPD release 7, item 18"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "7",
+   "clock_start": "2017-10-01T22:06:52-07:00",
+   "sync_offset_seconds": 412,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:52-07:00",
+   "clock_start_implied": "2017-10-01T22:06:52-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 18,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -1.0,
+   "sync_flags": [
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 20,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094033,
+    "lon": -115.172516
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.172516,36.094033],[-115.172524,36.093908],[-115.172615,36.093742],[-115.172663,36.093798],[-115.172537,36.093948]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-6sj_lp1i9OQ",
+  "template": "recording",
+  "title": "LVMPD release 7, item 38 · 22:06:36",
+  "properties": {
+   "map_label": "LVMPD release 7, item 38",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=6sj_lp1i9OQ",
+    "label": "LVMPD release 7, item 38"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "7",
+   "clock_start": "2017-10-01T22:06:36-07:00",
+   "sync_offset_seconds": 396,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:36-07:00",
+   "clock_start_implied": "2017-10-01T22:06:36-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 16,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 16,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.097262,
+    "lon": -115.171488
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.171488,36.097262],[-115.171461,36.097119],[-115.171475,36.096915],[-115.171512,36.096872],[-115.172607,36.096724],[-115.172625,36.096425],[-115.17269,36.096397],[-115.172671,36.096081],[-115.172625,36.095324],[-115.172628,36.09518],[-115.172617,36.09504],[-115.172615,36.094937],[-115.172663,36.094911]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-iP4EpWwN090",
+  "template": "recording",
+  "title": "LVMPD release 7, part 20 of 23 · 22:06:20",
+  "properties": {
+   "map_label": "LVMPD release 7, part 20 of 23",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=iP4EpWwN090",
+    "label": "LVMPD release 7, part 20 of 23"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "7",
+   "clock_start": "2017-10-01T22:06:20-07:00",
+   "sync_offset_seconds": 380,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:19-07:00",
+   "clock_start_implied": "2017-10-01T22:06:20-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 18,
+   "sync_spread_seconds": 1.0,
+   "sync_residual_seconds": 1.0,
+   "volleys_covered": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 18,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095912,
+    "lon": -115.17126
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.17126,36.095912],[-115.171359,36.095387],[-115.170952,36.095152],[-115.170515,36.095285],[-115.170547,36.094973],[-115.170352,36.095489],[-115.169656,36.095528],[-115.16971,36.095987],[-115.170278,36.096005]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-36UH5BhsyVk",
+  "template": "recording",
+  "title": "LVMPD release 8, item 65 · 22:06:47",
+  "properties": {
+   "map_label": "LVMPD release 8, item 65",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=36UH5BhsyVk",
+    "label": "LVMPD release 8, item 65"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "8",
+   "clock_start": "2017-10-01T22:06:47-07:00",
+   "sync_offset_seconds": 407,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:47-07:00",
+   "clock_start_implied": "2017-10-01T22:06:47-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 8,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -1.0,
+   "volleys_covered": [
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 8,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.092802,
+    "lon": -115.174769
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-ojEaYe9YaU0",
+  "template": "recording",
+  "title": "LVMPD release 8, part 13 of 19 · 22:07:09",
+  "properties": {
+   "map_label": "LVMPD release 8, part 13 of 19",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=ojEaYe9YaU0",
+    "label": "LVMPD release 8, part 13 of 19"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "8",
+   "clock_start": "2017-10-01T22:07:09-07:00",
+   "sync_offset_seconds": 429,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:09-07:00",
+   "clock_start_implied": "2017-10-01T22:07:09-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 7,
+   "sync_spread_seconds": 1.0,
+   "sync_residual_seconds": 0.0,
+   "sync_flags": [
+    "qualified-annotation"
+   ],
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11"
+   ],
+   "annotation_count": 8,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.095225,
+    "lon": -115.17303
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.17303,36.095225],[-115.173022,36.095079],[-115.173028,36.094895],[-115.173028,36.094681],[-115.173017,36.094444],[-115.173009,36.094295],[-115.173009,36.09415],[-115.172979,36.093753],[-115.172845,36.093738],[-115.172701,36.093805],[-115.172687,36.094193],[-115.172674,36.094334],[-115.172676,36.094542],[-115.172685,36.094824]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-QPxwv5hmpm8",
+  "template": "recording",
+  "title": "LVMPD release 9, item 72 · 22:07:26",
+  "properties": {
+   "map_label": "LVMPD release 9, item 72",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=QPxwv5hmpm8",
+    "label": "LVMPD release 9, item 72"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "9",
+   "clock_start": "2017-10-01T22:07:26-07:00",
+   "sync_offset_seconds": 446,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:26-07:00",
+   "clock_start_implied": "2017-10-01T22:07:26-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 16,
+   "sync_spread_seconds": 1.0,
+   "sync_residual_seconds": -0.5,
+   "clock_note": "Note: Timestamp on Body Cam Video :10 Ahead of Correct Time",
+   "known_clock_error_seconds": 10,
+   "sync_flags": [
+    "qualified-annotation",
+    "clock-note"
+   ],
+   "volleys_covered": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 17,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094425,
+    "lon": -115.172618
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.172618,36.094425],[-115.172575,36.094169],[-115.172516,36.093961],[-115.172591,36.093786],[-115.173261,36.093965],[-115.17328,36.094126],[-115.173956,36.094132],[-115.174613,36.094139],[-115.17497,36.094091],[-115.175137,36.094043],[-115.175284,36.093965],[-115.175444,36.093783],[-115.175495,36.093592],[-115.175603,36.093592],[-115.175799,36.093597],[-115.175805,36.093484],[-115.176005,36.093311],[-115.176984,36.093306]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-pRgRu_hZu0w",
+  "template": "recording",
+  "title": "LVMPD release 10 · 22:14:39",
+  "properties": {
+   "map_label": "LVMPD release 10",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=pRgRu_hZu0w",
+    "label": "LVMPD release 10"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "10",
+   "clock_start": "2017-10-01T22:14:39-07:00",
+   "sync_offset_seconds": 879,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:14:39-07:00",
+   "clock_start_implied": "2017-10-01T22:14:39-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 3,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -1.0,
+   "clock_note": "Note: Timestamp on video is ~ :20 ahead of real time",
+   "known_clock_error_seconds": 20,
+   "sync_flags": [
+    "clock-note"
+   ],
+   "volleys_covered": [
+    "12"
+   ],
+   "annotation_count": 3,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093922,
+    "lon": -115.172661
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-cZFAY2k3YII",
+  "template": "recording",
+  "title": "LVMPD release 11, item 85 · 22:08:01",
+  "properties": {
+   "map_label": "LVMPD release 11, item 85",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=cZFAY2k3YII",
+    "label": "LVMPD release 11, item 85"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "11",
+   "clock_start": "2017-10-01T22:08:01-07:00",
+   "sync_offset_seconds": 481,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:08:01-07:00",
+   "clock_start_implied": "2017-10-01T22:08:01-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 12,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 12,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094766,
+    "lon": -115.170741
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.170741,36.094766],[-115.171205,36.09479],[-115.171595,36.094668],[-115.171861,36.094581],[-115.172129,36.094819],[-115.17262,36.094891]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-edcZrJF2aGk",
+  "template": "recording",
+  "title": "LVMPD release 12, part 4 of 8 · 22:05:14",
+  "properties": {
+   "map_label": "LVMPD release 12, part 4 of 8",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=edcZrJF2aGk",
+    "label": "LVMPD release 12, part 4 of 8"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "12",
+   "clock_start": "2017-10-01T22:05:14-07:00",
+   "sync_offset_seconds": 314,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:05:14-07:00",
+   "clock_start_implied": "2017-10-01T22:05:14-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 19,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 19,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.096148,
+    "lon": -115.170753
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.170753,36.096148],[-115.170879,36.095684],[-115.17096,36.095452],[-115.17106,36.095368],[-115.171149,36.095315],[-115.171296,36.095273],[-115.171457,36.095222],[-115.171621,36.095157],[-115.171805,36.095142],[-115.17221,36.095145]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-UpR84HK1HKM",
+  "template": "recording",
+  "title": "LVMPD release 13, part 15 of 16 · 22:07:29",
+  "properties": {
+   "map_label": "LVMPD release 13, part 15 of 16",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=UpR84HK1HKM",
+    "label": "LVMPD release 13, part 15 of 16"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "13",
+   "clock_start": "2017-10-01T22:07:29-07:00",
+   "sync_offset_seconds": 449,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:07:28-07:00",
+   "clock_start_implied": "2017-10-01T22:07:29-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 17,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 17,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094106,
+    "lon": -115.172521
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-bgcrZ8wswz0",
+  "template": "recording",
+  "title": "LVMPD release 15, part 15 of 15 · 22:06:35",
+  "properties": {
+   "map_label": "LVMPD release 15, part 15 of 15",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=bgcrZ8wswz0",
+    "label": "LVMPD release 15, part 15 of 15"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "15",
+   "clock_start": "2017-10-01T22:06:35-07:00",
+   "sync_offset_seconds": 395,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:06:35-07:00",
+   "clock_start_implied": "2017-10-01T22:06:35-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 14,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": -0.5,
+   "volleys_covered": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 14,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.09511,
+    "lon": -115.172706
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-B2hjlo0pw9I",
+  "template": "recording",
+  "title": "LVMPD release 24, item 387 · 22:09:50",
+  "properties": {
+   "map_label": "LVMPD release 24, item 387",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=B2hjlo0pw9I",
+    "label": "LVMPD release 24, item 387"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "24",
+   "clock_start": "2017-10-01T22:09:50-07:00",
+   "sync_offset_seconds": 590,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:09:50-07:00",
+   "clock_start_implied": "2017-10-01T22:09:50-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 10,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 0.0,
+   "volleys_covered": [
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 10,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.093961,
+    "lon": -115.172574
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.172574,36.093961],[-115.173234,36.094035],[-115.173304,36.093475],[-115.174189,36.093549],[-115.174549,36.093545],[-115.174731,36.093421],[-115.174677,36.093354],[-115.174423,36.093187],[-115.174307,36.092968],[-115.174275,36.092006],[-115.174516,36.091902],[-115.174908,36.092041]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt--Aa1xLVxB5M",
+  "template": "recording",
+  "title": "LVMPD release 26, item 485 · 22:10:26",
+  "properties": {
+   "map_label": "LVMPD release 26, item 485",
+   "media_kind": "body-camera",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=-Aa1xLVxB5M",
+    "label": "LVMPD release 26, item 485"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "26",
+   "clock_start": "2017-10-01T22:10:26-07:00",
+   "sync_offset_seconds": 626,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:10:26-07:00",
+   "clock_start_implied": "2017-10-01T22:10:26-07:00",
+   "clock_start_basis": "annotations",
+   "sync_confidence": "anchored-consistent",
+   "sync_anchor_count": 7,
+   "sync_spread_seconds": 0.0,
+   "sync_residual_seconds": 1.0,
+   "volleys_covered": [
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+   ],
+   "annotation_count": 7,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.094815,
+    "lon": -115.170751
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-1NPGHTD-qOs",
+  "template": "recording",
+  "title": "LVMPD Release #10 - Helicopter Footage (2 of 3) · 23:56:00",
+  "properties": {
+   "map_label": "LVMPD Release #10 - Helicopter Footage (2 of 3)",
+   "media_kind": "aerial",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=1NPGHTD-qOs",
+    "label": "LVMPD Release #10 - Helicopter Footage (2 of 3)"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "official-release-reupload",
+   "release_batch": "10",
+   "clock_start": "2017-10-01T23:56:00-07:00",
+   "clock_precision": "minute",
+   "clock_start_title": "2017-10-01T23:56:00-07:00",
+   "clock_start_basis": "title",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.092853,
+    "lon": -115.174694
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-QLt16rs74ec",
+  "template": "recording",
+  "title": "Release #10 - Helicopter Footage (3 of 3) with Timestamp & Scanner Added · 22:25:02",
+  "properties": {
+   "map_label": "Release #10 - Helicopter Footage (3 of 3) with Timestamp & Scanner Added",
+   "media_kind": "aerial",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=QLt16rs74ec",
+    "label": "Release #10 - Helicopter Footage (3 of 3) with Timestamp & Scanner Added"
+   },
+   "platform": "youtube",
+   "availability": "available",
+   "availability_checked": "2026-10-07",
+   "provenance": "official-release-reupload",
+   "release_batch": "10",
+   "clock_start": "2017-10-01T22:25:02-07:00",
+   "sync_offset_seconds": 1502,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-01T22:25:02-07:00",
+   "clock_start_basis": "title",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.091531,
+    "lon": -115.173669
+   },
+   "position_basis": "start-of-path",
+   "camera_path": "{\"type\":\"LineString\",\"coordinates\":[[-115.173669,36.091531],[-115.17384,36.091254],[-115.174645,36.090751],[-115.176362,36.091029],[-115.176501,36.092086],[-115.175536,36.093265],[-115.174452,36.093309],[-115.173615,36.092875],[-115.173283,36.09193],[-115.173701,36.091237],[-115.174613,36.090569],[-115.175182,36.090257],[-115.176845,36.090448],[-115.178389,36.091644],[-115.178647,36.092381],[-115.178207,36.092996]]}"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-vsw6MNkk8PU",
+  "template": "recording",
+  "title": "Aerial, aftermath, with time stamp · 00:24:42",
+  "properties": {
+   "map_label": "Aerial, aftermath, with time stamp",
+   "media_kind": "aerial",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=vsw6MNkk8PU",
+    "label": "Aerial, aftermath, with time stamp"
+   },
+   "platform": "youtube",
+   "availability": "not-checked",
+   "provenance": "unknown",
+   "clock_start": "2017-10-02T00:24:42-07:00",
+   "sync_offset_seconds": 8682,
+   "clock_precision": "second",
+   "clock_start_title": "2017-10-02T00:24:42-07:00",
+   "clock_start_basis": "title",
+   "sync_confidence": "title-only",
+   "sync_anchor_count": 0,
+   "annotation_count": 0,
+   "content_warning": "distressing",
+   "verification": "single-source",
+   "camera_position": {
+    "lat": 36.096226,
+    "lon": -115.172918
+   },
+   "position_basis": "map-estimate"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "clock_start_title",
+     "clock_start_implied",
+     "sync_offset_seconds",
+     "sync_confidence",
+     "volleys_covered",
+     "annotation_count"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Clock times and offsets are the map's annotations. Title time and the time implied by the first annotation are kept apart; flags show where they disagree."
+   },
+   {
+    "property": [
+     "camera_position",
+     "camera_path",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Map position."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-39",
+  "template": "recording",
+  "title": "911 call #39",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 39,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.092,
+    "lon": -115.175
+   },
+   "position_basis": "generalised",
+   "call_category": "security-or-dispatch",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=kmnpoiYNNLg&t=1h17m23s",
+    "label": "911 call #39"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 4643,
+   "provenance": "official-release-reupload",
+   "audio_url": {
+    "url": "https://archive.org/details/LasVegasShooting911Calls/171001003519_(39).wma",
+    "label": "911 call #39, audio file"
+   },
+   "audio_basis": "matched-by-number"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   },
+   {
+    "property": [
+     "audio_url",
+     "audio_basis"
+    ],
+    "sources": [
+     "source:internet-archive-2018-06-06-lvmpd-batch-5-911-calls"
+    ],
+    "verification": "single-source",
+    "note": "Internet Archive item LasVegasShooting911Calls, credited to LVMPD, uploaded by a private account, no licence stated on the item. Linked only: nothing was downloaded or re-hosted. Found by matching the call number to the item's file list; the audio was not listened to."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-329",
+  "template": "recording",
+  "title": "911 call #329",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 329,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.1,
+    "lon": -115.168
+   },
+   "position_basis": "generalised",
+   "call_category": "other-unclear",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=4mwEH2vEcKw&t=2h2m0s",
+    "label": "911 call #329"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 7320,
+   "provenance": "official-release-reupload",
+   "audio_url": {
+    "url": "https://archive.org/details/LasVegasShooting911Calls/171001003519_(329).wma",
+    "label": "911 call #329, audio file"
+   },
+   "audio_basis": "matched-by-number"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   },
+   {
+    "property": [
+     "audio_url",
+     "audio_basis"
+    ],
+    "sources": [
+     "source:internet-archive-2018-06-06-lvmpd-batch-5-911-calls"
+    ],
+    "verification": "single-source",
+    "note": "Internet Archive item LasVegasShooting911Calls, credited to LVMPD, uploaded by a private account, no licence stated on the item. Linked only: nothing was downloaded or re-hosted. Found by matching the call number to the item's file list; the audio was not listened to."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-381",
+  "template": "recording",
+  "title": "911 call #381",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 381,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.099,
+    "lon": -115.172
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-shooter",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=4mwEH2vEcKw&t=3h34m46s",
+    "label": "911 call #381"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 12886,
+   "provenance": "official-release-reupload",
+   "audio_url": {
+    "url": "https://archive.org/details/LasVegasShooting911Calls/171001003519_(381).wma",
+    "label": "911 call #381, audio file"
+   },
+   "audio_basis": "matched-by-number"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   },
+   {
+    "property": [
+     "audio_url",
+     "audio_basis"
+    ],
+    "sources": [
+     "source:internet-archive-2018-06-06-lvmpd-batch-5-911-calls"
+    ],
+    "verification": "single-source",
+    "note": "Internet Archive item LasVegasShooting911Calls, credited to LVMPD, uploaded by a private account, no licence stated on the item. Linked only: nothing was downloaded or re-hosted. Found by matching the call number to the item's file list; the audio was not listened to."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-818",
+  "template": "recording",
+  "title": "911 call #818",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 818,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.113,
+    "lon": -115.176
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-shooter",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=XZvbgfI0AAY&t=1h32m53s",
+    "label": "911 call #818"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 5573,
+   "provenance": "official-release-reupload"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-651",
+  "template": "recording",
+  "title": "911 call #651",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 651,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.133,
+    "lon": -115.164
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-injury",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=K7bu62g9QTY&t=4h24m40s",
+    "label": "911 call #651"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 15880,
+   "provenance": "official-release-reupload"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-1146",
+  "template": "recording",
+  "title": "911 call #1146",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 1146,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.093,
+    "lon": -115.177
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-shooter",
+   "platform": "archive-org",
+   "provenance": "official-release-reupload",
+   "audio_url": {
+    "url": "https://archive.org/details/Vegas_Shoooting_Batch_7-911Calls/171001003519_(1146).wma",
+    "label": "911 call #1146, audio file"
+   },
+   "audio_basis": "map-link"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   },
+   {
+    "property": [
+     "audio_url",
+     "audio_basis"
+    ],
+    "sources": [
+     "source:internet-archive-2018-06-20-lvmpd-batch-7-911-calls",
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Internet Archive item Vegas_Shoooting_Batch_7-911Calls, credited to LVMPD, uploaded by a private account, no licence stated on the item. Linked only: nothing was downloaded or re-hosted. The map links this file."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-1142",
+  "template": "recording",
+  "title": "911 call #1142",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 1142,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.122,
+    "lon": -115.175
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-gunfire",
+   "platform": "archive-org",
+   "provenance": "official-release-reupload",
+   "audio_url": {
+    "url": "https://archive.org/details/Vegas_Shoooting_Batch_7-911Calls/171001003519_(1142).wma",
+    "label": "911 call #1142, audio file"
+   },
+   "audio_basis": "map-link"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   },
+   {
+    "property": [
+     "audio_url",
+     "audio_basis"
+    ],
+    "sources": [
+     "source:internet-archive-2018-06-20-lvmpd-batch-7-911-calls",
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Internet Archive item Vegas_Shoooting_Batch_7-911Calls, credited to LVMPD, uploaded by a private account, no licence stated on the item. Linked only: nothing was downloaded or re-hosted. The map links this file."
+   }
+  ]
+ },
+ {
+  "id": "recording:call-953",
+  "template": "recording",
+  "title": "911 call #953",
+  "properties": {
+   "media_kind": "911-call",
+   "call_number": 953,
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "camera_position": {
+    "lat": 36.1,
+    "lon": -115.165
+   },
+   "position_basis": "generalised",
+   "call_category": "reports-suspicious-activity",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=XZvbgfI0AAY&t=6h23m34s",
+    "label": "911 call #953"
+   },
+   "platform": "youtube",
+   "compilation_offset_seconds": 23014,
+   "provenance": "official-release-reupload"
+  },
+  "evidence": [
+   {
+    "property": [
+     "camera_position",
+     "position_basis"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Position generalised to three decimals (about 100 m) because a call can come from a private room; the map's title text is not carried."
+   },
+   {
+    "property": [
+     "call_category"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Category chosen by the Research lane from the map's call title with a closed list of keyword rules (data/call_categories.py); no title text is carried."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-kmnpoiYNNLg",
+  "template": "recording",
+  "title": "911 calls, release batch 5, part 1 of 2 (calls 1 to 260)",
+  "properties": {
+   "media_kind": "911-compilation",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=kmnpoiYNNLg",
+    "label": "911 calls, release batch 5, part 1 of 2 (calls 1 to 260)"
+   },
+   "platform": "youtube",
+   "provenance": "official-release-reupload",
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "available",
+   "availability_checked": "2026-10-07",
+   "map_label": "911 calls, release batch 5, part 1 of 2 (calls 1 to 260)"
+  },
+  "evidence": [
+   {
+    "property": "embed",
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Duration not known (no YouTube API key). Title from the YouTube oEmbed answer where checked."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-4mwEH2vEcKw",
+  "template": "recording",
+  "title": "911 calls, release batch 5, part 2 of 2 (calls 261 to 518)",
+  "properties": {
+   "media_kind": "911-compilation",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=4mwEH2vEcKw",
+    "label": "911 calls, release batch 5, part 2 of 2 (calls 261 to 518)"
+   },
+   "platform": "youtube",
+   "provenance": "official-release-reupload",
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "available",
+   "availability_checked": "2026-10-07",
+   "map_label": "911 calls, release batch 5, part 2 of 2 (calls 261 to 518)"
+  },
+  "evidence": [
+   {
+    "property": "embed",
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Duration not known (no YouTube API key). Title from the YouTube oEmbed answer where checked."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-K7bu62g9QTY",
+  "template": "recording",
+  "title": "911 call compilation (calls 524 to 767 on the map)",
+  "properties": {
+   "media_kind": "911-compilation",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=K7bu62g9QTY",
+    "label": "911 call compilation (calls 524 to 767 on the map)"
+   },
+   "platform": "youtube",
+   "provenance": "official-release-reupload",
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "map_label": "911 call compilation (calls 524 to 767 on the map)"
+  },
+  "evidence": [
+   {
+    "property": "embed",
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Duration and title not known."
+   }
+  ]
+ },
+ {
+  "id": "recording:yt-XZvbgfI0AAY",
+  "template": "recording",
+  "title": "911 call compilation (calls 785 to 1014 on the map)",
+  "properties": {
+   "media_kind": "911-compilation",
+   "embed": {
+    "url": "https://www.youtube.com/watch?v=XZvbgfI0AAY",
+    "label": "911 call compilation (calls 785 to 1014 on the map)"
+   },
+   "platform": "youtube",
+   "provenance": "official-release-reupload",
+   "content_warning": "graphic",
+   "verification": "single-source",
+   "availability": "not-checked",
+   "map_label": "911 call compilation (calls 785 to 1014 on the map)"
+  },
+  "evidence": [
+   {
+    "property": "embed",
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Duration and title not known."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-01",
+  "template": "moment",
+  "title": "Volley 1 · 22:06:06",
+  "properties": {
+   "label": "Volley 1",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:06:06-07:00",
+   "precision": "second",
+   "witness_count": 19,
+   "spread_seconds": 7.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 19 recordings' annotated clock times; spread 7 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-02",
+  "template": "moment",
+  "title": "Volley 2 · 22:06:53",
+  "properties": {
+   "label": "Volley 2",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:06:53-07:00",
+   "precision": "second",
+   "witness_count": 27,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 47.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 27 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-03",
+  "template": "moment",
+  "title": "Volley 3 · 22:07:21",
+  "properties": {
+   "label": "Volley 3",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:07:21-07:00",
+   "precision": "second",
+   "witness_count": 34,
+   "spread_seconds": 1.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 28.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 34 recordings' annotated clock times; spread 1 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-04",
+  "template": "moment",
+  "title": "Volley 4 · 22:07:50",
+  "properties": {
+   "label": "Volley 4",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:07:50-07:00",
+   "precision": "second",
+   "witness_count": 38,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 29.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 38 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-05",
+  "template": "moment",
+  "title": "Volley 5 · 22:09:47",
+  "properties": {
+   "label": "Volley 5",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:09:47-07:00",
+   "precision": "second",
+   "witness_count": 43,
+   "spread_seconds": 10.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 117.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 43 recordings' annotated clock times; spread 10 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-06",
+  "template": "moment",
+  "title": "Volley 6 · 22:10:59",
+  "properties": {
+   "label": "Volley 6",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:10:59-07:00",
+   "precision": "second",
+   "witness_count": 46,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 72.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 46 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-07",
+  "template": "moment",
+  "title": "Volley 7 · 22:11:34",
+  "properties": {
+   "label": "Volley 7",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:11:34-07:00",
+   "precision": "second",
+   "witness_count": 49,
+   "spread_seconds": 4.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 35.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 49 recordings' annotated clock times; spread 4 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-08",
+  "template": "moment",
+  "title": "Volley 8 · 22:12:08",
+  "properties": {
+   "label": "Volley 8",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:12:08-07:00",
+   "precision": "second",
+   "witness_count": 50,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 34.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 50 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-09",
+  "template": "moment",
+  "title": "Volley 9 · 22:12:34",
+  "properties": {
+   "label": "Volley 9",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:12:34-07:00",
+   "precision": "second",
+   "witness_count": 48,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 26.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 48 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-10",
+  "template": "moment",
+  "title": "Volley 10 · 22:13:30",
+  "properties": {
+   "label": "Volley 10",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:13:30-07:00",
+   "precision": "second",
+   "witness_count": 51,
+   "spread_seconds": 4.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 56.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 51 recordings' annotated clock times; spread 4 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-11",
+  "template": "moment",
+  "title": "Volley 11 · 22:14:50",
+  "properties": {
+   "label": "Volley 11",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:14:50-07:00",
+   "precision": "second",
+   "witness_count": 38,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 80.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 38 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:volley-12",
+  "template": "moment",
+  "title": "Volley 12 · 22:15:16",
+  "properties": {
+   "label": "Volley 12",
+   "moment_type": "volley",
+   "clock_start": "2017-10-01T22:15:16-07:00",
+   "precision": "second",
+   "witness_count": 39,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed",
+   "interval_from_previous_seconds": 26.0
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 39 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220843-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:08:43",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:08:43-07:00",
+   "precision": "second",
+   "witness_count": 18,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 18 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220853-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:08:53",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:08:53-07:00",
+   "precision": "second",
+   "witness_count": 23,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 23 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220903-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:09:03",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:09:03-07:00",
+   "precision": "second",
+   "witness_count": 27,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 27 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220908-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:09:08",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:09:08-07:00",
+   "precision": "second",
+   "witness_count": 26,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 26 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220915-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:09:15",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:09:15-07:00",
+   "precision": "second",
+   "witness_count": 30,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 30 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220923-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:09:23",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:09:23-07:00",
+   "precision": "second",
+   "witness_count": 27,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 27 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t221600-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:16:00",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:16:00-07:00",
+   "precision": "second",
+   "witness_count": 19,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 19 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t221610-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:16:10",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:16:10-07:00",
+   "precision": "second",
+   "witness_count": 21,
+   "spread_seconds": 3.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 21 recordings' annotated clock times; spread 3 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t221628-single-shot",
+  "template": "moment",
+  "title": "Single gunshot · 22:16:28",
+  "properties": {
+   "label": "Single gunshot",
+   "moment_type": "single-shot",
+   "clock_start": "2017-10-01T22:16:28-07:00",
+   "precision": "second",
+   "witness_count": 1,
+   "spread_seconds": 0.0,
+   "time_basis": "map-annotation",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Median of 1 recordings' annotated clock times; spread 0 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220527-first-shots",
+  "template": "moment",
+  "title": "First shots (map annotation) · 22:05:27",
+  "properties": {
+   "label": "First shots (map annotation)",
+   "moment_type": "first-shots",
+   "clock_start": "2017-10-01T22:05:27-07:00",
+   "precision": "second",
+   "witness_count": 12,
+   "spread_seconds": 0.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 12 recordings' annotated clock times; spread 0 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t221037-corridor-shots",
+  "template": "moment",
+  "title": "Shots in the hotel corridor (map annotation) · 22:10:37",
+  "properties": {
+   "label": "Shots in the hotel corridor (map annotation)",
+   "moment_type": "corridor-shots",
+   "clock_start": "2017-10-01T22:10:37-07:00",
+   "precision": "second",
+   "witness_count": 7,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 7 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220722-ricochet",
+  "template": "moment",
+  "title": "Ricochet sound · 22:07:22",
+  "properties": {
+   "label": "Ricochet sound",
+   "moment_type": "ricochet",
+   "clock_start": "2017-10-01T22:07:22-07:00",
+   "precision": "second",
+   "witness_count": 2,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 2 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t220728-ricochet",
+  "template": "moment",
+  "title": "Ricochet sound · 22:07:28",
+  "properties": {
+   "label": "Ricochet sound",
+   "moment_type": "ricochet",
+   "clock_start": "2017-10-01T22:07:28-07:00",
+   "precision": "second",
+   "witness_count": 3,
+   "spread_seconds": 2.0,
+   "time_basis": "map-annotation",
+   "verification": "confirmed"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "Median of 3 recordings' annotated clock times; spread 2 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:20171001t221239-bullet-pass",
+  "template": "moment",
+  "title": "Bullet passing sound · 22:12:39",
+  "properties": {
+   "label": "Bullet passing sound",
+   "moment_type": "bullet-pass",
+   "clock_start": "2017-10-01T22:12:39-07:00",
+   "precision": "second",
+   "witness_count": 1,
+   "spread_seconds": 0.0,
+   "time_basis": "map-annotation",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start",
+     "witness_count",
+     "spread_seconds"
+    ],
+    "sources": [
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "single-source",
+    "note": "Median of 1 recordings' annotated clock times; spread 0 s. Agreement among recordings counts as confirmation only if they are not copies of one video, which is not checked."
+   }
+  ]
+ },
+ {
+  "id": "moment:first-shots-official",
+  "template": "moment",
+  "title": "First shots, as the LVMPD timeline gives them · 22:05",
+  "properties": {
+   "label": "First shots, as the LVMPD timeline gives them",
+   "moment_type": "first-shots",
+   "clock_start": "2017-10-01T22:05:00-07:00",
+   "precision": "minute",
+   "time_basis": "official-report-summary",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source (LVMPD PDFs not yet downloaded)."
+   }
+  ]
+ },
+ {
+  "id": "moment:officers-on-31st-floor",
+  "template": "moment",
+  "title": "Two officers on the 31st floor report gunfire coming from above · 22:12",
+  "properties": {
+   "label": "Two officers on the 31st floor report gunfire coming from above",
+   "moment_type": "response",
+   "clock_start": "2017-10-01T22:12:00-07:00",
+   "precision": "minute",
+   "time_basis": "official-report-summary",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source (LVMPD PDFs not yet downloaded)."
+   }
+  ]
+ },
+ {
+  "id": "moment:last-shots-official",
+  "template": "moment",
+  "title": "Last shots, as the LVMPD timeline gives them · 22:15",
+  "properties": {
+   "label": "Last shots, as the LVMPD timeline gives them",
+   "moment_type": "last-shots",
+   "clock_start": "2017-10-01T22:15:00-07:00",
+   "precision": "minute",
+   "time_basis": "official-report-summary",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source (LVMPD PDFs not yet downloaded)."
+   }
+  ]
+ },
+ {
+  "id": "moment:officers-on-32nd-floor",
+  "template": "moment",
+  "title": "The first two officers reach the 32nd floor · 22:17",
+  "properties": {
+   "label": "The first two officers reach the 32nd floor",
+   "moment_type": "response",
+   "clock_start": "2017-10-01T22:17:00-07:00",
+   "precision": "minute",
+   "time_basis": "official-report-summary",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source (LVMPD PDFs not yet downloaded)."
+   }
+  ]
+ },
+ {
+  "id": "moment:suite-breach",
+  "template": "moment",
+  "title": "Strike team breaches the suite · 23:20",
+  "properties": {
+   "label": "Strike team breaches the suite",
+   "moment_type": "breach",
+   "clock_start": "2017-10-01T23:20:00-07:00",
+   "precision": "minute",
+   "time_basis": "official-report-summary",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "clock_start"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source (LVMPD PDFs not yet downloaded)."
+   }
+  ]
+ },
+ {
+  "id": "finding:first-shots-official",
+  "template": "finding",
+  "title": "First shots, as the LVMPD timeline gives them",
+  "properties": {
+   "text": "The gunman began firing at about 10:05 p.m., as seen on closed-circuit television from the concert venue.",
+   "finding_type": "timeline-entry",
+   "clock_time": "2017-10-01T22:05:00-07:00",
+   "precision": "minute",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text",
+     "clock_time"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:officers-on-31st-floor",
+  "template": "finding",
+  "title": "Two officers on the 31st floor report gunfire coming from above",
+  "properties": {
+   "text": "At about 10:12 p.m. the first two officers on the 31st floor reported the sound of gunfire directly above them.",
+   "finding_type": "timeline-entry",
+   "clock_time": "2017-10-01T22:12:00-07:00",
+   "precision": "minute",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text",
+     "clock_time"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:last-shots-official",
+  "template": "finding",
+  "title": "Last shots, as the LVMPD timeline gives them",
+  "properties": {
+   "text": "The last shots were fired at about 10:15 p.m., according to body-worn camera video.",
+   "finding_type": "timeline-entry",
+   "clock_time": "2017-10-01T22:15:00-07:00",
+   "precision": "minute",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text",
+     "clock_time"
+    ],
+    "sources": [
+     "source:clickondetroit-las-vegas-police-release-timeline-of-events",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:officers-on-32nd-floor",
+  "template": "finding",
+  "title": "The first two officers reach the 32nd floor",
+  "properties": {
+   "text": "The first two officers reached the 32nd floor at about 10:17 p.m.",
+   "finding_type": "timeline-entry",
+   "clock_time": "2017-10-01T22:17:00-07:00",
+   "precision": "minute",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text",
+     "clock_time"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:suite-breach",
+  "template": "finding",
+  "title": "Strike team breaches the suite",
+  "properties": {
+   "text": "At about 11:20 p.m. a strike team made an explosive breach of the suite and entered; the gunman was found dead of a self-inflicted wound.",
+   "finding_type": "timeline-entry",
+   "clock_time": "2017-10-01T23:20:00-07:00",
+   "precision": "minute",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text",
+     "clock_time"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:rounds-1058",
+  "template": "finding",
+  "title": "A total of 1,058 rounds were fired from the suite, according to the Criminal Investigative",
+  "properties": {
+   "text": "A total of 1,058 rounds were fired from the suite, according to the Criminal Investigative Report.",
+   "finding_type": "count",
+   "clock_time": "2018-08-03",
+   "precision": "day",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text"
+    ],
+    "sources": [
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:killed-58",
+  "template": "finding",
+  "title": "Fifty-eight people were killed at the venue or died in the days after; the coroner found a",
+  "properties": {
+   "text": "Fifty-eight people were killed at the venue or died in the days after; the coroner found all died of gunshot wounds.",
+   "finding_type": "count",
+   "clock_time": "2017-12-21",
+   "precision": "day",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text"
+    ],
+    "sources": [
+     "source:las-vegas-sun-2017-12-21-coroner-58-deaths-gunshot",
+     "source:after-action-report-2018-08-24-1-october"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:fbi-no-single-motive",
+  "template": "finding",
+  "title": "The FBI Behavioral Analysis Unit found no single or clear motivating factor, and no manife",
+  "properties": {
+   "text": "The FBI Behavioral Analysis Unit found no single or clear motivating factor, and no manifesto or other communication.",
+   "finding_type": "conclusion",
+   "clock_time": "2019-01-29",
+   "precision": "day",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text"
+    ],
+    "sources": [
+     "source:npr-2019-01-29-fbi-analysis-ends-without-clear-motive",
+     "source:fbi-2019-01-bau-report"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "finding:after-action-response",
+  "template": "finding",
+  "title": "The After-Action Report found numerous communication problems and some protocols not follo",
+  "properties": {
+   "text": "The After-Action Report found numerous communication problems and some protocols not followed, and described the response as efficient and coordinated.",
+   "finding_type": "conclusion",
+   "clock_time": "2018-08-24",
+   "precision": "day",
+   "verification": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "text"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october"
+    ],
+    "verification": "single-source",
+    "note": "From summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "claim:killed-58-as-of-2017-12",
+  "template": "claim",
+  "title": "58 killed (coroner, December 2017)",
+  "properties": {
+   "statement": "58 people were killed in the attack; the Clark County Coroner confirmed on 21 December 2017 that all died of gunshot wounds.",
+   "claim_type": "count",
+   "figure": 58,
+   "unit": "killed",
+   "qualifier": "exact",
+   "as_of": "2017-12-21",
+   "as_of_basis": "official-count",
+   "scope": "venue and the days after",
+   "verification_status": "confirmed",
+   "verification_note": "Two official origins: the coroner and the After-Action Report. Both read from summaries only."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:las-vegas-sun-2017-12-21-coroner-58-deaths-gunshot",
+     "source:after-action-report-2018-08-24-1-october"
+    ],
+    "verification": "confirmed",
+    "note": "Two official origins: the coroner and the After-Action Report. Both read from summaries only."
+   }
+  ]
+ },
+ {
+  "id": "claim:killed-60-as-of-2020-10",
+  "template": "claim",
+  "title": "60 killed (official count, October 2020)",
+  "properties": {
+   "statement": "After two women injured on 1 October 2017 died of their injuries (15 November 2019 and 26 May 2020), the LVMPD raised the official death toll to 60, shooter excluded.",
+   "claim_type": "count",
+   "figure": 60,
+   "unit": "killed",
+   "qualifier": "exact",
+   "as_of": "2020-10-01",
+   "as_of_basis": "official-count",
+   "scope": "including two later deaths, shooter excluded",
+   "verification_status": "single-source",
+   "verification_note": "One origin, the sheriff's announcement, reported by several outlets. Replaces the count of 58; not a contradiction. Wikipedia dates the two additions to the count 24 August and 1 October 2020."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:las-vegas-review-journal-60th-victim",
+     "source:washington-times-2020-10-01-las-vegas-marks-third-year",
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting"
+    ],
+    "verification": "single-source",
+    "note": "One origin, the sheriff's announcement, reported by several outlets. Replaces the count of 58; not a contradiction. Wikipedia dates the two additions to the count 24 August and 1 October 2020."
+   }
+  ]
+ },
+ {
+  "id": "claim:killed-61-including-gunman",
+  "template": "claim",
+  "title": "61 deaths including the perpetrator (Wikipedia)",
+  "properties": {
+   "statement": "Wikipedia's infobox gives 61 deaths 'including the perpetrator'. A court case in 2023 reportedly referred to a further death; that is not carried here.",
+   "claim_type": "count",
+   "figure": 61,
+   "unit": "deaths",
+   "qualifier": "exact",
+   "as_of": "2026-10-07",
+   "as_of_basis": "publication-date",
+   "scope": "including the gunman",
+   "verification_status": "single-source",
+   "verification_note": "A different counting basis from 60, not a conflict with it."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting"
+    ],
+    "verification": "single-source",
+    "note": "A different counting basis from 60, not a conflict with it."
+   }
+  ]
+ },
+ {
+  "id": "claim:injured-867",
+  "template": "claim",
+  "title": "About 867 injured, at least 413 by gunshot or shrapnel (Wikipedia)",
+  "properties": {
+   "statement": "About 867 people were injured, at least 413 of them with gunshot wounds or shrapnel injuries.",
+   "claim_type": "count",
+   "figure": 867,
+   "unit": "injured",
+   "qualifier": "about",
+   "as_of": "2026-10-07",
+   "as_of_basis": "publication-date",
+   "scope": "all injuries",
+   "verification_status": "single-source"
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting"
+    ],
+    "verification": "single-source",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "claim:injured-over-850-after-action",
+  "template": "claim",
+  "title": "More than 850 injured (After-Action Report)",
+  "properties": {
+   "statement": "The After-Action Report gives more than 850 people injured, including first responders.",
+   "claim_type": "count",
+   "figure": 850,
+   "unit": "injured",
+   "qualifier": "more-than",
+   "as_of": "2018-08-24",
+   "as_of_basis": "report-date",
+   "scope": "including first responders",
+   "verification_status": "single-source",
+   "verification_note": "From a summary, not read at source."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:after-action-report-2018-08-24-1-october"
+    ],
+    "verification": "single-source",
+    "note": "From a summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "claim:rounds-1058",
+  "template": "claim",
+  "title": "1,058 rounds fired (Criminal Investigative Report)",
+  "properties": {
+   "statement": "The Criminal Investigative Report counts 1,058 rounds fired in total.",
+   "claim_type": "count",
+   "figure": 1058,
+   "unit": "rounds",
+   "qualifier": "exact",
+   "as_of": "2018-08-03",
+   "as_of_basis": "report-date",
+   "scope": "total",
+   "verification_status": "disputed",
+   "verification_note": "Other counts: more than 1,100 (sheriff) and more than 900 into the crowd (NYT). The bases differ (total, stated, into the crowd). From a summary, not read at source."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:wikipedia-2026-10-07-2017-las-vegas-shooting",
+     "source:lvmpd-2018-08-03-criminal-investigative-report"
+    ],
+    "verification": "disputed",
+    "note": "Other counts: more than 1,100 (sheriff) and more than 900 into the crowd (NYT). The bases differ (total, stated, into the crowd). From a summary, not read at source."
+   }
+  ]
+ },
+ {
+  "id": "claim:rounds-over-1100-sheriff",
+  "template": "claim",
+  "title": "More than 1,100 rounds (sheriff)",
+  "properties": {
+   "statement": "The sheriff said the gunman fired more than 1,100 rounds.",
+   "claim_type": "count",
+   "figure": 1100,
+   "unit": "rounds",
+   "qualifier": "more-than",
+   "as_of_basis": "unknown",
+   "scope": "total",
+   "verification_status": "disputed",
+   "verification_note": "Publication date not shown in the search result."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:voa-news-sheriff-gunman-fired-more-than-1100-rounds"
+    ],
+    "verification": "disputed",
+    "note": "Publication date not shown in the search result."
+   }
+  ]
+ },
+ {
+  "id": "claim:rounds-over-900-nyt",
+  "template": "claim",
+  "title": "More than 900 rounds into the crowd (NYT analysis)",
+  "properties": {
+   "statement": "The New York Times counted more than 900 rounds fired into the crowd, from audio across 30 videos.",
+   "claim_type": "count",
+   "figure": 900,
+   "unit": "rounds",
+   "qualifier": "more-than",
+   "as_of": "2017-10",
+   "as_of_basis": "publication-date",
+   "scope": "into the crowd",
+   "verification_status": "disputed",
+   "verification_note": "Counts only the rounds heard into the crowd."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:cbs-news-2017-10-nyt-develops-timeline-of-las-vegas-shooting",
+     "source:knpr-2017-10-new-york-times-analysis-new-shooting-timeline"
+    ],
+    "verification": "disputed",
+    "note": "Counts only the rounds heard into the crowd."
+   }
+  ]
+ },
+ {
+  "id": "claim:twelve-bursts",
+  "template": "claim",
+  "title": "Twelve main bursts of gunfire",
+  "properties": {
+   "statement": "The gunfire into the crowd came in twelve main bursts (volleys). The NYT identified them from 30 videos; the map numbers volleys 1 to 12.",
+   "claim_type": "sequence",
+   "figure": 12,
+   "unit": "bursts",
+   "qualifier": "exact",
+   "as_of": "2017-10",
+   "as_of_basis": "publication-date",
+   "scope": "into the crowd",
+   "verification_status": "confirmed",
+   "verification_note": "The NYT and the map agree. The map may follow the NYT numbering, which is not known; the sync check shows the map's own annotations cluster into 12 separate times."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:cbs-news-2017-10-nyt-develops-timeline-of-las-vegas-shooting",
+     "source:threadreader-2017-10-23-nyt-reporter-thread-on-the-timeline",
+     "source:vegasshootingmap-2026-10-07-google-my-map"
+    ],
+    "verification": "confirmed",
+    "note": "The NYT and the map agree. The map may follow the NYT numbering, which is not known; the sync check shows the map's own annotations cluster into 12 separate times."
+   }
+  ]
+ },
+ {
+  "id": "claim:three-gaps-over-a-minute",
+  "template": "claim",
+  "title": "Three intervals of more than a minute between bursts",
+  "properties": {
+   "statement": "Between the twelve bursts there were three intervals of more than one minute.",
+   "claim_type": "sequence",
+   "figure": 3,
+   "unit": "intervals",
+   "qualifier": "exact",
+   "as_of": "2017-10",
+   "as_of_basis": "publication-date",
+   "scope": "between bursts",
+   "verification_status": "single-source",
+   "verification_note": "Checked against the map in sync-check.md."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:threadreader-2017-10-23-nyt-reporter-thread-on-the-timeline"
+    ],
+    "verification": "single-source",
+    "note": "Checked against the map in sync-check.md."
+   }
+  ]
+ },
+ {
+  "id": "claim:burst-40s-in-building",
+  "template": "claim",
+  "title": "One burst of about 40 seconds below the gunman's position",
+  "properties": {
+   "statement": "A burst of about 40 seconds appears in footage filmed directly below the gunman's position but not in simultaneous festival recordings, which suggests gunfire inside the building. The map's 'down-the-hall' annotations may be the same event; that is not established.",
+   "claim_type": "sequence",
+   "figure": 40,
+   "unit": "seconds",
+   "qualifier": "about",
+   "as_of": "2017-10-23",
+   "as_of_basis": "publication-date",
+   "scope": "inside the hotel",
+   "verification_status": "single-source",
+   "verification_note": "From the reporter's thread; no clock time is given."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:threadreader-2017-10-23-nyt-reporter-thread-on-the-timeline"
+    ],
+    "verification": "single-source",
+    "note": "From the reporter's thread; no clock time is given."
+   }
+  ]
+ },
+ {
+  "id": "claim:guard-shot-time",
+  "template": "claim",
+  "title": "When the hotel security guard was shot",
+  "properties": {
+   "statement": "The NYT analysis places the shooting of the hotel security guard at about 10:06 p.m., one minute into the attack, which differed from the investigators' timeline of the time. The official time is not carried until the reports are read.",
+   "claim_type": "time",
+   "as_of": "2017-10",
+   "as_of_basis": "publication-date",
+   "scope": "hotel corridor",
+   "verification_status": "disputed",
+   "verification_note": "The official timeline was revised more than once in October 2017. From summaries only."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:cbs-news-2017-10-nyt-develops-timeline-of-las-vegas-shooting",
+     "source:nevada-independent-2017-10-sheriff-revises-timeline"
+    ],
+    "verification": "disputed",
+    "note": "The official timeline was revised more than once in October 2017. From summaries only."
+   }
+  ]
+ },
+ {
+  "id": "claim:no-six-minute-gap",
+  "template": "claim",
+  "title": "No six-minute gap in the timeline (police, 13 October 2017)",
+  "properties": {
+   "statement": "On 13 October 2017 police said there was no six-minute gap between the first shots and the concert shooting (headline of the Philadelphia Inquirer).",
+   "claim_type": "sequence",
+   "as_of": "2017-10-13",
+   "as_of_basis": "publication-date",
+   "scope": "official timeline",
+   "verification_status": "single-source",
+   "verification_note": "Headline wording; the article was not read."
+  },
+  "evidence": [
+   {
+    "property": [
+     "statement",
+     "figure",
+     "as_of"
+    ],
+    "sources": [
+     "source:philadelphia-inquirer-2017-10-13-no-six-minute-gap"
+    ],
+    "verification": "single-source",
+    "note": "Headline wording; the article was not read."
+   }
+  ]
+ }
+]

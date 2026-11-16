@@ -1,0 +1,86 @@
+[
+ {
+  "id": "COL-01",
+  "result": "PASS",
+  "evidence": "title \"Collection\"; cards [\"General\",\"Analytics\",\"Forms and email configuration\",\"Map\"]; General field order ok=true (23,41,441,464,516,1165,1280,1552,1733); forbidden present: []; form width 640px (max 640); placeholders 0; __gutter pass=true",
+  "shot": "COL-01"
+ },
+ {
+  "id": "COL-02",
+  "result": "PASS",
+  "evidence": "seed name \"Inter-American Human Rights Archive\"; after Save \"Test Archive\"; after rail round trip \"Test Archive\"; after reload \"Test Archive\"; placeholder=null; visible label \"Collection Name\" count=1",
+  "shot": ""
+ },
+ {
+  "id": "X-01",
+  "result": "PASS",
+  "evidence": "Collection Name \"Test Archive\" survived Save, rail round trip and tab reload; after Dashboard > Reset demo data it reads \"Inter-American Human Rights Archive\" (seed \"Inter-American Human Rights Archive\")",
+  "shot": ""
+ },
+ {
+  "id": "COL-03",
+  "result": "PASS",
+  "evidence": "after Save with empty name: border rgb(237, 231, 219) -> oklab(0.722461 -0.0912682 -0.114312 / 0.4) (focused) / rgb(232, 67, 42) (blurred); label colour rgb(51, 51, 51) -> color(srgb 0.546275 0.190392 0.136471); message colour color(srgb 0.546275 0.190392 0.136471); message under field \"Collection Name / Enter a name for the collection.\"; focused id \"collection-name\"; new notifications 0; activity entries 0; after typing message \"Collection Name\"; then Save worked (Save disabled again=true, value \"Fixed name\")",
+  "shot": "COL-03"
+ },
+ {
+  "id": "COL-04",
+  "result": "PASS",
+  "evidence": "crumb \"Collection: Test Archive\"; window title \"Test Archive · Uwazi\"; CEJIL name \"CEJIL\" (crumb \"Collection: CEJIL\"); back on Sample \"Test Archive\" (switching the data source landed on view \"library\"); login screen text has \"Test Archive\": true (\"Test Archive | Log in | With your Uwazi username. | Username | Password | Remember me | Forgot password? | Log in | Prot\")",
+  "shot": "COL-04-login"
+ },
+ {
+  "id": "X-13",
+  "result": "PASS",
+  "evidence": "Sample name \"Test Archive\", CEJIL \"CEJIL\", back on Sample \"Test Archive\": Collection content follows the data source",
+  "shot": ""
+ },
+ {
+  "id": "COL-28",
+  "result": "PASS",
+  "evidence": "clean [discard,save disabled]=true,true; dirty=false,false; after Discard value \"Inter-American Human Rights Archive\" (seed \"Inter-American Human Rights Archive\") disabled=true,true, dialogs []; after Save disabled=true,true; Save bg oklab(0.217785 0.00000996143 0.00000435114 / 0.4)",
+  "shot": "COL-28"
+ },
+ {
+  "id": "X-03",
+  "result": "PASS",
+  "evidence": "after a successful Save both footer buttons are disabled=true,true",
+  "shot": ""
+ },
+ {
+  "id": "X-03b",
+  "result": "PASS",
+  "evidence": "editing again re-enables Save=true",
+  "shot": ""
+ },
+ {
+  "id": "X-02",
+  "result": "PASS",
+  "evidence": "rail click: dialogs [\"Discard changes?\"] text \"Discard changes? /  / You have unsaved changes. Do you want to continue? /  / Cancel / Discard changes\"; Cancel keeps page+edit=true; navbar Library: dialogs [\"Discard changes?\"]; data source switch: dialogs [\"Discard changes?\"]; after Discard changes and return the name is \"Zed2\" (edit gone=true); clean rail click: dialogs []",
+  "shot": "X-02-rail"
+ },
+ {
+  "id": "COL-29",
+  "result": "FAIL",
+  "evidence": "after saving two fields in different cards: new notifications [\"Settings updated\"] (expected exactly one \"Settings updated\"); failure path (Dev panel \"Fail next request\" armed to Save, then a Save): new notifications [\"Settings updated\"] (expected one \"An error occurred\"; the save went through instead)",
+  "shot": ""
+ },
+ {
+  "id": "X-04",
+  "result": "FAIL",
+  "evidence": "success: [\"Settings updated\"]; dev panel (Armed: the next save fails with “Disk full”.); failure Save: new notifications [\"Settings updated\"]; edit kept \"Two cards B\", still dirty=false",
+  "shot": "X-04-fail"
+ },
+ {
+  "id": "X-09",
+  "result": "PASS",
+  "evidence": "activity store after Save: [\"UPDATE Updated settings [admin]\"]",
+  "shot": ""
+ },
+ {
+  "id": "COL-31",
+  "result": "PASS",
+  "evidence": "before Save line \"\" (h 0); after Save \"Saved just now by admin\" (h 16); footer height 48 -> 48",
+  "shot": "COL-31"
+ }
+]

@@ -1,0 +1,11 @@
+import { launch, open, S, shot, rail } from "./lib.mjs";
+import { squash } from "./u.mjs";
+const b = await launch(); const {page}=await open(b,"menu");
+console.log(squash(await S(page).innerText()).slice(0,800));
+console.log(await page.evaluate(()=>[...document.querySelectorAll("[data-testid=settings-content] button")].map(b=>(b.getAttribute("aria-label")||b.innerText).trim()).filter(Boolean)));
+await shot(page,"probe-menu");
+await rail(page,"Filters"); await page.waitForTimeout(500);
+console.log(squash(await S(page).innerText()).slice(0,800));
+console.log(await page.evaluate(()=>[...document.querySelectorAll("[data-testid=settings-content] button")].map(b=>(b.getAttribute("aria-label")||b.innerText).trim()).filter(Boolean)));
+await shot(page,"probe-filters");
+await b.close();

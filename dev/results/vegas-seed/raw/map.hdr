@@ -1,0 +1,24 @@
+HTTP/2 200 
+content-type: text/xml; charset=utf-8
+access-control-allow-origin: *
+x-robots-tag: noindex,nofollow
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: Mon, 01 Jan 1990 00:00:00 GMT
+date: Wed, 07 Oct 2026 17:28:54 GMT
+content-disposition: attachment; filename="VegasShootingMap.com.kml"; filename*=UTF-8''VegasShootingMap.com.kml
+p3p: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+p3p: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+content-security-policy: script-src 'report-sample' 'nonce-jiGrNrrMJaQUCGp2FJS3rw' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /maps/d/cspreport
+cross-origin-opener-policy: same-origin-allow-popups
+server: ESF
+x-xss-protection: 0
+x-frame-options: SAMEORIGIN
+x-content-type-options: nosniff
+server-timing: gfet4t7; dur=645
+set-cookie: NID=CuUBCAESlwEBOxGDSJxsE4la28XK0PfwPN7SF6tIbcOWYBhnwy6D_o_v63PRHi8AzzM0s_y1Zcgdcom9GboVtM5-JrTV3oF06HbVWMzn-Go3SsNuaV8FQH1hTLWT9-c0JTNLimLGVOuWaWojtsa2gdr0PzdQvitbFtJPz1uvECtqPfy9TyanokZ5f1pdb33i4IFLB_b99O4Br-h0MNWFKAEyRQHSrAfPN24yqFvu2hia3-4D4jcNcTRxu_Sf2VMvnL8n7yc1y5SN8LiVkM9ytIqbixQkJadgWO9URnevfs-XFw4N1q5vDg; expires=Thu, 08-Apr-2027 17:28:53 GMT; path=/; domain=.google.com; HttpOnly
+set-cookie: NID=CuUBCAESlwEBOxGDSAGLm0uqSPPtc-wUhfPdo0zZrjx7QyAC3VJIzYtwCBoo7p_tCQirg8sF5aF5W9r16c8NPfTCAuaV56VfOvNJ-oWbQIcPwJNw0-Qf9Fxx-Pi1wdrFgSaWHDX09g6LtZwckqfy7lRbhai3XCANKRiS-ljFhtDQU-PD_5vPxYoT0Q3FBhnFWt0pkHYe237QHSgi1JAIKAEyRQHSrAfPNXOlh3_5xjxngo2J6nSu8rAm6zArt0EltZjNJYejXqAGZppVEYeSAakyLwpJ4yqVsiwcMTXDiwqYruXPCETZAg; expires=Thu, 08-Apr-2027 17:28:53 GMT; path=/; domain=.google.com; HttpOnly
+alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+accept-ranges: none
+vary: Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site,Accept-Encoding
+

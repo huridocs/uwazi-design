@@ -1,0 +1,26 @@
+import { clip, S } from "./lib.mjs";
+await clip("05-relationships-graph", async c => {
+  const p = c.page;
+  await p.getByRole("button", { name: /Collection/ }).click(); await p.getByText("CEJIL", { exact: false }).first().click();
+  await p.getByText("4,398 entities").waitFor({ timeout: 20000 }); await c.pause(2500);
+  await p.getByPlaceholder(/Search/).first().click();
+  await p.keyboard.type("Caballero Delgado y Santana", { delay: 20 }); await p.keyboard.press("Enter"); await c.pause(2500);
+  await p.getByRole("button", { name: /^Caballero Delgado/ }).first().click(); await c.pause(1200);
+  await p.getByRole("button", { name: /Clear search|Clear query/i }).first().click().catch(e => console.log("no clear btn")); await c.pause(800);
+  await p.getByRole("button", { name: /View entity/ }).click(); await c.pause(2000);
+  await p.getByRole("tab", { name: /^Relationships/ }).first().click(); await c.pause(2500);
+  const views = await c.qa(661, 176), tree = await c.qa(692, 176), graph = await c.qa(723, 176);
+  c.mark(); await c.pause(500);
+  await c.click(p.getByText("CorteIDH", { exact: true }).first(), { z: 1.4, hold: 2 }); await c.pause(1100);
+  await c.click(tree, { z: 1.7, hold: 1.6 }); await c.pause(900);
+  await c.click(p.getByRole("button", { name: /Collapse all/ }).last(), { z: 1.5, hold: 1.4 }); await c.pause(500);
+  await c.click(p.getByText("CorteIDH", { exact: true }).first(), { z: 1.4, hold: 1.8 }); await c.pause(1000);
+  await c.click(graph, { z: 1.7, hold: 1.6 }); await c.pause(1600);
+  const nodes = p.locator("svg circle[role=button]");
+  await c.hover(nodes.nth(2), { z: 1.6, hold: 1.8 }); await c.pause(800);
+  await c.hover(nodes.nth(6), {}); await c.pause(500);
+  await c.wheel(437, 500, -360, 8, 50); await c.pause(700);
+  await c.wheel(437, 500, 360, 8, 50); await c.pause(400);
+  await c.click(nodes.nth(5), { z: 1.5, hold: 1.8 }); await c.pause(2200);
+  await c.key("Escape"); await c.pause(700);
+});

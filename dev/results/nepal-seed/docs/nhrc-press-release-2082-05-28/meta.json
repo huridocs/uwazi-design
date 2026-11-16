@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-press-release-2082-05-28",
+ "title": "NHRC press release: prisoners to return to jail and return seized weapons (Nepali, 28 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 434167,
+ "sha256": "e105e6ff3aff9030f654192ef1217186cf7d4c03b07615122ea75fdd485d67ec",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/NHRC_Nepal_Press_Release-2082-5-28.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/842",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-13",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Text layer present but in legacy Preeti-style ASCII encoding (unreadable as Unicode). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-13-press-release-prisoners-return-weapons",
+  "action:2025-09-13-nhrc-urges-escaped-prisoners-to-return-and-weapons-to-be-returned"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 2715
+}

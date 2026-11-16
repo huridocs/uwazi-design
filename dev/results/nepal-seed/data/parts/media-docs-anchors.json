@@ -1,0 +1,182 @@
+{
+ "topic": "media-docs-anchors",
+ "entities": [],
+ "references": [
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-bhadra-2025-08-25-cabinet-directs-pla",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+   "to": "action:2025-08-25-cabinet-directs-platforms-to-register-within-one-week",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+    "quote": "सामाजिक सञ्जाल सञ्चालकलाई जिम्मेवार तथा जवाफदेही बनाउन सात दिनको म्याद दिई सञ्चार तथा"
+   },
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 4 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-bhadra-2025-09-15-cabinet-decisions-m",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+   "to": "action:2025-09-15-cabinet-decisions-martyrs-mourning-day-and-relief",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082",
+    "quote": "मिति २०८२ भदौ २३ र २४ गतेको प्रदर्शनका क्रममा मृत्यु भएका व्यक्तिहरूलाई शहीद"
+   },
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 7 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-asoj-2025-09-21-karki-inquiry-commi",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+   "to": "action:2025-09-21-karki-inquiry-commission-formed",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082",
+    "quote": "छानविन गरी प्रतिवेदन पेश गर्न श्री गौरी बहादुर कार्कीको अध्यक्षतामा श्री विज्ञानराज शर्मा र श्री विश्वेश्वर"
+   },
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-asoj-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 2 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-kartik-2025-11-03-cabinet-declares-45",
+   "from": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+   "to": "action:2025-11-03-cabinet-declares-45-gen-z-martyrs",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082",
+    "quote": "भएका ४५ जना व्यक्तिहरूलाई राज्यकोतर्फबाट शहीद घोषणा गर्ने।"
+   },
+   "sources": [
+    "source:opmcm-2026-01-07-cabinet-decisions-kartik-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 2 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-chaitra-2026-03-15-cabinet-receives-in",
+   "from": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+   "to": "action:2026-03-15-cabinet-receives-inquiry-commission-report",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+    "quote": "गरेको प्रतिवेदन नेपाल सरकार, मन्त्रिपरिषद्ले ग्रहण गर्ने"
+   },
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 3 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-gon-cabinet-decisions-2082-chaitra-2026-03-27-cabinet-decides-to-",
+   "from": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+   "to": "action:2026-03-27-cabinet-decides-to-implement-commission-report",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082",
+    "quote": "नेपाल सरकारसमक्ष पेश गरेको प्रतिवेदन तत्काल कार्यान्वयन गर्न देहायबमोजिम गर्ने-"
+   },
+   "sources": [
+    "source:opmcm-2026-06-09-cabinet-decisions-chaitra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 3 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-mocit-notice-social-media-listing-2081-10-21-2025-02-03-mocit-notice-platfo",
+   "from": "source:mocit-2025-02-03-notice-social-media-listing-2081",
+   "to": "action:2025-02-03-mocit-notice-platforms-to-list-and-name-contact-point",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:mocit-2025-02-03-notice-social-media-listing-2081",
+    "quote": "व्यवस्था पालना नभएमा सामाजिक सञ्जाल प्लेटफर्मलाई मन्त्रालयले नेपालभित्र सञ्चालनमा रोक"
+   },
+   "sources": [
+    "source:mocit-2025-02-03-notice-social-media-listing-2081"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 1 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-nhrc-press-release-2082-05-20-2025-09-05-nhrc-urges-reconsid",
+   "from": "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+   "to": "action:2025-09-05-nhrc-urges-reconsidering-social-media-ban",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban",
+    "quote": "सामाजिक सञ्जाल बन्द गर्ने निर्णयमा पुनर्विचार गर"
+   },
+   "sources": [
+    "source:nhrc-nepal-2025-09-05-press-release-reconsider-social-media-ban"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 1 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-nhrc-press-release-2082-05-23-2025-09-08-nhrc-urges-restrain",
+   "from": "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+   "to": "action:2025-09-08-nhrc-urges-restraint-and-relief",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force",
+    "quote": "प्रदर्शनकारीमाथि अत्यधिक बल प्रयोग गर्ने कार्य बन्द गर"
+   },
+   "sources": [
+    "source:nhrc-nepal-2025-09-08-press-release-stop-excessive-force"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 1 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-nhrc-press-release-2082-05-27-en-2025-09-12-nhrc-urges-presiden",
+   "from": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en",
+   "to": "action:2025-09-12-nhrc-urges-president-to-seek-solution-within-rule-of-law",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en",
+    "quote": "A solution should be sought based on human rights, democratic values, and the rule of law"
+   },
+   "sources": [
+    "source:nhrc-nepal-2025-09-12-press-release-solution-rule-of-law-en"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 1 of the bundled PDF text (OCR for scanned pages)."
+  },
+  {
+   "id": "ref:docanchor-sc-press-release-2082-05-26-2025-09-11-supreme-court-press",
+   "from": "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+   "to": "action:2025-09-11-supreme-court-press-release-on-arson-and-resumption-of-habeas-corpus-hearings",
+   "type": "reports_on",
+   "date": null,
+   "anchor": {
+    "source": "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082",
+    "quote": "साधन लगायतमा अकल्पनीय क्षति पुग्न गएको छ। नेपालको न्यायिक इतिहासका महत्वपूर्ण"
+   },
+   "sources": [
+    "source:supreme-court-of-nepal-2025-09-11-press-release-26-bhadra-2082"
+   ],
+   "verification": "single-source",
+   "note": "Quote located on page 1 of the bundled PDF text (OCR for scanned pages)."
+  }
+ ]
+}

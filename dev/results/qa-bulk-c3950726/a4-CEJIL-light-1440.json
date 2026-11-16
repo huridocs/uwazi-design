@@ -1,0 +1,32 @@
+[
+ {
+  "area": "csv-selection:CEJIL-light-1440",
+  "item": "CEJIL: export of a selection has exactly the 2 selected rows",
+  "ok": true,
+  "detail": "uwazi-cejil-selection-2026-09-21.csv: Gomes Lund y otros ; Barrios Altos"
+ },
+ {
+  "area": "csv-selection:CEJIL-light-1440",
+  "item": "CEJIL: multi-value cells are \"|\"-joined",
+  "ok": true,
+  "detail": "Amnistía|Desaparición forzada|Acceso a la información pública ## Gomes Lund y otros. Sentencia de 24 de noviembre de 2010|Gomes Lund y "
+ },
+ {
+  "area": "csv-selection:CEJIL-light-1440",
+  "item": "CEJIL: dates are ISO yyyy-mm-dd where a full day exists",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "csv-selection:CEJIL-light-1440",
+  "item": "CEJIL: no cell starts with = + - @ without a leading apostrophe",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "csv-selection:CEJIL-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

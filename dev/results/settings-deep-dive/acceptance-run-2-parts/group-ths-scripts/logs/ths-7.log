@@ -1,0 +1,54 @@
+FAIL | THS-26 | property dialog thesaurus select options ["Select...","Case status","Countries","Document types","Fruits","Legal instruments","Regions","Violation types"] (first option "Select...", sorted by label=true, new "Fruits" present=true); after binding Status to Fruits and renaming the thesaurus to "Fruits 2" without a reload: options ["Select...","Case status","Countries","Document types","Fruits 2","Legal instruments","Regions","Violation types"]; the bound property reads "Thesaurus: Fruits 2". Console errors during the check: ["error: Warning: Encountered two children with the same key `Judgment` (stack: TemplateEditor PropertyRow) x13"] | acceptance-run-2-shots/THS-26.png
+FAIL | THS-02 | after binding Court Case "Status" to the new "Fruits" thesaurus and saving the template, the Thesauri list rows are "Fruits 3" and "Case status 5": no Templates column or pill appears on any row (the list has only Thesaurus, Items, Actions), so neither bind nor unbind can change a pill | acceptance-run-2-shots/THS-02.png
+FAIL | THS-27 | list rows carry no checkbox (checkboxes=0) so "Fruits" cannot be ticked and the footer shows no "Selected 1 of m" bar; each row has a Delete action instead. Row delete dialog reads "Delete thesaurus Delete the Fruits thesaurus and its 3 values? No template uses it. Cancel Delete" (expected header "Delete", "Are you sure you want to delete this item?"); Cancel keeps the row=true; confirm button "Delete"; Beacon new ["Thesauri deleted"] (expected "Thesauri deleted"); row gone=true | acceptance-run-2-shots/THS-27.png
+FAIL | THS-28 | Delete on "Case status" (used by a template): dialog "Delete thesaurus Court Case uses this thesaurus. Unlink that property first. Used by 1 property in 1 template: Status. 5 entities hold one of its values. OK" buttons ["","OK"], confirm disabled=null; thesaurus stays=true; new Beacon entries [] | acceptance-run-2-shots/THS-28.png
+FAIL | THS-40 | list "Fruits 3" -> after adding 2 values and Save "Fruits 5"; editor total "Values (5)"; after reloading the tab the list row is "undefined" | 
+console THS-7 ERRORS error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE || error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE || error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Judgment 
+    at td
+    at tr
+    at PropertyRow (http://localhost:1438/src/components/settings/pages/TemplateEditor.tsx:861:3)
+    at tbody
+    at table
+    at section
+    at SettingsSection (http://localhost:1438/src/components/settings/SettingsSection.tsx:57:3)
+    at div
+    at div
+    at div
+    at SettingsForm (http://localhost:1438/src/components/settings/SettingsSection.tsx:20:3)
+    at div
+    at SettingsBody (http://localhost:1438/src/components/settings/SettingsContent.tsx:265:3)
+    at section
+    at SettingsContent (http://localhost:1438/src/components/settings/SettingsContent.tsx:46:3)
+    at SettingsE

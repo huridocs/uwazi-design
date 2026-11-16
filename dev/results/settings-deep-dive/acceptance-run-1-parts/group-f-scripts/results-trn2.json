@@ -1,0 +1,56 @@
+[
+ {
+  "id": "TRN-17",
+  "res": "FAIL",
+  "ev": "dirty guard per navigation (edit es \"Library\"): cancel: no dialog, navigated away (title Translations); breadcrumb: dialog \"Discard unsaved changes? Translation edits haven't been saved. Leaving now will discard them. Keep editing Discard\"; back: dialog \"Discard unsaved changes? Translation edits haven't been saved. Leaving now will discard them. Keep editing Discard\"; rail: dialog \"Discard unsaved changes? Translation edits haven't been saved. Leaving now will discard them. Keep editing Discard\"; datasource: dialog \"Discard unsaved changes? Translation edits haven't been saved. Leaving now will discard them. Keep editing Discard\"; search-only edit rail click: no dialog",
+  "shot": "TRN-17.png"
+ },
+ {
+  "id": "X-02",
+  "res": "FAIL",
+  "ev": "same evidence as TRN-17: dialog on rail=true, datasource=true, cancel=false, breadcrumb=true, back=true",
+  "shot": "TRN-17.png"
+ },
+ {
+  "id": "X-03",
+  "res": "PASS",
+  "ev": "Save disabled when clean=true; enabled after edit=true; after Save editor closed and rail click shows dialog=false. Editing again enable behaviour not observable because Save closes the editor",
+  "shot": ""
+ },
+ {
+  "id": "TRN-20",
+  "res": "FAIL",
+  "ev": "phone editor: doc scrollWidth {\"sw\":390,\"cw\":390,\"pane\":{\"sw\":390,\"cw\":390}}; column headers=0 (table layout kept: false); inputs=24; Save/Cancel positions [\"Cancel:251,807,64x28\",\"Save:322,807,52x28\"]; no status dot per language row; card shows: Translations / User Interface Translate each term into your active languages. The source language is shown for reference. Library English Source Library Spanish French Arabic Portuguese Search English",
+  "shot": "TRN-20.png"
+ },
+ {
+  "id": "X-06",
+  "res": "FAIL",
+  "ev": "list page: scrollWidth 390 (no horizontal overflow); editor on phone per TRN-20: cards; see shot TRN-20.png",
+  "shot": "TRN-20.png"
+ },
+ {
+  "id": "TRN-21",
+  "res": "FAIL",
+  "ev": "installed German in Languages, then opened the User Interface editor: headers [\"TERM\",\"ENGLISH Source\",\"SPANISH\",\"FRENCH\",\"ARABIC\",\"PORTUGUESE\"]: no German column (editor always uses the 5 seeded languages); default change and uninstall effects therefore not reflected either (see LNG-12, LNG-16b)",
+  "shot": ""
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe list [\"color-contrast (serious) x1: .bg-carbon-tint.py-0\\\\.5.w-fit\"]; axe editor [\"color-contrast (serious) x1: .px-1\"]; inputs without aria-label 0; duplicate row button names []; console []",
+  "shot": ""
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "type pill contrast light [\"System:2.08\",\"Template:12.13\",\"Template:12.13\",\"Thesaurus:12.13\",\"Menu:12.13\"] dark [\"System:5.08\",\"Template:9.04\",\"Template:9.04\",\"Thesaurus:9.04\",\"Menu:9.04\"]",
+  "shot": "X-08-trn-dark.png"
+ },
+ {
+  "id": "X-13",
+  "res": "FAIL",
+  "ev": "Sample [\"User InterfaceSystem412\",\"Court CaseTemplate12\",\"PersonTemplate8\",\"Violation typesThesaurus24\",\"MenuMenu6\"]; CEJIL [\"User InterfaceSystem412\",\"Court CaseTemplate12\",\"PersonTemplate8\",\"Violation typesThesaurus24\",\"MenuMenu6\"]",
+  "shot": "X-13-trn-cejil.png"
+ }
+]

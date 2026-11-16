@@ -1,0 +1,31 @@
+{
+ "doc_id": "sc-full-court-decision-2083-01-02-case-files-after-bhadra-23-24",
+ "title": "Supreme Court full-court decision of 2 Baisakh 2083 on the deadlock arising from the events of Bhadra 23 and 24, 2082, with covering letter of 10 Baisakh 2083 (Nepali)",
+ "language": "ne",
+ "pages": 6,
+ "bytes": 4507699,
+ "sha256": "2815284e39d1b1c77f820728af411c21810f4b9245e6e077fa4480010e6f472e",
+ "source_url": "https://supremecourt.gov.np/court/public/media/2026_04/d57f1efa934ada7bdb31893bf2087bf8.pdf",
+ "source_page": "https://supremecourt.gov.np/web/",
+ "retrieved": "2026-10-05",
+ "publisher": "Supreme Court of Nepal",
+ "published": "2026-04-23",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned image; the embedded text is OCR noise. OCR was not run. Page 1 is the registrar's covering letter dated 2083.01.10 (23 Apr 2026) sending five pages of the certified decision to all courts.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:supreme-court-of-nepal-2026-04-23-full-court-decision-case-files-bhadra-23-24",
+  "action:2026-04-15-supreme-court-full-court-decision-on-case-files-lost-in-bhadra-23-24-events"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 11137
+}

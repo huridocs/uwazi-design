@@ -1,0 +1,5 @@
+PASS | X-13@FLT | Sample 9 templates (Person,Court Case,Country), Red Trav 15 (ALBERGUE,FAMILIA,DATOS GENERALES), back on Sample 9; the page follows the data source | acceptance-run-2-shots/X-13-FLT.png
+PASS | X-03@FLT | edit -> Save enabled=true; after Save: Save disabled=true, rail click opens no dialog=true; editing again re-enables Save=true | 
+PASS | X-09@FLT | two Saves of Filters: session log ["UPDATE Updated settings “Library filters” [admin]","UPDATE Updated settings “Library filters” [admin]"]; Activity log page shows " range Date range From To Today Clear filters Activity log ACTION USER DESCRIPTION TIMESTAMP Details Update admin Update" | acceptance-run-2-shots/X-09-FLT.png
+FAIL | X-07@FLT | axe serious/critical: light [], dark [], with a group added and Save enabled (colour contrast) [], with the group listbox open []; duplicate control names on the page [] then with a group ["Move to group: No group x9"] (the nine row selects share one name "Move to group: No group"); inputs without a label [] / []. Filters has no dialog of its own (no Add group modal, FLT-04) | acceptance-run-2-shots/X-07-FLT.png
+console FLT-6 clean

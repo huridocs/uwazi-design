@@ -1,0 +1,276 @@
+3cd 156 {'PASS': 87, 'FAIL': 30, 'N/A': 6, 'INFO': 1, None: 32}  playground 209 {'PASS': 140, 'FAIL': 36, 'N/A': 8, 'NOT DRIVEABLE': 1, 'INFO': 1, None: 23}
+
+DSH-03: 3cd=None pg=PASS
+  3cd: 
+  pg:  Storage card per source {"Sample":"511.57 MB","CEJIL":"9.19 GB","Travesía":"124.72 MB","Artworks":"71.07 MB"} (label "Storage", caption "Files and database usage"); formatted with 2 decimals and unit=true; all four differ=true
+
+DSH-04: 3cd=None pg=PASS
+  3cd: 
+  pg:  Entities card vs Library count per source {"Sample":"104 (Library 104, expected 104)","CEJIL":"4,398 (Library 4,398, expected 4,398)","Travesía":"589 (Library 589, expected 589)","Artworks":"82 (Library 82, expected 82)"}
+
+DSH-06: 3cd=FAIL pg=PASS
+  3cd: Files card 43 with 4 Uploads rows (["logo-iachr.svg /assets/logo-iachr.svg","cover-banner.jpg /assets/cover-banner.jp","style-guide.pdf /assets/style-guide.pdf","Inter-brand.woff2 /assets/Inter-brand.wo"]); after deleting one upload (dialog "Delete Do you want to delete the follo
+  pg:  Files card 45 with 4 Uploads rows (["logo-iachr.svg /assets/logo-iachr.svg","cover-banner.jpg /assets/cover-banner.jp","style-guide.pdf /assets/style-guide.pdf","Inter-brand.woff2 /assets/Inter-brand.wo"]); after deleting one upload (dialog "Delete Do you want to delete the follo
+
+DSH-10: 3cd=FAIL pg=PASS
+  3cd: script error: locator.click: Timeout 30000ms exceeded.
+  pg:  Dashboard Relationships card (total references) before 550; after adding one "Mentions" reference to Juan Carlos Abella from Hearing 8 and Saving 551; after deleting that reference (dialog "Delete relationship? The relationship is removed from this entity. This can’t be undone. C
+
+DSH-13: 3cd=FAIL pg=PASS
+  3cd: script error: locator.click: Timeout 30000ms exceeded.
+  pg:  after switching to CEJIL and Travesía the Dashboard shows the Recent activity table with 5 rows and one intro paragraph only: {"CEJIL":{"rows":5,"hasRecent":true,"paras":["The collection at a glance, and the latest changes made to it."],"mentions":false},"Travesía":{"rows":5,"has
+
+DSH-stats-per-source: 3cd=None pg=PASS
+  3cd: 
+  pg:  Per source (the Sample's facts must not repeat): {"Sample":{"users":"5","roles":"1 Admins | 2 Editors | 2 Collaborators","storage":"511.57 MB","entities":"104","files":"45","relationships":"550"},"CEJIL":{"users":"5","roles":"1 Admins | 2 Editors | 2 Collaborators","storage":"9.1
+
+TRN-01: 3cd=None pg=FAIL
+  3cd: 
+  pg:  title="Translations"; group headings=["System translations","Content translations"]; System rows=["Menu","User Interface"] (expected User Interface, Menu and Filters; the seed has no Filters group, see TRN-07); Content rows=27 vs Templates 9 + Thesauri 6 + Relationship types 12 =
+
+TRN-02: 3cd=None pg=PASS
+  3cd: 
+  pg:  Content Name default ascending=true, click Name toggles descending=true; Type click sorts=true; "Translate" buttons=0; clicking the Hearing template row opened editor titled "Hearing"; pill labels=["Menu","User interface","Relationship type","Template","Thesaurus"]; distinct pill
+
+TRN-04: 3cd=None pg=PASS
+  3cd: 
+  pg:  Person template editor: title label "Title", properties ["Country","Role","Profession","Date of birth","Mandate","Nationality","Member of"] (7); Translations context keys ["Person","Title","Country","Role","Profession","Date of birth","Mandate","Nationality","Member of"] (9, expe
+
+TRN-05: 3cd=None pg=PASS
+  3cd: 
+  pg:  Hearing keys before=["Hearing","Title","Date"]; typed es "Fecha-ES" for key Date and saved; renamed property label Date -> "Hearing date" in Templates and saved; keys now=["Hearing","Title","Hearing date"]; old key gone=true, new key present=true, es text under new key="Fecha-ES"
+
+TRN-06: 3cd=None pg=PASS
+  3cd: 
+  pg:  Regions values in Thesauri editor (8, groups and children): ["Americas","North America","Central America","Caribbean","South America","Europe","Western Europe","Southern Europe"]; context keys (9): same set as name + values=true; added value via "Add value" focus=INPUT:Value; con
+
+TRN-08: 3cd=None pg=FAIL
+  3cd: 
+  pg:  User Interface context holds 412 keys (spec text: 100 to 200; SD-7 seeds 412, so the range is out of date); first rows rendered=["\"Costa Rica\"","\"the status\"~5","*please keep this key secret and don't share it.","+ Add data source","+ Add filter","+ click to select multiple c
+
+TRN-09: 3cd=None pg=FAIL
+  3cd: 
+  pg:  breadcrumb button/link "Translations"=1, title="User Interface"; column headers=["KEY","English EN","Español ES","Français FR","العربية AR","Português PT"] (autonym + code pill ["en","es","fr","ar","pt"]); source (English) column has no input=true; sample row has a Clear X on fil
+
+TRN-10: 3cd=None pg=PASS
+  3cd: 
+  pg:  cleared the Spanish cell of "Brazil" with its X (value now ""); Save -> "This field is required" shown 1 time(s); footer alert="1 empty cell blocks saving"; "Translations saved" entries before/after=0/0 (no write); after typing "Valor": errors=0, footer alert=""
+
+TRN-11: 3cd=None pg=FAIL
+  3cd: 
+  pg:  source (default English) header pill class=bg-ink; Spanish cell for "Brazil" initially pill bg-vellum (Brazil in Spanish); after typing "Brasil-XYZ" before Save: pill bg-vellum, label "Brazil in Spanish"; after typing the exact source text "Brazil" back: pill bg-warning-light, la
+
+TRN-12: 3cd=None pg=PASS
+  3cd: 
+  pg:  editor head progress (one cell per target language, as built): ["Spanish 8 of 23","French 12 of 23","Arabic 22 of 23","Portuguese 0 of 23"]; after translating "Countries": Spanish 9 of 23; after "Argentina": Spanish 10 of 23; after Save the list row reads "Countries \| Thesaurus 
+
+TRN-13: 3cd=None pg=PASS
+  3cd: 
+  pg:  toggle "Untranslated only" off by default=true; 23 keys; typed "Valor oculto" into es of key "Argentina" (es untranslated, ar translated); toggle on: 23 of 23 keys remain (Portuguese is untranslated everywhere, so every key has a non-translated language), each has an untranslated
+
+TRN-14: 3cd=None pg=PASS
+  3cd: 
+  pg:  "Account loc" -> ["Account locked"]; value-only text "Cuenta" (Spanish value of key Account) -> 5 key(s) ["Account","Account locked","Account unlocked successfully","Account updated"]; "zzz" -> "2 \| Portuguese \| 0 of 412 \| Untranslated only \| All languages \| KEY \| English \
+
+TRN-15: 3cd=None pg=PASS
+  3cd: 
+  pg:  edited es "Court Case" and fr "Title", one Save: Beacon "Translations saved" entries=1 (immediately after click: 0); editor stayed open=true, Save disabled afterwards=true, footer line="Saved just now by admin"; after reload and reopen es="ES-edit" fr="FR-edit"; Activity log line
+
+TRN-16: 3cd=None pg=PASS
+  3cd: 
+  pg:  edited and saved the es value of System key "Dashboard" (key in User Interface=true) to "IDIOMAS-X"; English column editable inputs=0 (it is the read-only source); header language pickers=0; Settings rail text, navbar text unchanged after Save and after opening Languages=true; ra
+
+TRN-17: 3cd=None pg=FAIL
+  3cd: 
+  pg:  dirty edit in es "Case number"; footer Cancel button: no dialog; left to the list at once; (after re-entering and re-editing) a dialog's Cancel kept the edit=true; navigation attempts: breadcrumb="Discard changes? You have unsaved change", rail="Discard changes? You have unsaved 
+
+TRN-18: 3cd=None pg=PASS
+  3cd: 
+  pg:  context "Cites" (1 key) translated in all four languages and saved; "Untranslated only" on shows: "There are no untranslated terms" with a "Show all keys" action=true
+
+TRN-18 (context with no keys): 3cd=None pg=NOT DRIVEABLE
+  3cd: 
+  pg:  No context with zero keys can be reached: every template, thesaurus and relationship type context holds at least its name key, and the Menu and Filters contexts disappear when they have no links or groups (TRN-03). Rows with 0 keys on the list: 0. The message "This context has no
+
+TRN-19: 3cd=None pg=PASS
+  3cd: 
+  pg:  User Interface holds 412 keys; rendered key rows at the top=60; after scrolling one screen=60; after scrolling to the end=412 (last key "Duplicated email"; rows already shown stay mounted, so this is progressive loading of 60 per page, not row recycling); search for key "Document
+
+TRN-20: 3cd=None pg=PASS
+  3cd: 
+  pg:  list rows=29, horizontal scroll list=false/false; editor structure: first card/row has 4 inputs and 9 code pills, 358x193px, key "Countries"; input box {"l":144,"r":328,"w":184}; editor horizontal scroll=false/false; footer ["Cancel:true","Save:true"]; status per language row: an
+
+TRN-21: 3cd=None pg=PASS
+  3cd: 
+  pg:  before: keys per context [31,23,1], list row "Court Case \| Template \| 31 \| ES 0% \| FR 0% \| AR 0% \| PT 0%"; after installing German: headers ["KEY","English EN","Español ES","Français FR","العربية AR","Português PT","Deutsch DE"], German cell for "Court Case" aria="Court Cas
+
+TRN-PO1: 3cd=None pg=PASS
+  3cd: 
+  pg:  Keys column vs editor rows: [{"name":"Court Case","lk":31,"n":31,"hasTerm":false},{"name":"Countries","lk":23,"n":23,"hasTerm":false},{"name":"Menu","lk":5,"n":5,"hasTerm":false}]; per-language progress on list rows present=true (e.g. "ES 98% \| FR 94% ..."); the word "term" appe
+
+X-01@trn-f: 3cd=None pg=PASS
+  3cd: 
+  pg:  saved es "Case number"="PERSIST-1"; after rail to Languages and back="PERSIST-1"; after reload="PERSIST-1"; after Reset demo data="Case number" (seed text)
+
+X-02@trn-e: 3cd=None pg=PASS
+  3cd: 
+  pg:  Dialog "Discard changes? You have unsaved changes. Do you want to continue? Cancel Discard changes" opens on breadcrumb, rail, back arrow, navbar link and data-source switch; its Cancel keeps the edit (true); "Discard changes" navigates and drops the edit (left=true, lost=true); 
+
+X-03@trn-e: 3cd=None pg=PASS
+  3cd: 
+  pg:  Save disabled when clean=true; enabled after an edit=true; after Save disabled=true; rail click right after Save shows no dialog=true; editing again re-enables Save=true
+
+X-04@trn-f: 3cd=None pg=FAIL
+  3cd: 
+  pg:  success half: "Translations saved" x1 per Save (TRN-15). Failure half: armed (Armed: the next save fails with “Injected save failure for QA.”.), edited es "Case number" and pressed Save: error entries "An error occurred"=[], success entries=1, edit kept=true, Save still enabled=f
+
+X-05@trn-f: 3cd=None pg=N/A
+  3cd: 
+  pg:  Excluded by the page's Applies line.
+
+X-06@trn-f: 3cd=None pg=PASS
+  3cd: 
+  pg:  Translations at 390x844: list rows readable (29), editor as cards, no horizontal scroll on list (false) or editor (false), Save/Cancel reachable ["Cancel:true","Save:true"], mobile back chevron guarded=true
+
+X-07@trn-f: 3cd=None pg=FAIL
+  3cd: 
+  pg:  serious/critical axe and checks: list=[]; duplicate row-button names on the list=["Translate Hearing","Translate Judgment"] (the column sort buttons Name and Type also repeat across the two tables: ["Name","Type"]); editor=[]; inputs without a label=0; discard dialog=[]; dialog n
+
+X-08 (desktop)@trn-f: 3cd=None pg=FAIL
+  3cd: 
+  pg:  list type pills light ["Menu=12.13","User interface=12.13","Thesaurus=12.13"] dark ["Menu=9.04","User interface=9.04","Thesaurus=9.04"]; list progress text light ["es 0%=12.63","fr 0%=12.63"] dark ["es 0%=9.78","fr 0%=9.78"]; editor code pills (source, translated, untranslated am
+
+X-08 (mobile)@trn-f: 3cd=None pg=FAIL
+  3cd: 
+  pg:  list type pills light ["Menu=12.13","User interface=12.13","Thesaurus=12.13"] dark ["Menu=9.04","User interface=9.04","Thesaurus=9.04"]; list progress text light ["es 0%=12.63","fr 0%=12.63"] dark ["es 0%=9.78","fr 0%=9.78"]; editor code pills (source, translated, untranslated am
+
+X-09@trn-f: 3cd=None pg=PASS
+  3cd: 
+  pg:  Activity log rows after one Save: ["Update admin Updated translations of “Countries” Oct 6, 2026 - 09:22"]
+
+X-10@trn-f: 3cd=None pg=FAIL
+  3cd: 
+  pg:  with the Dev panel's Empty templates, thesauri and relationship types: Content translations section reads "Content translations \| NAME \| TYPE \| KEYS \| TRANSLATED \| No content contexts"; generic "Nothing here yet."=false; title names the object=true; one-line hint present=fal
+
+X-11@trn-a: 3cd=None pg=PASS
+  3cd: 
+  pg:  rows 29; "Court" -> 1 rows ["Court Case"]; "zzzz" -> "Translations \| Translate the interface and your collection's content into its installed languages. \| Untranslated only \| System translations \| NAME \| TYPE \| KEYS \| TRANSLATED \| Nothing matches “zzzz” \| Clear search \|
+
+X-12@trn-f: 3cd=None pg=N/A
+  3cd: 
+  pg:  Excluded by the page's Applies line.
+
+X-13@dsh-x: 3cd=FAIL pg=PASS
+  3cd: script error: locator.click: Timeout 30000ms exceeded.
+  pg:  per data source {"Sample":{"users":"5 1 Admins | 2 Editors | 2 Collaborators","storage":"511.57 MB","entities":"104","files":"45","rel":"550"},"CEJIL":{"users":"5 1 Admins | 2 Editors | 2 Collaborators","storage":"9.19 GB","entities":"4,398","files":"5,249","rel":"16,998"},"Trave
+
+X-13@trn-f: 3cd=None pg=PASS
+  3cd: 
+  pg:  Sample contexts (29): ["Menu/Menu","User Interface/User interface","Case status/Thesaurus","Cites/Relationship type","Countries/Thesaurus","Country/Template"]...; CEJIL (47): ["Filters/Filters","Menu/Menu","User Interface/User interface","Audiencia/Template","Causa/Template","CID
+
+_errs-TA1: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TA2: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TB1: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TB2: 3cd=None pg=FAIL
+  3cd: 
+  pg:  ["error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p \n    at ul\n    at p\n    at div\n    at div\n    at div\n    at div\n    at Modal (http://localhost:1436/src/components/"]
+
+_errs-TB3: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD1: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD2: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD3: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD4: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD5: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TD6: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE1: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE2: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE3: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE4: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE5: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-TE6: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF1: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF2: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF3: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF4-desktop: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF4-mobile: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF5: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF6: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+_errs-XF7: 3cd=None pg=PASS
+  3cd: 
+  pg:  []
+
+dsh-a1: 3cd=FAIL pg=None
+  3cd: script error: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[role=listbox] [role=option]').filter({ hasText: 'Red Trav' })[22m
+
+  pg:  

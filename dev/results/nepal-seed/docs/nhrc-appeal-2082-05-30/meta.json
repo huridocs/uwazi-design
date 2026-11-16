@@ -1,0 +1,31 @@
+{
+ "doc_id": "nhrc-appeal-2082-05-30",
+ "title": "NHRC appeal (Nepali, 30 Bhadra 2082)",
+ "language": "ne",
+ "pages": 1,
+ "bytes": 788007,
+ "sha256": "6f8752d5f829ef154b2763aea0c443d3a365bbb8c922b6d68503f456b7d8fab1",
+ "source_url": "https://nhrcnepal.org/uploads/press_release/Appeal-NHRC_Nepal-2082-5-30.pdf",
+ "source_page": "https://nhrcnepal.org/press_release/detail/843",
+ "retrieved": "2026-10-05",
+ "publisher": "National Human Rights Commission, Nepal",
+ "published": "2025-09-15",
+ "licence_basis": "Government of Nepal official publication; no explicit open licence stated",
+ "text_layer": false,
+ "text_quality": "ocr-unreviewed",
+ "text_note": "Scanned or rasterised page; no usable text layer (any embedded text is OCR noise or legacy-font ASCII). OCR was not run.",
+ "ocr_run": false,
+ "translation_of": null,
+ "entities": [
+  "source:nhrc-nepal-2025-09-15-appeal-30-bhadra",
+  "action:2025-09-15-nhrc-statement-relief-and-return-to-calm"
+ ],
+ "text_source": "ocr",
+ "ocr": {
+  "engine": "tesseract 5.5.3",
+  "language": "nep+eng",
+  "dpi": 250,
+  "quality": "unreviewed; machine OCR, expect errors in Devanagari conjuncts and numerals"
+ },
+ "ocr_characters": 1658
+}

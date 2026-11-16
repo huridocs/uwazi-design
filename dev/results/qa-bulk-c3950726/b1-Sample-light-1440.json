@@ -1,0 +1,68 @@
+[
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "Cmd+click selects one, count reads '1 selected'",
+  "ok": true,
+  "detail": "{\"n\":1,\"bar\":\"1 selected\"}"
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "selected row is bg-parchment",
+  "ok": true,
+  "detail": "sel rgb(245, 240, 232) vs parchment rgb(245, 240, 232), unselected rgb(255, 255, 255)"
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "no visible checkbox (input hidden, no stray checkboxes)",
+  "ok": true,
+  "detail": "max box 1px"
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "no text selected by Cmd+click",
+  "ok": true,
+  "detail": "\"\""
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "no layout shift on select",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "Shift+click ranges from anchor (rows 1..4 = 4 selected)",
+  "ok": true,
+  "detail": "n=4 bar=4 selected"
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "no text selected by Shift+click",
+  "ok": true,
+  "detail": "\"\""
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "no layout shift on range",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "plain click previews and leaves the selection alone",
+  "ok": true,
+  "detail": "n=4"
+ },
+ {
+  "area": "select:Results:Sample-light-1440",
+  "item": "Clear empties the selection",
+  "ok": true,
+  "detail": "n=0"
+ },
+ {
+  "area": "select:Sample-light-1440",
+  "item": "console errors",
+  "ok": true,
+  "detail": ""
+ }
+]

@@ -1,0 +1,86 @@
+[
+ {
+  "id": "ACC-04",
+  "res": "PASS",
+  "ev": "lower: error under Email=true, field keeps value=\"j.nkemba@example.org\"; upper: error=true (msg: undefined), value kept=\"J.NKEMBA@example.org\"; Beacon error entries from the first attempt=1; Users list still shows admin@uwazi.io=true",
+  "shot": "ACC-04.png"
+ },
+ {
+  "id": "ACC-11",
+  "res": "PASS",
+  "ev": "Beacon \"An error occurred\" entries=1: [\"An error occurred The email \\\"j.nkemba@example.org\\\" already exists just now Retry\"]; new entries=[\"An error occurred The email \\\"j.nkemba@example.org\\\" already exists just now Retry\"]; password fields kept: \"secretnew\"/\"secretnew\"",
+  "shot": "ACC-11.png"
+ },
+ {
+  "id": "ACC-13",
+  "res": "PASS",
+  "ev": "card text=\"Enable You should activate this feature for enhanced account security.\"; modal is dialog=1; missing strings=[]; QR placeholder=1",
+  "shot": "ACC-13.png"
+ },
+ {
+  "id": "ACC-14",
+  "res": "PASS",
+  "ev": "secret shown=\"FTV56YESONUIYWSE\", clipboard=\"FTV56YESONUIYWSE\"; tooltip=\"Copied to clipboard\" check icon=1; after 2.3s tooltip=\"\"; \"Key copied\" notifications=0",
+  "shot": ""
+ },
+ {
+  "id": "ACC-15",
+  "res": "PASS",
+  "ev": "\"12ab34\"->\"1234\", Enable disabled with 4 digits=true; \"1234567\"->\"123456\"; 6 digits Enable disabled=false; rejected 123456 shows inline error=true, new \"An error occurred\" Beacon entries=0; typing again clears=true",
+  "shot": "ACC-15.png"
+ },
+ {
+  "id": "ACC-16",
+  "res": "PASS",
+  "ev": "after Cancel+reopen: token=\"\", error visible=false; secret1=FTV56YESONUIYWSE secret2=53M2MLX56P6SMRBL (differs=true)",
+  "shot": ""
+ },
+ {
+  "id": "ACC-17-acc",
+  "res": "INFO",
+  "ev": "modal closed=true; \"2FA Enabled\" entries=1; card=\"Activated Your account's security is enhanced with two-factor authentication.\"; Activated disabled=true; Disable/Turn off controls=0",
+  "shot": ""
+ },
+ {
+  "id": "ACC-17",
+  "res": "PASS",
+  "ev": "modal closed=true; \"2FA Enabled\" Beacon entries=1; card=\"Activated Your account's security is enhanced with two-factor authentication.\"; Activated disabled=true; Disable/Turn off controls=0; Users table columns=[\"\",\"USER\",\"ROLE\",\"GROUPS\",\"PROTECTION\",\"ACTIONS\"] (spec: Username, Protection, Role, Group); Users row for jnkemba after enabling (read as admin)=\"JN jnkemba j.nkemba@example.org Editor Litigation Research Password + 2fa\" (Protection pill \"Password + 2fa\" expected)",
+  "shot": "ACC-17-users.png"
+ },
+ {
+  "id": "ACC-18",
+  "res": "PASS",
+  "ev": "after admin Reset 2FA (dialogs left []), jnkemba Account card=\"Enable You should activate this feature for enhanced account security.\"",
+  "shot": "ACC-18.png"
+ },
+ {
+  "id": "ACC-19",
+  "res": "FAIL",
+  "ev": "After Logout: login username field present=1, dialogs=[], body starts \"Inter-American Human Rights Archive Log in With your Uwazi username. Username Pa\"; console errors while the login view mounted=[\"Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase\"] (img prop fetchPriority at LoginView.tsx:53)",
+  "shot": "ACC-19.png"
+ },
+ {
+  "id": "ACC-20",
+  "res": "PASS",
+  "ev": "logout: dialog=true text ok=true cancel keeps edit=true; rail item: dialog=true text ok=true cancel keeps edit=true; data source: dialog=true text ok=true cancel keeps edit=true",
+  "shot": "ACC-20.png"
+ },
+ {
+  "id": "ACC-20-2fa",
+  "res": "PASS",
+  "ev": "2FA modal opened and cancelled, then Account rail click: dialogs=0 (no dirty guard expected)",
+  "shot": ""
+ },
+ {
+  "id": "ACC-20-2fa-logout",
+  "res": "PASS",
+  "ev": "Logout after opening/closing the 2FA modal: dialogs=0, login shown=1",
+  "shot": ""
+ },
+ {
+  "id": "ACC2-console",
+  "res": "PASS",
+  "ev": "console errors/warnings (atomFamily baseline excluded): []",
+  "shot": ""
+ }
+]

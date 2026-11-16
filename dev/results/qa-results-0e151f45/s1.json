@@ -1,0 +1,140 @@
+{
+ "light/Grouped": {
+  "marks": 61,
+  "n": 49,
+  "gapMin": -8,
+  "gapMax": 8,
+  "linesMin": 1,
+  "linesMax": 4,
+  "linesAvg": 2.7,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages",
+   "2 fields"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "light/Tree": {
+  "marks": 54,
+  "n": 31,
+  "gapMin": -8,
+  "gapMax": -8,
+  "linesMin": 2,
+  "linesMax": 3,
+  "linesAvg": 2.3,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages",
+   "2 fields"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "light/Passages": {
+  "marks": 34,
+  "n": 31,
+  "gapMin": 0,
+  "gapMax": 0,
+  "linesMin": 1,
+  "linesMax": 4,
+  "linesAvg": 2.6,
+  "badges": [],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "light/Spine": {
+  "marks": 14,
+  "n": 0,
+  "gapMin": null,
+  "gapMax": null,
+  "linesMin": null,
+  "linesMax": null,
+  "linesAvg": null,
+  "badges": [
+   "2 fields",
+   "2 fields",
+   "1 field",
+   "2 fields",
+   "2 fields",
+   "35 passages"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "dark/Grouped": {
+  "marks": 61,
+  "n": 49,
+  "gapMin": -8,
+  "gapMax": 8,
+  "linesMin": 1,
+  "linesMax": 4,
+  "linesAvg": 2.7,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages",
+   "2 fields"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "dark/Tree": {
+  "marks": 54,
+  "n": 31,
+  "gapMin": -8,
+  "gapMax": -8,
+  "linesMin": 2,
+  "linesMax": 3,
+  "linesAvg": 2.3,
+  "badges": [
+   "35 passages",
+   "2 fields",
+   "2 fields",
+   "2 fields",
+   "35 passages",
+   "2 fields"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "dark/Passages": {
+  "marks": 34,
+  "n": 31,
+  "gapMin": 0,
+  "gapMax": 0,
+  "linesMin": 1,
+  "linesMax": 4,
+  "linesAvg": 2.6,
+  "badges": [],
+  "scrollW": 1440,
+  "iw": 1440
+ },
+ "dark/Spine": {
+  "marks": 14,
+  "n": 0,
+  "gapMin": null,
+  "gapMax": null,
+  "linesMin": null,
+  "linesMax": null,
+  "linesAvg": null,
+  "badges": [
+   "2 fields",
+   "2 fields",
+   "1 field",
+   "2 fields",
+   "2 fields",
+   "35 passages"
+  ],
+  "scrollW": 1440,
+  "iw": 1440
+ }
+}

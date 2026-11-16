@@ -1,0 +1,18 @@
+import { launch, open, S, wait, shot, addTemplate, openRow, toSettingsItem, addRelProp } from "./common.mjs";
+const b = await launch();
+const { page } = await open(b, "templates");
+await wait(page, 800);
+await addTemplate(page, "QA Target"); await addTemplate(page, "QA Via");
+await openRow(page, "QA Via"); await addRelProp(page, "Via to Target", "QA Target");
+await openRow(page, "Court Case");
+await S(page).getByRole("button", { name: "Add property" }).click(); await wait(page, 400);
+const dlg = page.locator("[role=dialog]").filter({ hasText: "New property" }).last();
+await dlg.getByRole("button", { name: /^Property type/ }).click(); await page.getByRole("option", { name: "Relationship", exact: true }).click();
+await dlg.getByRole("textbox", { name: "Label" }).fill("Through Via");
+await dlg.getByRole("button", { name: /^Relationship type:/ }).click(); await page.locator("[role=option]:not([disabled])").first().click();
+await dlg.getByRole("button", { name: /^Entities:/ }).click(); await page.getByRole("option", { name: "QA Via", exact: true }).click(); await wait(page,300);
+console.log(await dlg.innerText());
+await shot(page, "probe-inh");
+await dlg.getByRole("button", { name: /^Inherit property/ }).click(); await wait(page,300);
+console.log(await page.evaluate(()=>[...document.querySelectorAll('[role=option]')].map(o=>o.innerText)));
+await b.close();

@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:1426/"); await p.waitForTimeout(1500);
+await p.getByRole("button", { name: /Collection/ }).click(); await p.getByText("CEJIL", {exact:false}).first().click();
+await p.getByText("4,398 entities").waitFor({timeout:20000}); await p.waitForTimeout(2500);
+await p.getByPlaceholder(/Search/).first().click();
+await p.keyboard.type("Caballero Delgado y Santana", {delay:20}); await p.keyboard.press("Enter"); await p.waitForTimeout(2500);
+await p.getByRole("button", {name:/^Caballero Delgado/}).first().click(); await p.waitForTimeout(1200);
+console.log("buttons:", await p.evaluate(()=>[...document.querySelectorAll("button")].filter(b=>b.getBoundingClientRect().x>960&&b.getBoundingClientRect().y<110).map(b=>b.getAttribute("aria-label")||b.innerText).join("|")));
+await p.screenshot({path:"s53.png"});
+await p.getByRole("button", {name:/View entity/}).click(); await p.waitForTimeout(2500);
+await p.getByRole("tab", {name:/^Relationships/}).first().click(); await p.waitForTimeout(2000);
+await p.mouse.click(723,176); await p.waitForTimeout(3000);
+console.log(JSON.stringify(await p.evaluate(()=>[...document.querySelectorAll("svg *[tabindex], svg [role]")].slice(0,30).map(e=>[e.tagName,e.getAttribute("role"),e.getAttribute("aria-label")]))));
+await b.close();

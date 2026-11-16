@@ -1,0 +1,159 @@
+:root {
+  /* Brand — Parchment palette */
+  --bg-primary: #F5F0E8;
+  --bg-surface: #FFFFFF;
+  --bg-warm: #FCFAF8;
+  --bg-muted: #F5EED7;
+  --bg-overlay: #00000066;
+  --bg-selected: #F0EDED;
+
+  /* Text */
+  --text-primary: #1A1A1A;
+  --text-secondary: #333333;
+  --text-tertiary: #555555;
+  --text-muted: #777777;
+
+  /* Borders — the layout chrome (pane dividers, header/footer rules, tab strip)
+     is structure, not content: it should be felt, not read. These were heavy
+     enough that every pane read as a boxed-in compartment. */
+  --border-primary: #EDE7DB;
+  --border-soft: #E2DBC9;
+  --border-primary-64: #EDE7DBA3;
+  --border-soft-64: #E2DBC9A3;
+
+  /* Accents */
+  --accent-blue: #00B4F0;
+  --accent-seal: #E8432A;
+  --accent-primary: #1A1A1A;
+  --accent-blue-tint: #DDF3FD;
+  /* The Library's selected / keyboard-focus ring: carbon, soft on paper. */
+  --selected-ring: color-mix(in oklab, var(--accent-blue) 30%, transparent);
+  --accent-seal-tint: #FEE2E2;
+
+  /* How far a saturated accent travels toward the text colour before it is
+     allowed to BE text. The one number behind both `--accent-seal-label` below
+     and `typeLabelColor` (utils/typeColor.ts), which reads this var rather than
+     carrying its own copy — the second copy is how EntityTypeChip shipped the
+     raw colour. utils/typeColor.ts holds the reasoning for the value. */
+  --label-mix: 55%;
+
+  /* Seal AS TEXT. `--accent-seal` is one red for both themes and clears 4.5:1
+     against nothing it is drawn on — 3.99:1 on paper in light, 3.89:1 in dark,
+     3.26:1 on its own tint. No single hex fixes that: light surfaces want seal
+     darker, dark surfaces want it lighter, so darkening improves one theme and
+     ruins the other. Mixing toward `--text-primary` is self-correcting, because
+     that token is itself theme-flipped — the same trick type labels use. At 55%
+     every surface seal text lands on clears AA in both themes (6.19–8.20:1),
+     and the hue moves under 1°, so it still reads as seal.
+
+     FOREGROUND ONLY. The solid danger BUTTON is the opposite problem — seal is
+     the fill under fixed white text — and mixing toward ink would lighten it in
+     dark mode and wreck the white. That one has its own darker fill; see
+     `--accent-seal-fill`. Raw `--accent-seal` stays untouched: dots, borders and
+     swatches still mean "seal". */
+  --accent-seal-label: color-mix(in srgb, var(--accent-seal) var(--label-mix), var(--text-primary));
+
+  /* Seal as a solid FILL behind white text. 8% toward black: 4.62:1 with white,
+     identically in both themes, because both the fill and the white are
+     theme-invariant. Same hue, one shade deeper. */
+  --accent-seal-fill: #D53E27;
+
+  /* Semantic */
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --danger: #E8432A;
+  --danger-light: #FEE2E2;
+
+  /* Highlight */
+  --highlight-yellow: #FDE68A;
+  --highlight-yellow-active: #FCD34D;
+  --highlight-blue: #BFDBFE;
+  /* Marks on a rendered PDF page. NOT redefined under `.dark`: the page is
+     printed paper, white with black glyphs, in both themes, so the marks keep
+     the light yellow and an ink ring. The dark highlight (#92400E) is for light
+     text on a dark surface; on the page it blacked the word out. */
+  --pdf-hit: #FCD34D;
+  --pdf-hit-ring: #1A1A1A;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root.dark {
+  /* Stronger in dark: at 30% the ring disappeared on the dark fill. */
+  --selected-ring: color-mix(in oklab, var(--accent-blue) 60%, transparent);
+  --bg-primary: #1A1A1A;
+  --bg-surface: #242424;
+  --bg-warm: #2A2A2A;
+  --bg-muted: #333333;
+  --bg-overlay: #000000AA;
+  --bg-selected: #333333;
+
+  --text-primary: #F5F0E8;
+  --text-secondary: #D4CDB8;
+  /* Tertiary and muted are WARM greys, not neutral ones, and they are set by
+     the LIGHTEST dark surface, not the darkest. Measured against all five
+     (`--bg-primary` #1A1A1A → `--bg-muted`/`--bg-selected` #333333), the old
+     neutral pair only ever cleared on the base background: #9A9A9A read 6.19:1
+     on #1A1A1A but 4.49:1 on #333333 — under AA on every vellum panel and every
+     selected row — and #6B6B6B fell to 2.37:1, under the 3:1 floor a muted
+     token needs to stay legible at all. The new values clear 4.5:1 (tertiary)
+     and 3:1 (muted) on ALL FIVE surfaces with headroom: 5.29:1 and 3.45:1 worst
+     case. Pick any replacement against #333333; #1A1A1A flatters everything. */
+  --text-tertiary: #ADA79E;
+  --text-muted: #8A857C;
+
+  /* Borders — same story, worse. At #343434 the primary rule was 1.01:1 on a
+     vellum or selected ground: not a faint line, NO line. It only ever showed
+     against the darkest background (1.40:1), which is why panels looked bounded
+     in the Library and dissolved in the drawers.
+
+     These are the SECOND pass. The first fix took primary to 2.06:1 worst case
+     and soft to 2.39:1, which read as rules rather than hairlines — chrome you
+     notice instead of chrome you feel. The band that works is narrow: below
+     ~1.4:1 a line vanishes on #333333, above ~2:1 it boxes the pane in. These
+     sit at 1.52:1 (primary) and 1.84:1 (soft) against #333333, 2.10:1 and
+     2.46:1 against #1A1A1A. Warm-tinted to match the text ladder above.
+
+     Soft is the STRONGER of the two in both themes (light: #E2DBC9 over
+     #EDE7DB) — the names read backwards but the roles are consistent, so keep
+     soft above primary if these move again. */
+  --border-primary: #514E48;
+  --border-soft: #5E5A53;
+  /* 64% variants of the two above (`A3` = 163/255). Unused in the app today;
+     kept for the handoff layer. A deliberately quieter line still. */
+  --border-primary-64: #514E48A3;
+  --border-soft-64: #5E5A53A3;
+
+  --accent-primary: #F5F0E8;
+  --accent-blue-tint: #0C3A4D;
+  --accent-seal-tint: #4A1A1A;
+
+  --success-light: #064E3B;
+  --warning-light: #78350F;
+  --danger-light: #4A1A1A;
+
+  --highlight-yellow: #78350F;
+  --highlight-yellow-active: #92400E;
+  --highlight-blue: #1E3A5F;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+}

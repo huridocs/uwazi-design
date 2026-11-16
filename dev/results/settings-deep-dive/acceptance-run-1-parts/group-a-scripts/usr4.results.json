@@ -1,0 +1,20 @@
+[
+ {
+  "id": "USR-29",
+  "res": "PASS",
+  "ev": "Row actions opacity idle=0, hover=1, keyboard focus on the row target=1; focus ring box-shadow on row target=\"rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0\"; Tab after the row target lands on \"Delete mlopez\"; Enter on the row target opens the editor=true; accessible names are unique (one \"Edit mlopez\" target, one \"Delete mlopez\"; no second visible Edit button, so nothing is announced twice)",
+  "shot": ""
+ },
+ {
+  "id": "X-07",
+  "res": "FAIL",
+  "ev": "axe on list: [\"color-contrast (serious) x2: .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h | .min-h-11.has-\\\\[\\\\[data-part\\\\=select\\\\]_input\\\\:checked\\\\]\\\\:bg-parchment.h\",\"empty-table-header (minor) x1: th:nth-child(5)\"]; axe on delete dialog: [\"landmark-no-duplicate-banner (moderate)\"] (name \"Delete user\"); axe on editor: []; focus stayed inside the dialog over 6 Tabs=true; Escape closed=true; focus restored to \"Delete tbuergenthal\"; unlabeled inputs on editor=[]; duplicate button names=[]",
+  "shot": "X-07-users.png"
+ },
+ {
+  "id": "X-08",
+  "res": "FAIL",
+  "ev": "Role pill contrast (light:dark): admin 15:11.14, editor 2.08:5.08, collaborator 12.13:9.04 (need >= 4.5:1 in both)",
+  "shot": "X-08-users-dark.png"
+ }
+]

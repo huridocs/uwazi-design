@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relationships audit</title>
+<link rel="stylesheet" href="concept.css">
+</head>
+<body>
+<button class="theme-toggle" type="button" onclick="toggleTheme()">Theme</button>
+<main class="page">
+  <div class="crumbs"><a href="sketches.html">Concept sketches</a> · <span>Part 1: audit</span> · <span>playground 1b029c03, captured 2026-10-05</span></div>
+  <h1>Relationships panel: what each control answers</h1>
+  <p class="lede">Five records, captured at 1440×900 in light and dark: the Nepal event “Police fire on protesters at Parliament and New Baneshwar” (216 references), KP Sharma Oli (123), the claim “Hami Nepal organised the 8 September protest” (15), the CEJIL judge Sergio García Ramírez (349) and the Sample judgment Velásquez Rodríguez (9). Frequency is my estimate of a researcher’s use; there is no usage data.</p>
+
+  <h2>The surface as it opens</h2>
+  <div class="shot">
+    <img src="screens/event-1-list.png" alt="Relationships tab for the Nepal event, list view, eleven collapsed relation-type groups">
+    <span class="pin" style="left:30%;top:19.5%">1</span>
+    <span class="pin" style="left:47.6%;top:19.5%">2</span>
+    <span class="pin" style="left:53%;top:19.5%">3</span>
+    <span class="pin" style="left:57.5%;top:19.5%">4</span>
+    <span class="pin" style="left:8%;top:47%">5</span>
+    <span class="pin" style="left:54.5%;top:97.3%">6</span>
+    <span class="pin" style="left:80.5%;top:54%">7</span>
+  </div>
+  <p class="shot-cap">1 search with boolean syntax · 2 four view modes · 3 Display menu · 4 Filters · 5 eleven collapsed groups, each a relation-type name and a count · 6 Collapse all / Expand all · 7 the document pane, empty for every Nepal event, Person and Claim (“No document”), 40% of the window.</p>
+
+  <div class="grid2">
+    <div>
+      <div class="shot"><img src="screens/event-2-expanded.png" alt="Expanded list: every row is a coloured pill with a direction arrow and the type repeated at the right"></div>
+      <p class="shot-cap">Expanded: twelve red pills under “led to”. Two point the other way (← “Protesters climb Parliament gate”, ← “Peter 1”), so the group mixes causes and consequences under one label. The type at the right repeats the pill colour.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-tree.png" alt="Tree view: same groups, each target with an evidence count of 1"></div>
+      <p class="shot-cap">Tree: the list again, with an evidence count per target. In Nepal every target reads “1”, so the column carries no information.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-graph.png" alt="Graph view: 150 unlabelled dots in fans around relation-type labels"></div>
+      <p class="shot-cap">Graph: “Showing the top 150 of 216 relationships”. Dots have no labels, no status and no date; the picture says that claims and casualty records are numerous, which the group counts already said.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-when.png" alt="When view: 158 dated entries, events and claims mixed"></div>
+      <p class="shot-cap">When: the most useful view for an event. It mixes event dates with claim “Asserted on” dates, has no place, and lists “Toll six dead”, “Toll eight dead”, “Toll fourteen dead”, “Toll seventeen dead” as four unrelated rows.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-display.png" alt="Display menu: group by, then by, sort, density"></div>
+      <p class="shot-cap">Display: Group by (8 axes), Then by (8), Sort (5), Density (3): 56 grouping pairs and 15 sort-density pairs, before Filters.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-filters.png" alt="Filters slide-over: anchoring, direction, relationship type, target entity type"></div>
+      <p class="shot-cap">Filters: Anchoring and Direction first. No Verification, although every one of the 5,319 Nepal references carries a status; the adapter drops it (<code>data/nepal/profile.ts</code>).</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/claim-2-expanded.png" alt="Claim relationships: supports group with quotes, no publisher"></div>
+      <p class="shot-cap">Claim: six “supports” rows and five “disputes” rows, each the article title and its quote. The publisher (Al Jazeera, BBC, Onlinekhabar) is not on the row, so “are the two sides independent?” needs eleven slide-overs.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/judge-tree.png" alt="CEJIL judge tree view with hubs of five and three parties"></div>
+      <p class="shot-cap">CEJIL judge: hubs (“HUB · 5 parties”) group the judges who signed one act. The count disagrees across views: Firmantes 174 in the list, 163 in the tree; 349 on the tab, 327 in the graph, 326 on the profile.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/sample-2-expanded.png" alt="Sample judgment with page tags p.3, p.5, p.9"></div>
+      <p class="shot-cap">Sample judgment: page tags work here and are the panel’s best feature. Case 11.137 appears in three rows across two groups (“Relates to” p.3, p.5; “Mentions” p.9).</p>
+    </div>
+    <div>
+      <div class="shot"><img src="screens/event-dark.png" alt="Dark theme, list expanded"></div>
+      <p class="shot-cap">Dark: contrast holds; the red pills read heavier than in light and the list becomes a column of red.</p>
+    </div>
+  </div>
+
+  <h2>Control by control</h2>
+  <div class="table-wrap">
+  <table class="audit">
+    <thead><tr><th>Control</th><th>Question it answers</th><th>How often</th><th>Cost in screen and attention</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>List view</td><td>What is this connected to, and by which relation type?</td><td>Every visit</td><td>Opens as eleven collapsed headers. The first answer takes a click per group, or Expand all, which then scrolls for 216 rows.</td><td><span class="verdict merge">Merge</span> into References, the second tab of the answer view</td></tr>
+      <tr><td>Tree view</td><td>Same as list, by type then target, with evidence per target</td><td>Rare</td><td>A full view mode for what “group by target” does. Evidence is “1” on almost every Nepal row. Its counts differ from the list’s (163 vs 174).</td><td><span class="verdict cut">Cut</span>; the per-target count moves into the summary</td></tr>
+      <tr><td>Graph view</td><td>What shape is the neighbourhood?</td><td>Rare; mostly demos</td><td>940 lines of code, own zoom bar, caps at 150 nodes, no labels, no status, no time. Nothing on it can be cited.</td><td><span class="verdict cut">Cut</span> as a view; Paths draws a graph only for a chosen pair</td></tr>
+      <tr><td>When view</td><td>What happened before and after, around this record?</td><td>Weekly, for events</td><td>Good. Mixes claim assertion dates with event dates; no place; repeated figures unlinked.</td><td><span class="verdict keep">Keep</span>, grow into When and where</td></tr>
+      <tr><td>Density (zoom)</td><td>None. A display preference</td><td>Once</td><td>Three unlabelled icons. Changes what an aggregate title does on click (title becomes a button at compact and detail).</td><td><span class="verdict cut">Cut</span>; one density per row kind</td></tr>
+      <tr><td>Group by</td><td>Depends on axis. Relation type and target template answer real questions</td><td>Rare to change</td><td>Eight axes. On an entity view, source entity and source template are always the open record, so those two give one group.</td><td><span class="verdict merge">Merge</span> to two fixed groupings: by relationship (summary) and by template (References)</td></tr>
+      <tr><td>Then by</td><td>A two-level breakdown</td><td>Almost never</td><td>56 combinations, most meaningless; drives the expansion state machine behind Collapse/Expand.</td><td><span class="verdict cut">Cut</span></td></tr>
+      <tr><td>Sort</td><td>Order rows by document position, evidence or name</td><td>Occasional</td><td>“Appearance” is arbitrary for records without a document (all Nepal events); “None” and “Z → A” answer nothing.</td><td><span class="verdict merge">Merge</span> to Date, Evidence, Document order (when a document exists)</td></tr>
+      <tr><td>Filters: Relationship type</td><td>Only these relation types</td><td>Occasional</td><td>Duplicates the group headers, in a slide-over.</td><td><span class="verdict merge">Merge</span> into the summary rows (click a row to scope)</td></tr>
+      <tr><td>Filters: Target entity type</td><td>Only claims, only sources</td><td>Weekly</td><td>Fine; buried behind Filters.</td><td><span class="verdict keep">Keep</span> as chips on the toolbar</td></tr>
+      <tr><td>Filters: Anchoring</td><td>Which links quote a passage?</td><td>Rare</td><td>Top of the slide-over. In Nepal a quote on a web article counts as anchored with no page, so the facet mixes two things.</td><td><span class="verdict merge">Merge</span> into a “With quote” toggle</td></tr>
+      <tr><td>Filters: Direction</td><td>Who stored the edge pointing where</td><td>Almost never</td><td>Second in the slide-over. Direction is how the data was entered, not a research question; the question it hides is cause vs consequence, which needs labels.</td><td><span class="verdict cut">Cut</span>; render direction as wording (“Led to” / “Followed from”)</td></tr>
+      <tr><td>Filters: Country, Descriptores, inherited</td><td>CEJIL-specific narrowing</td><td>Weekly on CEJIL</td><td>Shows only where data exists. Fine.</td><td><span class="verdict keep">Keep</span></td></tr>
+      <tr><td>Missing: Verification, date, publisher</td><td>Is this link confirmed? When was it true? Who said it?</td><td>Every claim and person</td><td>The data exists (5,319 statuses, 146 date ranges, publisher on every source) and the panel cannot show or filter it.</td><td><span class="verdict keep">Add</span></td></tr>
+      <tr><td>Search (boolean)</td><td>Find one connected record by name</td><td>Weekly</td><td>The long syntax hint (AND, OR, NOT, “exact”, wild*) takes the placeholder for a list of at most a few hundred titles.</td><td><span class="verdict keep">Keep</span>, plain placeholder</td></tr>
+      <tr><td>Hubs</td><td>Who else took part in the same act?</td><td>Weekly on CEJIL</td><td>“HUB · 5 parties” is jargon; the row shows pills only.</td><td><span class="verdict keep">Keep</span>, label by the act (“Signed together”)</td></tr>
+      <tr><td>Aggregates</td><td>How many references back this link?</td><td>Weekly</td><td>Only signal when the count is above 1 or the status varies.</td><td><span class="verdict keep">Keep</span> as the strength column</td></tr>
+      <tr><td>Page tags</td><td>Where in the document?</td><td>Every visit to a document record</td><td>Low cost, high return. 11 of 5,319 Nepal links have a page.</td><td><span class="verdict keep">Keep</span></td></tr>
+      <tr><td>Entity pills</td><td>Open the connected record</td><td>Every visit</td><td>Every row a tinted pill; a list of 12 events is a column of red. Colour carries type, which the group already says.</td><td><span class="verdict merge">Merge</span> to dot plus ink text</td></tr>
+      <tr><td>Direction glyphs</td><td>Which way the edge points</td><td>Rarely read</td><td>6px arrows after every pill.</td><td><span class="verdict cut">Cut</span>; wording carries it</td></tr>
+      <tr><td>Collapse / Expand all</td><td>Open every group</td><td>Every visit, because groups open closed</td><td>Footer slot; stays visible and greyed in Graph and When.</td><td><span class="verdict cut">Cut</span>; the summary opens answered</td></tr>
+      <tr><td>Display menu</td><td>Holds density, group, then by, sort</td><td>Rare</td><td>A trigger with a modified dot for four controls, three of which are cut.</td><td><span class="verdict cut">Cut</span>; Sort moves to the References header</td></tr>
+      <tr><td>Document pane</td><td>Read the passage behind a link</td><td>On document records</td><td>40% of the window shows “No document” on every Nepal event, person and claim.</td><td><span class="verdict merge">Merge</span>: collapse to the drawer when the record holds no file</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Complex for no return</h2>
+  <div class="grid2">
+    <div class="card"><h3>Four ways to draw one list</h3><p>List, tree and graph show the same rows grouped by relation type. Each has its own counts (174, 163, 327) and its own controls. A researcher learns three views to answer one question.</p></div>
+    <div class="card"><h3>Arrangement before content</h3><p>Seven of the toolbar’s controls change how rows are arranged. None says whether a link is confirmed, when it held, or who reported it, though the data has all three.</p></div>
+    <div class="card"><h3>Direction as a filter</h3><p>The stored direction is shown as an arrow and offered as a facet, while the question it hides (did this cause the event, or follow it?) is not answered in words.</p></div>
+  </div>
+</main>
+<script>
+function toggleTheme(){var r=document.documentElement;var dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";try{localStorage.setItem("rc-theme",r.dataset.theme)}catch(e){}}
+try{var t=localStorage.getItem("rc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+</script>
+</body>
+</html>
