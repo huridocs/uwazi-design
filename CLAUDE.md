@@ -453,8 +453,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     committed query parsed by `utils/queryClauses.ts`; a chip's × cuts only its clause's text.
     Quotes is offered only where entities carry `quote:` fields (`libraryHasQuotesAtom`) and
     falls back to All elsewhere (collection switch, snapshot).
-    Whole words scans CEJIL's full text in 1–5 ms per keystroke against 0–1 ms for partial
-    (measured 2026-10-06); the per-keystroke cost is still the re-render.
+    Whole words costs more per keystroke than partial, but the per-keystroke cost is still
+    the re-render.
   - Every results surface (the drawer's Results tab, the rail panel, the phone sheet, Adv.
     Search's Grouped, Tree and Passages) draws a record with `ResultRecord`
     (`ResultsSnippets/ResultRecord.tsx`), the `MemberCard` shape: a stretched button opens the
@@ -590,8 +590,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   in `map.css`. One height (2rem) and radius; buttons on `BAR_GHOST`.
 - Split (`views/LibrarySplitView.tsx`): two Full width `LibraryView`s, each a `section` landmark
   ("Library, left pane" / "right pane"), with a divider (`role="separator"`, arrows, Home/End to
-  a pane's 28rem minimum, double-click resets; `librarySplitRatioAtom`, session). RTL mirrors
-  the row.
+  a pane's 28rem minimum, double-click resets). The share is the view's own state: every mount
+  and every collection switch starts at 50/50. RTL mirrors the row.
   - The left pane is the root store, so `#view=` links, Reset demo data and anything else
     written from outside a pane land there. The right pane is a jotai-scope scope over
     `libraryPaneScopedAtoms`, the Network find cursor, `atoms/rightPane.ts`'s bases and the
@@ -601,7 +601,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     the collection-switch and Reset resets through its scope. A new per-pane atom goes in
     `libraryPaneScopedAtoms`, a new per-record entity-view atom in `ENTITY_VIEW_ATOMS`.
     Language, collection, Notebook and entity data are shared. Dirty forms register with their
-    pane (`libraryPaneSideAtom`, now in `atoms/paneSide.ts`); a navigation inside a pane
+    pane (`libraryPaneSideAtom`, `atoms/paneSide.ts`); a navigation inside a pane
     (`guardPaneNavigationAtom`, and `useDirtyGuard` under a pane) asks only about that pane's
     forms, a navigation outside the panes about all of them.
   - A pane's keys and long presses act only where the focus is, or the pointer when the focus
@@ -890,7 +890,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   on its footer. Admins only, from Tools and the Library footer.
 - Metadata extraction: extractors and suggestion states are per-corpus stores (`atoms/extraction.ts`).
   Suggestion rows are derived from the entities (current value read through the entity overlay);
-  Accept writes the entity (G12). Train and process runs are timers with one Beacon task each;
+  Accept writes the entity. Train and process runs are timers with one Beacon task each;
   the page restarts a run that a reload interrupted. No Reject, no "Accept all".
 - Nepal protests 2024–2026 (`data/nepal/`, `public/nepal-data/`): a real open-source corpus,
   built from Research's seed by `scripts/build-nepal-corpus.mjs` (the seed lives in the main
