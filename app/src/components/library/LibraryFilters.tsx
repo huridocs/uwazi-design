@@ -84,6 +84,7 @@ import {
 import { useActiveFilters } from "../../hooks/useActiveFilters";
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
+import { SectionLabel } from "../shared/SectionLabel";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { FacetTally } from "../../utils/facetTally";
@@ -100,6 +101,7 @@ import {
   FilterCard,
   FilterClearAll,
   FilterListCard,
+  FilterOption,
   SegmentRow,
 } from "../shared/FilterCard";
 
@@ -652,22 +654,6 @@ export function LibraryFilters() {
           />
         </FacetCard>
 
-        {permissionsAllowed && (
-          <PermissionsFacetCard
-            universe={permissionUniverse}
-            counts={permissionCounts.values}
-            selected={permissionFilters}
-            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
-            onClear={() => {
-              setPermissionFilters({});
-              setMatch("permissions", "any");
-            }}
-            match={{ mode: permissionMode, onChange: (m) => setMatch("permissions", m), multi: true, missing: permissionCounts.missing }}
-            nameOf={permissionMemberName}
-            isGroup={(key) => memberGroups.some((g) => key.endsWith(`:${g.id}`))}
-          />
-        )}
-
         {dataSource === "cejil" ? (
           <>
             {/* CEJIL: the curated summa.cejil.org filter config — top-level
@@ -882,6 +868,23 @@ export function LibraryFilters() {
               setDateFrom("");
               setDateTo("");
             }}
+          />
+        )}
+        {/* Last, as Uwazi renders it (`FiltersForm.jsx`: after the property
+            filters). */}
+        {permissionsAllowed && (
+          <PermissionsFacetCard
+            universe={permissionUniverse}
+            counts={permissionCounts.values}
+            selected={permissionFilters}
+            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
+            onClear={() => {
+              setPermissionFilters({});
+              setMatch("permissions", "any");
+            }}
+            match={{ mode: permissionMode, onChange: (m) => setMatch("permissions", m), multi: true, missing: permissionCounts.missing }}
+            nameOf={permissionMemberName}
+            isGroup={(key) => memberGroups.some((g) => key.endsWith(`:${g.id}`))}
           />
         )}
         {groups.map((g) => (
@@ -1309,9 +1312,16 @@ function KeywordFacetCard({
   );
 }
 
-/** Uwazi v1's "Permissions" filter: the users and groups the records are
- *  shared with, under "Shared as viewer" (read) and "Shared as editor"
- *  (write), with one Match mode for both lists. Admins and editors only. */
+/** Uwazi's "Permissions" filter (`AssigneeFilter.tsx`): the users and groups
+ *  the records are shared with, under "Shared as viewer" (read) and "Shared
+ *  as editor" (write), with one Match mode for both lists. Admins only, and
+ *  last in the panel, as Uwazi renders it. A list with nothing to offer reads
+ *  "No options found", Uwazi's MultiSelect empty state. */
+const PERMISSION_LEVELS = [
+  { level: "read", title: "Shared as viewer" },
+  { level: "write", title: "Shared as editor" },
+] as const;
+
 function PermissionsFacetCard({
   universe,
   counts,
@@ -1338,34 +1348,59 @@ function PermissionsFacetCard({
   const missingMode = match.mode === "missing";
   const selectedCount = missingMode ? 0 : Object.values(selected).filter(Boolean).length;
   const narrowing = selectedCount > 0 || match.mode !== "any";
-  const entries = useMemo(() => list.map((k) => [k, counts.get(k) ?? 0] as [string, number]), [list, counts]);
   return (
-    <FilterListCard
+    <FilterCard
       component="PermissionsFacetCard"
       title="Permissions"
-      entries={entries}
-      selected={selected}
-      onToggle={onToggle}
-      onClear={onClear}
-      label={nameOf}
-      renderMarker={(k) => {
-        const Icon = isGroup(k) ? Users : User;
-        return <Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />;
-      }}
-      groupOf={(k) => (k.startsWith("write:") ? "Shared as editor" : "Shared as viewer")}
-      // Six users and three groups at most per level in the seed: no fold.
-      cap={Infinity}
       selectedCount={selectedCount}
+      onClear={onClear}
       narrowing={narrowing}
-      inert={missingMode}
-      match={
-        <FacetMatchRow
-          title="Permissions"
-          match={match}
-          note={missingMode ? `${match.missing.toLocaleString()} shared with no one` : ""}
-        />
-      }
-    />
+      stack
+    >
+      <FacetMatchRow
+        title="Permissions"
+        match={match}
+        note={missingMode ? `${match.missing.toLocaleString()} shared with no one` : ""}
+      />
+      <div
+        data-part="values"
+        className={`transition-opacity ${missingMode ? "opacity-40" : ""}`}
+        ref={(el) => el?.toggleAttribute("inert", missingMode)}
+      >
+        {PERMISSION_LEVELS.map(({ level, title }) => {
+          const keys = list.filter((k) => k.startsWith(`${level}:`));
+          return (
+            <div key={level} role="group" aria-label={title}>
+              <SectionLabel as="span" className="px-2 pt-1.5 pb-0.5">
+                {title}
+              </SectionLabel>
+              {keys.length === 0 ? (
+                <p data-part="empty" className="px-2 py-1 text-xs text-ink-tertiary">
+                  No options found
+                </p>
+              ) : (
+                keys.map((k) => {
+                  const n = counts.get(k) ?? 0;
+                  const Icon = isGroup(k) ? Users : User;
+                  return (
+                    <FilterOption
+                      key={k}
+                      label={nameOf(k)}
+                      count={n}
+                      checked={!!selected[k]}
+                      onToggle={() => onToggle(k)}
+                      marker={<Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />}
+                      ariaLabel={`${nameOf(k)}${isGroup(k) ? ", group" : ""} (${title}), ${n}`}
+                      disabled={missingMode ? false : undefined}
+                    />
+                  );
+                })
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </FilterCard>
   );
 }
 

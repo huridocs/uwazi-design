@@ -751,11 +751,13 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   a refit. The atom reads null outside the Map view, and leaving the view, a collection switch,
   Clear all and Reset demo data drop it. Snapshots carry it as the optional `mapBounds` key,
   which also sets where the map opens.
-- Permissions facet (Uwazi v1's, huridocs/uwazi issue 10020): after Status, for signed-in admins and
-  editors only (`libraryPermissionsAllowedAtom`; for anyone else a pick does not filter).
-  `PermissionsFacetCard` lists the users and groups records are shared with, under "Shared as
-  viewer" (read) and "Shared as editor" (write), keys `read:<id>` / `write:<id>`, one Match mode
-  for both; `missing` keeps records shared with no one. A record's members are
+- Permissions facet (Uwazi's `AssigneeFilter`, huridocs/uwazi issue 10020): the last facet card,
+  as in Uwazi's `FiltersForm`, for signed-in admins only (`libraryPermissionsAllowedAtom`, Uwazi's
+  `NeedAuthorization` default; for anyone else a pick does not filter). `PermissionsFacetCard`
+  lists the users and groups records are shared with, under "Shared as viewer" (read) and
+  "Shared as editor" (write), keys `read:<id>` / `write:<id>`, one Match mode for both; `missing`
+  keeps records shared with no one. A list with no option reads "No options found", Uwazi's
+  MultiSelect empty state. A record's members are
   `entityMembersAtom` (`atoms/entityChanges.ts`): the session's Share changes, else
   `seedMembersOf`, a stable seed (four in ten records shared with no one), less users and groups
   deleted in the session. Settings' "Shared with N entities" counts the open collection.

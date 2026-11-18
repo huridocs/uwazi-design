@@ -255,8 +255,7 @@ export interface LibraryFilterState {
   descriptorCarriers?: ReadonlySet<string>;
   /** Permissions facet: picked `read:<id>` ("Shared as viewer") and
    *  `write:<id>` ("Shared as editor") keys, a member being a user or a group.
-   *  Empty unless the signed-in user may filter by permissions (admins and
-   *  editors). */
+   *  Empty unless the signed-in user may filter by permissions (admins). */
   permissions: string[];
   permissionMode: LibraryMatch;
   /** A record's members (`entityMembersAtom`); null while the facet does not
