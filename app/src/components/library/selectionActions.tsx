@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, LayoutTemplate, PenLine, Share2, Trash2, Users } from "lucide-react";
+import { FileDown, LayoutTemplate, PenLine, Trash2, Users } from "lucide-react";
 import {
   deselectIdsAtom,
   libraryEditRequestAtom,
@@ -27,7 +27,7 @@ import { ChangeTemplateDialog } from "./ChangeTemplateDialog";
  *  places that show them: the footer bar, the phone's sheet and the selection
  *  drawer's Actions menu. Each opens the same dialog (`SelectionDialogs`). */
 export interface SelectionAction {
-  id: "edit" | "change-template" | "export" | "share" | "permissions" | "delete";
+  id: "edit" | "change-template" | "export" | "permissions" | "delete";
   label: string;
   icon: ReactNode;
   onClick?: () => void;
@@ -119,7 +119,6 @@ export function useSelectionActions({
       disabledReason: noOtherTemplate ? "No other template to change to" : undefined,
     },
     { id: "export", label: "Export CSV", icon: <FileDown size={13} />, onClick: scoped("Export", exportSelection) },
-    { id: "share", label: "Share", icon: <Share2 size={13} />, onClick: scoped("Share", () => open("share")) },
     { id: "permissions", label: "Permissions", icon: <Users size={13} />, onClick: scoped("Set permissions for", () => open("permissions")) },
     { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => open("delete"), danger: true },
   ];
@@ -191,10 +190,10 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
       )}
       <HiddenScopeDialog />
       <ShareEntityModal
-        open={dialog === "share" || dialog === "permissions"}
+        open={dialog === "permissions"}
         onClose={close}
         ids={[...selection]}
-        initialFocus={dialog === "permissions" ? "people" : "access"}
+        initialFocus="people"
       />
     </>
   );
