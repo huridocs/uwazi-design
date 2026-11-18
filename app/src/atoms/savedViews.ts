@@ -13,6 +13,7 @@ import {
   libraryContentFiltersAtom,
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
+  libraryPermissionFiltersAtom,
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
@@ -72,6 +73,9 @@ export interface LibrarySnapshot {
   types: Ticks;
   hasDoc: boolean;
   status: Ticks;
+  /** Permissions facet picks (`read:<id>` / `write:<id>`). Missing in
+   *  snapshots saved before the facet. */
+  permissions?: Ticks;
   countries: Ticks;
   descriptors: Ticks;
   /** Each facet's Match mode (any / all / none / missing) by facet key; absent
@@ -140,6 +144,7 @@ export function captureLibrarySnapshot(get: Getter): LibrarySnapshot {
     types: ticked(get(libraryTypeFiltersAtom)),
     hasDoc: get(libraryHasDocAtom),
     status: ticked(get(libraryStatusFiltersAtom)),
+    permissions: ticked(get(libraryPermissionFiltersAtom)),
     countries: ticked(get(libraryCountryFiltersAtom)),
     descriptors: ticked(get(libraryDescriptorFiltersAtom)),
     match: get(libraryFacetMatchAtom),
@@ -190,6 +195,7 @@ function writeSnapshot(get: Getter, set: Setter, s: LibrarySnapshot) {
   set(libraryTypeFiltersAtom, { ...s.types });
   set(libraryHasDocAtom, s.hasDoc);
   set(libraryStatusFiltersAtom, { ...s.status });
+  set(libraryPermissionFiltersAtom, { ...(s.permissions ?? {}) });
   set(libraryCountryFiltersAtom, { ...s.countries });
   set(libraryDescriptorFiltersAtom, { ...s.descriptors });
   set(libraryFacetMatchAtom, snapshotMatch(s));
@@ -279,6 +285,7 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
       case "type": return n(s.types) > 0;
       case "doc": return s.hasDoc;
       case "status": return n(s.status) > 0;
+      case "permissions": return n(s.permissions ?? {}) > 0;
       case "country": return n(s.countries) > 0;
       case "descriptor": return n(s.descriptors) > 0;
       case "date": return !!s.dateFrom || !!s.dateTo;
@@ -294,6 +301,7 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
     n(s.types) +
     (s.hasDoc ? 1 : 0) +
     n(s.status) +
+    ticks("permissions", s.permissions ?? {}) +
     ticks("country", s.countries) +
     ticks("descriptor", s.descriptors) +
     (s.dateFrom || s.dateTo ? 1 : 0) +
@@ -309,7 +317,7 @@ export function snapshotFilterCount(s: LibrarySnapshot): number {
 /** A filter signature: two searches for the same words under different
  *  filters are different searches. */
 const facetKey = (s: LibrarySnapshot) =>
-  JSON.stringify([s.types, s.hasDoc, s.status, s.countries, s.descriptors, snapshotMatch(s), s.ranges ?? {},
+  JSON.stringify([s.types, s.hasDoc, s.status, s.permissions ?? {}, s.countries, s.descriptors, snapshotMatch(s), s.ranges ?? {},
     s.groups ?? [], s.dateFrom, s.dateTo, s.inherited, s.chains, s.content, s.contentMode,
     s.searchScope ?? "all", s.searchMatch ?? "partial", s.mapBounds ?? null]);
 
@@ -327,6 +335,7 @@ export function isLibrarySnapshot(x: unknown): x is LibrarySnapshot {
     !!s.display && typeof s.display === "object" &&
     !!s.sort && typeof s.sort === "object" &&
     (s.match === undefined || (!!s.match && typeof s.match === "object" && !Array.isArray(s.match))) &&
+    (s.permissions === undefined || (!!s.permissions && typeof s.permissions === "object" && !Array.isArray(s.permissions))) &&
     (s.ranges === undefined || (!!s.ranges && typeof s.ranges === "object" && !Array.isArray(s.ranges))) &&
     (s.groups === undefined ||
       (Array.isArray(s.groups) &&

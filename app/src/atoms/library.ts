@@ -2,6 +2,7 @@ import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom, guardPaneNavigationAtom } from "./dirtyGuard";
 import { discardDraftAtom } from "./entityChanges";
+import { sessionStateAtom, signedInUserAtom } from "./users";
 import { libraryPaneSideAtom } from "./paneSide";
 import { atomFamily } from "jotai/utils";
 import {
@@ -216,6 +217,32 @@ export const libraryContentModeAtom = atom<"AND" | "OR">("OR");
 
 /** Publishing-status facet: keys "published" / "restricted". */
 export const libraryStatusFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Permissions facet (Uwazi v1's "Permissions" filter): keys are
+ *  `read:<member id>` ("Shared as viewer") and `write:<member id>` ("Shared as
+ *  editor"), a member being a user or a group. Its Match mode is
+ *  `libraryFacetMatchAtom.permissions`. */
+export const libraryPermissionFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Whether the signed-in user may filter by permissions: admins and editors,
+ *  as in Uwazi. A collaborator or an anonymous visitor does not see who else a
+ *  record is shared with, and a pick left from before a log out stops
+ *  narrowing. */
+export const libraryPermissionsAllowedAtom = atom((get) => {
+  if (get(sessionStateAtom) !== "signed-in") return false;
+  const role = get(signedInUserAtom)?.role;
+  return role === "admin" || role === "editor";
+});
+
+/** The picked keys, read only where they are allowed. */
+export const libraryPermissionPicksAtom = atom((get) =>
+  get(libraryPermissionsAllowedAtom)
+    ? Object.entries(get(libraryPermissionFiltersAtom))
+        .filter(([, on]) => on)
+        .map(([k]) => k)
+        .sort()
+    : [],
+);
 
 /** Mobile filters drawer open state (the sidebar is persistent on desktop). */
 export const libraryFiltersOpenAtom = atom(false);
@@ -1362,6 +1389,7 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});
+  set(libraryPermissionFiltersAtom, {});
   set(libraryDescriptorFiltersAtom, {});
   set(libraryInheritedFiltersAtom, {});
   set(libraryFacetMatchAtom, {});
@@ -1387,6 +1415,7 @@ export const clearLibraryFacetsAtom = atom(null, (get, set) => {
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});
+  set(libraryPermissionFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryDescriptorFiltersAtom, {});
   set(libraryDateFromAtom, "");
@@ -1409,6 +1438,7 @@ export const clearLibraryFiltersAtom = atom(null, (get, set) => {
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});
+  set(libraryPermissionFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
   set(libraryDescriptorFiltersAtom, {});
   set(libraryDateFromAtom, "");
@@ -1437,6 +1467,7 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   let n = Object.values(get(libraryTypeFiltersAtom)).filter(Boolean).length;
   if (get(libraryHasDocAtom)) n += 1;
   n += Object.values(get(libraryStatusFiltersAtom)).filter(Boolean).length;
+  if (get(libraryPermissionsAllowedAtom)) n += ticks("permissions", get(libraryPermissionFiltersAtom));
   n += ticks("country", get(libraryCountryFiltersAtom));
   n += ticks("descriptor", get(libraryDescriptorFiltersAtom));
   if (get(libraryDateFromAtom) || get(libraryDateToAtom)) n += 1;
@@ -1467,6 +1498,7 @@ function facetNarrows(get: Getter): (key: string) => boolean {
   const match = get(libraryFacetMatchAtom);
   const ticked = (rec: Record<string, boolean> | undefined) => Object.values(rec ?? {}).some(Boolean);
   return (key) => {
+    if (key === "permissions" && !get(libraryPermissionsAllowedAtom)) return false;
     if (match[key] === "missing") return true;
     switch (key) {
       case "type":
@@ -1475,6 +1507,8 @@ function facetNarrows(get: Getter): (key: string) => boolean {
         return get(libraryHasDocAtom);
       case "status":
         return ticked(get(libraryStatusFiltersAtom));
+      case "permissions":
+        return ticked(get(libraryPermissionFiltersAtom));
       case "country":
         return ticked(get(libraryCountryFiltersAtom));
       case "descriptor":
@@ -1547,6 +1581,7 @@ export const libraryFilterSetAtoms = [
   libraryContentFiltersAtom,
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
+  libraryPermissionFiltersAtom,
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
@@ -1575,6 +1610,7 @@ export const libraryPaneScopedAtoms = [
   libraryContentFiltersAtom,
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
+  libraryPermissionFiltersAtom,
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,

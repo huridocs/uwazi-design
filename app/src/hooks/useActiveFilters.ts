@@ -1,3 +1,4 @@
+import { groupsAtom, usersAtom } from "../atoms/users";
 import { useMemo } from "react";
 import { CONTENT_GROUPS, CONTENT_GROUP_LABEL, contentRowLabel } from "../utils/entityContent";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -7,6 +8,8 @@ import {
   libraryTypeFiltersAtom,
   libraryHasDocAtom,
   libraryStatusFiltersAtom,
+  libraryPermissionFiltersAtom,
+  libraryPermissionsAllowedAtom,
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryDateFromAtom,
@@ -62,6 +65,10 @@ export function useActiveFilters(): ActiveFilter[] {
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
+  const [permissionFilters, setPermissionFilters] = useAtom(libraryPermissionFiltersAtom);
+  const permissionsAllowed = useAtomValue(libraryPermissionsAllowedAtom);
+  const users = useAtomValue(usersAtom);
+  const memberGroups = useAtomValue(groupsAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
@@ -93,10 +100,12 @@ export function useActiveFilters(): ActiveFilter[] {
       idPrefix: string,
       vals: Record<string, boolean>,
       removeValue: (v: string) => () => void,
+      labelOf: (v: string) => string = (v) => v,
+      missingLabel = `No ${group.toLowerCase()}`,
     ) => {
       const mode: LibraryMatch = facetMatch[key] ?? "any";
       if (mode === "missing") {
-        out.push({ id: `${idPrefix}-missing`, group, label: `No ${group.toLowerCase()}`, remove: resetMatch(key), facetKey: key });
+        out.push({ id: `${idPrefix}-missing`, group, label: missingLabel, remove: resetMatch(key), facetKey: key });
         return;
       }
       for (const [v, on] of Object.entries(vals))
@@ -104,7 +113,7 @@ export function useActiveFilters(): ActiveFilter[] {
           out.push({
             id: `${idPrefix}-${v}`,
             group: mode === "any" ? group : `${group} · ${mode}`,
-            label: mode === "none" ? `not ${v}` : v,
+            label: mode === "none" ? `not ${labelOf(v)}` : labelOf(v),
             remove: removeValue(v),
             facetKey: key,
           });
@@ -155,6 +164,23 @@ export function useActiveFilters(): ActiveFilter[] {
           facetKey: "status",
         });
 
+    // Picks a signed-out visitor or a collaborator cannot see do not filter
+    // either (`libraryPermissionPicksAtom`), so they get no chip. The label
+    // names the level: a member can be picked at both.
+    if (permissionsAllowed)
+      valueChips(
+        "permissions",
+        "Permissions",
+        "perm",
+        permissionFilters,
+        (k) => drop(setPermissionFilters, k),
+        (k) => {
+          const [level, id] = k.split(":");
+          const name = users.find((u) => u.id === id)?.username ?? memberGroups.find((g) => g.id === id)?.name ?? id;
+          return `${level === "write" ? "Editor" : "Viewer"}: ${name}`;
+        },
+        "Shared with no one",
+      );
     valueChips("country", "Country", "country", countryFilters, (c) => drop(setCountryFilters, c));
     valueChips("descriptor", "Descriptor", "desc", descriptorFilters, (d) => drop(setDescriptorFilters, d));
 
@@ -277,6 +303,10 @@ export function useActiveFilters(): ActiveFilter[] {
     typeFilters,
     hasDocOnly,
     statusFilters,
+    permissionFilters,
+    permissionsAllowed,
+    users,
+    memberGroups,
     countryFilters,
     descriptorFilters,
     dateFrom,
@@ -298,6 +328,7 @@ export function useActiveFilters(): ActiveFilter[] {
     setTypeFilters,
     setHasDocOnly,
     setStatusFilters,
+    setPermissionFilters,
     setCountryFilters,
     setDescriptorFilters,
     setDateFrom,

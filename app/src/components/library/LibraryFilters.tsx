@@ -14,7 +14,7 @@ import {
 } from "../../utils/entityContent";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, User, Users, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
@@ -26,6 +26,8 @@ import {
   libraryContentFiltersAtom,
   libraryContentModeAtom,
   libraryStatusFiltersAtom,
+  libraryPermissionFiltersAtom,
+  libraryPermissionsAllowedAtom,
   libraryCountryFiltersAtom,
   libraryDescriptorFiltersAtom,
   libraryFacetMatchAtom,
@@ -61,6 +63,7 @@ import {
 } from "../../data/chainFacets";
 import {
   matchesAll,
+  permissionKeys,
   buildSearchIndex,
   chainFacetCounts,
   forEachFacetBase,
@@ -84,6 +87,9 @@ import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 import { useKeepClickedInPlace } from "../../hooks/useKeepClickedInPlace";
 import { FacetTally } from "../../utils/facetTally";
+import { usePermissionFilter } from "../../hooks/usePermissionFilter";
+import { entityMembersAtom } from "../../atoms/entityChanges";
+import { groupsAtom, usersAtom } from "../../atoms/users";
 import { BAR_GHOST } from "../shared/warmButton";
 import { DateInput } from "../shared/DateInput";
 import { NativeSelect } from "../shared/NativeSelect";
@@ -128,6 +134,13 @@ export function LibraryFilters() {
   const [facetMatch, setFacetMatch] = useAtom(libraryFacetMatchAtom);
   const [rangeFilters, setRangeFilters] = useAtom(libraryRangeFiltersAtom);
   const [groups, setGroups] = useAtom(libraryFilterGroupsAtom);
+  const [permissionFilters, setPermissionFilters] = useAtom(libraryPermissionFiltersAtom);
+  const permissionsAllowed = useAtomValue(libraryPermissionsAllowedAtom);
+  const permissionFilter = usePermissionFilter();
+  const permissionMode = facetMatch.permissions ?? "any";
+  const membersOf = useAtomValue(entityMembersAtom);
+  const memberUsers = useAtomValue(usersAtom);
+  const memberGroups = useAtomValue(groupsAtom);
   const countryMode = facetMatch.country ?? "any";
   const descriptorMode = facetMatch.descriptor ?? "any";
   const setMatch = (key: string, mode: LibraryMatch) =>
@@ -255,6 +268,7 @@ export function LibraryFilters() {
       descriptors: on(descriptorFilters),
       descriptorMode,
       descriptorCarriers: descriptorCarriersOf(entities, dataSource),
+      ...permissionFilter.state,
       fromMs: dateBoundMs(dateFrom, "from"),
       toMs: dateBoundMs(dateTo, "to"),
       inherited,
@@ -274,7 +288,7 @@ export function LibraryFilters() {
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
-    statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
+    statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode, permissionFilter,
     dateFrom, dateTo, inheritedFilters, facetMatch, rangeFilters, rangeDefs, groups, chainDefs, chainFilters, query, matchTypes,
     contentSelection, contentMode, entities, searchScope, searchMatch, mapBounds,
   ]);
@@ -339,6 +353,34 @@ export function LibraryFilters() {
   // every other facet.
   // Counted in the facet's Match mode (`FacetTally`), so a 0 means ticking the
   // value cannot add a result, and the row is disabled.
+  // The Permissions card's rows: every user and group the collection's
+  // records are shared with, at each level, in an order set by the collection
+  // (viewer before editor, then by count), so a tick elsewhere changes
+  // numbers, not rows. Counted only for a user who sees the card.
+  const permissionUniverse = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!permissionsAllowed) return m;
+    for (const e of entities) for (const k of permissionKeys(membersOf(e.id))) m.set(k, (m.get(k) ?? 0) + 1);
+    return new Map(
+      [...m].sort(([a, na], [b, nb]) => (a.startsWith("read:") === b.startsWith("read:") ? nb - na : a.startsWith("read:") ? -1 : 1)),
+    );
+  }, [entities, membersOf, permissionsAllowed]);
+  const permissionCounts = useMemo(() => {
+    const tally = new FacetTally(permissionMode, tickedOf(permissionFilters));
+    let missing = 0;
+    if (permissionsAllowed)
+      for (const e of entities)
+        if (matchesAll(e, filterState, "permissions")) {
+          const keys = permissionKeys(membersOf(e.id));
+          if (!keys.length) missing++;
+          tally.add(keys, true);
+        }
+    return { values: tally.counts(permissionUniverse.keys()), missing };
+  }, [entities, filterState, membersOf, permissionsAllowed, permissionMode, permissionFilters, permissionUniverse]);
+  const permissionMemberName = (key: string) => {
+    const id = key.slice(key.indexOf(":") + 1);
+    return memberUsers.find((u) => u.id === id)?.username ?? memberGroups.find((g) => g.id === id)?.name ?? id;
+  };
   const countryCounts = useMemo(() => {
     const carriers = countryCarriersOf(entities, dataSource, language);
     const tally = new FacetTally(countryMode, tickedOf(countryFilters));
@@ -609,6 +651,22 @@ export function LibraryFilters() {
             bold
           />
         </FacetCard>
+
+        {permissionsAllowed && (
+          <PermissionsFacetCard
+            universe={permissionUniverse}
+            counts={permissionCounts.values}
+            selected={permissionFilters}
+            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
+            onClear={() => {
+              setPermissionFilters({});
+              setMatch("permissions", "any");
+            }}
+            match={{ mode: permissionMode, onChange: (m) => setMatch("permissions", m), multi: true, missing: permissionCounts.missing }}
+            nameOf={permissionMemberName}
+            isGroup={(key) => memberGroups.some((g) => key.endsWith(`:${g.id}`))}
+          />
+        )}
 
         {dataSource === "cejil" ? (
           <>
@@ -1251,6 +1309,66 @@ function KeywordFacetCard({
   );
 }
 
+/** Uwazi v1's "Permissions" filter: the users and groups the records are
+ *  shared with, under "Shared as viewer" (read) and "Shared as editor"
+ *  (write), with one Match mode for both lists. Admins and editors only. */
+function PermissionsFacetCard({
+  universe,
+  counts,
+  selected,
+  onToggle,
+  onClear,
+  match,
+  nameOf,
+  isGroup,
+}: {
+  universe: Map<string, number>;
+  counts: Map<string, number>;
+  selected: Record<string, boolean>;
+  onToggle: (key: string) => void;
+  onClear: () => void;
+  match: FacetMatch;
+  nameOf: (key: string) => string;
+  isGroup: (key: string) => boolean;
+}) {
+  const list = useMemo(() => {
+    const extra = Object.keys(selected).filter((k) => selected[k] && !universe.has(k));
+    return [...universe.keys(), ...extra.sort()];
+  }, [universe, selected]);
+  const missingMode = match.mode === "missing";
+  const selectedCount = missingMode ? 0 : Object.values(selected).filter(Boolean).length;
+  const narrowing = selectedCount > 0 || match.mode !== "any";
+  const entries = useMemo(() => list.map((k) => [k, counts.get(k) ?? 0] as [string, number]), [list, counts]);
+  return (
+    <FilterListCard
+      component="PermissionsFacetCard"
+      title="Permissions"
+      entries={entries}
+      selected={selected}
+      onToggle={onToggle}
+      onClear={onClear}
+      label={nameOf}
+      renderMarker={(k) => {
+        const Icon = isGroup(k) ? Users : User;
+        return <Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />;
+      }}
+      groupOf={(k) => (k.startsWith("write:") ? "Shared as editor" : "Shared as viewer")}
+      // Six users and three groups at most per level in the seed: no fold.
+      cap={Infinity}
+      selectedCount={selectedCount}
+      narrowing={narrowing}
+      inert={missingMode}
+      match={
+        <FacetMatchRow
+          title="Permissions"
+          match={match}
+          note={missingMode ? `${match.missing.toLocaleString()} shared with no one` : ""}
+        />
+      }
+    />
+  );
+}
+
 /** A facet's Match mode, and what `missing` would keep. */
 interface FacetMatch {
   mode: LibraryMatch;
@@ -1287,6 +1405,7 @@ const FIXED_FACET_NAMES: Record<string, string> = {
   type: "Type",
   doc: "Document",
   status: "Status",
+  permissions: "Permissions",
   country: "Country",
   descriptor: "Descriptor",
   date: "Date",

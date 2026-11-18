@@ -1,3 +1,4 @@
+import { usePermissionFilter } from "../hooks/usePermissionFilter";
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FULL_TEXT_MIN } from "../utils/searchScope";
 import { dateBoundMs } from "../utils/timeline";
@@ -724,6 +725,7 @@ export function LibraryView() {
   const activeDescriptors = Object.entries(descriptorFilters)
     .filter(([, on]) => on)
     .map(([d]) => d);
+  const permissionFilter = usePermissionFilter();
   const wantPublished = !!statusFilters.published;
   const wantRestricted = !!statusFilters.restricted;
   const statusActive = wantPublished || wantRestricted;
@@ -820,6 +822,7 @@ export function LibraryView() {
       descriptors: activeDescriptors,
       descriptorMode,
       descriptorCarriers: descriptorCarriersOf(entities, dataSource),
+      ...permissionFilter.state,
       fromMs,
       toMs,
       inherited: activeInherited,
@@ -849,6 +852,7 @@ export function LibraryView() {
       countryMode,
       activeDescriptors.join(","),
       descriptorMode,
+      permissionFilter,
       fromMs,
       toMs,
       inheritedKey,
@@ -879,6 +883,7 @@ export function LibraryView() {
     countryMode,
     activeDescriptors.join(","),
     descriptorMode,
+    permissionFilter.key,
     fromMs,
     toMs,
     inheritedKey,

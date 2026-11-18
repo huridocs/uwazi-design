@@ -253,6 +253,15 @@ export interface LibraryFilterState {
   descriptors: string[];
   descriptorMode: LibraryMatch;
   descriptorCarriers?: ReadonlySet<string>;
+  /** Permissions facet: picked `read:<id>` ("Shared as viewer") and
+   *  `write:<id>` ("Shared as editor") keys, a member being a user or a group.
+   *  Empty unless the signed-in user may filter by permissions (admins and
+   *  editors). */
+  permissions: string[];
+  permissionMode: LibraryMatch;
+  /** A record's members (`entityMembersAtom`); null while the facet does not
+   *  narrow. */
+  membersOf: ((id: string) => readonly { id: string; level: "read" | "write" }[]) | null;
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
@@ -300,6 +309,7 @@ export type FacetKey =
   | "status"
   | "country"
   | "descriptor"
+  | "permissions"
   | "date"
   | "search"
   | "matchType"
@@ -381,6 +391,9 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   countryMode: "any",
   descriptors: [],
   descriptorMode: "any",
+  permissions: [],
+  permissionMode: "any",
+  membersOf: null,
   fromMs: null,
   toMs: null,
   inherited: [],
@@ -428,6 +441,9 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     descriptors: s.descriptors ?? [],
     descriptorMode: s.descriptorMode ?? "any",
     descriptorCarriers: s.descriptorCarriers,
+    permissions: s.permissions ?? [],
+    permissionMode: s.permissionMode ?? "any",
+    membersOf: s.membersOf ?? null,
     fromMs: s.fromMs ?? null,
     toMs: s.toMs ?? null,
     inherited: s.inherited ?? [],
@@ -501,6 +517,14 @@ function compile(s: LibraryFilterState): FilterNode[] {
       matchValues(e.descriptors ?? [], sel, s.descriptorMode, !carriers || carriers.has(e.typeId)),
     );
   }
+  // Every record can be shared, so every record carries the facet: `none`
+  // keeps the records shared with none of the picks, `missing` those shared
+  // with no one.
+  if (s.membersOf && facetActive(s.permissionMode, s.permissions.length)) {
+    const sel = new Set(s.permissions);
+    const membersOf = s.membersOf;
+    leaf("permissions", (e) => matchValues(permissionKeys(membersOf(e.id)), sel, s.permissionMode, true));
+  }
   // Overlap with the record's span where it has one (an event's start and
   // end), else its date as a point: see `entityInRange`.
   if (s.fromMs !== null || s.toMs !== null) leaf("date", (e) => entityInRange(e, s.fromMs, s.toMs));
@@ -551,6 +575,11 @@ function compile(s: LibraryFilterState): FilterNode[] {
   compiledStates.set(s, out);
   return out;
 }
+
+/** A record's members as the Permissions facet's values: `read:<id>` and
+ *  `write:<id>`. */
+export const permissionKeys = (members: readonly { id: string; level: string }[]): string[] =>
+  members.map((m) => `${m.level}:${m.id}`);
 
 /** Does a group change the result? An OR needs two members that narrow (one
  *  is the facet alone); a NOT needs one. What the chips and the badge count. */

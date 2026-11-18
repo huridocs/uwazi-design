@@ -4,8 +4,7 @@ import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2 } from
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import {
   applyShareAtom,
-  defaultMembersAtom,
-  entityAccessAtom,
+  entityMembersAtom,
   type AccessLevel,
   type MemberChange,
 } from "../../atoms/entityChanges";
@@ -84,8 +83,7 @@ interface MemberSummary {
 export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "access", canShare = () => true }: ShareEntityModalProps) {
   const store = useStore();
   const focusedId = useAtomValue(focusedEntityIdAtom);
-  const access = useAtomValue(entityAccessAtom);
-  const defaultMembers = useAtomValue(defaultMembersAtom);
+  const membersOf = useAtomValue(entityMembersAtom);
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const applyShare = useSetAtom(applyShareAtom);
@@ -147,14 +145,14 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const members = useMemo(() => {
     const m = new Map<string, MemberSummary>();
     for (const id of eligible)
-      for (const x of access[id] ?? defaultMembers) {
+      for (const x of membersOf(id)) {
         const s = m.get(x.id) ?? { id: x.id, label: x.label, count: 0, levels: new Set<AccessLevel>() };
         s.count++;
         s.levels.add(x.level);
         m.set(x.id, s);
       }
     return [...m.values()];
-  }, [eligible, access, defaultMembers]);
+  }, [eligible, membersOf]);
 
   if (!open) return null;
 
