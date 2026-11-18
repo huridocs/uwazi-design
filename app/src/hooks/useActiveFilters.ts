@@ -177,7 +177,7 @@ export function useActiveFilters(): ActiveFilter[] {
         (k) => {
           const [level, id] = k.split(":");
           const name = users.find((u) => u.id === id)?.username ?? memberGroups.find((g) => g.id === id)?.name ?? id;
-          return `${level === "write" ? "Editor" : "Viewer"}: ${name}`;
+          return `${level === "write" ? "Can edit" : "Can view"}: ${name}`;
         },
         "Shared with no one",
       );

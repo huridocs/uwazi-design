@@ -14,7 +14,7 @@ import {
 } from "../../utils/entityContent";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, User, Users, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
@@ -1313,13 +1313,13 @@ function KeywordFacetCard({
 }
 
 /** Uwazi's "Permissions" filter (`AssigneeFilter.tsx`): the users and groups
- *  the records are shared with, under "Shared as viewer" (read) and "Shared
- *  as editor" (write), with one Match mode for both lists. Admins only, and
+ *  the records are shared with, under "Can view" (read) and "Can edit"
+ *  (write), with one Match mode for both lists. Admins only, and
  *  last in the panel, as Uwazi renders it. A list with nothing to offer reads
  *  "No options found", Uwazi's MultiSelect empty state. */
 const PERMISSION_LEVELS = [
-  { level: "read", title: "Shared as viewer" },
-  { level: "write", title: "Shared as editor" },
+  { level: "read", title: "Can view" },
+  { level: "write", title: "Can edit" },
 ] as const;
 
 function PermissionsFacetCard({
@@ -1381,7 +1381,7 @@ function PermissionsFacetCard({
               ) : (
                 keys.map((k) => {
                   const n = counts.get(k) ?? 0;
-                  const Icon = isGroup(k) ? Users : User;
+                  const Icon = isGroup(k) ? UsersRound : UserRound;
                   return (
                     <FilterOption
                       key={k}
