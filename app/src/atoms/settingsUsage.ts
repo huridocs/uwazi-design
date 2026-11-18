@@ -24,9 +24,9 @@ import {
   type HeldValue,
   type ValueReader,
 } from "../utils/settingsUsage";
-import { cejilReadyAtom, dataSourceAtom, type DataSource } from "./dataSource";
+import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { entitiesAtom } from "./entities";
-import { entityAccessAtom, libraryEntityOverlayAtom } from "./entityOverlay";
+import { entityMembersAtom, libraryEntityOverlayAtom } from "./entityOverlay";
 import { entityMetadataAtom } from "./entityMetadata";
 import type { Language } from "./language";
 import { referencesAtom } from "./references";
@@ -223,16 +223,19 @@ export const relationTypeUsageInAtom = atomFamily((key: string) =>
 
 /* ── Users and groups ──────────────────────────────────────────────────── */
 
-/** Entities shared with a user or group by name in the Share modal. */
-const sharesOf = (access: Record<string, { id: string }[]>, memberId: string) =>
-  Object.values(access).filter((list) => list.some((m) => m.id === memberId)).length;
+/** Records of the open collection shared with a user or group, by the seed or
+ *  in the Share modal. */
+const sharesOf = (get: Getter, memberId: string) => {
+  const membersOf = get(entityMembersAtom);
+  return get(libraryEntitiesAtom).filter((e) => membersOf(e.id).some((m) => m.id === memberId)).length;
+};
 
 export const groupUsageAtom = atomFamily((groupId: string) =>
   atom((get) => {
     const g = get(groupsAtom).find((x) => x.id === groupId);
     const users = get(usersAtom);
     const members = (g?.memberIds ?? []).map((id) => users.find((u) => u.id === id)?.username ?? id);
-    return groupUsage({ members, shares: sharesOf(get(entityAccessAtom), groupId) });
+    return groupUsage({ members, shares: sharesOf(get, groupId) });
   }),
 );
 
@@ -246,7 +249,7 @@ export const userUsageAtom = atomFamily((userId: string) =>
     return userUsage({
       block: userDeleteBlock(users, get(signedInUserAtom)?.id, userId),
       groups,
-      shares: sharesOf(get(entityAccessAtom), userId),
+      shares: sharesOf(get, userId),
     });
   }),
 );

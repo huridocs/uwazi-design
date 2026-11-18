@@ -4,8 +4,7 @@ import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2 } from
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import {
   applyShareAtom,
-  DEFAULT_MEMBERS,
-  entityAccessAtom,
+  entityMembersAtom,
   type AccessLevel,
   type MemberChange,
 } from "../../atoms/entityOverlay";
@@ -78,7 +77,7 @@ interface MemberSummary {
 export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "access", canShare = () => true }: ShareEntityModalProps) {
   const store = useStore();
   const focusedId = useAtomValue(focusedEntityIdAtom);
-  const access = useAtomValue(entityAccessAtom);
+  const membersOf = useAtomValue(entityMembersAtom);
   const applyShare = useSetAtom(applyShareAtom);
   // Frozen when the modal opens: the set the review names is the set Apply
   // writes. Until the opening effect has frozen it (the first render), the
@@ -138,14 +137,14 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const members = useMemo(() => {
     const m = new Map<string, MemberSummary>();
     for (const id of eligible)
-      for (const x of access[id] ?? DEFAULT_MEMBERS) {
+      for (const x of membersOf(id)) {
         const s = m.get(x.id) ?? { id: x.id, label: x.label, count: 0, levels: new Set<AccessLevel>() };
         s.count++;
         s.levels.add(x.level);
         m.set(x.id, s);
       }
     return [...m.values()];
-  }, [eligible, access]);
+  }, [eligible, membersOf]);
 
   if (!open) return null;
 

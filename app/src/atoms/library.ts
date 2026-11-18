@@ -4,6 +4,7 @@ import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
+import { sessionStateAtom, signedInUserAtom } from "./users";
 import { breakpointAtom } from "./viewport";
 import { propertyColumns } from "../utils/entityFields";
 import { templatesAtom } from "./templates";
@@ -443,6 +444,37 @@ export const libraryCountryModeAtom = atom<FacetMode>("OR");
  *  "AND" = entity has all of them (meaningful — an entity carries several). */
 export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
 export const libraryDescriptorModeAtom = atom<FacetMode>("OR");
+
+/** Permissions facet (Uwazi v1's "Permissions" filter): keys are
+ *  `read:<member id>` ("Shared as viewer") and `write:<member id>` ("Shared as
+ *  editor"), a member being a user or a group. */
+export const libraryPermissionFiltersAtom = atom<Record<string, boolean>>({});
+export const libraryPermissionModeAtom = atom<FacetMode>("OR");
+
+/** Whether the signed-in user may filter by permissions: admins and editors,
+ *  as in Uwazi. A collaborator or an anonymous visitor does not see who else a
+ *  record is shared with, and a pick left from before a log out stops
+ *  narrowing. */
+export const libraryPermissionsAllowedAtom = atom((get) => {
+  if (get(sessionStateAtom) !== "signed-in") return false;
+  const role = get(signedInUserAtom)?.role;
+  return role === "admin" || role === "editor";
+});
+
+/** The ids picked at each level, read only where they are allowed. */
+export const libraryPermissionPicksAtom = atom((get) => {
+  const allowed = get(libraryPermissionsAllowedAtom);
+  const picks = get(libraryPermissionFiltersAtom);
+  const read: string[] = [];
+  const write: string[] = [];
+  if (allowed)
+    for (const [k, on] of Object.entries(picks)) {
+      if (!on) continue;
+      if (k.startsWith("read:")) read.push(k.slice(5));
+      else if (k.startsWith("write:")) write.push(k.slice(6));
+    }
+  return { read, write };
+});
 
 /** Date-range property filter (the entity's representative date, e.g. CEJIL
  *  `Fecha`). ISO `yyyy-mm-dd` strings; "" = open-ended on that side. Mirrors
@@ -897,6 +929,8 @@ function switchDataSource(get: Getter, set: Setter, source: DataSource) {
   set(libraryCountryFiltersAtom, {});
   set(libraryStatusFiltersAtom, {});
   set(libraryDescriptorFiltersAtom, {});
+  set(libraryPermissionFiltersAtom, {});
+  set(libraryPermissionModeAtom, "OR");
   set(libraryInheritedFiltersAtom, {});
   set(libraryChainFiltersAtom, {});
   set(libraryDateFromAtom, "");
@@ -921,6 +955,8 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryCountryModeAtom, "OR");
   set(libraryDescriptorFiltersAtom, {});
   set(libraryDescriptorModeAtom, "OR");
+  set(libraryPermissionFiltersAtom, {});
+  set(libraryPermissionModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
@@ -939,6 +975,8 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryCountryModeAtom, "OR");
   set(libraryDescriptorFiltersAtom, {});
   set(libraryDescriptorModeAtom, "OR");
+  set(libraryPermissionFiltersAtom, {});
+  set(libraryPermissionModeAtom, "OR");
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   set(libraryInheritedFiltersAtom, {});
@@ -960,6 +998,8 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   n += Object.values(get(libraryStatusFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(libraryCountryFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(libraryDescriptorFiltersAtom)).filter(Boolean).length;
+  const perms = get(libraryPermissionPicksAtom);
+  n += perms.read.length + perms.write.length;
   if (get(libraryDateFromAtom) || get(libraryDateToAtom)) n += 1;
   for (const vals of Object.values(get(libraryInheritedFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;

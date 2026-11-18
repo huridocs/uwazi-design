@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, User, Users, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { templatesAtom } from "../../atoms/templates";
 import { getEntityType } from "../../data/entities";
@@ -15,6 +15,9 @@ import {
   libraryCountryModeAtom,
   libraryDescriptorFiltersAtom,
   libraryDescriptorModeAtom,
+  libraryPermissionFiltersAtom,
+  libraryPermissionModeAtom,
+  libraryPermissionsAllowedAtom,
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
@@ -25,6 +28,10 @@ import {
   type FacetMode,
 } from "../../atoms/library";
 import { MatchModeToggle } from "../shared/MatchModeToggle";
+import { SectionLabel } from "../shared/SectionLabel";
+import { usePermissionFilter } from "../../hooks/usePermissionFilter";
+import { entityMembersAtom } from "../../atoms/entityOverlay";
+import { groupsAtom, usersAtom } from "../../atoms/users";
 import { typeHasDocument } from "../../data/entityProfiles";
 import { cejilSettings } from "../../data/cejil/settings";
 import {
@@ -66,6 +73,13 @@ export function LibraryFilters() {
   const [countryMode, setCountryMode] = useAtom(libraryCountryModeAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const [descriptorMode, setDescriptorMode] = useAtom(libraryDescriptorModeAtom);
+  const [permissionFilters, setPermissionFilters] = useAtom(libraryPermissionFiltersAtom);
+  const [permissionMode, setPermissionMode] = useAtom(libraryPermissionModeAtom);
+  const permissionsAllowed = useAtomValue(libraryPermissionsAllowedAtom);
+  const permissionFilter = usePermissionFilter();
+  const membersOf = useAtomValue(entityMembersAtom);
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
@@ -125,6 +139,7 @@ export function LibraryFilters() {
       countryMode,
       descriptors: on(descriptorFilters),
       descriptorMode,
+      ...permissionFilter,
       fromMs: dateFrom ? Date.parse(dateFrom) : null,
       toMs: dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null,
       inherited,
@@ -137,7 +152,7 @@ export function LibraryFilters() {
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
-    statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
+    statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode, permissionFilter,
     dateFrom, dateTo, inheritedFilters, chainFilters, query, matchTypes,
   ]);
 
@@ -165,6 +180,27 @@ export function LibraryFilters() {
         for (const c of entityCountries(e, language)) m.set(c, (m.get(c) ?? 0) + 1);
     return m;
   }, [entities, filterState, language]);
+  // Records per member and level ("read:u2"), over the records passing every
+  // other filter. Not computed for a user who cannot see the facet.
+  const permissionCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!permissionsAllowed) return m;
+    for (const e of entities) {
+      if (!matchesAll(e, filterState, "permissions")) continue;
+      for (const x of membersOf(e.id)) {
+        const k = `${x.level}:${x.id}`;
+        m.set(k, (m.get(k) ?? 0) + 1);
+      }
+    }
+    return m;
+  }, [entities, filterState, membersOf, permissionsAllowed]);
+  const permissionMembers = useMemo<PermissionMember[]>(
+    () => [
+      ...users.map((u) => ({ id: u.id, label: u.username, group: false })),
+      ...groups.map((g) => ({ id: g.id, label: g.name, group: true })),
+    ],
+    [users, groups],
+  );
   const descriptorCounts = useMemo(() => {
     const m = new Map<string, number>();
     for (const e of entities)
@@ -303,6 +339,18 @@ export function LibraryFilters() {
             bold
           />
         </FacetCard>
+
+        {permissionsAllowed && (
+          <PermissionsFacetCard
+            members={permissionMembers}
+            counts={permissionCounts}
+            selected={permissionFilters}
+            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
+            onClear={() => setPermissionFilters({})}
+            mode={permissionMode}
+            onModeChange={setPermissionMode}
+          />
+        )}
 
         {dataSource === "cejil" ? (
           <>
@@ -839,6 +887,110 @@ function KeywordFacetCard({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ── Permissions card ──
+   Uwazi v1's "Permissions" filter: the users and groups records are shared
+   with, under "Shared as viewer" (read) and "Shared as editor" (write), with
+   one AND/OR for both lists. Admins and editors only. */
+
+interface PermissionMember {
+  id: string;
+  label: string;
+  group: boolean;
+}
+
+const PERMISSION_LEVELS = [
+  { level: "read", title: "Shared as viewer" },
+  { level: "write", title: "Shared as editor" },
+] as const;
+
+function PermissionsFacetCard({
+  members,
+  counts,
+  selected,
+  onToggle,
+  onClear,
+  mode,
+  onModeChange,
+}: {
+  members: PermissionMember[];
+  counts: Map<string, number>;
+  selected: Record<string, boolean>;
+  onToggle: (key: string) => void;
+  onClear: () => void;
+  mode: FacetMode;
+  onModeChange: (m: FacetMode) => void;
+}) {
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+  return (
+    <div className={`${FACET_CARD} space-y-1.5`}>
+      <div className="flex items-center justify-between gap-2 px-2 pt-1">
+        <span className="flex items-center gap-1.5 min-w-0">
+          <span className="text-tab font-bold text-ink truncate">Permissions</span>
+          {selectedCount > 0 && (
+            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
+              {selectedCount}
+            </span>
+          )}
+        </span>
+        <span className="flex items-center gap-1.5 shrink-0">
+          {selectedCount > 0 && (
+            <button
+              onClick={onClear}
+              className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+            >
+              <X size={11} />
+              Clear
+            </button>
+          )}
+          <MatchModeToggle mode={mode} onChange={onModeChange} groupLabel="Match mode for Permissions" />
+        </span>
+      </div>
+      {PERMISSION_LEVELS.map(({ level, title }) => {
+        // Members this level reaches in the current results, plus any picked,
+        // so a pick never disappears under the other filters.
+        const rows = members
+          .map((m) => ({ ...m, key: `${level}:${m.id}`, count: counts.get(`${level}:${m.id}`) ?? 0 }))
+          .filter((m) => m.count > 0 || selected[m.key])
+          .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+        return (
+          <div key={level} role="group" aria-label={title}>
+            <SectionLabel className="block px-2 pt-1 pb-0.5">{title}</SectionLabel>
+            {rows.length === 0 ? (
+              <p className="px-2 py-1 text-xs text-ink-tertiary">Not shared with anyone</p>
+            ) : (
+              rows.map((m) => {
+                const checked = !!selected[m.key];
+                const Icon = m.group ? Users : User;
+                return (
+                  <label
+                    key={m.key}
+                    className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
+                      checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onChange={() => onToggle(m.key)}
+                      ariaLabel={`${title}: ${m.label}${m.group ? " (group)" : ""}`}
+                    />
+                    <span className="flex-1 min-w-0 flex items-center gap-1.5">
+                      <Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />
+                      <span className={`truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
+                        {m.label}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-secondary">{m.count}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

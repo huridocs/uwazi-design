@@ -12,7 +12,10 @@ import {
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
+  libraryPermissionFiltersAtom,
+  libraryPermissionsAllowedAtom,
 } from "../atoms/library";
+import { groupsAtom, usersAtom } from "../atoms/users";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { languageAtom } from "../atoms/language";
 import { getEntityType } from "../data/entities";
@@ -50,6 +53,10 @@ export function useActiveFilters(): ActiveFilter[] {
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
+  const [permissionFilters, setPermissionFilters] = useAtom(libraryPermissionFiltersAtom);
+  const permissionsAllowed = useAtomValue(libraryPermissionsAllowedAtom);
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
 
   return useMemo<ActiveFilter[]>(() => {
     const out: ActiveFilter[] = [];
@@ -109,6 +116,23 @@ export function useActiveFilters(): ActiveFilter[] {
           remove: drop(setDescriptorFilters, d),
         });
 
+    // Picks a signed-out visitor or a collaborator cannot see do not filter
+    // either (`libraryPermissionPicksAtom`), so they get no chip.
+    if (permissionsAllowed)
+      for (const [k, on] of Object.entries(permissionFilters)) {
+        if (!on) continue;
+        const [level, id] = k.split(":");
+        const name = users.find((u) => u.id === id)?.username ?? groups.find((g) => g.id === id)?.name ?? id;
+        out.push({
+          id: `perm-${k}`,
+          group: level === "write" ? "Shared as editor" : "Shared as viewer",
+          // The chip shows only its label, and a member can be picked at both
+          // levels, so the label names the level.
+          label: `${level === "write" ? "Editor" : "Viewer"}: ${name}`,
+          remove: drop(setPermissionFilters, k),
+        });
+      }
+
     if (dateFrom || dateTo)
       out.push({
         id: "date",
@@ -159,6 +183,10 @@ export function useActiveFilters(): ActiveFilter[] {
     statusFilters,
     countryFilters,
     descriptorFilters,
+    permissionFilters,
+    permissionsAllowed,
+    users,
+    groups,
     dateFrom,
     dateTo,
     inheritedFilters,
@@ -171,6 +199,7 @@ export function useActiveFilters(): ActiveFilter[] {
     setStatusFilters,
     setCountryFilters,
     setDescriptorFilters,
+    setPermissionFilters,
     setDateFrom,
     setDateTo,
     setInheritedFilters,

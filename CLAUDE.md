@@ -354,6 +354,13 @@ and the files ported with it; other surfaces have not had the pass yet.
 
 ### Library
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
+- Permissions facet (Uwazi v1's, huridocs/uwazi issue 10020): after Status, for signed-in admins and
+  editors only (`libraryPermissionsAllowedAtom`). "Shared as viewer" lists the users and groups
+  records are shared with at read, "Shared as editor" at write, with one AND/OR for both
+  (`libraryPermissionFiltersAtom`, keys `read:<id>` / `write:<id>`). A record's members are
+  `entityMembersAtom` (`atoms/entityOverlay.ts`): the session's Share changes, else
+  `seedMembersOf`, a stable seed (four in ten records shared with no one), less users and
+  groups deleted in the session. Settings' "Shared with N entities" counts the open collection.
 - Search evidence comes from one path, `buildSnippetsFor` / `matchCategories`
   (`utils/librarySnippets.ts`, tokens from `utils/queryTokens.ts`), used by:
   - `MatchOrigin`: a row mark in the List table's Match column, shown only when the match is in

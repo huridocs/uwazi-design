@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
-import { seedUsers } from "../data/settings";
+import { seedGroups, seedUsers } from "../data/settings";
+import { registerSettingsReset } from "./settingsReset";
 import { getEntityProfile } from "../data/entityProfiles";
 import { adapterPatch, changedFieldIds, mergeScalarsByLang } from "../utils/entityEdit";
 import {
@@ -181,17 +182,83 @@ export const undoAtom = atom(null, (get, set, ref: string): boolean => {
    Who can see or edit each entity, beside the rest of the session's changes.
    Visibility is not here: it IS the entity's `published`, patched through the
    overlay, so the Status facet, the Restricted lock and the counts follow. An
-   entity with no entry has the seed's members (the one collaborator the
-   Share modal has always opened with). */
+   entity with no entry has its seed members (`seedMembersOf`). */
 export type AccessLevel = "read" | "write";
 export interface AccessMember {
   id: string;
   label: string;
   level: AccessLevel;
 }
-export const DEFAULT_MEMBERS: AccessMember[] = seedUsers
-  .slice(0, 1)
-  .map((u) => ({ id: u.id, label: u.username, level: "read" as AccessLevel }));
+/** Who the seed shares records with: the editors and collaborators, and the
+ *  groups that are not Administrators (admins see every record anyway). An
+ *  editor or a group gets write by default, a collaborator read; one in four
+ *  takes the other level. */
+const SEED_POOL: { id: string; label: string; level: AccessLevel }[] = [
+  ...seedUsers
+    .filter((u) => u.role !== "admin" && !u.locked)
+    .map((u) => ({ id: u.id, label: u.username, level: (u.role === "editor" ? "write" : "read") as AccessLevel })),
+  ...seedGroups
+    .filter((g) => g.id !== "g1")
+    .map((g) => ({ id: g.id, label: g.name, level: "write" as AccessLevel })),
+];
+
+/** FNV-1a: a stable number per record id, so the seed is the same on every load. */
+function idHash(id: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+const seedCache = new Map<string, AccessMember[]>();
+/** A record's members before any Share in this session. Four in ten records
+ *  are shared with no one, the rest with one to three users or groups. Uwazi
+ *  stores these on the entity (`permissions`); the prototype derives them. */
+export function seedMembersOf(id: string): AccessMember[] {
+  const hit = seedCache.get(id);
+  if (hit) return hit;
+  const h = idHash(id);
+  const roll = h % 100;
+  const n = roll < 40 ? 0 : roll < 70 ? 1 : roll < 90 ? 2 : 3;
+  const out: AccessMember[] = [];
+  for (let i = 0; i < n; i++) {
+    const m = SEED_POOL[(Math.floor(h / 100) + i * 5) % SEED_POOL.length];
+    if (out.some((x) => x.id === m.id)) continue;
+    const flip = ((h >>> (8 + i * 2)) & 3) === 0;
+    out.push({ ...m, level: flip ? (m.level === "write" ? "read" : "write") : m.level });
+  }
+  seedCache.set(id, out);
+  return out;
+}
+
+/** A record's members: the session's Share changes, else the seed less any
+ *  user or group deleted in this session. */
+export const membersOf = (
+  access: Record<string, AccessMember[]>,
+  id: string,
+  removed: ReadonlySet<string> = NO_REMOVED,
+): AccessMember[] => {
+  const own = access[id];
+  if (own) return own;
+  const seed = seedMembersOf(id);
+  return removed.size && seed.some((m) => removed.has(m.id)) ? seed.filter((m) => !removed.has(m.id)) : seed;
+};
+const NO_REMOVED: ReadonlySet<string> = new Set();
+
+/** Users and groups deleted in this session: the seed's shares with them go
+ *  too, as Uwazi removes a deleted member from every entity's permissions. */
+export const removedAccessMembersAtom = atom<ReadonlySet<string>>(NO_REMOVED);
+// Reset demo data brings the users and groups back, so their seed shares too.
+registerSettingsReset((set) => set(removedAccessMembersAtom, NO_REMOVED));
+
+/** `membersOf` bound to the session's state, for components and atoms. */
+export const entityMembersAtom = atom((get) => {
+  const access = get(entityAccessAtom);
+  const removed = get(removedAccessMembersAtom);
+  return (id: string) => membersOf(access, id, removed);
+});
 
 export const entityAccessAtom = atom<Record<string, AccessMember[]>>({});
 
@@ -202,6 +269,7 @@ export const removeAccessMemberAtom = atom(null, (get, set, memberId: string) =>
   for (const [id, list] of Object.entries(access))
     next[id] = list.some((m) => m.id === memberId) ? list.filter((m) => m.id !== memberId) : list;
   set(entityAccessAtom, next);
+  set(removedAccessMembersAtom, new Set([...get(removedAccessMembersAtom), memberId]));
 });
 
 /** One member's change across a set: given a level (added where missing,
@@ -240,7 +308,7 @@ export const applyShareAtom = atom(
       if (visibility && !!e.published !== (visibility === "published"))
         patches[id] = { published: visibility === "published" };
       if (Object.keys(changes).length) {
-        let list = [...(access[id] ?? DEFAULT_MEMBERS)];
+        let list = [...membersOf(access, id, get(removedAccessMembersAtom))];
         for (const [mid, c] of Object.entries(changes)) {
           if (c.kind === "remove") list = list.filter((m) => m.id !== mid);
           else if (list.some((m) => m.id === mid))

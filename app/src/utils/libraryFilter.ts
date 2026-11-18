@@ -59,6 +59,14 @@ export interface LibraryFilterState {
   countryMode: "AND" | "OR";
   descriptors: string[];
   descriptorMode: "AND" | "OR";
+  /** Permissions facet: user and group ids picked under "Shared as viewer"
+   *  (read) and "Shared as editor" (write). Empty unless the signed-in user may
+   *  filter by permissions (admins and editors). */
+  sharedRead: string[];
+  sharedWrite: string[];
+  permissionMode: "AND" | "OR";
+  /** A record's members (`entityMembersAtom`); null when nothing is picked. */
+  membersOf: ((id: string) => readonly { id: string; level: "read" | "write" }[]) | null;
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
@@ -86,6 +94,7 @@ export type FacetKey =
   | "status"
   | "country"
   | "descriptor"
+  | "permissions"
   | "date"
   | "inherited"
   | "search"
@@ -143,6 +152,10 @@ const DEFAULT_FILTER_STATE: LibraryFilterState = {
   countryMode: "OR",
   descriptors: [],
   descriptorMode: "OR",
+  sharedRead: [],
+  sharedWrite: [],
+  permissionMode: "OR",
+  membersOf: null,
   fromMs: null,
   toMs: null,
   inherited: [],
@@ -184,6 +197,10 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     countryMode: s.countryMode ?? "OR",
     descriptors: s.descriptors ?? [],
     descriptorMode: s.descriptorMode ?? "OR",
+    sharedRead: s.sharedRead ?? [],
+    sharedWrite: s.sharedWrite ?? [],
+    permissionMode: s.permissionMode ?? "OR",
+    membersOf: s.membersOf ?? null,
     fromMs: s.fromMs ?? null,
     toMs: s.toMs ?? null,
     inherited: s.inherited ?? [],
@@ -217,6 +234,7 @@ const PREDICATES: Record<
     (s.descriptorMode === "AND"
       ? s.descriptors.every((d) => (e.descriptors ?? []).includes(d))
       : (e.descriptors ?? []).some((d) => s.descriptors.includes(d))),
+  permissions: (e, s) => matchesPermissions(e.id, s),
   date: (e, s) => {
     if (!s.fromMs && !s.toMs) return true;
     if (!e.createdAt) return false;
@@ -244,6 +262,22 @@ const PREDICATES: Record<
       matchCategories(e, s.q, s.language, s.source),
     ),
 };
+
+/** The Permissions facet. Each pick is one condition: the record is shared
+ *  with that user or group at that level ("Shared as viewer" is read, "Shared
+ *  as editor" is write), as Uwazi v1's filter reads them. OR keeps a record
+ *  meeting any condition, AND one meeting all. */
+function matchesPermissions(id: string, s: LibraryFilterState): boolean {
+  if (!s.membersOf || (s.sharedRead.length === 0 && s.sharedWrite.length === 0)) return true;
+  const members = s.membersOf(id);
+  const has = (memberId: string, level: "read" | "write") =>
+    members.some((m) => m.id === memberId && m.level === level);
+  const conditions = [
+    ...s.sharedRead.map((m) => () => has(m, "read")),
+    ...s.sharedWrite.map((m) => () => has(m, "write")),
+  ];
+  return s.permissionMode === "AND" ? conditions.every((c) => c()) : conditions.some((c) => c());
+}
 
 /** The match-type chip gate, as ONE definition.
  *

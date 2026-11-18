@@ -1,3 +1,4 @@
+import { usePermissionFilter } from "../hooks/usePermissionFilter";
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
@@ -341,6 +342,7 @@ export function LibraryView() {
     .map(([d]) => d);
   const wantPublished = !!statusFilters.published;
   const wantRestricted = !!statusFilters.restricted;
+  const permissionFilter = usePermissionFilter();
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
   const hasQuery = q.length > 0;
@@ -441,6 +443,7 @@ export function LibraryView() {
       countryMode,
       descriptors: activeDescriptors,
       descriptorMode,
+      ...permissionFilter,
       fromMs,
       toMs,
       inherited: activeInherited,
@@ -463,6 +466,7 @@ export function LibraryView() {
       countryMode,
       activeDescriptors.join(","),
       descriptorMode,
+      permissionFilter,
       fromMs,
       toMs,
       inheritedKey,
@@ -575,7 +579,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, permissionFilter, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the FACETS widened — so the Results
   // tab can offer to reveal the ones the current facets are hiding.
