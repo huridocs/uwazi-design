@@ -1,3 +1,4 @@
+import { AlertBanner } from "../../shared/AlertBanner";
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { KeyRound, Lock, Mail, Shield, Trash2, UserPlus, Users } from "lucide-react";
@@ -71,6 +72,10 @@ export function UsersPage() {
   const resetPassword = useSetAtom(adminResetPasswordAtom);
   const notify = useNotify();
   const [emailsOpen, setEmailsOpen] = useState(false);
+  /** How many users the last bulk Reset password went to, until dismissed or
+   *  the tab changes. Shown above the table and copied to the Beacon: in the
+   *  Beacon alone it went unseen (huridocs/uwazi issue 9748). */
+  const [resetSentCount, setResetSentCount] = useState<number | null>(null);
   const addToGroup = useSetAtom(bulkAddToGroupAtom);
   const setRole = useSetAtom(bulkSetRoleAtom);
   const deleteUsers = useSetAtom(bulkDeleteUsersAtom);
@@ -216,6 +221,7 @@ export function UsersPage() {
               icon: <KeyRound size={13} />,
               onClick: () => {
                 for (const id of tickedIds) resetPassword(id);
+                setResetSentCount(tickedIds.length);
                 notify(SETTINGS_NOTICES.passwordResetSent, "success");
               },
             },
@@ -240,6 +246,7 @@ export function UsersPage() {
           onChange={(v) => {
             setTab(v as "users" | "groups");
             setTicked(new Set());
+            setResetSentCount(null);
           }}
           tabs={[
             { id: "users", label: "Users", count: users.length },
@@ -387,6 +394,13 @@ export function UsersPage() {
         </>
       }
     >
+      {tab === "users" && resetSentCount !== null && (
+        <div className="mb-3">
+          <AlertBanner variant="success" onDismiss={() => setResetSentCount(null)}>
+            Instructions to reset the password were sent to {people(resetSentCount)}.
+          </AlertBanner>
+        </div>
+      )}
       {tab === "users" ? (
         <SettingsTable
           columns={userColumns}
