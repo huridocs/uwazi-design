@@ -451,14 +451,13 @@ export const libraryDescriptorModeAtom = atom<FacetMode>("OR");
 export const libraryPermissionFiltersAtom = atom<Record<string, boolean>>({});
 export const libraryPermissionModeAtom = atom<FacetMode>("OR");
 
-/** Whether the signed-in user may filter by permissions: admins and editors,
- *  as in Uwazi. A collaborator or an anonymous visitor does not see who else a
- *  record is shared with, and a pick left from before a log out stops
- *  narrowing. */
+/** Whether the signed-in user may filter by permissions: admins only, as in
+ *  Uwazi (`AssigneeFilter` sits in `NeedAuthorization`, whose default role is
+ *  admin). Anyone else does not see who a record is shared with, and a pick
+ *  left from before a log out or a role change stops narrowing. */
 export const libraryPermissionsAllowedAtom = atom((get) => {
   if (get(sessionStateAtom) !== "signed-in") return false;
-  const role = get(signedInUserAtom)?.role;
-  return role === "admin" || role === "editor";
+  return get(signedInUserAtom)?.role === "admin";
 });
 
 /** The ids picked at each level, read only where they are allowed. */

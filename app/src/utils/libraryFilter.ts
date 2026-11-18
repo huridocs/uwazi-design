@@ -61,7 +61,7 @@ export interface LibraryFilterState {
   descriptorMode: "AND" | "OR";
   /** Permissions facet: user and group ids picked under "Shared as viewer"
    *  (read) and "Shared as editor" (write). Empty unless the signed-in user may
-   *  filter by permissions (admins and editors). */
+   *  filter by permissions (admins). */
   sharedRead: string[];
   sharedWrite: string[];
   permissionMode: "AND" | "OR";

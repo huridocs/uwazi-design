@@ -340,18 +340,6 @@ export function LibraryFilters() {
           />
         </FacetCard>
 
-        {permissionsAllowed && (
-          <PermissionsFacetCard
-            members={permissionMembers}
-            counts={permissionCounts}
-            selected={permissionFilters}
-            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
-            onClear={() => setPermissionFilters({})}
-            mode={permissionMode}
-            onModeChange={setPermissionMode}
-          />
-        )}
-
         {dataSource === "cejil" ? (
           <>
             {/* CEJIL: the curated summa.cejil.org filter config — top-level
@@ -528,6 +516,20 @@ export function LibraryFilters() {
               setDateFrom("");
               setDateTo("");
             }}
+          />
+        )}
+
+        {/* Last, as Uwazi renders it (`FiltersForm.jsx`: after the property
+            filters). */}
+        {permissionsAllowed && (
+          <PermissionsFacetCard
+            members={permissionMembers}
+            counts={permissionCounts}
+            selected={permissionFilters}
+            onToggle={(k) => setPermissionFilters((prev) => ({ ...prev, [k]: !prev[k] }))}
+            onClear={() => setPermissionFilters({})}
+            mode={permissionMode}
+            onModeChange={setPermissionMode}
           />
         )}
       </div>
@@ -892,9 +894,11 @@ function KeywordFacetCard({
 }
 
 /* ── Permissions card ──
-   Uwazi v1's "Permissions" filter: the users and groups records are shared
-   with, under "Shared as viewer" (read) and "Shared as editor" (write), with
-   one AND/OR for both lists. Admins and editors only. */
+   Uwazi's "Permissions" filter (`AssigneeFilter.tsx`): the users and groups
+   records are shared with, under "Shared as viewer" (read) and "Shared as
+   editor" (write), with one AND/OR for both lists. Admins only, last in the
+   panel. A list with nothing to offer reads "No options found", Uwazi's
+   MultiSelect empty state. */
 
 interface PermissionMember {
   id: string;
@@ -960,7 +964,7 @@ function PermissionsFacetCard({
           <div key={level} role="group" aria-label={title}>
             <SectionLabel className="block px-2 pt-1 pb-0.5">{title}</SectionLabel>
             {rows.length === 0 ? (
-              <p className="px-2 py-1 text-xs text-ink-tertiary">Not shared with anyone</p>
+              <p className="px-2 py-1 text-xs text-ink-tertiary">No options found</p>
             ) : (
               rows.map((m) => {
                 const checked = !!selected[m.key];

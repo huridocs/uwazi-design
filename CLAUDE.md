@@ -354,10 +354,11 @@ and the files ported with it; other surfaces have not had the pass yet.
 
 ### Library
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
-- Permissions facet (Uwazi v1's, huridocs/uwazi issue 10020): after Status, for signed-in admins and
-  editors only (`libraryPermissionsAllowedAtom`). "Shared as viewer" lists the users and groups
-  records are shared with at read, "Shared as editor" at write, with one AND/OR for both
-  (`libraryPermissionFiltersAtom`, keys `read:<id>` / `write:<id>`). A record's members are
+- Permissions facet (Uwazi's `AssigneeFilter`, huridocs/uwazi issue 10020): the last facet card, as
+  in Uwazi's `FiltersForm`, for signed-in admins only (`libraryPermissionsAllowedAtom`, Uwazi's
+  `NeedAuthorization` default). "Shared as viewer" lists the users and groups records are shared
+  with at read, "Shared as editor" at write, with one AND/OR for both (`libraryPermissionFiltersAtom`,
+  keys `read:<id>` / `write:<id>`). A list with no option reads "No options found". A record's members are
   `entityMembersAtom` (`atoms/entityOverlay.ts`): the session's Share changes, else
   `seedMembersOf`, a stable seed (four in ten records shared with no one), less users and
   groups deleted in the session. Settings' "Shared with N entities" counts the open collection.
