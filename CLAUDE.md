@@ -862,6 +862,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Account locked, Uwazi's subjects and bodies) and their link opens the page. It opens from the
   auth screens' `DemoAccounts` note, Users & Groups and the Dev panel.
 
+### Live translate
+- Uwazi's inline edit, admins only: Settings menu › Live translate (ON/OFF row, `liveTranslateAtom`).
+  While on, `LiveTranslateStrip` sits under the navbar (amber, "Live translate is on.") with
+  "Turn off live translate", and Escape ends it unless an overlay holds Escape; the way out in
+  Uwazi was only the pressed button (huridocs/uwazi issue 9973). The strip marks the root
+  `data-live-translate`, which underlines interface text dashed amber (`index.css`). Clicking
+  underlined text does nothing yet: the translation editor is not built.
+
 ### Notifications and Bert
 - `Beacon` (navbar right cluster) is the indicator; `NotificationsSlideOver` is the log.
   - Beacon: a `rounded-md bg-warm` button with no edge, showing the `UwaziLoader` mark coloured by

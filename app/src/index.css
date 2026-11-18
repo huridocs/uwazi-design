@@ -725,3 +725,20 @@ button:not(:disabled):not([aria-disabled="true"]) {
     display: none;
   }
 }
+
+/* Live translate (`LiveTranslateStrip`): the interface's translatable text
+   (navbar and tab labels, section and field labels, headings) gets Uwazi's
+   dashed amber underline while the mode is on. Record content is left alone. */
+:root[data-live-translate] :is(
+  [data-component="Navbar"] button,
+  [role="tab"],
+  [data-component="SectionLabel"],
+  main h1, main h2, main h3,
+  main label
+) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--color-warning);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}

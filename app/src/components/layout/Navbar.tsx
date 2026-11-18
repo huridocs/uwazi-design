@@ -1,3 +1,4 @@
+import { liveTranslateAtom } from "../../atoms/liveTranslate";
 import { Fragment, useState, useRef, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -86,6 +87,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // UI (chrome) language — subscribing here is also what re-renders the navbar's
   // t() strings when the switcher below changes it.
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
+  const [liveTranslate, setLiveTranslate] = useAtom(liveTranslateAtom);
   const guard = useDirtyGuard();
   // Signed out: no Settings or Log out, a Log in button in their place.
   const signedOut = useAtomValue(sessionStateAtom) === "signed-out";
@@ -532,6 +534,28 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       steady
                     />
                   </div>
+                  {/* Live translate (Uwazi: the language menu's footer, admins
+                      only). The row says whether it is on; the strip under the
+                      navbar is where it ends. */}
+                  {systemAllowed && (
+                    <button
+                      onClick={() => { setLiveTranslate((v) => !v); setSettingsOpen(false); }}
+                      data-part="live-translate"
+                      className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Languages size={14} className="text-ink-tertiary" />
+                        {t("System", "Live translate")}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
+                          liveTranslate ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
+                        }`}
+                      >
+                        {liveTranslate ? "ON" : "OFF"}
+                      </span>
+                    </button>
+                  )}
                   {/* Library layout: experimental, a session switch like the two
                       above. It applies from 1024px; on a tablet the row stays and
                       the options say so. Phones never get it (no dropdown there,
