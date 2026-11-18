@@ -1,3 +1,4 @@
+import { LiveTranslateEditor } from "./components/layout/LiveTranslateEditor";
 import { LiveTranslateStrip } from "./components/layout/LiveTranslateStrip";
 import { useEffect } from "react";
 import { collectionSettings } from "./atoms/settingsSingletons";
@@ -165,6 +166,7 @@ export function App() {
         onToggleRtl={handleToggleRtl}
       />
       <LiveTranslateStrip />
+      <LiveTranslateEditor />
       {/* Before `main` in the tab order, floating over the navbar's edge. */}
       {appView === "entity" && <PublishedViewToggle />}
       {/* The document's one `main`: whichever view is switched in. */}

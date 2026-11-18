@@ -867,8 +867,13 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   While on, `LiveTranslateStrip` sits under the navbar (amber, "Live translate is on.") with
   "Turn off live translate", and Escape ends it unless an overlay holds Escape; the way out in
   Uwazi was only the pressed button (huridocs/uwazi issue 9973). The strip marks the root
-  `data-live-translate`, which underlines interface text dashed amber (`index.css`). Clicking
-  underlined text does nothing yet: the translation editor is not built.
+  `data-live-translate`, which underlines interface text dashed amber (`index.css`).
+- A click on underlined text does not run the control: `LiveTranslateEditor` (capture-phase
+  listener, targets `LIVE_TRANSLATE_TARGETS`, kept in step with the CSS) opens a dialog with the
+  text's key and one field per installed language, the default language read-only as the key.
+  Save writes Settings › Translations (`saveTranslationsAtom`). The innermost text that is a key
+  wins; a label with no key yet joins the User Interface context (`extraUiKeysAtom`, starting from
+  `uiStringDefaults`), because the prototype carries only the first 412 of Uwazi's System keys.
 
 ### Notifications and Bert
 - `Beacon` (navbar right cluster) is the indicator; `NotificationsSlideOver` is the log.

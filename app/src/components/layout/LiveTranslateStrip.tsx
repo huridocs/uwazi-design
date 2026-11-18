@@ -9,7 +9,8 @@ import { t } from "../../utils/i18n";
  *  the way out, which in Uwazi was only the pressed "Live translate" button
  *  (huridocs/uwazi issue 9973). Escape ends it too, unless an overlay holds
  *  Escape. The strip also marks the root (`data-live-translate`), which
- *  underlines translatable text (`index.css`). */
+ *  underlines translatable text (`index.css`); a click on it opens
+ *  `LiveTranslateEditor`. */
 export function LiveTranslateStrip() {
   const [on, setOn] = useAtom(liveTranslateAtom);
   const layers = useAtomValue(layerStackAtom);
@@ -41,7 +42,7 @@ export function LiveTranslateStrip() {
       <Languages size={14} aria-hidden className="shrink-0" />
       <p role="status" className="flex-1 min-w-0 truncate text-xs">
         <span className="font-semibold">{t("System", "Live translate is on.")}</span>{" "}
-        {t("System", "Translatable text is underlined.")}
+        {t("System", "Click underlined text to translate it.")}
       </p>
       <kbd className="hidden md:inline text-meta font-medium opacity-70">Esc</kbd>
       <button
