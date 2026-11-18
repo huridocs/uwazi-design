@@ -353,6 +353,9 @@ and the files ported with it; other surfaces have not had the pass yet.
   values; search applies within it; a row unticked there stays until the view changes.
 
 ### Library
+- A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
+  `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the
+  Permissions action draws people (`Users`), never a lock.
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
 - Search evidence comes from one path, `buildSnippetsFor` / `matchCategories`
   (`utils/librarySnippets.ts`, tokens from `utils/queryTokens.ts`), used by:

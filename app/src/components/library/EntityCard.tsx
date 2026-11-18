@@ -1,3 +1,4 @@
+import { RestrictedMark } from "./RestrictedMark";
 import { Fragment, memo } from "react";
 import { Link2, X } from "lucide-react";
 import { useAtomValue } from "jotai";
@@ -243,6 +244,7 @@ export const EntityCard = memo(function EntityCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <RestrictedMark entity={entity} />
             {connectionBadge}
             {viewButton}
             {onRemove !== undefined && (
@@ -409,6 +411,7 @@ export const EntityCard = memo(function EntityCard({
       <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
         <EntityTypeTag typeId={entity.typeId} />
         <div className="shrink-0 flex items-center gap-2">
+          <RestrictedMark entity={entity} />
           {connectionBadge}
           {viewButton}
         </div>

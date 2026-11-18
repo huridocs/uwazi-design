@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSetAtom, useStore } from "jotai";
-import { Lock, Share2, Trash2 } from "lucide-react";
+import { Share2, Trash2, Users } from "lucide-react";
 import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
 import { deselectIdsAtom, whenBulkCleanAtom } from "../../atoms/library";
 import { notificationsAtom } from "../../atoms/notifications";
@@ -93,13 +93,13 @@ export function EntityBarActions({
           touchTarget
           items={[
             { id: "share", label: "Share", icon: <Share2 size={13} />, onSelect: () => setDialog("share") },
-            { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onSelect: () => setDialog("permissions") },
+            { id: "permissions", label: "Permissions", icon: <Users size={13} />, onSelect: () => setDialog("permissions") },
           ]}
         />
       ) : (
         <>
           {button("Share", <Share2 size={13} />, () => setDialog("share"), BAR_GHOST, "share")}
-          {button("Permissions", <Lock size={13} />, () => setDialog("permissions"), BAR_GHOST, "permissions")}
+          {button("Permissions", <Users size={13} />, () => setDialog("permissions"), BAR_GHOST, "permissions")}
         </>
       )}
       <BarDivider />
