@@ -352,6 +352,14 @@ and the files ported with it; other surfaces have not had the pass yet.
   of the search row (`FacetSection`'s `searchAside`, `showOnly`). Selected lists the ticked
   values; search applies within it; a row unticked there stays until the view changes.
 
+### Live translate
+- Uwazi's inline edit, admins only: Settings menu › Live translate (ON/OFF row, `liveTranslateAtom`).
+  While on, `LiveTranslateStrip` sits under the navbar (amber, "Live translate is on.") with
+  "Turn off live translate", and Escape ends it unless an overlay holds Escape; the way out in
+  Uwazi was only the pressed button (huridocs/uwazi issue 9973). The strip marks the root
+  `data-live-translate`, which underlines interface text dashed amber (`index.css`). Clicking
+  underlined text does nothing yet: the translation editor is not built.
+
 ### Library
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
 - Search evidence comes from one path, `buildSnippetsFor` / `matchCategories`
