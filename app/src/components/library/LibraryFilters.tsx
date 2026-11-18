@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, User, Users, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { templatesAtom } from "../../atoms/templates";
 import { getEntityType } from "../../data/entities";
@@ -895,8 +895,8 @@ function KeywordFacetCard({
 
 /* ── Permissions card ──
    Uwazi's "Permissions" filter (`AssigneeFilter.tsx`): the users and groups
-   records are shared with, under "Shared as viewer" (read) and "Shared as
-   editor" (write), with one AND/OR for both lists. Admins only, last in the
+   records are shared with, under "Can view" (read) and "Can edit"
+   (write), with one AND/OR for both lists. Admins only, last in the
    panel. A list with nothing to offer reads "No options found", Uwazi's
    MultiSelect empty state. */
 
@@ -907,8 +907,8 @@ interface PermissionMember {
 }
 
 const PERMISSION_LEVELS = [
-  { level: "read", title: "Shared as viewer" },
-  { level: "write", title: "Shared as editor" },
+  { level: "read", title: "Can view" },
+  { level: "write", title: "Can edit" },
 ] as const;
 
 function PermissionsFacetCard({
@@ -968,7 +968,7 @@ function PermissionsFacetCard({
             ) : (
               rows.map((m) => {
                 const checked = !!selected[m.key];
-                const Icon = m.group ? Users : User;
+                const Icon = m.group ? UsersRound : UserRound;
                 return (
                   <label
                     key={m.key}

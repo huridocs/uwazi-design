@@ -125,10 +125,10 @@ export function useActiveFilters(): ActiveFilter[] {
         const name = users.find((u) => u.id === id)?.username ?? groups.find((g) => g.id === id)?.name ?? id;
         out.push({
           id: `perm-${k}`,
-          group: level === "write" ? "Shared as editor" : "Shared as viewer",
+          group: "Permissions",
           // The chip shows only its label, and a member can be picked at both
           // levels, so the label names the level.
-          label: `${level === "write" ? "Editor" : "Viewer"}: ${name}`,
+          label: `${level === "write" ? "Can edit" : "Can view"}: ${name}`,
           remove: drop(setPermissionFilters, k),
         });
       }
