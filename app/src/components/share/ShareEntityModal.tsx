@@ -594,13 +594,16 @@ function MemberRow({
         <span data-part="name" className={`block truncate text-xs ${removed ? "text-ink-tertiary line-through" : "text-ink"}`}>
           {label}
         </span>
-        {/* The meta line is always mounted (coverage, or the change), so a
-            change never grows the row. */}
-        <span className="flex items-center gap-2 min-h-4">
-          {coverage && <span className="text-meta text-ink-tertiary tabular-nums">{coverage}</span>}
-          {bulk && note && <ChangedMark label={label} onRevert={onRevert} note={note} />}
-          {!removed && level === null && <span className="text-meta text-ink-tertiary">Mixed access</span>}
-        </span>
+        {/* Sharing several entities, the meta line is always mounted
+            (coverage, or the change), so a change never grows the row. One
+            entity has nothing for it, so the name centres on the mark. */}
+        {bulk && (
+          <span className="flex items-center gap-2 min-h-4">
+            {coverage && <span className="text-meta text-ink-tertiary tabular-nums">{coverage}</span>}
+            {note && <ChangedMark label={label} onRevert={onRevert} note={note} />}
+            {!removed && level === null && <span className="text-meta text-ink-tertiary">Mixed access</span>}
+          </span>
+        )}
       </span>
       <div data-part="actions" className="flex shrink-0 items-center">
         {/* The level in words, one choice of two: an eye and a pencil read as
