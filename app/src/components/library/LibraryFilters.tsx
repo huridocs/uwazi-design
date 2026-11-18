@@ -1,3 +1,4 @@
+import { MemberMark } from "../shared/MemberMark";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FULL_TEXT_MIN } from "../../utils/searchScope";
 import { boundDay, boundTime, dateBoundMs, entityInRange } from "../../utils/timeline";
@@ -14,7 +15,7 @@ import {
 } from "../../utils/entityContent";
 import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, Plus, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
@@ -1381,7 +1382,7 @@ function PermissionsFacetCard({
               ) : (
                 keys.map((k) => {
                   const n = counts.get(k) ?? 0;
-                  const Icon = isGroup(k) ? UsersRound : UserRound;
+
                   return (
                     <FilterOption
                       key={k}
@@ -1389,7 +1390,7 @@ function PermissionsFacetCard({
                       count={n}
                       checked={!!selected[k]}
                       onToggle={() => onToggle(k)}
-                      marker={<Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />}
+                      marker={<MemberMark name={nameOf(k)} group={isGroup(k)} />}
                       ariaLabel={`${nameOf(k)}${isGroup(k) ? ", group" : ""} (${title}), ${n}`}
                       disabled={missingMode ? false : undefined}
                     />

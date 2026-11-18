@@ -97,6 +97,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "csv-progress-bar", label: "ProgressBar" },
       { id: "csv-stats-card", label: "StatsCard" },
       { id: "csv-stepper", label: "Stepper" },
+      { id: "member-mark", label: "MemberMark" },
       { id: "csv-alert-banner", label: "AlertBanner" },
     ],
   },

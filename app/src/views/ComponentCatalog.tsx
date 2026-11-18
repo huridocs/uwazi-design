@@ -1,3 +1,4 @@
+import { MemberMark } from "../components/shared/MemberMark";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDelete } from "../components/shared/ConfirmDelete";
 import { TypedConfirmModal } from "../components/shared/TypedConfirmModal";
@@ -1187,6 +1188,24 @@ sendFill(selection.text);                                    // commits, then di
                         { label: "Complete", state: "completed" },
                       ]} />
                     </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="member-mark" ref={reg("member-mark")}>
+                <CatalogEntry
+                  name="MemberMark"
+                  description="Who a permission is given to: a user as initials on vellum, a group as a people icon in an outlined square"
+                  code={`<MemberMark name="mlopez" />
+<MemberMark name="Litigation" group />`}
+                >
+                  <div className="flex flex-col gap-2">
+                    {[["mlopez", false], ["afarah", false], ["Litigation", true], ["Research", true]].map(([n, g]) => (
+                      <span key={n as string} className="flex items-center gap-2 text-sm text-ink">
+                        <MemberMark name={n as string} group={g as boolean} />
+                        {n as string}
+                      </span>
+                    ))}
                   </div>
                 </CatalogEntry>
               </div>

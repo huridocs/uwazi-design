@@ -1,3 +1,4 @@
+import { MemberMark } from "../shared/MemberMark";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { AlertTriangle, Globe, Info, Lock, RotateCcw, Trash2 } from "lucide-react";
@@ -154,6 +155,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
     return [...m.values()];
   }, [eligible, membersOf]);
 
+  const isGroupId = (id: string) => groups.some((g) => g.id === id);
   if (!open) return null;
 
   const allPublished = n > 0 && published === n;
@@ -481,6 +483,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
           {/* Fixed first row, as in Uwazi: why no entity can be left
               without an editor. Not removable. */}
           <li data-component="MemberRow" data-fixed className="flex items-center gap-3 py-2.5">
+            <MemberMark name={t("System", "Administrators and Editors")} group />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs text-ink">{t("System", "Administrators and Editors")}</span>
               <span className="block text-meta text-ink-tertiary">Always</span>
@@ -493,6 +496,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
             <MemberRow
               key={m.id}
               label={m.label}
+              group={isGroupId(m.id)}
               coverage={bulk ? `${m.count.toLocaleString()} of ${n.toLocaleString()}` : undefined}
               current={m.levels.size === 1 ? [...m.levels][0] : null}
               change={changes[m.id]}
@@ -511,6 +515,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
             <MemberRow
               key={id}
               label={c.label}
+              group={isGroupId(id)}
               current={c.level}
               change={c}
               addedTo={n}
@@ -554,6 +559,7 @@ function ChangedMark({ label, onRevert, note }: { label: string; onRevert: () =>
  *  access"), coverage, and what will happen to them. */
 function MemberRow({
   label,
+  group = false,
   coverage,
   current,
   change,
@@ -566,6 +572,8 @@ function MemberRow({
   onRevert,
 }: {
   label: string;
+  /** A group, not a user: drawn with the group mark. */
+  group?: boolean;
   coverage?: string;
   /** The level every entity gives them; null = it differs. */
   current: AccessLevel | null;
@@ -589,6 +597,7 @@ function MemberRow({
         : undefined;
   return (
     <li data-component="MemberRow" data-level={level ?? "mixed"} className="flex items-center gap-3 py-2.5">
+      <MemberMark name={label} group={group} />
       <span className="min-w-0 flex-1">
         <span data-part="name" className={`block truncate text-xs ${removed ? "text-ink-tertiary line-through" : "text-ink"}`}>
           {label}
