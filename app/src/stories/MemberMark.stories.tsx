@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MemberMark } from "../components/shared/MemberMark";
 
-/** A user (initials) and a group (people icon) as the Permissions facet and
+/** A user (a person) and a group (people in a circle) as the Permissions facet and
  *  the Permissions dialog draw them, beside their names. */
 function MemberMarks() {
   const rows = [
