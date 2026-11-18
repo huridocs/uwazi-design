@@ -1,6 +1,7 @@
 import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom, guardPaneNavigationAtom } from "./dirtyGuard";
+import { discardDraftAtom } from "./entityChanges";
 import { libraryPaneSideAtom } from "./paneSide";
 import { atomFamily } from "jotai/utils";
 import {
@@ -353,13 +354,25 @@ export const libraryBulkEditOpenAtom = atom(false);
  *  dirty one routes selection changes through the guard (`selectionWrite`). */
 export const libraryBulkEditIdsAtom = atom<string[]>([]);
 
-/** Open the bulk form over the current selection. */
-export const openBulkEditAtom = atom(null, (get, set) => {
-  set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
-  set(libraryBulkEditOpenAtom, true);
+/** Close the open record. A draft closed this way is discarded, so no empty
+ *  entity is left behind. Callers put this behind the dirty guard: a draft or
+ *  an edit with input asks first. */
+function closeOpenRecord(get: Getter, set: Setter) {
+  const id = get(libraryOpenEntityIdAtom);
+  if (id) set(discardDraftAtom, id);
   set(libraryOpenEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
-  set(librarySelectionListAskedAtom, true);
+}
+
+/** Open the bulk form over the current selection. It replaces the open
+ *  record, so a draft or an edit with input asks first. */
+export const openBulkEditAtom = atom(null, (get, set) => {
+  set(guardPaneNavigationAtom, () => {
+    set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
+    set(libraryBulkEditOpenAtom, true);
+    closeOpenRecord(get, set);
+    set(librarySelectionDrawerOpenAtom, true);
+    set(librarySelectionListAskedAtom, true);
+  });
 });
 
 /** Every selection write goes through here. With a dirty bulk form it is
@@ -742,23 +755,29 @@ export const submitLibrarySearchAtom = atom(null, (get, set) => {
 export const libraryViewModeAtom = atom(
   (get) => get(viewModeStateAtom),
   (get, set, next: LibraryViewMode) => {
-    // The map area is a filter only while its map is in front. Synced, the
-    // shared area goes when the pane whose map set it leaves the Map view.
-    if (next !== "map") {
-      set(mapBoundsStateAtom, null);
-      if (get(librarySyncActiveAtom) && get(syncedMapAreaAtom)?.side === get(libraryPaneSideAtom))
-        set(syncedMapAreaAtom, null);
-    }
-    // The Overview describes the whole collection: going back to it clears
-    // the search, the filters, the selection and the open record.
-    if (next === "overview") {
-      set(clearLibraryFiltersAtom);
-      set(libraryOpenEntityIdAtom, null);
-      set(librarySelectedClusterAtom, null);
-      set(clearSelectionAtom);
-      set(libraryOverviewOriginAtom, false);
-    }
-    set(viewModeStateAtom, next);
+    const apply = () => {
+      // The map area is a filter only while its map is in front. Synced, the
+      // shared area goes when the pane whose map set it leaves the Map view.
+      if (next !== "map") {
+        set(mapBoundsStateAtom, null);
+        if (get(librarySyncActiveAtom) && get(syncedMapAreaAtom)?.side === get(libraryPaneSideAtom))
+          set(syncedMapAreaAtom, null);
+      }
+      // The Overview describes the whole collection: going back to it clears
+      // the search, the filters, the selection and the open record.
+      if (next === "overview") {
+        set(clearLibraryFiltersAtom);
+        closeOpenRecord(get, set);
+        set(librarySelectedClusterAtom, null);
+        set(clearSelectionAtom);
+        set(libraryOverviewOriginAtom, false);
+      }
+      set(viewModeStateAtom, next);
+    };
+    // Going to the Overview closes the open record: a draft or an edit with
+    // input asks first, and Cancel stays on the current view.
+    if (next === "overview") set(guardPaneNavigationAtom, apply);
+    else apply();
   },
 );
 
@@ -1354,7 +1373,7 @@ function resetLibraryForSource(get: Getter, set: Setter) {
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
   clearMapArea(get, set);
-  set(libraryOpenEntityIdAtom, null);
+  closeOpenRecord(get, set);
   set(librarySelectedClusterAtom, null);
   // A selection belongs to the collection it was made in.
   set(clearSelectionAtom);
