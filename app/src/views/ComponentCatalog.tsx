@@ -1194,13 +1194,17 @@ sendFill(selection.text);                                    // commits, then di
               <div id="csv-alert-banner" ref={reg("csv-alert-banner")}>
                 <CatalogEntry
                   name="AlertBanner"
-                  description="Warning (amber) and error (red) banners with icon and message"
+                  description="Warning (amber), error (red) and success (green) banners with icon and message; success is a status, with an optional dismiss"
                   code={`<AlertBanner variant="warning">
   3 warnings detected — review issues below.
 </AlertBanner>
 
 <AlertBanner variant="error">
   Import failed — 3 errors encountered.
+</AlertBanner>
+
+<AlertBanner variant="success" onDismiss={dismiss}>
+  Instructions to reset the password were sent to 3 users.
 </AlertBanner>`}
                 >
                   <div className="flex flex-col gap-3 w-full">
@@ -1209,6 +1213,9 @@ sendFill(selection.text);                                    // commits, then di
                     </AlertBanner>
                     <AlertBanner variant="error">
                       Import failed — 3 errors encountered. Review the issues below and re-import the file.
+                    </AlertBanner>
+                    <AlertBanner variant="success" onDismiss={() => {}}>
+                      Instructions to reset the password were sent to 3 users.
                     </AlertBanner>
                   </div>
                 </CatalogEntry>

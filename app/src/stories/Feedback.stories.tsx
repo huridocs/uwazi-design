@@ -21,6 +21,9 @@ function FeedbackSheet() {
         <AlertBanner variant="error">
           The import failed — the template no longer exists.
         </AlertBanner>
+        <AlertBanner variant="success" onDismiss={() => {}}>
+          Instructions to reset the password were sent to 3 users.
+        </AlertBanner>
       </div>
     </div>
   );
