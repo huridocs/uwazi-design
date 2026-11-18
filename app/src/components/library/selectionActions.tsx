@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, LayoutTemplate, Lock, PenLine, Share2, Trash2 } from "lucide-react";
+import { FileDown, LayoutTemplate, PenLine, Share2, Trash2, Users } from "lucide-react";
 import {
   deselectIdsAtom,
   libraryEditRequestAtom,
@@ -120,7 +120,7 @@ export function useSelectionActions({
     },
     { id: "export", label: "Export CSV", icon: <FileDown size={13} />, onClick: scoped("Export", exportSelection) },
     { id: "share", label: "Share", icon: <Share2 size={13} />, onClick: scoped("Share", () => open("share")) },
-    { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onClick: scoped("Set permissions for", () => open("permissions")) },
+    { id: "permissions", label: "Permissions", icon: <Users size={13} />, onClick: scoped("Set permissions for", () => open("permissions")) },
     { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => open("delete"), danger: true },
   ];
   // Select mode starts with nothing picked: every action waits for a record.

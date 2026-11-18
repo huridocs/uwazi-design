@@ -1,3 +1,4 @@
+import { RestrictedMark } from "./RestrictedMark";
 import type { ReactNode } from "react";
 import { HighlightedText } from "../shared/HighlightedText";
 import { EntityTypeChip } from "../shared/EntityTypeChip";
@@ -71,6 +72,9 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
         <EntityTypeChip typeId={e.typeId} />
         <span className="font-medium text-ink truncate">
           <HighlightedText text={e.title} query={ctx.query} />
+        </span>
+        <span className="shrink-0 flex items-center">
+          <RestrictedMark entity={e} />
         </span>
       </span>
     ),
