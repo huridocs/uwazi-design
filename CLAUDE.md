@@ -356,7 +356,8 @@ and the files ported with it; other surfaces have not had the pass yet.
 - A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
   `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the
   Permissions action draws people (`Users`), never a lock.
-- The Share dialog opened from Permissions is titled Permissions. A member's level is two words,
+- There is no Share button: Permissions (people icon) is the one door into the sharing dialog,
+  titled Permissions, with General access and People and groups. A member's level is two words,
   Can view | Can edit (`LevelSegment`), never an eye and a pencil: a pencil reads as editing a
   field. The fixed Administrators and Editors row says Can edit in words.
 - View modes (`libraryViewModeAtom`): cards, list, map, results.
@@ -380,7 +381,7 @@ and the files ported with it; other surfaces have not had the pass yet.
   a snippet or a matched property toggles it, and a ground click does not end it. Cmd/Ctrl and
   Shift + click and the long press still start one from the view. No checkbox is drawn.
   - While selecting the bar holds the bulk actions at its start (Edit, Export and Delete as
-    icons with a Hint; Change template, Share and Permissions in Actions), and at its end the
+    icons with a Hint; Change template and Permissions in Actions), and at its end the
     same `SelectionScopeMenu` in a fixed 9rem slot ("652 selected ▾", at most one caption
     below it, "3,746 hidden by filters") and Clear. Its menu opens with where the selection
     sits ("120 on this page", "4,278 not loaded", "N hidden by filters"), then the scopes: Cherrypick
