@@ -583,4 +583,16 @@ button:not(:disabled) {
   text-decoration-color: var(--color-warning);
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
+  cursor: pointer;
+}
+/* The text under the pointer is the one a click translates. */
+:root[data-live-translate] :is(
+  [data-component="Navbar"] button,
+  [role="tab"],
+  [data-component="SectionLabel"],
+  [data-part="view"] h1, [data-part="view"] h2, [data-part="view"] h3,
+  [data-part="view"] label
+):hover {
+  text-decoration-thickness: 2px;
+  background-color: var(--warning-light);
 }

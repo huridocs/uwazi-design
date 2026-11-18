@@ -1,3 +1,4 @@
+import { LiveTranslateEditor } from "./components/layout/LiveTranslateEditor";
 import { LiveTranslateStrip } from "./components/layout/LiveTranslateStrip";
 import { useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -152,6 +153,7 @@ export function App() {
         onToggleRtl={handleToggleRtl}
       />
       <LiveTranslateStrip />
+      <LiveTranslateEditor />
       {/* Before the view in the tab order, floating over the navbar's edge. */}
       {appView === "entity" && <PublishedViewToggle />}
       <div data-part="view" className="flex-1 min-h-0 flex flex-col">

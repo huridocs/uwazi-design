@@ -77,3 +77,9 @@ export function t(_scope: string, key: string, fallback?: string): string {
   if (current === "en") return en;
   return STRINGS[key]?.[current] ?? en;
 }
+
+/** The prototype's own Spanish and French text for an interface string, for a
+ *  key live translate adds (`addUiKeyAtom`). */
+export function uiStringDefaults(key: string): { es?: string; fr?: string } {
+  return STRINGS[key] ?? {};
+}
