@@ -754,8 +754,8 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - Permissions facet (Uwazi's `AssigneeFilter`, huridocs/uwazi issue 10020): the last facet card,
   as in Uwazi's `FiltersForm`, for signed-in admins only (`libraryPermissionsAllowedAtom`, Uwazi's
   `NeedAuthorization` default; for anyone else a pick does not filter). `PermissionsFacetCard`
-  lists the users and groups records are shared with, under "Shared as viewer" (read) and
-  "Shared as editor" (write), keys `read:<id>` / `write:<id>`, one Match mode for both; `missing`
+  lists the users and groups records are shared with, under "Can view" (read) and
+  "Can edit" (write), keys `read:<id>` / `write:<id>`, one Match mode for both; `missing`
   keeps records shared with no one. A list with no option reads "No options found", Uwazi's
   MultiSelect empty state. A record's members are
   `entityMembersAtom` (`atoms/entityChanges.ts`): the session's Share changes, else
@@ -764,6 +764,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
 - A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
   `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the
   Permissions action draws people (`Users`), never a lock.
+- The Share dialog opened from Permissions is titled Permissions. A member's level is two words,
+  Can view | Can edit (`LevelSegment`), never an eye and a pencil: a pencil reads as editing a
+  field. The fixed Administrators and Editors row says Can edit in words.
 - Facets compile to an AND of nodes (`compile` in `utils/libraryFilter.ts`); a group (OR of two
   facets, NOT of one) is one node. A facet's counts skip the whole node it sits in, so inside a
   group they show what a tick would add or remove. Value facets and ranges have a Match mode
@@ -851,6 +854,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `SetPasswordView` (`set-password`) and `UnlockAccountView` (`unlock-account`), opened from
   `authLinkAtom`. What a finished flow did shows in the login screen's message line
   (`loginNoticeAtom`); Uwazi uses toasts and these screens have no Beacon.
+- Forgot password ends on its own screen (`LoginView` mode `sent`, huridocs/uwazi issue 9748):
+  "Check your email", the address on a line of its own, Back to log in, Send it again and Use
+  another email. It stays until the user leaves it and reads the same for any address.
 - Kept from Uwazi: username only; one "Login failed" for an unknown user, a wrong password and a
   locked account, after a random 500–1000 ms; six failed passwords or codes lock the account and
   send Account locked; forgot password answers the same for any email; a saved password clears the
