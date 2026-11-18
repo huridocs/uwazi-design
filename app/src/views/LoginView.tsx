@@ -26,9 +26,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** One answer for a wrong username, a wrong password and a locked account. */
 const LOGIN_FAILED = "Login failed. Check your username and password.";
 const CODE_FAILED = "Two-factor verification failed. Check the code and try again.";
-const RECOVERY_SENT = "If the email address supplied is correct, we will send instructions to reset the password.";
-
-type Mode = "login" | "two-step" | "forgot";
+type Mode = "login" | "two-step" | "forgot" | "sent";
 
 function readRemembered(): string {
   try {
@@ -43,8 +41,10 @@ function readRemembered(): string {
  *    same, after the same random delay; six of them lock the account.
  *  - Two-step verification: for an account with 2FA, after the password is
  *    right. The username and password are kept and sent again with the code.
- *  - Forgot password: one email field; the confirmation is the same whether
- *    an account has that address or not.
+ *  - Forgot password: one email field.
+ *  - Sent: after Forgot password, a screen of its own that names the address
+ *    and stays until the user leaves it (huridocs/uwazi issue 9748). It reads
+ *    the same whether an account has that address or not.
  *  `onLoggedIn` replaces the sign-in (the catalog's frame passes a no-op). */
 export function LoginView({ onLoggedIn }: { onLoggedIn?: (userId: string) => void }) {
   const collectionName = useAtomValue(collectionSettings.valueAtom).name;
@@ -59,6 +59,8 @@ export function LoginView({ onLoggedIn }: { onLoggedIn?: (userId: string) => voi
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
+  /** The address the last recovery email went to, for the Sent screen. */
+  const [sentTo, setSentTo] = useState("");
   const [remember, setRemember] = useState(() => readRemembered() !== "");
   const [invalid, setInvalid] = useState<{ identifier?: boolean; password?: boolean; token?: boolean; email?: boolean }>({});
   // What the last flow did (a password saved, an account unlocked) opens as
@@ -93,6 +95,7 @@ export function LoginView({ onLoggedIn }: { onLoggedIn?: (userId: string) => voi
     requestAnimationFrame(() => {
       if (next === "login") (identifier ? passwordRef : identifierRef).current?.focus();
       else if (next === "two-step") tokenRef.current?.focus();
+      else if (next === "sent") titleRef.current?.focus();
       else emailRef.current?.focus();
     });
   };
@@ -176,8 +179,20 @@ export function LoginView({ onLoggedIn }: { onLoggedIn?: (userId: string) => voi
     setPending(true);
     timer.current = window.setTimeout(() => {
       requestRecovery(email.trim());
+      setSentTo(email.trim());
       setEmail("");
-      switchMode("login", { tone: "note", text: RECOVERY_SENT });
+      switchMode("sent");
+    }, 400);
+  };
+
+  /** Send again from the Sent screen: same address, and the screen says so. */
+  const resend = () => {
+    if (pending || !sentTo) return;
+    setPending(true);
+    timer.current = window.setTimeout(() => {
+      requestRecovery(sentTo);
+      setPending(false);
+      setMessage({ tone: "note", text: `Sent again to ${sentTo}.` });
     }, 400);
   };
 
@@ -327,6 +342,57 @@ export function LoginView({ onLoggedIn }: { onLoggedIn?: (userId: string) => voi
           <div className="mt-4 flex justify-center">
             <button type="button" data-part="cancel" onClick={() => switchMode("login")} className={AUTH_TEXT_LINK}>
               Cancel
+            </button>
+          </div>
+          <DemoAccounts />
+        </form>
+      )}
+
+      {mode === "sent" && (
+        <form
+          data-part="form"
+          data-mode="sent"
+          noValidate
+          aria-describedby={ids.message}
+          onSubmit={(e) => {
+            e.preventDefault();
+            switchMode("login");
+          }}
+        >
+          <AuthHeading
+            titleRef={titleRef}
+            eyebrow={collectionName}
+            title="Check your email"
+            lead={
+              <>
+                We sent a link to reset the password to
+                {/* Its own line, whole: an address split at a dot reads as two. */}
+                <strong data-part="sent-to" className="block font-semibold text-ink break-words">
+                  {sentTo}
+                </strong>
+              </>
+            }
+          />
+          <p className="mt-4 text-sm text-ink-tertiary text-pretty">
+            It arrives only if an account uses this address, with the account&rsquo;s username. Nothing after a few
+            minutes? Check the spam folder, or send it again.
+          </p>
+          <AuthMessage id={ids.message} message={message} />
+          <AuthSubmit label="Back to log in" />
+          <div className="mt-4 flex justify-center gap-6">
+            <button type="button" data-part="resend" onClick={resend} disabled={pending} className={AUTH_TEXT_LINK}>
+              {pending ? "Sending…" : "Send it again"}
+            </button>
+            <button
+              type="button"
+              data-part="other-email"
+              onClick={() => {
+                setEmail(sentTo);
+                switchMode("forgot");
+              }}
+              className={AUTH_TEXT_LINK}
+            >
+              Use another email
             </button>
           </div>
           <DemoAccounts />
