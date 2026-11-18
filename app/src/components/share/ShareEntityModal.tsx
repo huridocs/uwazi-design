@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, Globe, Info, Lock, RotateCcw, Trash2 } from "lucide-react";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import {
   applyShareAtom,
@@ -191,7 +191,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
     lines.push({ text: `Publish ${(n - published).toLocaleString()} ${n - published === 1 ? "entity" : "entities"}`, count: "now visible to anyone", warn: true });
   if (visibility === "private")
     lines.push({ text: `Make ${published.toLocaleString()} ${published === 1 ? "entity" : "entities"} private`, count: "only members can see them" });
-  const levelWord = (l: AccessLevel) => (l === "write" ? "can edit" : "can see");
+  const levelWord = (l: AccessLevel) => (l === "write" ? "can edit" : "can view");
   for (const [id, c] of Object.entries(changes)) {
     const m = members.find((x) => x.id === id);
     if (c.kind === "remove") {
@@ -246,7 +246,17 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
       panelRef={panelRef}
       onClose={onClose}
       titleId={titleId}
-      title={review ? "Review changes" : bulk ? `Share ${ids.length.toLocaleString()} entities` : t("System", "Share")}
+      title={
+        review
+          ? "Review changes"
+          : initialFocus === "people"
+            ? bulk
+              ? `Permissions for ${ids.length.toLocaleString()} entities`
+              : t("System", "Permissions")
+            : bulk
+              ? `Share ${ids.length.toLocaleString()} entities`
+              : t("System", "Share")
+      }
       subtitle={
         bulk ? (
           <span data-part="subtitle-types" className="inline-flex gap-x-3 text-xs">
@@ -468,8 +478,8 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
               <span className="block truncate text-xs text-ink">{t("System", "Administrators and Editors")}</span>
               <span className="block text-meta text-ink-tertiary">Always</span>
             </span>
-            <span className="inline-flex items-center gap-1 text-meta text-ink-secondary">
-              <Pencil size={13} aria-hidden /> {t("System", "Can edit")}
+            <span data-part="fixed-level" className="text-meta font-medium text-ink-secondary">
+              {t("System", "Can edit")}
             </span>
           </li>
           {members.map((m) => (
@@ -585,19 +595,28 @@ function MemberRow({
         </span>
       </span>
       <div data-part="actions" className="flex shrink-0 items-center">
-        <div data-part="permissions" className="flex items-center gap-0.5" role="group" aria-label={t("System", "Permission level")}>
-          {showCanSee ? (
-            <IconAction label={t("System", "Can see")} active={level === "read"} onClick={() => onLevel("read")}>
-              <Eye size={16} aria-hidden />
-            </IconAction>
-          ) : null}
-          <IconAction
-            label={t("System", "Can edit")}
-            active={level === "write"}
-            onClick={() => onLevel(level === "write" && !showCanSee ? "read" : "write")}
+        {/* The level in words, one choice of two: an eye and a pencil read as
+            "preview" and "edit this field", not as what a person may do. On a
+            published entity everyone can view it, so Can view says that. */}
+        <div
+          data-part="permissions"
+          role="radiogroup"
+          aria-label={`${t("System", "Permission level")}, ${label}`}
+          className="inline-flex h-8 items-center rounded-md overflow-hidden"
+          style={{ border: "1px solid var(--border-primary)" }}
+        >
+          <LevelSegment
+            active={level === "read"}
+            disabled={removed}
+            title={showCanSee ? undefined : "Anyone can view a published entity"}
+            onClick={() => onLevel("read")}
+            first
           >
-            <Pencil size={16} aria-hidden />
-          </IconAction>
+            {t("System", "Can view")}
+          </LevelSegment>
+          <LevelSegment active={level === "write"} disabled={removed} onClick={() => onLevel("write")}>
+            {t("System", "Can edit")}
+          </LevelSegment>
         </div>
         <div className="ms-2 border-s border-border ps-2">
           {removed ? (
@@ -612,6 +631,42 @@ function MemberRow({
         </div>
       </div>
     </li>
+  );
+}
+
+/** One level in a member's Can view / Can edit choice. */
+function LevelSegment({
+  active,
+  disabled = false,
+  title,
+  onClick,
+  children,
+  first = false,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  title?: string;
+  onClick: () => void;
+  children: ReactNode;
+  first?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      disabled={disabled}
+      title={title}
+      data-component="LevelSegment"
+      data-state={active ? "active" : "inactive"}
+      onClick={onClick}
+      className={`flex h-8 items-center px-2.5 text-xs font-medium whitespace-nowrap transition-colors cursor-pointer disabled:cursor-default disabled:opacity-40 ${
+        active ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
+      }`}
+      style={{ borderLeft: first ? "none" : "1px solid var(--border-primary)" }}
+    >
+      {children}
+    </button>
   );
 }
 
