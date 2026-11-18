@@ -761,6 +761,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `entityMembersAtom` (`atoms/entityChanges.ts`): the session's Share changes, else
   `seedMembersOf`, a stable seed (four in ten records shared with no one), less users and groups
   deleted in the session. Settings' "Shared with N entities" counts the open collection.
+- A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
+  `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the
+  Permissions action draws people (`Users`), never a lock.
 - Facets compile to an AND of nodes (`compile` in `utils/libraryFilter.ts`); a group (OR of two
   facets, NOT of one) is one node. A facet's counts skip the whole node it sits in, so inside a
   group they show what a tick would add or remove. Value facets and ranges have a Match mode

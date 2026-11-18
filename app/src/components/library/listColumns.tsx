@@ -1,3 +1,4 @@
+import { RestrictedMark } from "./RestrictedMark";
 import type { MouseEvent, ReactNode } from "react";
 import { UploadStateMark } from "./UploadStateMark";
 import { HighlightedText } from "../shared/HighlightedText";
@@ -114,7 +115,8 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
         <span data-part="title" className="font-medium text-ink truncate" {...fullOnHover(e.title)}>
           <HighlightedText text={e.title} query={ctx.query} fieldKey="title" />
         </span>
-        <span className="shrink-0">
+        <span className="shrink-0 flex items-center gap-2">
+          <RestrictedMark entity={e} />
           <UploadStateMark entityId={e.id} />
         </span>
       </span>

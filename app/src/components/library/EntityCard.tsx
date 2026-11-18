@@ -1,3 +1,4 @@
+import { RestrictedMark } from "./RestrictedMark";
 import { PinToggle } from "../shared/PinToggle";
 import { UploadStateMark } from "./UploadStateMark";
 import { Fragment, memo } from "react";
@@ -680,6 +681,7 @@ export const EntityCard = memo(function EntityCard({
         </span>
         <div className="shrink-0 flex items-center gap-2">
           <UploadStateMark entityId={entity.id} />
+          <RestrictedMark entity={entity} />
           {/* Marks and the count sit on the always-mounted footer, so they
               never make a card taller.
 

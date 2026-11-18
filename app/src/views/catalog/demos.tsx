@@ -15,7 +15,7 @@ import { SelectionActionsMenu } from "../../components/library/SelectionActionsM
 import { ChangeTemplateDialog } from "../../components/library/ChangeTemplateDialog";
 import { ShareEntityModal } from "../../components/share/ShareEntityModal";
 import { entityTypes } from "../../data/entities";
-import { FileDown, LayoutTemplate, Lock, Share2, Trash2 } from "lucide-react";
+import { FileDown, LayoutTemplate, Share2, Trash2, Users } from "lucide-react";
 import { seedThesaurusValues, type ThesaurusValue } from "../../data/settings";
 import { selectableLabels } from "../../atoms/thesauri";
 
@@ -1084,7 +1084,7 @@ export function SelectionActionsMenuDemo() {
           { id: "change-template", label: "Change template", icon: <LayoutTemplate size={13} />, onClick: () => {} },
           { id: "export", label: "Export CSV", icon: <FileDown size={13} />, onClick: () => {} },
           { id: "share", label: "Share", icon: <Share2 size={13} />, onClick: () => {} },
-          { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onClick: () => {} },
+          { id: "permissions", label: "Permissions", icon: <Users size={13} />, onClick: () => {} },
           { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => {}, danger: true },
         ]}
       />
