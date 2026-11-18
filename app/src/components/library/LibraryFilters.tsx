@@ -1,6 +1,7 @@
+import { MemberMark } from "../shared/MemberMark";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Play, Search, Lock, Globe, X, ChevronRight, Link2, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { templatesAtom } from "../../atoms/templates";
 import { getEntityType } from "../../data/entities";
@@ -968,7 +969,6 @@ function PermissionsFacetCard({
             ) : (
               rows.map((m) => {
                 const checked = !!selected[m.key];
-                const Icon = m.group ? UsersRound : UserRound;
                 return (
                   <label
                     key={m.key}
@@ -982,7 +982,7 @@ function PermissionsFacetCard({
                       ariaLabel={`${title}: ${m.label}${m.group ? " (group)" : ""}`}
                     />
                     <span className="flex-1 min-w-0 flex items-center gap-1.5">
-                      <Icon size={13} className="text-ink-tertiary shrink-0" aria-hidden />
+                      <MemberMark name={m.label} group={m.group} />
                       <span className={`truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
                         {m.label}
                       </span>
