@@ -411,7 +411,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   entity's file atoms and would be wrong for another entity; "Open entity" leads to them.
 - "Open entity" is hidden (`invisible`) while any edit form is open (`editSessionOpenAtom`).
 - On phones the preview footer keeps the commit on one line: Edit folds to its icon with a Hint,
-  Share and Permissions (and Duplicate) go to a "More actions" menu, Delete stays after the divider.
+  Permissions (and Duplicate) go to a "More actions" menu, Delete stays after the divider.
   Every target in that footer has a 44px hit box on phones (`touch-target` in `index.css`, an
   invisible ::after that changes neither the drawing nor the bar); Edit's leans to its inline
   start (`touch-target-lean`), because More actions sits closer than a centred box allows.
@@ -678,7 +678,7 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     Cmd/Ctrl and Shift + click and the long press still start one from the view. No checkbox
     is drawn on cards or in the bar.
   - While selecting the bar holds three things: the bulk actions at its start (Edit, Export
-    and Delete as icons with a Hint; Change template, Share and Permissions in Actions), and
+    and Delete as icons with a Hint; Change template and Permissions in Actions), and
     at its end the selection control and Clear. The control is the same `SelectionScopeMenu`
     in a fixed 9rem slot, "652 selected ▾" centred, with at most one short caption below the
     middle, only when something needs saying ("3,746 hidden by filters"), so neither moves
@@ -758,13 +758,14 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   "Can edit" (write), keys `read:<id>` / `write:<id>`, one Match mode for both; `missing`
   keeps records shared with no one. A list with no option reads "No options found", Uwazi's
   MultiSelect empty state. A record's members are
-  `entityMembersAtom` (`atoms/entityChanges.ts`): the session's Share changes, else
+  `entityMembersAtom` (`atoms/entityChanges.ts`): the session's Permissions changes, else
   `seedMembersOf`, a stable seed (four in ten records shared with no one), less users and groups
   deleted in the session. Settings' "Shared with N entities" counts the open collection.
 - A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
   `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the
   Permissions action draws people (`Users`), never a lock.
-- The Share dialog opened from Permissions is titled Permissions. A member's level is two words,
+- There is no Share button: Permissions (people icon) is the one door into the sharing dialog,
+  titled Permissions, with General access and People and groups. A member's level is two words,
   Can view | Can edit (`LevelSegment`), never an eye and a pencil: a pencil reads as editing a
   field. The fixed Administrators and Editors row says Can edit in words.
 - Facets compile to an AND of nodes (`compile` in `utils/libraryFilter.ts`); a group (OR of two

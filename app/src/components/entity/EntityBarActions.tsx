@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSetAtom, useStore } from "jotai";
-import { CopyPlus, Share2, Trash2, Users } from "lucide-react";
+import { CopyPlus, Trash2, Users } from "lucide-react";
 import { deleteWithUndoAtom } from "../../atoms/entityChanges";
 import { deselectIdsAtom, whenBulkCleanAtom } from "../../atoms/library";
 import { notificationsAtom } from "../../atoms/notifications";
@@ -12,11 +12,11 @@ import { Hint } from "../shared/Hint";
 import { BAR_DANGER, BAR_GHOST } from "../shared/warmButton";
 import { MobileActionMenu } from "../layout/MobileActionMenu";
 
-/** Share, Permissions and Delete for ONE entity — the bar of every surface that
+/** Permissions and Delete for ONE entity — the bar of every surface that
  *  shows a single entity (the Metadata view's read bar, the Library drawer's
  *  preview footer). They open the same dialogs as the Library's selection
- *  actions, scoped to this entity: the Share modal (Permissions opens it on
- *  the people lookup), and a confirm before a Delete that the notification
+ *  actions, scoped to this entity: the sharing dialog, titled Permissions (one door:
+ *  Share and Permissions opened the same dialog), and a confirm before a Delete that the notification
  *  can undo.
  *
  *  Ghosts, then a divider, then Delete in seal text (the bar ladder in
@@ -44,7 +44,7 @@ export function EntityBarActions({
 }) {
   const store = useStore();
   const deselect = useSetAtom(deselectIdsAtom);
-  const [dialog, setDialog] = useState<"share" | "permissions" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"permissions" | "delete" | null>(null);
   const title = getEntity(entityId)?.title ?? "Entity";
 
   const doDelete = () => {
@@ -97,24 +97,22 @@ export function EntityBarActions({
           touchTarget
           items={[
             ...(onDuplicate ? [{ id: "duplicate", label: "Duplicate", icon: <CopyPlus size={13} />, onSelect: onDuplicate }] : []),
-            { id: "share", label: "Share", icon: <Share2 size={13} />, onSelect: () => setDialog("share") },
             { id: "permissions", label: "Permissions", icon: <Users size={13} />, onSelect: () => setDialog("permissions") },
           ]}
         />
       ) : (
         <>
           {onDuplicate && button("Duplicate", <CopyPlus size={13} />, onDuplicate, BAR_GHOST, "duplicate")}
-          {button("Share", <Share2 size={13} />, () => setDialog("share"), BAR_GHOST, "share")}
           {button("Permissions", <Users size={13} />, () => setDialog("permissions"), BAR_GHOST, "permissions")}
         </>
       )}
       <BarDivider />
       {button("Delete", <Trash2 size={13} />, () => setDialog("delete"), BAR_DANGER, "delete")}
       <ShareEntityModal
-        open={dialog === "share" || dialog === "permissions"}
+        open={dialog === "permissions"}
         onClose={() => setDialog(null)}
         ids={[entityId]}
-        initialFocus={dialog === "permissions" ? "people" : "access"}
+        initialFocus="people"
       />
       <ConfirmDialog
         open={dialog === "delete"}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, Pencil, Share2, Trash2 } from "lucide-react";
+import { HelpCircle, Pencil, Trash2, Users } from "lucide-react";
 import { useNotify } from "../../hooks/useNotify";
 import { ShareEntityModal } from "../share/ShareEntityModal";
 import { SearchTipsPopover } from "../library/SearchTipsPopover";
@@ -61,12 +61,12 @@ export function DrawerActionBar({ activeTab, onEdit }: DrawerActionBarProps) {
       className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
+      <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} initialFocus="people" />
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
             <ActionPill icon={Pencil} label="Edit" variant="lead" onClick={onEdit ?? (() => notify("Editing metadata"))} />
-            <ActionPill icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
+            <ActionPill icon={Users} label="Permissions" onClick={() => setShareOpen(true)} />
           </div>
           <ActionPill icon={Trash2} label="Delete" variant="danger" onClick={() => notify("Entity deleted", "success")} />
         </>

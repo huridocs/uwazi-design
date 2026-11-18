@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileDown, LayoutTemplate, Lock, Share2, Trash2 } from "lucide-react";
+import { FileDown, LayoutTemplate, Trash2, Users } from "lucide-react";
 import { SelectionActionsMenu } from "../components/library/SelectionActionsMenu";
 import { ChangeTemplateDialog } from "../components/library/ChangeTemplateDialog";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
@@ -15,8 +15,7 @@ const meta = {
     actions: [
       { id: "change-template", label: "Change template", icon: <LayoutTemplate size={13} />, onClick: () => {} },
       { id: "export", label: "Export CSV", icon: <FileDown size={13} />, onClick: () => {} },
-      { id: "share", label: "Share", icon: <Share2 size={13} />, onClick: () => {} },
-      { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onClick: () => {} },
+      { id: "permissions", label: "Permissions", icon: <Users size={13} />, onClick: () => {} },
       { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => {}, danger: true },
     ],
   },

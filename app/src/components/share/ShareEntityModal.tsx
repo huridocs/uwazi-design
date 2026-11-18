@@ -258,13 +258,9 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
       title={
         review
           ? "Review changes"
-          : initialFocus === "people"
-            ? bulk
-              ? `Permissions for ${ids.length.toLocaleString()} entities`
-              : t("System", "Permissions")
-            : bulk
-              ? `Share ${ids.length.toLocaleString()} entities`
-              : t("System", "Share")
+          : bulk
+            ? `Permissions for ${ids.length.toLocaleString()} entities`
+            : t("System", "Permissions")
       }
       subtitle={
         bulk ? (
