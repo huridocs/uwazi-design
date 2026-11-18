@@ -1195,7 +1195,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="member-mark" ref={reg("member-mark")}>
                 <CatalogEntry
                   name="MemberMark"
-                  description="Who a permission is given to: a user as initials on vellum, a group as a people icon in an outlined square"
+                  description="Who a permission is given to: a user as a person, a group as people in a circle"
                   code={`<MemberMark name="mlopez" />
 <MemberMark name="Litigation" group />`}
                 >
