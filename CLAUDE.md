@@ -352,6 +352,19 @@ and the files ported with it; other surfaces have not had the pass yet.
   of the search row (`FacetSection`'s `searchAside`, `showOnly`). Selected lists the ticked
   values; search applies within it; a row unticked there stays until the view changes.
 
+### Live translate
+- Uwazi's inline edit, admins only: Settings menu › Live translate (ON/OFF row, `liveTranslateAtom`).
+  While on, `LiveTranslateStrip` sits under the navbar (amber, "Live translate is on.") with
+  "Turn off live translate", and Escape ends it unless an overlay holds Escape; the way out in
+  Uwazi was only the pressed button (huridocs/uwazi issue 9973). The strip marks the root
+  `data-live-translate`, which underlines interface text dashed amber (`index.css`).
+- A click on underlined text does not run the control: `LiveTranslateEditor` (capture-phase
+  listener, targets `LIVE_TRANSLATE_TARGETS`, kept in step with the CSS) opens a dialog with the
+  text's key and one field per installed language, the default language read-only as the key.
+  Save writes Settings › Translations (`saveTranslationsAtom`). The innermost text that is a key
+  wins; a label with no key yet joins the User Interface context (`extraUiKeysAtom`, starting from
+  `uiStringDefaults`), because the prototype carries only the first 412 of Uwazi's System keys.
+
 ### Library
 - A lock means restricted, nothing else (huridocs/uwazi issue 9974): a restricted record carries
   `RestrictedMark` (a padlock) on its Library card footer and List title cell, and the

@@ -1,3 +1,5 @@
+import { LiveTranslateEditor } from "./components/layout/LiveTranslateEditor";
+import { LiveTranslateStrip } from "./components/layout/LiveTranslateStrip";
 import { useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { collectionSettings } from "./atoms/settingsSingletons";
@@ -150,9 +152,11 @@ export function App() {
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
+      <LiveTranslateStrip />
+      <LiveTranslateEditor />
       {/* Before the view in the tab order, floating over the navbar's edge. */}
       {appView === "entity" && <PublishedViewToggle />}
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div data-part="view" className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" && canImport ? (
           <ImportCSVView onNavigate={handleNavigate} />
         ) : appView === "settings" ? (

@@ -1,3 +1,4 @@
+import { liveTranslateAtom } from "../../atoms/liveTranslate";
 import { Fragment, useState, useRef, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -75,6 +76,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // UI (chrome) language — subscribing here is also what re-renders the navbar's
   // t() strings when the switcher below changes it.
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
+  const [liveTranslate, setLiveTranslate] = useAtom(liveTranslateAtom);
   const guard = useDirtyGuard();
   // Signed out: no Settings or Log out, a Log in button in their place.
   const signedOut = useAtomValue(sessionStateAtom) === "signed-out";
@@ -126,6 +128,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // Only what the signed-in role reaches: a collaborator has no Tools
   // (`atoms/settings.ts`), and Import CSV is for admins.
   const settingsAllowed = useAtomValue(settingsAccessAtom);
+  // Live translate is an admin's, as in Uwazi: whoever reaches System settings.
+  const liveTranslateAllowed = settingsAllowed(settingsEntryOf("system"));
   const itemLabel = useAtomValue(settingsItemLabelAtom);
   const toolsItems = settingsToolsItems()
     .filter((i) => settingsAllowed(i.id))
@@ -160,6 +164,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // padding parked the logo (and the right cluster) 8px inboard of everything it
     // sits above. The chrome and its content share a left edge now.
     <header
+      data-component="Navbar"
       className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
@@ -475,6 +480,28 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       steady
                     />
                   </div>
+                  {/* Live translate (Uwazi: the language menu's footer, admins
+                      only). The row says whether it is on; the strip under the
+                      navbar is where it ends. */}
+                  {liveTranslateAllowed && (
+                    <button
+                      onClick={() => { setLiveTranslate((v) => !v); setSettingsOpen(false); }}
+                      data-part="live-translate"
+                      className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Languages size={14} className="text-ink-tertiary" />
+                        {t("System", "Live translate")}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
+                          liveTranslate ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
+                        }`}
+                      >
+                        {liveTranslate ? "ON" : "OFF"}
+                      </span>
+                    </button>
+                  )}
                   {/* Two doors, two destinations. Both used to dump you on the
                       same page with the same twenty-item rail — the distinction
                       was a label, not a place. */}

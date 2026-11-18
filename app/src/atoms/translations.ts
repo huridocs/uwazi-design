@@ -68,6 +68,16 @@ const translationSettings = createSettingsSingleton<{ values: Stored }>({
   },
 });
 
+/** Interface strings live translate added to the User Interface context: the
+ *  prototype carries only the first 412 of Uwazi's System keys, so a label
+ *  clicked in live translate may have none yet. Global, like the interface;
+ *  for the session. */
+export const extraUiKeysAtom = atom<ContextKey[]>([]);
+export const addUiKeyAtom = atom(null, (get, set, key: ContextKey) => {
+  if (get(extraUiKeysAtom).some((k) => k.id === key.id)) return;
+  set(extraUiKeysAtom, [...get(extraUiKeysAtom), key]);
+});
+
 const LANG: Record<string, Language> = { en: "EN", es: "ES", fr: "FR", ar: "AR" };
 const byText = (a: ContextKey, b: ContextKey) => a.text.localeCompare(b.text, undefined, { sensitivity: "base" });
 
@@ -83,7 +93,10 @@ export const translationContextsAtom = atomFamily((corpus: Corpus) =>
       // Uwazi's own System keys and its shipped translations (SD-7).
       // Korean's column is Uwazi's predefined translation: installing Korean
       // brings it (SD-8); a language Uwazi ships none for starts untranslated.
-      keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar, ko: k.ko } })),
+      keys: [
+        ...UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar, ko: k.ko } })),
+        ...get(extraUiKeysAtom).filter((k) => !UWAZI_UI_KEYS.some((u) => u.key === k.id)),
+      ],
     });
     // The Menu's links and sub-links, as Settings › Menu saved them.
     const menuKeys = get(menuSettings.valueOfAtom(corpus))
