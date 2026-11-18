@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
+import { AlertBanner } from "../../shared/AlertBanner";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsEditor } from "../SettingsEditor";
 import { SettingsCheckList, SettingsCheckRow, SettingsFieldRow, SettingsSection } from "../SettingsSection";
@@ -45,6 +46,8 @@ export function UserEditor({
 }) {
   const { record } = useSettingsNotify();
   const notify = useNotify();
+  /** Whom the last Reset password went to, while this user's editor is open. */
+  const [resetSent, setResetSent] = useState<{ id: string; email: string } | null>(null);
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const saveUser = useSetAtom(saveUserAtom);
@@ -132,7 +135,10 @@ export function UserEditor({
   const sendReset = () => {
     if (!base) return;
     resetPassword(base.id);
-    // Changes no record, so a notification only, not an Activity log entry.
+    // Said here, under the button, and copied to the Beacon: in the Beacon
+    // alone it went unseen (huridocs/uwazi issue 9748). Changes no record, so
+    // no Activity log entry.
+    setResetSent({ id: base.id, email: base.email });
     notify(SETTINGS_NOTICES.passwordResetSent, "success");
   };
   const reset2fa = () => {
@@ -216,6 +222,13 @@ export function UserEditor({
               Reset password
             </SettingsButton>
             <p className="mt-1.5 text-xs text-ink-tertiary">Emails the user a link to set a new password.</p>
+            {resetSent && resetSent.id === base?.id && (
+              <div className="mt-3">
+                <AlertBanner variant="success" onDismiss={() => setResetSent(null)}>
+                  Instructions to reset the password were sent to {resetSent.email || "the user"}.
+                </AlertBanner>
+              </div>
+            )}
           </div>
         )}
       </SettingsSection>

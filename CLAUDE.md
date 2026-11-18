@@ -424,6 +424,9 @@ and the files ported with it; other surfaces have not had the pass yet.
   `SetPasswordView` (`set-password`) and `UnlockAccountView` (`unlock-account`), opened from
   `authLinkAtom`. What a finished flow did shows in the login screen's message line
   (`loginNoticeAtom`); Uwazi uses toasts and these screens have no Beacon.
+- Forgot password ends on its own screen (`LoginView` mode `sent`, huridocs/uwazi issue 9748):
+  "Check your email", the address on a line of its own, Back to log in, Send it again and Use
+  another email. It stays until the user leaves it and reads the same for any address.
 - Kept from Uwazi: username only; one "Login failed" for an unknown user, a wrong password and a
   locked account, after a random 500–1000 ms; six failed passwords or codes lock the account and
   send Account locked; forgot password answers the same for any email; a saved password clears the
