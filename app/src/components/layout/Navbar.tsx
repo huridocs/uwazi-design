@@ -134,7 +134,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // A fictional shelter network: generated records, synthetic portraits.
     { id: "travesia", label: names.travesia, detail: "Fictional · synthetic portraits" },
     // Public sources only; every fact carries a verification status.
-    { id: "nepal", label: names.nepal, detail: "Open sources · verified per fact · 1,868" },
+    { id: "nepal", label: names.nepal, detail: "Open sources · verified per fact · 2,126" },
     // Recordings linked, never stored; every one carries a content warning.
     { id: "vegas", label: names.vegas, detail: "Open sources · recordings timed to the second · 582" },
   ];
