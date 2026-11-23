@@ -54,8 +54,9 @@ import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
 import { Hint } from "../shared/Hint";
-import { headerLayoutAtom } from "../../atoms/branding";
-import { hasMenuLinks, type HeaderLayout } from "../../utils/theme/headerLayout";
+import { headerHeightAtom, headerLayoutAtom } from "../../atoms/branding";
+import { drawnHeaderHeight, hasMenuLinks, type HeaderHeight, type HeaderLayout } from "../../utils/theme/headerLayout";
+import { logoSizeFor } from "../../utils/theme/logoFrame";
 import { NavMenu, NavMenuSheetSection } from "./NavMenuLinks";
 import { sitePagesAtom, type SitePage } from "../../atoms/sitePages";
 import { PageViewModal } from "../settings/pages/site/PageViewModal";
@@ -131,21 +132,29 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const chosenLayout = useAtomValue(headerLayoutAtom);
   const layout: HeaderLayout = isMobile || showingCatalog ? "standard" : chosenLayout;
   const compact = layout === "compact";
+  // Header height (same section): Tall and Extra tall, for a larger logo.
+  // Compact, phones and the catalog keep their own bar.
+  const chosenHeight = useAtomValue(headerHeightAtom);
+  const barHeight: HeaderHeight = isMobile || showingCatalog ? "default" : drawnHeaderHeight(layout, chosenHeight);
   /** The bar draws the collection's menu (Menu centred, Menu at end, Compact):
    *  its controls are 2rem boxes and its utilities are icons with a Hint. */
   const menuBar = hasMenuLinks(layout);
-  const ctlH = menuBar ? "h-8" : "";
-  const iconOnly = menuBar;
+  // Standard keeps its labels, except on a tablet under a Tall or Extra tall
+  // bar: the larger logo leaves no room for words on both sides of it.
+  const iconOnly = menuBar || (breakpoint === "tablet" && barHeight !== "default");
   /** An icon-only control: the bar's control height, squared. */
-  const iconBox = "justify-center w-8 h-8";
+  const iconBox = menuBar ? "justify-center w-8 h-8" : "justify-center w-7 h-7";
   // The root carries the layout the bar draws: `--spacing-navbar` follows it
   // (`index.css`), so `h-navbar` and anything else measured from the bar agree.
   useLayoutEffect(() => {
     const root = document.documentElement;
-    if (layout === "standard") return;
-    root.dataset.headerLayout = layout;
-    return () => root.removeAttribute("data-header-layout");
-  }, [layout]);
+    if (layout !== "standard") root.dataset.headerLayout = layout;
+    if (barHeight !== "default") root.dataset.headerHeight = barHeight;
+    return () => {
+      root.removeAttribute("data-header-layout");
+      root.removeAttribute("data-header-height");
+    };
+  }, [layout, barHeight]);
 
   // Each collection reads as its saved name (Settings › Collection ›
   // "Collection Name"); the detail line says which demo dataset it is.
@@ -251,9 +260,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       type="button"
       onClick={onLogoClick}
       data-part="logo"
-      className={`flex items-center shrink-0 ${ctlH}`}
+      // At least the bar's control height; a Tall or Extra tall bar's logo is taller.
+      className={`flex items-center shrink-0 ${menuBar ? "min-h-8 min-w-8" : ""}`}
     >
-      <Wordmark size={compact ? "sm" : "md"} />
+      <Wordmark size={logoSizeFor(layout, barHeight)} />
     </button>
   );
 
@@ -567,7 +577,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 iconOnly ? iconBox : "gap-1.5 px-3 py-1"
               }`}
             >
-              {iconOnly ? <Power size={14} aria-hidden /> : <LogIn size={14} className="rtl:-scale-x-100" aria-hidden />} {!iconOnly && t("System", "Log in")}
+              {menuBar ? <Power size={14} aria-hidden /> : <LogIn size={14} className="rtl:-scale-x-100" aria-hidden />} {!iconOnly && t("System", "Log in")}
             </button>
           )}
         </Hint>
@@ -966,6 +976,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       <header
         data-component="Navbar"
         data-layout={layout}
+        data-height={barHeight}
         className="relative h-navbar bg-paper flex items-center gap-3 px-3 shrink-0"
         style={border}
       >
@@ -977,7 +988,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         <NavMenu
           {...menuHandlers}
           align={layout === "menu-centred" ? "center" : layout === "menu-end" ? "end" : "start"}
-          small={compact}
+          size={compact ? "small" : barHeight === "default" ? "regular" : "large"}
         />
         {utilities}
         {pageView}
@@ -998,6 +1009,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     <header
       data-component="Navbar"
       data-layout={layout}
+      data-height={barHeight}
       className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
       style={border}
     >

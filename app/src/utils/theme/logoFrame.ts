@@ -1,9 +1,30 @@
 /** The logo's frame and the crop maths of "Adjust logo", after
  *  huridocs/uwazi `app/react/V2/theme/logoFrame.ts`. Sizes are image pixels. */
 
-/** The box a custom logo is drawn in on the header: `max-w-32 max-h-7`
- *  (`Wordmark`). Uwazi's header allows 128 × 48; this navbar is 52px tall. */
-export const LOGO_FRAME = { width: 128, height: 28 };
+import type { HeaderHeight, HeaderLayout } from "./headerLayout";
+
+/** The logo's sizes on the header, one per bar height (`Wordmark`'s `size`).
+ *  `width` × `height` is the box a custom logo is drawn in, in CSS pixels at
+ *  the default font size; `wordmark` is the built-in wordmark's height in rem,
+ *  scaled with the box. Uwazi's header allows 128 × 48 in one 52px bar. */
+export const LOGO_SIZES = {
+  /** Compact, 2.5rem bar. */
+  sm: { width: 112, height: 24, wordmark: 0.75 },
+  /** Default, 3.25rem bar. */
+  md: { width: 128, height: 28, wordmark: 0.919 },
+  /** Tall, 4.5rem bar. */
+  lg: { width: 192, height: 44, wordmark: 1.444 },
+  /** Extra tall, 5.5rem bar. */
+  xl: { width: 240, height: 56, wordmark: 1.838 },
+} as const;
+export type LogoSize = keyof typeof LOGO_SIZES;
+
+/** The logo size the bar draws for a layout and a height. */
+export const logoSizeFor = (layout: HeaderLayout, height: HeaderHeight): LogoSize =>
+  layout === "compact" ? "sm" : height === "tall" ? "lg" : height === "extra-tall" ? "xl" : "md";
+
+/** The default bar's frame. */
+export const LOGO_FRAME: Size = LOGO_SIZES.md;
 /** The largest the image is drawn in the crop editor. */
 const EDITOR_MAX = { width: 480, height: 256 };
 const MIN_CROP = 8;
@@ -21,10 +42,11 @@ export interface Size {
   height: number;
 }
 
-/** The size a `width` × `height` logo is drawn at in the header. Never enlarged. */
-export function logoDisplaySize({ width, height }: Size): Size {
+/** The size a `width` × `height` logo is drawn at in the header, inside
+ *  `frame`. Never enlarged. */
+export function logoDisplaySize({ width, height }: Size, frame: Size = LOGO_FRAME): Size {
   if (!width || !height) return { width: 0, height: 0 };
-  const scale = Math.min(LOGO_FRAME.width / width, LOGO_FRAME.height / height, 1);
+  const scale = Math.min(frame.width / width, frame.height / height, 1);
   return { width: width * scale, height: height * scale };
 }
 

@@ -102,16 +102,25 @@ function MenuAnchor({
 
 /* ── The bar ─────────────────────────────────────────────────────────────── */
 
+/** The links' size: `small` in Compact, `large` in the Tall and Extra tall bars. */
+export type NavMenuSize = "small" | "regular" | "large";
 /** A top-level item's box: a 2rem target, the bar's control height. */
-const item = (small: boolean) =>
+const item = (size: NavMenuSize) =>
   `relative flex items-center gap-1 h-8 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
-    small ? "px-2 text-xs" : "px-2.5 text-sm"
+    size === "small" ? "px-2 text-xs" : size === "large" ? "px-3 text-base" : "px-2.5 text-sm"
   }`;
 const REST = "text-ink-secondary hover:bg-warm hover:text-ink";
-/** The current page: the header's accent on the text, and a 2px rule under it. */
+/** The current page: the header's accent on the text, and a 2px rule on the
+ *  bar's bottom edge, under the link. The link is a 2rem box centred in the
+ *  bar above its 1px border, so the rule drops by half the difference. */
 const CURRENT = "text-[var(--header-accent)] hover:bg-warm";
-const Underline = ({ small }: { small: boolean }) => (
-  <span aria-hidden data-part="current-rule" className={`absolute bottom-0.5 h-0.5 rounded-full bg-[var(--header-accent)] ${small ? "inset-x-2" : "inset-x-2.5"}`} />
+const Underline = ({ size }: { size: NavMenuSize }) => (
+  <span
+    aria-hidden
+    data-part="current-rule"
+    className={`absolute h-0.5 bg-[var(--header-accent)] ${size === "small" ? "inset-x-2" : size === "large" ? "inset-x-3" : "inset-x-2.5"}`}
+    style={{ bottom: "calc(1rem - (var(--spacing-navbar) + 1px) / 2)" }}
+  />
 );
 const PANEL = "absolute top-full mt-1.5 min-w-44 bg-paper border border-border rounded-lg shadow-lg z-50 py-1";
 const PANEL_LINK = "flex items-center justify-between gap-3 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors";
@@ -130,9 +139,9 @@ const GAP = 4; // gap-1 between top-level items
  */
 export function NavMenu({
   align,
-  small = false,
+  size = "regular",
   ...handlers
-}: NavMenuHandlers & { align: "start" | "center" | "end"; small?: boolean }) {
+}: NavMenuHandlers & { align: "start" | "center" | "end"; size?: NavMenuSize }) {
   const menu = useMenu(handlers);
   const { links } = menu;
   const wrapRef = useRef<HTMLElement>(null);
@@ -181,7 +190,7 @@ export function NavMenu({
     observer.observe(wrap);
     observer.observe(measure);
     return () => observer.disconnect();
-  }, [links, align, small]);
+  }, [links, align, size]);
 
   const shown = links.slice(0, fit.count);
   const folded = links.slice(fit.count);
@@ -199,12 +208,12 @@ export function NavMenu({
       {/* Every item and "More" at their natural width, to measure the fold from. */}
       <div ref={measureRef} aria-hidden data-part="measure" className="absolute start-0 top-0 flex w-max invisible pointer-events-none">
         {links.map((l) => (
-          <span key={l.id} className={`${item(small)} shrink-0`}>
+          <span key={l.id} className={`${item(size)} shrink-0`}>
             {l.title}
             {l.type === "group" && <ChevronDown size={13} />}
           </span>
         ))}
-        <span className={`${item(small)} shrink-0`}>
+        <span className={`${item(size)} shrink-0`}>
           More
           <ChevronDown size={13} />
         </span>
@@ -214,12 +223,12 @@ export function NavMenu({
           {shown.map((l) => (
             <li key={l.id}>
               {l.type === "group" ? (
-                <MenuGroup label={l.title} small={small} current={l.sublinks.some(menu.isCurrent)}>
+                <MenuGroup label={l.title} size={size} current={l.sublinks.some(menu.isCurrent)}>
                   {(close) => <GroupLinks group={l} menu={menu} onDone={close} />}
                 </MenuGroup>
               ) : (
-                <MenuAnchor link={l} menu={menu} className={`${item(small)} ${menu.isCurrent(l) ? CURRENT : REST}`}>
-                  {menu.isCurrent(l) && <Underline small={small} />}
+                <MenuAnchor link={l} menu={menu} className={`${item(size)} ${menu.isCurrent(l) ? CURRENT : REST}`}>
+                  {menu.isCurrent(l) && <Underline size={size} />}
                 </MenuAnchor>
               )}
             </li>
@@ -229,7 +238,7 @@ export function NavMenu({
               <MenuGroup
                 label="More"
                 part="more"
-                small={small}
+                size={size}
                 panelEnd
                 current={folded.some((l) => (l.type === "group" ? l.sublinks.some(menu.isCurrent) : menu.isCurrent(l)))}
               >
@@ -289,14 +298,14 @@ function GroupLinks({ group, menu, onDone }: { group: SettingsMenuLink; menu: Me
  *  the button; a click or focus outside closes it. */
 function MenuGroup({
   label,
-  small,
+  size,
   current,
   panelEnd = false,
   part = "group",
   children,
 }: {
   label: string;
-  small: boolean;
+  size: NavMenuSize;
   current: boolean;
   /** Anchor the panel to the button's end: "More" sits last in the row. */
   panelEnd?: boolean;
@@ -358,11 +367,11 @@ function MenuGroup({
         data-part="group-trigger"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`${item(small)} ${current ? CURRENT : open ? "text-ink bg-warm" : REST}`}
+        className={`${item(size)} ${current ? CURRENT : open ? "text-ink bg-warm" : REST}`}
       >
         {label}
         <ChevronDown size={13} aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`} />
-        {current && <Underline small={small} />}
+        {current && <Underline size={size} />}
       </button>
       {open && (
         <ul data-part="panel" className={`${PANEL} ${panelEnd ? "end-0" : "start-0"}`}>

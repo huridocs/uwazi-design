@@ -5,7 +5,7 @@ import { uploadsAtom } from "./uploads";
 import { asset } from "../utils/asset";
 import { themeCss } from "../utils/theme/themeCss";
 import type { StockPresetId } from "../utils/theme/derivation";
-import { headerLayoutOf } from "../utils/theme/headerLayout";
+import { headerHeightOf, headerLayoutOf } from "../utils/theme/headerLayout";
 
 /** Settings › Theme and branding: one value per corpus (Uwazi's `themeVars`
  *  and `themeAssets`, huridocs/uwazi PR 10039). Not `atoms/theme.ts`, which
@@ -46,6 +46,8 @@ export const activeThemeAtom = atom((get) => get(themeDraftAtom) ?? get(themeSet
 
 /** The app bar's layout in the painted theme (`utils/theme/headerLayout.ts`). */
 export const headerLayoutAtom = atom((get) => headerLayoutOf(get(activeThemeAtom).vars));
+/** The app bar's height step in the painted theme. Compact ignores it. */
+export const headerHeightAtom = atom((get) => headerHeightOf(get(activeThemeAtom).vars));
 
 /** The stylesheet for the painted theme ("" for the untouched default). */
 export const themeCssAtom = atom((get) => themeCss(get(activeThemeAtom).vars));

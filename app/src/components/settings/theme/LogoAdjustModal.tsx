@@ -6,6 +6,7 @@ import {
   applyCropDrag,
   clampCrop,
   defaultOutputScale,
+  LOGO_FRAME,
   logoDisplaySize,
   logoEditorSize,
   scaledCropSize,
@@ -43,10 +44,13 @@ const previewOf = (image: HTMLImageElement, crop: Crop) =>
 export function LogoAdjustModal({
   src,
   barStyle,
+  frame = LOGO_FRAME,
   onApply,
   onClose,
 }: {
   src: string;
+  /** The box the header draws the logo in, at the chosen layout and height. */
+  frame?: Size;
   /** The header's ground, for the preview strip. */
   barStyle?: CSSProperties;
   onApply: (image: { src: string; width: number; height: number }) => void;
@@ -115,7 +119,7 @@ export function LogoAdjustModal({
   };
 
   const saved = scaledCropSize(crop, scale);
-  const shown = logoDisplaySize(crop);
+  const shown = logoDisplaySize(crop, frame);
   const fitted = logoEditorSize(bounds);
 
   const apply = () => {
@@ -228,7 +232,9 @@ export function LogoAdjustModal({
             </span>
           </p>
           <div data-part="header-preview" style={barStyle} className="flex h-navbar items-center overflow-hidden rounded-md border border-border bg-paper px-3">
-            {preview && <img src={preview} alt="" className="max-h-7 max-w-32 w-auto object-contain" />}
+            {preview && (
+              <img src={preview} alt="" className="w-auto object-contain" style={{ maxHeight: `${frame.height / 16}rem`, maxWidth: `${frame.width / 16}rem` }} />
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,16 @@
 import { isValidHex, normalizeHex } from "./color";
-import { HEADER_LAYOUT_KEY, headerLayoutFrom, headerLayoutOf, withHeaderLayout, type HeaderLayout } from "./headerLayout";
+import {
+  HEADER_HEIGHT_KEY,
+  HEADER_LAYOUT_KEY,
+  headerHeightFrom,
+  headerHeightOf,
+  headerLayoutFrom,
+  headerLayoutOf,
+  withHeaderHeight,
+  withHeaderLayout,
+  type HeaderHeight,
+  type HeaderLayout,
+} from "./headerLayout";
 import { recomputeSimpleFromAnchors, settingsColorsFromRail, themeVarsForExport, type StockPresetId } from "./derivation";
 import {
   appliedTheme,
@@ -34,7 +45,8 @@ import {
  *  (`parseThemeInstanceImportJson`, PR 10039 at 5d4014dc), so it skips the
  *  line; a key inside `light` or `dark` would be refused there as an unknown
  *  colour. A file without the line, which is every file from Uwazi, loads
- *  as Standard. `"__headerAccent"` (`{ "light": …, "dark": … }`) is the
+ *  as Standard. `"__headerHeight"` sits beside it the same way (a file
+ *  without it loads at the default height). `"__headerAccent"` (`{ "light": …, "dark": … }`) is the
  *  second: the active menu link's colour, written only when the theme stores
  *  one, at the top level for the same reason. */
 
@@ -96,7 +108,7 @@ export function buildThemeInstanceExport(vars: ThemeVars, assetPreset?: StockPre
   const accentLine = accents.length
     ? `,\n  "${HEADER_ACCENT_FILE_KEY}": { ${accents.map(([mode, hex]) => `"${mode}": "${hex}"`).join(", ")} }`
     : "";
-  const layoutLine = `,\n  "${HEADER_LAYOUT_KEY}": "${headerLayoutOf(source)}"${accentLine}`;
+  const layoutLine = `,\n  "${HEADER_LAYOUT_KEY}": "${headerLayoutOf(source)}",\n  "${HEADER_HEIGHT_KEY}": "${headerHeightOf(source)}"${accentLine}`;
   return `{
   "id": "${id}",
   "editorMode": "${editorMode}"${assetLine}${layoutLine},
@@ -133,6 +145,8 @@ export interface ThemeInstanceImport {
   assetPreset?: StockPresetId;
   /** Standard when the file does not say. */
   headerLayout: HeaderLayout;
+  /** Default when the file does not say. */
+  headerHeight: HeaderHeight;
 }
 
 /** Uwazi's four refusals. */
@@ -218,6 +232,7 @@ export function parseThemeInstanceImportText(text: string): ThemeInstanceImport 
     presetId: id === "legacy" || id === "default" || id === "custom" ? id : undefined,
     assetPreset: stock(typeof raw.assetPreset === "string" ? raw.assetPreset : undefined),
     headerLayout: headerLayoutFrom(raw[HEADER_LAYOUT_KEY]),
+    headerHeight: headerHeightFrom(raw[HEADER_HEIGHT_KEY]),
   };
 }
 
@@ -230,7 +245,7 @@ const SIMPLE_DERIVED = ["--color-theme-bg-muted", "--color-theme-text-secondary"
 /** An imported theme is always Custom. In simple mode the derived colours
  *  are recomputed from the file's anchors, as an edit would. */
 export function themeVarsFromInstanceImport(file: ThemeInstanceImport): ThemeVars {
-  return withHeaderLayout(importedColors(file), file.headerLayout);
+  return withHeaderHeight(withHeaderLayout(importedColors(file), file.headerLayout), file.headerHeight);
 }
 
 function importedColors(file: ThemeInstanceImport): ThemeVars {

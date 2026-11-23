@@ -43,3 +43,41 @@ export function withHeaderLayout<T extends Record<string, string | undefined>>(v
   delete next[HEADER_LAYOUT_KEY];
   return layout === "standard" ? next : { ...next, [HEADER_LAYOUT_KEY]: layout };
 }
+
+/* ── Header height ──────────────────────────────────────────────────────── */
+
+/** How tall the bar is, stored beside the layout under `__headerHeight`;
+ *  Default is no key, so today's bar is what an untouched theme draws.
+ *  Compact has its own 2.5rem and ignores it. The logo's frame grows with the
+ *  bar (`LOGO_SIZES`, `logoFrame.ts`). Not in Uwazi. */
+export const HEADER_HEIGHT_KEY = "__headerHeight";
+
+export const HEADER_HEIGHT_IDS = ["default", "tall", "extra-tall"] as const;
+export type HeaderHeight = (typeof HEADER_HEIGHT_IDS)[number];
+
+/** `rem` is `--spacing-navbar` for the step (`index.css` holds the same
+ *  numbers; the check script compares the two). */
+export const HEADER_HEIGHTS: { id: HeaderHeight; label: string; rem: number }[] = [
+  { id: "default", label: "Default", rem: 3.25 },
+  { id: "tall", label: "Tall", rem: 4.5 },
+  { id: "extra-tall", label: "Extra tall", rem: 5.5 },
+];
+
+export const headerHeightFrom = (value: unknown): HeaderHeight =>
+  HEADER_HEIGHT_IDS.find((id) => id === value) ?? "default";
+
+export const headerHeightOf = (vars: Record<string, string | undefined> | undefined): HeaderHeight =>
+  headerHeightFrom(vars?.[HEADER_HEIGHT_KEY]);
+
+export const headerHeightLabel = (id: HeaderHeight) => HEADER_HEIGHTS.find((h) => h.id === id)!.label;
+
+/** `vars` with the height set; Default removes the key. */
+export function withHeaderHeight<T extends Record<string, string | undefined>>(vars: T, height: HeaderHeight): T {
+  const next = { ...vars };
+  delete next[HEADER_HEIGHT_KEY];
+  return height === "default" ? next : { ...next, [HEADER_HEIGHT_KEY]: height };
+}
+
+/** The height the bar draws: Compact keeps its own. */
+export const drawnHeaderHeight = (layout: HeaderLayout, height: HeaderHeight): HeaderHeight =>
+  layout === "compact" ? "default" : height;

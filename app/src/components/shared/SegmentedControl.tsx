@@ -16,6 +16,7 @@ export function SegmentedControl({
   size = "md",
   ariaLabel,
   fill = false,
+  disabled = false,
 }: {
   value: string;
   options: Segment[];
@@ -26,6 +27,9 @@ export function SegmentedControl({
    *  answers inside a fixed-width menu). A label that cannot fit its equal
    *  share widens its segment rather than clipping (Columns' "Auto"). */
   fill?: boolean;
+  /** The choice does not apply right now: every segment is disabled and the
+   *  group is dimmed, the stored value still marked. Say why beside it. */
+  disabled?: boolean;
 }) {
   const h = size === "sm" ? "h-6" : "h-8";
   const iconSize = size === "sm" ? 11 : 14;
@@ -48,12 +52,15 @@ export function SegmentedControl({
             key={opt.id}
             type="button"
             onClick={() => onChange(opt.id)}
+            disabled={disabled}
             aria-pressed={active}
             data-part="option"
             aria-label={opt.label}
             title={opt.label}
-            className={`flex items-center justify-center ${h} ${fill ? "flex-1 basis-0 min-w-max px-1" : "px-2"} transition-colors cursor-pointer ${
-              active ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
+            className={`flex items-center justify-center ${h} ${fill ? "flex-1 basis-0 min-w-max px-1" : "px-2"} transition-colors ${
+              disabled
+                ? `cursor-not-allowed text-ink-muted ${active ? "bg-vellum" : ""}`
+                : `cursor-pointer ${active ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"}`
             }`}
             // Filled, the first segment carries a clear 1px edge too: the
             // dividers are part of each segment's share, so without it the

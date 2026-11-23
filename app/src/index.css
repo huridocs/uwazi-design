@@ -73,10 +73,18 @@
 
 /* HEADER LAYOUT (Settings › Theme and branding). The Navbar marks the root
  * with the layout it draws, and the bar's height follows here, in the one
- * variable everything measured from the bar reads. Only Compact changes it;
- * phones never set the attribute. */
+ * variable everything measured from the bar reads. Header height (same
+ * section) is the Tall and Extra tall steps; Compact keeps its own height,
+ * and the Navbar never sets both. Phones set neither. The numbers are
+ * `HEADER_HEIGHTS` (`utils/theme/headerLayout.ts`). */
 :root[data-header-layout="compact"] {
   --spacing-navbar: 2.5rem;
+}
+:root[data-header-height="tall"] {
+  --spacing-navbar: 4.5rem;
+}
+:root[data-header-height="extra-tall"] {
+  --spacing-navbar: 5.5rem;
 }
 /* The active menu link's colour and underline (Theme and branding › Header
  * bar › active link). Declared on the bar, not the root, so the default

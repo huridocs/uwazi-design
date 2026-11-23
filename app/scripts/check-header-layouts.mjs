@@ -96,9 +96,31 @@ const tealFile = (file) => {
   theme.__headerAccent = { light: ACCENT, dark: ACCENT };
   return JSON.stringify(theme);
 };
+const HEIGHTS = ["default", "tall", "extra-tall"];
+const HEIGHT_LABEL = { default: "Default", tall: "Tall", "extra-tall": "Extra tall" };
+const HEIGHT_LAYOUTS = ["standard", "menu-centred", "menu-end"];
+const chooseHeight = async (p, height) => {
+  await p.locator('[data-part="header-height"] [data-part="option"]', { hasText: new RegExp(`^${HEIGHT_LABEL[height]}$`) }).click();
+  await p.waitForTimeout(300);
+};
+/** Two partner-shaped logos: a wide wordmark (5:1) and a square badge. */
+const LOGOS = {
+  wordmark: { name: "wordmark.svg", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="120" viewBox="0 0 600 120"><rect width="600" height="120" rx="8" fill="#1F3A8A"/><text x="300" y="80" font-family="Arial,sans-serif" font-size="64" font-weight="700" fill="#fff" text-anchor="middle">PARTNER LIBRARY</text></svg>` },
+  badge: { name: "badge.svg", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><circle cx="128" cy="128" r="124" fill="#0072CE"/><circle cx="128" cy="96" r="34" fill="#fff"/><path d="M52 212c8-48 40-72 76-72s68 24 76 72z" fill="#fff"/></svg>` },
+};
+const uploadLogo = async (p, which) => {
+  await p.locator('[data-part="header-layouts"]').scrollIntoViewIfNeeded();
+  await p.getByRole("button", { name: "Change", exact: true }).first().click();
+  const dialog = p.locator('[role="dialog"]').last();
+  const already = dialog.getByText(LOGOS[which].name, { exact: false }).first();
+  if (await already.count()) await already.click();
+  else await dialog.locator('input[type="file"]').setInputFiles({ name: LOGOS[which].name, mimeType: "image/svg+xml", buffer: Buffer.from(LOGOS[which].svg) });
+  await p.waitForTimeout(900);
+  if (await p.locator('[data-component="ImagePickerModal"]').count()) throw new Error(`the picker did not close on ${which}`);
+};
 const drawn = (p) => p.evaluate((sel) => document.querySelector(sel).dataset.layout, BAR);
 
-const probe = ({ layout, anonymous }) => {
+const probe = ({ layout, anonymous, height = "default", logo = null }) => {
   const bar = document.querySelector('[data-component="Navbar"]');
   const br = bar.getBoundingClientRect();
   const issues = [];
@@ -119,8 +141,26 @@ const probe = ({ layout, anonymous }) => {
   const probeEl = document.createElement("div"); probeEl.style.cssText = "position:absolute;height:var(--spacing-navbar)"; document.body.appendChild(probeEl);
   const tokenPx = probeEl.getBoundingClientRect().height; probeEl.remove();
   if (Math.abs(br.height - tokenPx) > 0.5) issues.push(`bar ${br.height}px, --spacing-navbar ${tokenPx}px`);
-  if (br.height !== (layout === "compact" ? 40 : 52)) issues.push(`bar is ${br.height}px`);
+  const wantH = layout === "compact" ? 40 : { default: 52, tall: 72, "extra-tall": 88 }[height];
+  if (br.height !== wantH) issues.push(`bar is ${br.height}px, wanted ${wantH}`);
   if (bar.dataset.layout !== layout) issues.push(`draws ${bar.dataset.layout}`);
+  if (layout !== "compact" && bar.dataset.height !== height) issues.push(`draws height ${bar.dataset.height}`);
+  // Every control sits on the bar's centre line (the bar's box less its 1px rule).
+  const mid = br.top + (br.height - 1) / 2;
+  for (const a of rects) if (Math.abs((a.r.top + a.r.bottom) / 2 - mid) > 1) issues.push(`off the centre line: ${a.n} by ${((a.r.top + a.r.bottom) / 2 - mid).toFixed(1)}px`);
+  // The logo fills its frame for this height and no more, and keeps its shape.
+  const frame = layout === "compact" ? [112, 24, 12] : { default: [128, 28, 14.7], tall: [192, 44, 23.1], "extra-tall": [240, 56, 29.4] }[height];
+  const img = bar.querySelector('[data-part="logo"] img');
+  const ir = img.getBoundingClientRect();
+  let logoNote = "";
+  if (logo) {
+    if (!img.hasAttribute("data-custom")) issues.push("the bar draws the built-in wordmark, not the uploaded logo");
+    const scale = Math.min(frame[0] / img.naturalWidth, frame[1] / img.naturalHeight, 1);
+    if (Math.abs(ir.width - img.naturalWidth * scale) > 1 || Math.abs(ir.height - img.naturalHeight * scale) > 1)
+      issues.push(`logo ${ir.width.toFixed(0)}×${ir.height.toFixed(0)}, wanted ${(img.naturalWidth * scale).toFixed(0)}×${(img.naturalHeight * scale).toFixed(0)}`);
+    logoNote = ` · logo ${Math.round(ir.width)}×${Math.round(ir.height)}`;
+  } else if (!img.hasAttribute("data-custom") && Math.abs(ir.height - frame[2]) > 0.6) issues.push(`wordmark ${ir.height.toFixed(1)}px tall, wanted ${frame[2]}`);
+  if (ir.top < br.top + 3 || ir.bottom > br.bottom - 3) issues.push("logo touches the bar's edge");
 
   // The menu: present only in the menu layouts, inside the room it has, and
   // where the layout puts it.
@@ -158,6 +198,7 @@ const probe = ({ layout, anonymous }) => {
       const rule = current.querySelector('[data-part="current-rule"]');
       if (getComputedStyle(current).color !== want) issues.push(`current link is ${getComputedStyle(current).color}, accent ${want}`);
       if (!rule || rule.getBoundingClientRect().height !== 2 || getComputedStyle(rule).backgroundColor !== want) issues.push("current link has no 2px rule in the accent");
+      else if (Math.abs(rule.getBoundingClientRect().bottom - br.bottom) > 0.5) issues.push(`current link's rule ends ${br.bottom - rule.getBoundingClientRect().bottom}px above the bar's bottom edge`);
     }
   }
 
@@ -179,14 +220,14 @@ const probe = ({ layout, anonymous }) => {
   const rtl = document.documentElement.dir === "rtl" || getComputedStyle(bar).direction === "rtl";
   const order = rects.map((x) => ({ n: x.n, x: rtl ? -x.r.right : x.r.left }));
   for (let i = 1; i < order.length; i++) if (order[i].x < order[i - 1].x - 1) issues.push(`tab order: ${order[i].n} after ${order[i - 1].n}`);
-  return { h: br.height, issues, links };
+  return { h: br.height, issues, links: links + logoNote };
 };
-const check = async (p, where, layout, { axe = true, scope = null, anonymous = false, contrast = true } = {}) => {
+const check = async (p, where, layout, { axe = true, scope = null, anonymous = false, contrast = true, height = "default", logo = null } = {}) => {
   // A save flashes the Beacon open over what is beside it; measure the bar at rest.
   await p.mouse.move(1, 1);
   await p.waitForFunction(() => [...document.querySelectorAll('[data-component="Beacon"][data-state]')].every((e) => e.dataset.state === "collapsed"), null, { timeout: 15000 });
   await p.waitForTimeout(500);
-  const r = await p.evaluate(probe, { layout, anonymous });
+  const r = await p.evaluate(probe, { layout, anonymous, height, logo });
   for (const i of r.issues) fail(where, i);
   if (axe) {
     await p.addScriptTag({ content: AXE });
@@ -463,6 +504,154 @@ for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (c
     await p.waitForTimeout(300);
     await p.keyboard.press("Escape");
   }
+  await ctx.close();
+}
+
+/* 6. Header height: Default, Tall and Extra tall under the three layouts
+      that take it, with a wide wordmark and a square badge as the logo, on
+      both bars. */
+for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
+  const { ctx, p } = await open(w, theme);
+  const shots = (theme === "light" && w === 1360) || (theme === "dark" && w === 900);
+  await openThemePage(p);
+  for (const barName of ["design", "teal"]) {
+    const teal = barName === "teal";
+    if (teal) await importFile(p, tealFile(await exportFile(p)));
+    for (const logo of ["wordmark", "badge"]) {
+      await uploadLogo(p, logo);
+      for (const layout of HEIGHT_LAYOUTS) {
+        await choose(p, layout);
+        for (const height of HEIGHTS) {
+          await chooseHeight(p, height);
+          await check(p, `${theme} ${w} ${barName} ${logo} ${layout} ${height}`, layout, { height, logo, contrast: !teal, scope: teal ? BAR : null });
+          if (shots) await p.screenshot({ path: `${out}/height-${theme}-${w}${teal ? "-teal" : ""}-${logo}-${layout}-${height}.png`, clip: { x: 0, y: 0, width: w, height: 130 } });
+        }
+      }
+    }
+    if (!teal && w === 1360) {
+      // The built-in wordmark scales too; the adjust dialog reads the frame.
+      await p.getByRole("button", { name: "Reset", exact: true }).first().click();
+      await choose(p, "menu-end");
+      for (const height of HEIGHTS) {
+        await chooseHeight(p, height);
+        await check(p, `${theme} ${w} built-in wordmark ${height}`, "menu-end", { height });
+      }
+      await p.screenshot({ path: `${out}/height-${theme}-theme-page-extra-tall.png` });
+      await uploadLogo(p, "wordmark");
+      await p.getByRole("button", { name: "Adjust logo" }).click();
+      await p.waitForSelector('[data-part="header-preview"] img');
+      await p.waitForTimeout(400);
+      const adjust = await p.evaluate(() => {
+        const strip = document.querySelector('[data-part="header-preview"]');
+        const i = strip.querySelector("img").getBoundingClientRect();
+        return { strip: strip.getBoundingClientRect().height, img: `${Math.round(i.width)}×${Math.round(i.height)}`, text: strip.parentElement.textContent };
+      });
+      if (adjust.strip !== 88 || adjust.img !== "240×48" || !adjust.text.includes("240×48")) fail(`${theme} adjust logo`, JSON.stringify(adjust));
+      console.log(`${theme} adjust logo at Extra tall: ${JSON.stringify(adjust)}`);
+      await p.screenshot({ path: `${out}/height-${theme}-adjust-logo-extra-tall.png` });
+      await p.keyboard.press("Escape");
+      // Compact keeps its own height: the control is disabled and says so.
+      await choose(p, "compact");
+      const off = await p.evaluate(() => ({
+        disabled: [...document.querySelectorAll('[data-part="header-height"] [data-part="option"]')].every((o) => o.disabled),
+        note: document.querySelector('[data-part="header-height-note"]').textContent,
+      }));
+      if (!off.disabled || !off.note.startsWith("Compact has its own height")) fail(`${theme} compact`, JSON.stringify(off));
+      await check(p, `${theme} ${w} compact with Extra tall stored`, "compact", { logo: "wordmark" });
+      await p.screenshot({ path: `${out}/height-${theme}-compact-disabled.png` });
+    }
+  }
+  await ctx.close();
+}
+
+/* 7. Extra tall reaches everything measured from the bar: the Library, the
+      Library with its drawer, an entity view, the Live translate strip. */
+for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for (const w of [1360, 900]) {
+  const { ctx, p } = await open(w, theme);
+  await openThemePage(p);
+  await uploadLogo(p, "badge");
+  await choose(p, layout);
+  await chooseHeight(p, "extra-tall");
+  await save(p);
+  const opts = { height: "extra-tall", logo: "badge" };
+  await p.click(`${BAR} [data-part="library"]`);
+  await p.waitForTimeout(1200);
+  await check(p, `${theme} ${w} ${layout} extra-tall library`, layout, opts);
+  if (w === 1360) await p.screenshot({ path: `${out}/height-${theme}-${layout}-extra-tall-library.png` });
+  await p.locator('[data-component="EntityCard"] [data-part="primary-action"]').first().click({ position: { x: 6, y: 6 } });
+  await p.waitForTimeout(500);
+  await check(p, `${theme} ${w} ${layout} extra-tall library+drawer`, layout, { ...opts, axe: false });
+  if (w === 1360) await p.screenshot({ path: `${out}/height-${theme}-${layout}-extra-tall-library-drawer.png` });
+  await p.getByRole("button", { name: "View entity" }).first().click();
+  await p.waitForTimeout(1500);
+  await check(p, `${theme} ${w} ${layout} extra-tall entity`, layout, opts);
+  if (w === 1360) await p.screenshot({ path: `${out}/height-${theme}-${layout}-extra-tall-entity.png` });
+  if (theme === "light" && layout === "menu-end") {
+    if (w === 900) {
+      // The fold with the larger links: More is there, last, and opens in view.
+      const more = p.locator(`${BAR} [data-part="more"] [data-part="group-trigger"]`);
+      if (!(await more.count())) fail("extra-tall fold", "no More at 900");
+      else {
+        await more.click();
+        const inView = await p.evaluate(() => { const r = document.querySelector('[data-component="NavMenu"] [data-part="panel"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.top >= document.querySelector('[data-component="Navbar"]').getBoundingClientRect().bottom - 30; });
+        if (!inView) fail("extra-tall fold", "More's panel is misplaced");
+        await check(p, "light 900 menu-end extra-tall more open", layout, opts);
+        await p.screenshot({ path: `${out}/height-light-menu-end-extra-tall-900-more-open.png`, clip: { x: 0, y: 0, width: 900, height: 330 } });
+        await p.keyboard.press("Escape");
+      }
+    } else {
+      await p.click('[data-part="settings-trigger"]');
+      await p.click('[data-part="live-translate"]');
+      await p.waitForTimeout(300);
+      const strip = await p.evaluate(() => ({ top: document.querySelector('[data-component="LiveTranslateStrip"]').getBoundingClientRect().top, bar: document.querySelector('[data-component="Navbar"]').getBoundingClientRect().bottom }));
+      if (Math.abs(strip.top - strip.bar) > 0.5) fail("live translate", `strip at ${strip.top}, bar ends at ${strip.bar}`);
+      await check(p, "light 1360 menu-end extra-tall live translate", layout, { ...opts, axe: false });
+      await p.screenshot({ path: `${out}/height-light-menu-end-extra-tall-live-translate.png` });
+    }
+  }
+  await ctx.close();
+}
+
+/* 8. Height is part of the theme: Discard, the file, a preset, the Activity
+      log, the phone. */
+{
+  const { ctx, p } = await open(1360, "light");
+  await openThemePage(p);
+  await chooseHeight(p, "tall");
+  await p.getByRole("button", { name: "Discard changes" }).click();
+  await p.waitForTimeout(300);
+  const barH = () => p.evaluate((sel) => document.querySelector(sel).getBoundingClientRect().height, BAR);
+  if ((await barH()) !== 52) fail("height discard", `bar is ${await barH()}px`);
+  await chooseHeight(p, "tall");
+  const file = await exportFile(p);
+  if (!/^  "__headerHeight": "tall",$/m.test(file)) fail("height export", "no __headerHeight line");
+  if (/__headerHeight/.test(file.slice(file.indexOf('"light"')))) fail("height export", "the height is inside a mode");
+  for (const [text, want, what] of [
+    [file.replace(/^  "__headerHeight".*\n/m, ""), 52, "without the key"],
+    [file.replace('"tall"', '"extra-tall"'), 88, "extra-tall"],
+    [file.replace('"tall"', '"huge"'), 52, "an unknown value"],
+    [file, 72, "tall"],
+  ]) {
+    await importFile(p, text);
+    if ((await barH()) !== want) fail(`height import ${what}`, `bar is ${await barH()}px`);
+    console.log(`height import ${what}: ${await barH()}px`);
+  }
+  await p.locator('[data-part="presets"] button').nth(1).click();
+  await p.waitForTimeout(300);
+  if ((await barH()) !== 72) fail("height preset", `bar is ${await barH()}px after choosing a preset`);
+  await save(p);
+  await openSystemSettings(p, "Activity log");
+  await p.waitForTimeout(600);
+  await p.getByRole("button", { name: /Updated theme/ }).first().click();
+  await p.waitForTimeout(400);
+  const logged = await p.evaluate(() => /Header height\s*Default\s*(→|to)?\s*Tall/.test(document.body.innerText) || document.body.innerText.includes("Header height"));
+  if (!logged) fail("activity log", "no Header height line");
+  console.log(`activity log: Header height ${logged ? "listed" : "missing"}`);
+  await p.setViewportSize({ width: 390, height: 800 });
+  await p.waitForTimeout(600);
+  const phone = await p.evaluate((sel) => ({ h: document.querySelector(sel).getBoundingClientRect().height, attr: document.documentElement.dataset.headerHeight ?? null }), BAR);
+  if (phone.h !== 52 || phone.attr) fail("height phone", JSON.stringify(phone));
+  console.log(`height phone: ${JSON.stringify(phone)}`);
   await ctx.close();
 }
 

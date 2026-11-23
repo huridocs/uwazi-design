@@ -19,7 +19,17 @@ import {
 } from "../../shared/ImagePickerModal";
 import { LogoAdjustModal } from "../theme/LogoAdjustModal";
 import { HeaderLayoutCards } from "../theme/HeaderLayoutCards";
-import { headerLayoutLabel, headerLayoutOf, withHeaderLayout } from "../../../utils/theme/headerLayout";
+import {
+  HEADER_HEIGHTS,
+  headerHeightLabel,
+  headerHeightOf,
+  headerLayoutLabel,
+  headerLayoutOf,
+  withHeaderHeight,
+  withHeaderLayout,
+  type HeaderHeight,
+} from "../../../utils/theme/headerLayout";
+import { LOGO_SIZES, logoSizeFor } from "../../../utils/theme/logoFrame";
 import {
   brandImageLookupAtom,
   BUILTIN_FAVICONS,
@@ -373,6 +383,10 @@ export function ThemePage() {
 
   const logo = lookup(draft.logo, BUILTIN_LOGOS) ?? DEFAULT_LOGO;
   const favicon = lookup(draft.favicon, BUILTIN_FAVICONS) ?? DEFAULT_FAVICON;
+  // The header's height step and the logo box that goes with it.
+  const headerLayout = headerLayoutOf(vars);
+  const headerHeight = headerHeightOf(vars);
+  const logoFrame = LOGO_SIZES[logoSizeFor(headerLayout, headerHeight)];
   const barStyle: CSSProperties = { backgroundColor: chrome[BAR_KEY], borderColor: chrome["--color-theme-chrome-app-bar-separator"] };
 
   const pick = (image: PickableImage) => {
@@ -435,7 +449,7 @@ export function ThemePage() {
               onPick={pick}
             />
           )}
-          {adjusting && <LogoAdjustModal src={logo.src} barStyle={barStyle} onClose={() => setAdjusting(false)} onApply={applyAdjusted} />}
+          {adjusting && <LogoAdjustModal src={logo.src} barStyle={barStyle} frame={logoFrame} onClose={() => setAdjusting(false)} onApply={applyAdjusted} />}
         </>
       }
     >
@@ -448,7 +462,7 @@ export function ThemePage() {
         description="How the header arranges its items on desktops and tablets. Standard is the app bar. The other three draw the collection's menu (Settings › Menu) in the bar, with the language, the Library and Settings as utilities. Phones keep their own bar and list the menu in their menu sheet."
       >
         <HeaderLayoutCards
-          selected={headerLayoutOf(vars)}
+          selected={headerLayout}
           colors={{
             bar: chrome[BAR_KEY],
             text: chrome["--color-theme-chrome-app-bar-fg"],
@@ -457,6 +471,25 @@ export function ThemePage() {
           }}
           onSelect={(id) => setVars((current) => withHeaderLayout(current, id))}
         />
+        {/* Header height: a taller bar gives the logo a larger box. The note
+            is one line at a fixed place, whatever is chosen. */}
+        <div data-part="header-height" className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span id="header-height-label" className="text-xs font-medium text-ink-secondary">
+            Header height
+          </span>
+          <SegmentedControl
+            ariaLabel="Header height"
+            value={headerHeight}
+            options={HEADER_HEIGHTS.map((h) => ({ id: h.id, label: h.label }))}
+            onChange={(id) => setVars((current) => withHeaderHeight(current, id as HeaderHeight))}
+            disabled={headerLayout === "compact"}
+          />
+          <p data-part="header-height-note" className="text-xs text-ink-tertiary" dir="auto">
+            {headerLayout === "compact"
+              ? "Compact has its own height, 40 px."
+              : `${HEADER_HEIGHTS.find((h) => h.id === headerHeight)!.rem * 16} px bar. The logo shows at up to ${logoFrame.width} × ${logoFrame.height} px.`}
+          </p>
+        </div>
       </SettingsSection>
 
       <SettingsSection title="Logo and favicon" description="The logo shows in the header and on the sign-in screens. The favicon is the browser tab's icon.">
@@ -745,6 +778,8 @@ function themeChanges(
   if (preset(before) !== preset(after)) out.push({ field: "Preset", before: preset(before), after: preset(after) });
   const layout = (t: ThemeSettings) => headerLayoutLabel(headerLayoutOf(t.vars));
   if (layout(before) !== layout(after)) out.push({ field: "Header layout", before: layout(before), after: layout(after) });
+  const height = (t: ThemeSettings) => headerHeightLabel(headerHeightOf(t.vars));
+  if (height(before) !== height(after)) out.push({ field: "Header height", before: height(before), after: height(after) });
   for (const mode of THEME_MODES) {
     const painted = (t: ThemeSettings): Record<string, string> => ({ ...appliedTheme(t.vars, mode), ...resolvedChrome(t.vars, mode) });
     const a = painted(before);

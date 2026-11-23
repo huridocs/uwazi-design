@@ -901,17 +901,34 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     Collection picker and the Tools entries, which have no button in the bar.
   - The Beacon is `overlay`: its box keeps its collapsed size and the expanded rail opens over
     the links beside it, so they neither move nor fold.
-- Phones and the catalog always draw Standard; under a menu layout the phone menu sheet lists
-  the menu as its own section (`NavMenuSheetSection`), a group as a label over its links.
+- Phones and the catalog always draw Standard at the default height; under a menu layout the
+  phone menu sheet lists the menu as its own section (`NavMenuSheetSection`), a group as a label
+  over its links.
 - `--header-accent` is "Header bar active link" in Theme and branding's Header bar group
   (`HEADER_ACCENT_KEY`, not in Uwazi). Unset, it is the header's text (`index.css` declares it
   on the Navbar). The theme file carries it as a top-level `"__headerAccent"` object, written
   only when set: inside `light` or `dark` Uwazi would refuse it as an unknown colour.
-- The Navbar marks the root `data-header-layout` and `index.css` sets `--spacing-navbar` from
-  it (3.25rem, 2.5rem Compact). Anything measured from the bar reads that variable.
+- Header height (not in Uwazi) sits under the layout cards and is part of the theme the same
+  way: `vars.__headerHeight` is `tall` or `extra-tall`, no key is Default; presets keep it; the
+  theme file carries a top-level `"__headerHeight"` line. Steps (`HEADER_HEIGHTS`): Default
+  3.25rem, Tall 4.5rem, Extra tall 5.5rem. Compact keeps its 2.5rem: the control is disabled
+  there with a note, and the stored step comes back with another layout.
+- The logo's box follows the bar (`LOGO_SIZES`, `logoSizeFor`, `utils/theme/logoFrame.ts`;
+  `Wordmark`'s `size`): Compact 112 × 24, Default 128 × 28, Tall 192 × 44, Extra tall 240 × 56
+  px. A custom logo is never enlarged; the built-in wordmark scales with the box (0.919,
+  1.444, 1.838rem). The logo adjust dialog's readout and preview strip use the chosen frame.
+- Under a taller bar controls keep their size and sit on the centre line; menu links are
+  `text-base` at Tall and Extra tall. The current link's 2px rule is on the bar's bottom edge
+  at every height. In Standard on a tablet with Tall or Extra tall, the utilities drop their
+  labels (icons with a `Hint`): the larger logo leaves no room for them.
+- The Navbar marks the root `data-header-layout` and `data-header-height`, and `index.css` sets
+  `--spacing-navbar` from them (3.25rem; 2.5rem Compact; 4.5rem, 5.5rem). The Navbar never sets
+  both. Anything measured from the bar reads that variable.
   `scripts/check-header-layouts.mjs <dir>` checks all four in light and dark at 1360 and 900,
   with a full-colour bar, signed in and as a visitor (overlap, centring, 32px controls, height,
-  tab order, the fold, a group by keyboard, RTL, the phone sheet, the file round trip, axe). A
+  tab order, the fold, a group by keyboard, RTL, the phone sheet, the file round trip, axe),
+  then the three heights with an uploaded wide wordmark and a square badge. It takes about
+  fifteen minutes. A
   reload returns to CEJIL, whose menu has six links and no group; the Sample's seed has one.
 
 ### Login and account
