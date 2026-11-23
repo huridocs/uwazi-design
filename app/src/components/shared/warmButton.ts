@@ -14,9 +14,11 @@
  *  shows, and those buttons take no edge. */
 export const WARM_EDGE = "inset-ring inset-ring-border-soft";
 
-/** Rung 1 of the ladder below: the solid ink commit. Colour only; the caller
+/** Rung 1 of the ladder below: the solid ink commit. `action` is ink on paper
+ *  unless Settings › Theme and branding sets a "Primary action" colour
+ *  (`tokens.css`). Colour only; the caller
  *  sizes it (`MODAL_COMMIT` for footers, a full-width button on login). */
-export const COMMIT_FILL = "bg-ink text-paper hover:bg-ink/90";
+export const COMMIT_FILL = "bg-action text-on-action hover:bg-action/90";
 
 export const WARM_BUTTON = `text-ink-secondary bg-warm hover:bg-parchment hover:text-ink ${WARM_EDGE}`;
 

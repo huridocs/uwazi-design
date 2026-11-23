@@ -24,6 +24,7 @@ import { AccountPage } from "../components/settings/pages/AccountPage";
 import { LanguagesPage } from "../components/settings/pages/LanguagesPage";
 import { UsersPage } from "../components/settings/pages/UsersPage";
 import { CollectionPage } from "../components/settings/pages/CollectionPage";
+import { ThemePage } from "../components/settings/pages/ThemePage";
 import { TemplatesPage } from "../components/settings/pages/TemplatesPage";
 import { ThesauriPage } from "../components/settings/pages/ThesauriPage";
 import { RelationTypesPage } from "../components/settings/pages/RelationTypesPage";
@@ -67,6 +68,8 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
         return <UsersPage />;
       case "collection":
         return <CollectionPage />;
+      case "theme":
+        return <ThemePage />;
       case "templates":
         return <TemplatesPage />;
       case "thesauri":

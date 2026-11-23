@@ -99,10 +99,10 @@ export function ChangeTemplateDialog({
             aria-disabled={n === 0 || undefined}
             className={`${MODAL_BUTTON} ${
               n === 0
-                ? "bg-ink/40 text-paper cursor-not-allowed"
+                ? "bg-action/40 text-on-action cursor-not-allowed"
                 : danger
                   ? "bg-seal text-white hover:bg-seal/90 cursor-pointer"
-                  : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+                  : "bg-action text-on-action hover:bg-action/90 cursor-pointer"
             }`}
           >
             {n ? `Change ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"} to ${targetName}` : "Change template"}

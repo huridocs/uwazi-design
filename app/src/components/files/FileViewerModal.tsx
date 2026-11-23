@@ -143,7 +143,7 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
           href={href}
           target="_blank"
           rel="noreferrer"
-          className="px-3 py-1.5 text-xs font-medium text-paper bg-ink hover:bg-ink/90 rounded-md transition-colors cursor-pointer"
+          className="px-3 py-1.5 text-xs font-medium text-on-action bg-action hover:bg-action/90 rounded-md transition-colors cursor-pointer"
         >
           Open link
         </a>

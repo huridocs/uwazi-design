@@ -233,10 +233,10 @@ export function BulkEditBody({
             disabled={review.touched === 0}
             className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
               review.touched === 0
-                ? "bg-ink/40 text-paper cursor-not-allowed"
+                ? "bg-action/40 text-on-action cursor-not-allowed"
                 : danger
                   ? "bg-seal text-white hover:bg-seal/90 cursor-pointer"
-                  : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+                  : "bg-action text-on-action hover:bg-action/90 cursor-pointer"
             }`}
           >
             Apply to {review.touched.toLocaleString()} {review.touched === 1 ? "entity" : "entities"}

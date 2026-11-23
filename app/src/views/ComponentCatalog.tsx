@@ -65,7 +65,7 @@ import { Dropzone } from "../components/shared/Dropzone";
 import { TranslationProgress } from "../components/settings/TranslationProgress";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
-import { DateInputDemo, ImagePickerModalDemo, MapPointPickerDemo, StatsCardDemo } from "./catalog/collectionDemos";
+import { ColorFieldDemo, DateInputDemo, ImagePickerModalDemo, MapPointPickerDemo, StatsCardDemo } from "./catalog/collectionDemos";
 import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
@@ -2549,10 +2549,20 @@ const textColor = typeLabelColor(type.color);`}
               <div id="set-image-picker" ref={reg("set-image-picker")}>
                 <CatalogEntry
                   name="ImagePickerModal"
-                  description="Pick an image from Settings › Uploads, or drop one to upload it at once. Lists only images that pass the size rule; a dropped file that fails it is refused with the actual and expected size."
+                  description="Pick an image from Settings › Uploads, or drop one to upload it at once. Built-in images are listed first. A strict rule (the favicon) lists only images that pass it and refuses a dropped file that fails, with the actual and expected size. A soft rule (the theme logo) lists every image and asks before using one outside it."
                   code={`<ImagePickerModal title="Select favicon image" rule={FAVICON_RULE} value={id} onPick={pick} onClose={close} />`}
                 >
                   <ImagePickerModalDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-color-field" ref={reg("set-color-field")}>
+                <CatalogEntry
+                  name="ColorField"
+                  description="A colour value as a control: a swatch with its hex, opening a panel with swatches, the system colour picker and a hex field. One swatch may be marked as suggested. The hex field commits at six digits; Escape or a press outside closes the panel and returns focus. Settings › Theme and branding uses one per colour."
+                  code={`<ColorField label="Primary action" value={hex} options={swatches} suggested={swatches[0]} onChange={setHex} />`}
+                >
+                  <ColorFieldDemo />
                 </CatalogEntry>
               </div>
             </div>

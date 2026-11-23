@@ -319,8 +319,8 @@ function NewThesaurusForm({
           type="button"
           onClick={() => ok && onCreate(name.trim(), labels)}
           aria-disabled={!ok || undefined}
-          className={`px-3 py-1.5 text-xs font-medium rounded-md text-paper bg-ink transition-colors ${
-            ok ? "hover:bg-ink/90 cursor-pointer" : "opacity-50 cursor-not-allowed"
+          className={`px-3 py-1.5 text-xs font-medium rounded-md text-on-action bg-action transition-colors ${
+            ok ? "hover:bg-action/90 cursor-pointer" : "opacity-50 cursor-not-allowed"
           }`}
         >
           Create

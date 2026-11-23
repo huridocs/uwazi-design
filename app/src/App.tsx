@@ -2,7 +2,7 @@ import { LiveTranslateEditor } from "./components/layout/LiveTranslateEditor";
 import { LiveTranslateStrip } from "./components/layout/LiveTranslateStrip";
 import { useEffect } from "react";
 import { collectionSettings } from "./atoms/settingsSingletons";
-import { uploadsAtom } from "./atoms/uploads";
+import { faviconSrcAtom } from "./atoms/branding";
 import { setActiveDatePattern } from "./utils/dateFormat";
 import { settingsAccessAtom } from "./atoms/settings";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -90,7 +90,8 @@ export function App() {
   setActiveDatePattern(collection.dateFormat);
   // The favicon is the chosen upload, else the Uwazi mark. Uwazi needs a
   // reload for this; the prototype swaps it on Save.
-  const faviconSrc = useAtomValue(uploadsAtom).find((u) => u.id === collection.favicon)?.src;
+  // Settings › Theme and branding's favicon comes first (`atoms/branding.ts`).
+  const faviconSrc = useAtomValue(faviconSrcAtom);
   useEffect(() => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!link) return;

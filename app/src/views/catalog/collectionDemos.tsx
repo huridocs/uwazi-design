@@ -3,6 +3,7 @@ import { StatsCard } from "../../components/shared/StatsCard";
 import { DateInput } from "../../components/shared/DateInput";
 import { MapPointPicker } from "../../components/shared/MapPointPicker";
 import { FAVICON_RULE, ImagePickerModal } from "../../components/shared/ImagePickerModal";
+import { ColorField } from "../../components/shared/ColorField";
 import { SettingsButton } from "../../components/settings/SettingsButton";
 
 export function StatsCardDemo() {
@@ -64,6 +65,26 @@ export function ImagePickerModalDemo() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+const DEMO_SWATCHES = ["#1A1A1A", "#333333", "#555555", "#777777", "#2B56C1", "#00B4F0", "#059669", "#F59E0B", "#E8432A", "#8B5CF6", "#F5EED7", "#F5F0E8", "#FCFAF8", "#FFFFFF"];
+
+/** A colour value with its swatches; the third is the suggested one. */
+export function ColorFieldDemo({ swatches = true, suggested = true, disabled = false }: { swatches?: boolean; suggested?: boolean; disabled?: boolean }) {
+  const [value, setValue] = useState("#2B56C1");
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-sm font-medium text-ink">Primary action</span>
+      <ColorField
+        label="Primary action"
+        value={value}
+        options={swatches ? DEMO_SWATCHES : []}
+        suggested={suggested ? DEMO_SWATCHES[2] : undefined}
+        onChange={setValue}
+        disabled={disabled}
+      />
     </div>
   );
 }

@@ -74,6 +74,8 @@ export const DEFAULT_NOTICES: ByAction = {
  *  call passes. */
 export const FIXED_NOTICES: ByAction = {
   "collection:UPDATE": "collectionSaved",
+  // Uwazi's theming page reports a save with the same text.
+  "theme:UPDATE": "collectionSaved",
   "customisation:UPDATE": "customisationSaved",
   "filters:UPDATE": "filtersSaved",
 };

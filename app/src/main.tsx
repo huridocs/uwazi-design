@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeEffect, primeTheme } from "./components/shared/ThemeEffect";
+import { BrandingEffect, ThemeEffect, primeTheme } from "./components/shared/ThemeEffect";
 import { installGutterCheck } from "./utils/gutterCheck";
 import "./index.css";
 
@@ -16,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
     {/* A leaf, outside the app: the theme is a document-level fact, and nothing
         in React re-renders when it changes. */}
     <ThemeEffect />
+    <BrandingEffect />
     <App />
   </StrictMode>
 );

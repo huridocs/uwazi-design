@@ -176,6 +176,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-date-input", label: "DateInput" },
       { id: "set-map-point", label: "MapPointPicker" },
       { id: "set-image-picker", label: "ImagePickerModal" },
+      { id: "set-color-field", label: "ColorField" },
     ],
   },
   {

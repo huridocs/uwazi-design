@@ -55,7 +55,7 @@ const sizes: Record<Size, string> = {
 /** Disabled: a filled rung keeps its shape at low contrast; an unfilled rung
  *  stays unfilled, so a disabled ghost does not read as a pressed chip. */
 function disabledClass(variant: Variant, bar: boolean): string {
-  if (variant === "commit") return "bg-ink/40 text-paper cursor-not-allowed";
+  if (variant === "commit") return "bg-action/40 text-on-action cursor-not-allowed";
   const filled = variant === "success" || (!bar && variant !== "ghost" && variant !== "lead");
   return filled ? "bg-vellum text-ink-muted cursor-not-allowed" : "text-ink-muted cursor-not-allowed";
 }

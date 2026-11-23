@@ -365,5 +365,5 @@ export function Modal({
 // 44px tall on a phone: a touch target.
 export const MODAL_BUTTON = "px-3 py-1.5 max-md:min-h-11 max-md:px-4 text-xs font-medium rounded-md transition-colors";
 export const MODAL_COMMIT = `${MODAL_BUTTON} ${COMMIT_FILL} cursor-pointer`;
-export const MODAL_COMMIT_DISABLED = `${MODAL_BUTTON} bg-ink/40 text-paper cursor-not-allowed`;
+export const MODAL_COMMIT_DISABLED = `${MODAL_BUTTON} bg-action/40 text-on-action cursor-not-allowed`;
 export const MODAL_DANGER = `${MODAL_BUTTON} bg-seal-fill text-white hover:bg-seal-fill/90 cursor-pointer`;

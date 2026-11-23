@@ -17,6 +17,9 @@
   --color-border-soft: var(--border-soft);
   --color-carbon: var(--accent-blue);
   --color-seal: var(--accent-seal);
+  /* The commit button's fill and its text (`tokens.css`). */
+  --color-action: var(--action-primary);
+  --color-on-action: var(--action-primary-fg);
   /* `text-seal-label` for seal AS TEXT (it clears AA, raw seal does not) and
      `bg-seal-fill` for the solid danger button. `seal` itself stays the raw
      accent, for dots, borders and swatches. See tokens.css. */
@@ -356,9 +359,11 @@ button:not(:disabled):not([aria-disabled="true"]) {
   cursor: pointer;
 }
 
-/* Dark mode: invert black logo */
-:root.dark .logo-img {
-  filter: invert(1);
+/* The built-in wordmark is black artwork. `--logo-filter` inverts it where
+   the text around it is light: dark mode, or a dark header bar set in
+   Settings › Theme and branding. */
+.logo-img {
+  filter: var(--logo-filter);
 }
 
 /* Dark mode: make native form controls render dark (unchecked boxes, etc.),

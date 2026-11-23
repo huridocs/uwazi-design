@@ -238,6 +238,7 @@ only the fallback paints, and dark mode breaks.
 | parchment bg | `--bg-primary` | `bg-parchment` |
 | selected bg | `--bg-selected` | `bg-selected` |
 | border / soft border | `--border-primary` / `--border-soft` | `border-border` / `border-border-soft` |
+| commit fill / its text | `--action-primary` / `--action-primary-fg` | `bg-action` / `text-on-action` |
 
 `handoff/uwazi-semantic-tokens.css` and `handoff/TOKENS-MAPPING.md` mirror these for the real
 repo; update them when tokens or style rules change.
@@ -837,6 +838,38 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     IntersectionObserver uses the nearest scroller as root; with the viewport as root the
     600px margin never applied inside the Library pane. A failed render is not cached.
   - PDF thumbnails do not render in a background tab; use `scripts/check-thumbs.ts`.
+
+### Theme and branding
+- Settings › Theme and branding (`ThemePage`, after huridocs/uwazi PR 10039) is a per-corpus
+  singleton, `themeSettings` (`atoms/branding.ts`): `vars` is the theme as Uwazi stores it (flat,
+  Uwazi's `--color-theme-*` keys, `light:` / `dark:` prefixes), so a "theme instance file" moves
+  between the two. `atoms/theme.ts` is something else: the reader's light/dark preference.
+- Logic is pure and lives in `utils/theme/`: `model.ts` (presets, `appliedTheme`,
+  `resolvedChrome`), `derivation.ts` (simple mode, companion colours, the custom backup),
+  `instanceFile.ts` (export, import), `color.ts` (contrast, palettes), `logoFrame.ts` (crop).
+- `themeCss.ts` maps a theme onto `tokens.css`: one stylesheet for both modes, scoped
+  `:root:not(.dark)` and `:root:root.dark`, inside `@media screen` (print stays paper).
+  `BrandingEffect` (`main.tsx`) writes it into `<style id="uwazi-theme">`. The untouched default
+  preset is `tokens.css` itself and writes nothing.
+- Header bar and Settings sidebar colours are the same tokens scoped to
+  `[data-component="Navbar"]` and `[data-component="SettingsNav"]`. A scoped block must declare
+  the `--color-*` names again (`RESCOPE`): Tailwind's utilities read `--color-ink` and the rest,
+  which resolve on `:root`, so a token changed below the root does not reach them otherwise.
+- The live preview is `themeDraftAtom`: the page sets it on every change and clears it on
+  unmount, and `activeThemeAtom` is the draft or the saved theme. Leaving, Discard changes and the
+  dirty guard's discard all revert through that unmount.
+- Colours are edited for the mode the app is in. Simple mode stores seven anchors and derives
+  the other six; editing the page, the surface or the main text moves its companions in both
+  editor modes; choosing a stock preset keeps the custom theme under `backup:` keys.
+- "Primary action" paints the commit button through `--action-primary` (`COMMIT_FILL` is
+  `bg-action text-on-action`). A hand-written `bg-ink text-paper` commit does not follow it.
+- The logo and the favicon are "" (the built-in image), a `builtin:` id or an upload id.
+  `Wordmark` draws the logo; a custom one sits in `LOGO_FRAME` (8rem × 1.75rem) and is not
+  inverted. The built-in wordmark inverts through `--logo-filter`, where the text around it is
+  light. The tab icon is the theme's favicon, else Collection's Custom Favicon, else the mark
+  (`faviconSrcAtom`). Choosing a stock preset resets the logo, as in Uwazi.
+- `ImagePickerModal` takes `builtins` and a rule with a policy: strict (favicon) lists only
+  what fits and refuses the rest; soft (logo) lists everything and asks with "Use image".
 
 ### Login and account
 - Behaviour follows Research's inventory of Uwazi (`dev/results/uwazi-auth-flows.md` in the main

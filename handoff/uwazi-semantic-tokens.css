@@ -48,6 +48,12 @@
   --accent-blue: #00B4F0;
   --accent-seal: #E8432A;
   --accent-primary: #1A1A1A;
+  /* The commit button's fill and the text on it. Ink on paper by default;
+     a theme's "Primary action" sets --accent-primary and a readable fg. */
+  --action-primary: var(--accent-primary);
+  --action-primary-fg: var(--bg-surface);
+  /* The built-in wordmark is black artwork: inverted where text is light. */
+  --logo-filter: none;
   --accent-blue-tint: #DDF3FD;
   --accent-seal-tint: #FEE2E2;
 
@@ -110,6 +116,7 @@
   --border-soft-64: #5E5A53A3;
 
   --accent-primary: #F5F0E8;
+  --logo-filter: invert(1);
   --accent-blue-tint: #0C3A4D;
   --accent-seal-tint: #4A1A1A;
 

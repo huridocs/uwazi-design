@@ -111,6 +111,8 @@ Light values are unchanged; they already clear their floors.
 | Carbon tint | `--accent-blue-tint` | `bg-carbon-tint` | `#DDF3FD` | `#0C3A4D` | `primary-50` |
 | Seal — **danger only** | `--accent-seal` | `text-seal` / `bg-seal` | `#E8432A` | same | `error-600` `#d9534f` |
 | Seal tint | `--accent-seal-tint` | `bg-seal-tint` | `#FEE2E2` | `#4A1A1A` | `error-50` |
+| Commit button fill | `--action-primary` (= `--accent-primary`) | `bg-action` | `#1A1A1A` | `#F5F0E8` | `--color-theme-action-primary` |
+| Text on the commit fill | `--action-primary-fg` (= `--bg-surface`) | `text-on-action` | `#FFFFFF` | `#242424` | `--color-theme-action-primary-fg` |
 | Success | `--success` | `text-success` | `#059669` | same | `success-600` `#5cb85c` |
 | Success bg | `--success-light` | `bg-success-light` | `#D1FAE5` | `#064C3A` | `success-100` |
 | Warning | `--warning` | `text-warning` | `#F59E0B` | same | `warning-500` (identical hex) |

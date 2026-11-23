@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAtomValue } from "jotai";
 import { themeAtom, resolveTheme, type Theme } from "../../atoms/theme";
+import { themeCssAtom } from "../../atoms/branding";
 
 /** Apply the theme: swap `:root.dark`, store the preference, and follow the OS
  *  while in auto.
@@ -21,6 +22,33 @@ export function ThemeEffect() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, [theme]);
+
+  return null;
+}
+
+const BRANDING_STYLE_ID = "uwazi-theme";
+
+/** Paint the collection's theme (Settings › Theme and branding): one
+ *  stylesheet over the tokens, holding both modes (`utils/theme/themeCss.ts`).
+ *  It follows the draft while that page is open and the saved theme
+ *  otherwise. Mounted beside the app for the reason `ThemeEffect` is: the
+ *  design system is CSS variables, so no view re-renders. */
+export function BrandingEffect() {
+  const css = useAtomValue(themeCssAtom);
+
+  useEffect(() => {
+    let style = document.getElementById(BRANDING_STYLE_ID) as HTMLStyleElement | null;
+    if (!css) {
+      style?.remove();
+      return;
+    }
+    if (!style) {
+      style = document.createElement("style");
+      style.id = BRANDING_STYLE_ID;
+      document.head.appendChild(style);
+    }
+    style.textContent = css;
+  }, [css]);
 
   return null;
 }

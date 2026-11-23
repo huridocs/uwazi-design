@@ -431,7 +431,7 @@ function PropertyStep({
           className={`${MODAL_BUTTON} ${
             n === 0
               ? "bg-vellum text-ink-muted cursor-not-allowed"
-              : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+              : "bg-action text-on-action hover:bg-action/90 cursor-pointer"
           } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
         >
           Copy {n} {n === 1 ? "property" : "properties"}

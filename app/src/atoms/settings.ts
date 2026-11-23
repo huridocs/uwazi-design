@@ -23,6 +23,7 @@ import {
   Upload,
   FileSpreadsheet,
   ExternalLink,
+  Palette,
 } from "lucide-react";
 import type { AppView } from "./navigation";
 import type { UserRole } from "../data/settings";
@@ -76,6 +77,9 @@ export const settingsGroups: SettingsGroup[] = [
       // stays first, since the System entry opens it.
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, subgroup: "Collection" },
       { id: "collection", label: "Collection", icon: SlidersHorizontal, subgroup: "Collection" },
+      // Uwazi lists it right after Collection, behind its `themeCustomization`
+      // flag; here every admin has it.
+      { id: "theme", label: "Theme and branding", icon: Palette, subgroup: "Collection" },
       { id: "menu", label: "Menu", icon: Menu, subgroup: "Collection" },
       { id: "pages", label: "Pages", icon: FileText, subgroup: "Collection" },
       { id: "templates", label: "Templates", icon: LayoutTemplate, subgroup: "Content model" },
