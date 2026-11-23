@@ -102,12 +102,12 @@ function MenuAnchor({
 
 /* ── The bar ─────────────────────────────────────────────────────────────── */
 
-/** The links' size: `small` in Compact, `large` in the Tall and Extra tall bars. */
-export type NavMenuSize = "small" | "regular" | "large";
+/** The links' size: `small` in Compact, `regular` at every header height. */
+export type NavMenuSize = "small" | "regular";
 /** A top-level item's box: a 2rem target, the bar's control height. */
 const item = (size: NavMenuSize) =>
   `relative flex items-center gap-1 h-8 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
-    size === "small" ? "px-2 text-xs" : size === "large" ? "px-3 text-base" : "px-2.5 text-sm"
+    size === "small" ? "px-2 text-xs" : "px-2.5 text-sm"
   }`;
 const REST = "text-ink-secondary hover:bg-warm hover:text-ink";
 /** The current page: the header's accent on the text, and a 2px rule on the
@@ -118,7 +118,7 @@ const Underline = ({ size }: { size: NavMenuSize }) => (
   <span
     aria-hidden
     data-part="current-rule"
-    className={`absolute h-0.5 bg-[var(--header-accent)] ${size === "small" ? "inset-x-2" : size === "large" ? "inset-x-3" : "inset-x-2.5"}`}
+    className={`absolute h-0.5 bg-[var(--header-accent)] ${size === "small" ? "inset-x-2" : "inset-x-2.5"}`}
     style={{ bottom: "calc(1rem - (var(--spacing-navbar) + 1px) / 2)" }}
   />
 );

@@ -48,8 +48,8 @@ export function withHeaderLayout<T extends Record<string, string | undefined>>(v
 
 /** How tall the bar is, stored beside the layout under `__headerHeight`;
  *  Default is no key, so today's bar is what an untouched theme draws.
- *  Compact has its own 2.5rem and ignores it. The logo's frame grows with the
- *  bar (`LOGO_SIZES`, `logoFrame.ts`). Not in Uwazi. */
+ *  Compact has its own 2.5rem and ignores it. The logo and the bar's controls keep
+ *  their size. Not in Uwazi. */
 export const HEADER_HEIGHT_KEY = "__headerHeight";
 
 export const HEADER_HEIGHT_IDS = ["default", "tall", "extra-tall"] as const;

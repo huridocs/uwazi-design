@@ -4,6 +4,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
   BookOpen,
+  ChevronLeft,
   ChevronRight,
   Wrench,
   Settings,
@@ -20,8 +21,6 @@ import {
   LogOut,
   Database,
   Columns2,
-  LayoutGrid,
-  Power,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
@@ -53,10 +52,8 @@ import { NotebookButton } from "../notebook/NotebookButton";
 import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
-import { Hint } from "../shared/Hint";
 import { headerHeightAtom, headerLayoutAtom } from "../../atoms/branding";
 import { drawnHeaderHeight, hasMenuLinks, type HeaderHeight, type HeaderLayout } from "../../utils/theme/headerLayout";
-import { logoSizeFor } from "../../utils/theme/logoFrame";
 import { NavMenu, NavMenuSheetSection } from "./NavMenuLinks";
 import { sitePagesAtom, type SitePage } from "../../atoms/sitePages";
 import { PageViewModal } from "../settings/pages/site/PageViewModal";
@@ -78,6 +75,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
+  // The Settings dropdown's Collection row, opened to its list.
+  const [collectionListOpen, setCollectionListOpen] = useState(false);
+  const collectionRowRef = useRef<HTMLButtonElement>(null);
+  const collectionListRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -125,6 +126,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     return () => document.removeEventListener("mousedown", handleClick);
   }, [settingsOpen, toolsOpen, collectionOpen]);
 
+  // The Collection list closes with its dropdown, and opening it moves focus
+  // to the current collection.
+  useEffect(() => {
+    if (!settingsOpen) setCollectionListOpen(false);
+  }, [settingsOpen]);
+  useEffect(() => {
+    if (collectionListOpen) collectionListRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus();
+  }, [collectionListOpen]);
+
   const showingCatalog = appView === "catalog";
 
   // Header layout (Settings › Theme and branding). Phones keep their own bar
@@ -132,18 +142,13 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const chosenLayout = useAtomValue(headerLayoutAtom);
   const layout: HeaderLayout = isMobile || showingCatalog ? "standard" : chosenLayout;
   const compact = layout === "compact";
-  // Header height (same section): Tall and Extra tall, for a larger logo.
+  // Header height (same section): Tall and Extra tall.
   // Compact, phones and the catalog keep their own bar.
   const chosenHeight = useAtomValue(headerHeightAtom);
   const barHeight: HeaderHeight = isMobile || showingCatalog ? "default" : drawnHeaderHeight(layout, chosenHeight);
-  /** The bar draws the collection's menu (Menu centred, Menu at end, Compact):
-   *  its controls are 2rem boxes and its utilities are icons with a Hint. */
+  /** The bar draws the collection's menu (Menu centred, Menu at end, Compact)
+   *  between the logo and the utilities. The utilities are Standard's. */
   const menuBar = hasMenuLinks(layout);
-  // Standard keeps its labels, except on a tablet under a Tall or Extra tall
-  // bar: the larger logo leaves no room for words on both sides of it.
-  const iconOnly = menuBar || (breakpoint === "tablet" && barHeight !== "default");
-  /** An icon-only control: the bar's control height, squared. */
-  const iconBox = menuBar ? "justify-center w-8 h-8" : "justify-center w-7 h-7";
   // The root carries the layout the bar draws: `--spacing-navbar` follows it
   // (`index.css`), so `h-navbar` and anything else measured from the bar agree.
   useLayoutEffect(() => {
@@ -260,10 +265,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       type="button"
       onClick={onLogoClick}
       data-part="logo"
-      // At least the bar's control height; a Tall or Extra tall bar's logo is taller.
       className={`flex items-center shrink-0 ${menuBar ? "min-h-8 min-w-8" : ""}`}
     >
-      <Wordmark size={logoSizeFor(layout, barHeight)} />
+      <Wordmark size={compact ? "sm" : "md"} />
     </button>
   );
 
@@ -300,8 +304,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     </div>
   );
 
-  // Library + its collection picker. The dataset belongs to the destination,
-  // not the view, so it is not in the Library toolbar.
+  // Library. The collection is chosen in the Settings dropdown (the
+  // Collection row). A visitor has no Settings dropdown, so the picker stays
+  // beside Library for them.
+  const barPicker = signedOut;
   const collectionControl = (
     <div ref={collectionRef} data-part="collection" className="relative flex items-center">
       <button
@@ -309,7 +315,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         onClick={() => onNavigate?.("library")}
         data-part="library"
         aria-current={appView === "library" ? "page" : undefined}
-        className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${
+        className={`flex items-center gap-1.5 ps-3 py-1 text-tab font-medium transition-colors ${barPicker ? "pe-2 rounded-s-md" : "pe-3 rounded-md"} ${
           appView === "library"
             ? "text-ink bg-vellum"
             : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
@@ -317,7 +323,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       >
         <BookOpen size={14} /> {t("System", "Library")}
       </button>
-      <button
+      {barPicker && <button
         type="button"
         data-part="collection-trigger"
         onClick={() => {
@@ -341,8 +347,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           size={13}
           className={`text-ink-tertiary transition-transform ${collectionOpen ? "rotate-180" : ""}`}
         />
-      </button>
-      {collectionOpen && (
+      </button>}
+      {barPicker && collectionOpen && (
         <div
           role="listbox"
           data-part="collection-menu"
@@ -490,71 +496,26 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     </div>
   );
 
-  // Notifications + Notebook + Assistant + Settings + Theme toggle. In the
-  // menu layouts, after the first three: the language as a bordered dropdown,
-  // the Library as a grid icon, Settings as a gear and Log in / Log out as a
-  // power icon, the order public Uwazi sites use.
-  const appTools = !menuBar || !signedOut;
-  const utilityIcon = (active: boolean) =>
-    `flex items-center ${iconBox} rounded-md transition-colors ${
-      active ? "text-ink bg-vellum" : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-    }`;
-  const languageAndLibrary = menuBar && (
-    <>
-      <Select
-        value={uiLang}
-        onChange={(v) => setUiLang(v as UiLanguage)}
-        ariaLabel={t("System", "Interface language")}
-        align="end"
-        options={UI_LANGUAGES}
-        triggerIcon={<Globe size={14} aria-hidden />}
-        steady
-      />
-      <Hint text={t("System", "Library")} describe={false} placement="below">
-        {(hint) => (
-          <button
-            {...hint}
-            type="button"
-            onClick={() => onNavigate?.("library")}
-            data-part="library"
-            aria-label={t("System", "Library")}
-            aria-current={appView === "library" ? "page" : undefined}
-            className={utilityIcon(appView === "library")}
-          >
-            <LayoutGrid size={14} aria-hidden />
-          </button>
-        )}
-      </Hint>
-    </>
-  );
+  // Notifications + Notebook + Assistant + Settings + Theme toggle, the same
+  // in every layout. In the menu layouts the Beacon opens over the bar, so
+  // the menu beside it does not refold.
   const utilities = (
     <div data-part="end" className="flex items-center gap-2 shrink-0">
-      {/* The menu layouts keep the app's own tools for people who are signed
-          in: a visitor gets the menu, the language, the Library and Log in. */}
-      {!showingCatalog && appTools && <Beacon rtl={rtl} dense={menuBar} overlay={menuBar} />}
+      {!showingCatalog && <Beacon rtl={rtl} overlay={menuBar} />}
       {/* Full width puts the Notebook on the Library's rail, with its count. */}
-      {!showingCatalog && appTools && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile || iconOnly} dense={menuBar} hinted={iconOnly} />}
-      {!showingCatalog && appTools && (
-        <Hint text={`${t("System", "Ask Bert")} (${shortcutLabel})`} describe={false} placement="below" muted={!iconOnly}>
-          {(hint) => (
-            <button
-              {...hint}
-              type="button"
-              onClick={() => openAgent(true)}
-              data-part="ask-bert"
-              className={`flex items-center text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors ${
-                iconOnly ? iconBox : "gap-1.5 px-2.5 h-7"
-              }`}
-              aria-label={iconOnly ? t("System", "Ask Bert") : undefined}
-              title={iconOnly ? undefined : `${t("System", "Ask Bert")} (${shortcutLabel})`}
-            >
-              <Sparkles size={14} className="text-carbon" />
-              {!isMobile && !iconOnly && t("System", "Ask Bert")}
-            </button>
-          )}
-        </Hint>
+      {!showingCatalog && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile} />}
+      {!showingCatalog && (
+        <button
+          type="button"
+          onClick={() => openAgent(true)}
+          data-part="ask-bert"
+          className="flex items-center gap-1.5 px-2.5 h-7 text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
+          title={`${t("System", "Ask Bert")} (${shortcutLabel})`}
+        >
+          <Sparkles size={14} className="text-carbon" />
+          {!isMobile && t("System", "Ask Bert")}
+        </button>
       )}
-      {languageAndLibrary}
       {showingCatalog ? (
         <button
           type="button"
@@ -565,45 +526,40 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           <ArrowLeft size={14} /> Return to app
         </button>
       ) : signedOut ? (
-        <Hint text={t("System", "Log in")} describe={false} placement="below" muted={!iconOnly}>
-          {(hint) => (
-            <button
-              {...hint}
-              type="button"
-              onClick={() => onNavigate?.("login")}
-              data-part="log-in"
-              aria-label={iconOnly ? t("System", "Log in") : undefined}
-              className={`flex items-center text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors ${
-                iconOnly ? iconBox : "gap-1.5 px-3 py-1"
-              }`}
-            >
-              {menuBar ? <Power size={14} aria-hidden /> : <LogIn size={14} className="rtl:-scale-x-100" aria-hidden />} {!iconOnly && t("System", "Log in")}
-            </button>
-          )}
-        </Hint>
+        <button
+          type="button"
+          onClick={() => onNavigate?.("login")}
+          data-part="log-in"
+          className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
+        >
+          <LogIn size={14} className="rtl:-scale-x-100" aria-hidden /> {t("System", "Log in")}
+        </button>
       ) : !isMobile ? (
-        <div className="relative" ref={settingsRef} data-part="settings">
-          <Hint text={t("System", "Settings")} describe={false} placement="below" muted={!iconOnly || settingsOpen}>
-            {(hint) => (
-              <button
-                {...hint}
-                type="button"
-                onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
-                data-part="settings-trigger"
-                aria-expanded={settingsOpen}
-                aria-label={iconOnly ? t("System", "Settings") : undefined}
-                className={`flex items-center text-tab font-medium rounded-md transition-colors ${
-                  iconOnly ? iconBox : "gap-1.5 px-3 py-1"
-                } ${
-                  settingsOpen
-                    ? "text-ink bg-vellum"
-                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-                }`}
-              >
-                <Settings size={14} /> {!iconOnly && t("System", "Settings")}
-              </button>
-            )}
-          </Hint>
+        <div
+          className="relative"
+          ref={settingsRef}
+          data-part="settings"
+          onKeyDown={(e) => {
+            // A list inside the dropdown takes its own Escape first.
+            if (e.key !== "Escape" || e.defaultPrevented || !settingsOpen) return;
+            e.preventDefault();
+            setSettingsOpen(false);
+            settingsRef.current?.querySelector<HTMLButtonElement>('[data-part="settings-trigger"]')?.focus();
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
+            data-part="settings-trigger"
+            aria-expanded={settingsOpen}
+            className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
+              settingsOpen
+                ? "text-ink bg-vellum"
+                : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+            }`}
+          >
+            <Settings size={14} /> {t("System", "Settings")}
+          </button>
           {/* No `dir="ltr"` on the panel: this menu is chrome and mirrors
               under RTL like every other; the left/right anchoring below flips. */}
           {settingsOpen && (
@@ -612,29 +568,96 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               // w-72: the language row carries a control in its trailing slot.
               // Sized for the longest UI language label ("Idioma de la
               // interfaz"); at w-64 it wraps and its row grows taller.
-              className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+              // Not clipped: a Select's list in a row may be wider than the
+              // panel, and opens over its edge.
+              className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg z-50"
               style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
             >
               {/* The icon leads, as in the Tools dropdown and SettingsNav. The
                   trailing slot is reserved for state or a hint: the RTL pill,
                   ExternalLink for "leaves the app", a chevron for "goes deeper". */}
               <div className="py-1">
-                {/* The menu layouts have no collection picker in the bar. */}
-                {menuBar && (
-                  <div data-part="collection" className="flex items-center justify-between gap-2 px-3 py-2">
-                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
-                      <Database size={14} className="text-ink-tertiary" />
+                {/* Collection: the row goes deeper. Its list takes the
+                    dropdown's place, one collection per row on two lines, so
+                    no name or description is cut by the panel; the row turns
+                    into the way back. */}
+                <div data-part="collection">
+                  <button
+                    ref={collectionRowRef}
+                    type="button"
+                    data-part="collection-row"
+                    aria-expanded={collectionListOpen}
+                    aria-controls="navbar-collection-list"
+                    onClick={() => setCollectionListOpen((o) => !o)}
+                    className="flex items-start justify-between gap-3 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2 shrink-0">
+                      {collectionListOpen ? (
+                        <ChevronLeft size={14} aria-hidden className="text-ink-tertiary rtl:-scale-x-100" />
+                      ) : (
+                        <Database size={14} className="text-ink-tertiary" />
+                      )}
                       Collection
                     </span>
-                    <Select
-                      value={dataSource}
-                      onChange={(v) => { setSettingsOpen(false); switchCollection(v as DataSource); }}
-                      ariaLabel="Collection"
-                      align="end"
-                      options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label, hint: c.detail }))}
-                    />
-                  </div>
-                )}
+                    {!collectionListOpen && (
+                      <span className="flex items-start gap-1 min-w-0 text-end text-ink-tertiary">
+                        <span data-part="collection-current" className="min-w-0">{collection.label}</span>
+                        <ChevronRight size={13} aria-hidden className="shrink-0 mt-0.5 rtl:-scale-x-100" />
+                      </span>
+                    )}
+                  </button>
+                  {collectionListOpen && (
+                    <div
+                      ref={collectionListRef}
+                      id="navbar-collection-list"
+                      role="listbox"
+                      aria-label="Collection"
+                      data-part="collection-menu"
+                      onKeyDown={(e) => {
+                        const options = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="option"]')];
+                        const at = options.indexOf(document.activeElement as HTMLButtonElement);
+                        const to =
+                          e.key === "ArrowDown" ? Math.min(at + 1, options.length - 1)
+                          : e.key === "ArrowUp" ? Math.max(at - 1, 0)
+                          : e.key === "Home" ? 0
+                          : e.key === "End" ? options.length - 1
+                          : -1;
+                        if (to >= 0) {
+                          e.preventDefault();
+                          options[to].focus();
+                        } else if (e.key === "Escape") {
+                          // The first Escape closes the list and returns to
+                          // the row; the dropdown takes the next one.
+                          e.preventDefault();
+                          setCollectionListOpen(false);
+                          collectionRowRef.current?.focus();
+                        }
+                      }}
+                    >
+                      {COLLECTIONS.map((c) => {
+                        const on = c.id === dataSource;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            role="option"
+                            data-part="option"
+                            aria-selected={on}
+                            onClick={() => { setSettingsOpen(false); switchCollection(c.id); }}
+                            className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${on ? "bg-parchment" : "hover:bg-warm"}`}
+                          >
+                            <span className="w-3.5 shrink-0 pt-0.5 text-carbon">{on && <Check size={13} aria-hidden />}</span>
+                            <span className="min-w-0">
+                              <span data-part="option-name" className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary font-medium"}`}>{c.label}</span>
+                              <span data-part="option-detail" className="block text-meta text-ink-tertiary">{c.detail}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                {!collectionListOpen && <>
                 <button
                   onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
                   className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
@@ -656,9 +679,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 {/* Interface language: the chrome's language, not the
                     document's reading language or System › Languages. It sits
                     with the RTL toggle because both are switches, not
-                    destinations; choosing writes `uiLanguageAtom` and closes the menu.
-                    The menu layouts carry it in the bar instead. */}
-                {!menuBar && <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    destinations; choosing writes `uiLanguageAtom` and closes the menu. */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
                   <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
                     <Globe size={14} className="text-ink-tertiary" />
                     {t("System", "Interface language")}
@@ -671,7 +693,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                     options={UI_LANGUAGES}
                     steady
                   />
-                </div>}
+                </div>
                 {/* Live translate (Uwazi: the language menu's footer, admins
                     only). The row says whether it is on; the strip under the
                     navbar is where it ends. */}
@@ -754,8 +776,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   </div>
                 )}
                 <DocumentationLink onDone={() => setSettingsOpen(false)} />
-                {/* Log out is the power icon in the menu layouts' bar. */}
-                {!menuBar && <button
+                <button
                   onClick={() => {
                     setSettingsOpen(false);
                     guard(() => logOut());
@@ -766,29 +787,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 >
                   <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
                   {t("System", "Log out")}
-                </button>}
+                </button>
+                </>}
               </div>
             </div>
           )}
         </div>
       ) : null}
-      {menuBar && !signedOut && (
-        <Hint text={t("System", "Log out")} describe={false} placement="below">
-          {(hint) => (
-            <button
-              {...hint}
-              type="button"
-              onClick={() => guard(() => logOut())}
-              data-part="log-out"
-              aria-label={t("System", "Log out")}
-              className={utilityIcon(false)}
-            >
-              <Power size={14} aria-hidden />
-            </button>
-          )}
-        </Hint>
-      )}
-      {!isMobile && <ThemeToggle dense={menuBar} />}
+      {!isMobile && <ThemeToggle />}
     </div>
   );
 
@@ -988,7 +994,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         <NavMenu
           {...menuHandlers}
           align={layout === "menu-centred" ? "center" : layout === "menu-end" ? "end" : "start"}
-          size={compact ? "small" : barHeight === "default" ? "regular" : "large"}
+          size={compact ? "small" : "regular"}
         />
         {utilities}
         {pageView}

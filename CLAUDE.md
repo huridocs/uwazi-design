@@ -917,10 +917,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `Wordmark`'s `size`): Compact 112 × 24, Default 128 × 28, Tall 192 × 44, Extra tall 240 × 56
   px. A custom logo is never enlarged; the built-in wordmark scales with the box (0.919,
   1.444, 1.838rem). The logo adjust dialog's readout and preview strip use the chosen frame.
-- Under a taller bar controls keep their size and sit on the centre line; menu links are
-  `text-base` at Tall and Extra tall. The current link's 2px rule is on the bar's bottom edge
-  at every height. In Standard on a tablet with Tall or Extra tall, the utilities drop their
-  labels (icons with a `Hint`): the larger logo leaves no room for them.
+- Under a taller bar controls keep their size and sit on the centre line; menu links stay
+  `text-sm` at every height (`text-xs` in Compact). The current link's 2px rule is on the
+  bar's bottom edge at every height. In Standard on a tablet with Tall or Extra tall, the
+  utilities drop their labels (icons with a `Hint`): the larger logo leaves no room for them.
 - The Navbar marks the root `data-header-layout` and `data-header-height`, and `index.css` sets
   `--spacing-navbar` from them (3.25rem; 2.5rem Compact; 4.5rem, 5.5rem). The Navbar never sets
   both. Anything measured from the bar reads that variable.

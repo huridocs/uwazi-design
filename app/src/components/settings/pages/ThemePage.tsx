@@ -29,7 +29,6 @@ import {
   withHeaderLayout,
   type HeaderHeight,
 } from "../../../utils/theme/headerLayout";
-import { LOGO_SIZES, logoSizeFor } from "../../../utils/theme/logoFrame";
 import {
   brandImageLookupAtom,
   BUILTIN_FAVICONS,
@@ -383,10 +382,8 @@ export function ThemePage() {
 
   const logo = lookup(draft.logo, BUILTIN_LOGOS) ?? DEFAULT_LOGO;
   const favicon = lookup(draft.favicon, BUILTIN_FAVICONS) ?? DEFAULT_FAVICON;
-  // The header's height step and the logo box that goes with it.
   const headerLayout = headerLayoutOf(vars);
   const headerHeight = headerHeightOf(vars);
-  const logoFrame = LOGO_SIZES[logoSizeFor(headerLayout, headerHeight)];
   const barStyle: CSSProperties = { backgroundColor: chrome[BAR_KEY], borderColor: chrome["--color-theme-chrome-app-bar-separator"] };
 
   const pick = (image: PickableImage) => {
@@ -449,7 +446,7 @@ export function ThemePage() {
               onPick={pick}
             />
           )}
-          {adjusting && <LogoAdjustModal src={logo.src} barStyle={barStyle} frame={logoFrame} onClose={() => setAdjusting(false)} onApply={applyAdjusted} />}
+          {adjusting && <LogoAdjustModal src={logo.src} barStyle={barStyle} onClose={() => setAdjusting(false)} onApply={applyAdjusted} />}
         </>
       }
     >
@@ -471,8 +468,8 @@ export function ThemePage() {
           }}
           onSelect={(id) => setVars((current) => withHeaderLayout(current, id))}
         />
-        {/* Header height: a taller bar gives the logo a larger box. The note
-            is one line at a fixed place, whatever is chosen. */}
+        {/* Header height: the bar grows; the logo and the controls keep their
+            size. The note is one line at a fixed place, whatever is chosen. */}
         <div data-part="header-height" className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <span id="header-height-label" className="text-xs font-medium text-ink-secondary">
             Header height
@@ -487,7 +484,7 @@ export function ThemePage() {
           <p data-part="header-height-note" className="text-xs text-ink-tertiary" dir="auto">
             {headerLayout === "compact"
               ? "Compact has its own height, 40 px."
-              : `${HEADER_HEIGHTS.find((h) => h.id === headerHeight)!.rem * 16} px bar. The logo shows at up to ${logoFrame.width} × ${logoFrame.height} px.`}
+              : `${HEADER_HEIGHTS.find((h) => h.id === headerHeight)!.rem * 16} px bar. The logo and the controls keep their size.`}
           </p>
         </div>
       </SettingsSection>

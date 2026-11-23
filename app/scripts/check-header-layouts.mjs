@@ -6,16 +6,20 @@ import { readFileSync } from "node:fs";
  *  and as an anonymous visitor on a public collection. Then the menu itself
  *  (a group's dropdown by keyboard, the More fold, the current link, a page
  *  link), the Library and an entity view, RTL, the phone bar and its menu
- *  sheet, Discard, and the theme file round trip.
+ *  sheet, Discard, the theme file round trip, the three header heights, and
+ *  the Settings dropdown (the Collection list, the language list, keyboard).
  *
  *  Fails on overlapping or clipped bar controls, a menu off the bar's centre
- *  in Menu centred when it has the room, a menu-layout control under 32px, a
+ *  in Menu centred when it has the room, a menu link under 32px or off 14px
+ *  (12px in Compact), utilities that differ from Standard's, a logo off its
+ *  default box, a clipped list in the Settings dropdown, a
  *  bar whose height is not `--spacing-navbar`, content that does not start
  *  at the bar's bottom edge, page scroll, a control an anonymous visitor
  *  should not see, or an axe violation. The full-colour bar is the partner
  *  example (teal #0F9A80, white text, 3.5:1): axe runs there without its
  *  contrast rule, and Theme and branding lists the failure itself.
- *  Usage: PORT=1432 node scripts/check-header-layouts.mjs <screenshot-dir> */
+ *  Usage: PORT=1432 node scripts/check-header-layouts.mjs <screenshot-dir>
+ *  SECTIONS=6,7 runs only those numbered sections; unset runs all nine. */
 const BASE = `http://localhost:${process.env.PORT || 5173}/`;
 const out = process.argv[2];
 const AXE = readFileSync("node_modules/axe-core/axe.min.js", "utf8");
@@ -25,6 +29,8 @@ const TEAL = "#0F9A80";
 const ACCENT = "#FFE45C";
 // PW_EXECUTABLE: a Chromium already on the machine, when this Playwright's own build is not installed.
 const b = await chromium.launch(process.env.PW_EXECUTABLE ? { executablePath: process.env.PW_EXECUTABLE } : {});
+const ONLY = process.env.SECTIONS ? process.env.SECTIONS.split(",").map(Number) : null;
+const run = (n) => !ONLY || ONLY.includes(n);
 let fails = 0;
 const fail = (where, what) => { fails++; console.log(`FAIL ${where}: ${what}`); };
 const BAR = '[data-component="Navbar"]';
@@ -61,9 +67,24 @@ const save = async (p) => {
  *  the default collection (CEJIL: six links, no group), which is what the
  *  sections that reload are checked on. Needs the Standard bar. */
 const useSample = async (p) => {
-  await p.click(`${BAR} [data-part="collection-trigger"]`);
+  await p.click(`${BAR} [data-part="settings-trigger"]`);
+  await p.click(`${BAR} [data-part="collection-row"]`);
   await p.locator(`${BAR} [data-part="collection-menu"] [data-part="option"]`, { hasText: "Inter-American Human Rights Archive" }).click();
   await p.waitForTimeout(1200);
+};
+/** To the Library: Standard's button, or in a menu layout the menu's own
+ *  Library link (the Sample's "Library", CEJIL's "Processes"), under More
+ *  when it is folded. */
+const goLibrary = async (p) => {
+  const button = p.locator(`${BAR} [data-part="library"]`);
+  if (await button.count()) return button.first().click();
+  for (const name of ["Library", "Processes"]) {
+    const link = p.locator(`${BAR} [data-part="menu"] a`, { hasText: new RegExp(`^${name}$`) }).first();
+    if (!(await link.count())) continue;
+    if (!(await link.isVisible())) await p.locator(`${BAR} [data-part="more"] [data-part="group-trigger"]`).click();
+    return link.click();
+  }
+  throw new Error("no way to the Library in the bar");
 };
 const makePublic = async (p) => {
   await openSystemSettings(p, "Collection");
@@ -136,7 +157,8 @@ const probe = ({ layout, anonymous, height = "default", logo = null }) => {
       const ox = Math.min(a.r.right, c.r.right) - Math.max(a.r.left, c.r.left), oy = Math.min(a.r.bottom, c.r.bottom) - Math.max(a.r.top, c.r.top);
       if (ox > 1 && oy > 1 && a.n < c.n) issues.push(`overlap: ${a.n} × ${c.n}`);
     }
-    if (menu && (a.r.height < 31.5 || a.r.width < 31.5)) issues.push(`under 32px: ${a.n} ${Math.round(a.r.width)}×${Math.round(a.r.height)}`);
+    // The menu's links and the logo are 2rem targets; the utilities are Standard's.
+    if (menu && a.e.closest('[data-component="NavMenu"],[data-part="logo"]') && (a.r.height < 31.5 || a.r.width < 31.5)) issues.push(`under 32px: ${a.n} ${Math.round(a.r.width)}×${Math.round(a.r.height)}`);
   }
   const probeEl = document.createElement("div"); probeEl.style.cssText = "position:absolute;height:var(--spacing-navbar)"; document.body.appendChild(probeEl);
   const tokenPx = probeEl.getBoundingClientRect().height; probeEl.remove();
@@ -148,8 +170,8 @@ const probe = ({ layout, anonymous, height = "default", logo = null }) => {
   // Every control sits on the bar's centre line (the bar's box less its 1px rule).
   const mid = br.top + (br.height - 1) / 2;
   for (const a of rects) if (Math.abs((a.r.top + a.r.bottom) / 2 - mid) > 1) issues.push(`off the centre line: ${a.n} by ${((a.r.top + a.r.bottom) / 2 - mid).toFixed(1)}px`);
-  // The logo fills its frame for this height and no more, and keeps its shape.
-  const frame = layout === "compact" ? [112, 24, 12] : { default: [128, 28, 14.7], tall: [192, 44, 23.1], "extra-tall": [240, 56, 29.4] }[height];
+  // The logo keeps its frame at every height, and keeps its shape.
+  const frame = layout === "compact" ? [112, 24, 12] : [128, 28, 14.7];
   const img = bar.querySelector('[data-part="logo"] img');
   const ir = img.getBoundingClientRect();
   let logoNote = "";
@@ -178,6 +200,10 @@ const probe = ({ layout, anonymous, height = "default", logo = null }) => {
     const shown = [...list.children].map((c) => (c.querySelector("[data-part='group-trigger']") ?? c).textContent.trim());
     const folded = !!list.querySelector('[data-part="more"]');
     links = ` · ${shown.join(", ")}`;
+    // Links are text-sm at every height, text-xs in Compact.
+    const want = layout === "compact" ? 12 : 14;
+    const sizes = [...new Set([...list.querySelectorAll(":scope > * > a, :scope > * > button, [data-part='group-trigger']")].map((e) => parseFloat(getComputedStyle(e).fontSize)))];
+    if (sizes.some((f) => f !== want)) issues.push(`menu links at ${sizes.join("/")}px, want ${want}px`);
     if (layout === "menu-centred") {
       const off = (l.left + l.right) / 2 - (br.left + br.right) / 2;
       // Off centre only where centring would leave under half the links in
@@ -202,14 +228,22 @@ const probe = ({ layout, anonymous, height = "default", logo = null }) => {
     }
   }
 
-  // Utilities: a visitor gets the language, the Library and Log in.
-  const has = (part) => !!bar.querySelector(`[data-part="end"] [data-part="${part}"], [data-part="end"] [data-component="${part}"]`);
-  if (menu) {
-    for (const part of ["Select", "library"]) if (!has(part)) issues.push(`no ${part} in the utilities`);
-    for (const part of ["Beacon", "notebook-trigger", "ask-bert", "settings-trigger", "log-out"])
-      if (has(part) === anonymous && part !== "notebook-trigger") issues.push(`${anonymous ? "visitor sees" : "signed in, missing"} ${part}`);
-    if (has("log-in") !== anonymous) issues.push(`Log in ${anonymous ? "missing" : "shown to a signed-in user"}`);
+  // Utilities: the same in every layout. Beacon, Notebook, Ask Bert, then
+  // Settings (signed in) or Log in (a visitor), then the theme toggle, with
+  // their words. Nothing else: no language button, Library icon or Log out.
+  const endEl = bar.querySelector('[data-part="end"]');
+  const has = (part) => !!endEl.querySelector(`[data-part="${part}"], [data-component="${part}"]`);
+  const endSettingsOpen = !!endEl.querySelector('[data-part="settings-menu"]');
+  for (const part of ["Beacon", "NotebookButton", "ask-bert", "ThemeToggle"]) if (!has(part)) issues.push(`no ${part} in the utilities`);
+  if (has("settings-trigger") === anonymous) issues.push(`Settings ${anonymous ? "shown to a visitor" : "missing"}`);
+  if (has("log-in") !== anonymous) issues.push(`Log in ${anonymous ? "missing" : "shown to a signed-in user"}`);
+  if (!endSettingsOpen) for (const part of ["Select", "library", "log-out"]) if (has(part)) issues.push(`${part} is in the bar`);
+  for (const [part, word] of [["ask-bert", "Ask Bert"], [anonymous ? "log-in" : "settings-trigger", anonymous ? "Log in" : "Settings"]]) {
+    const el = endEl.querySelector(`[data-part="${part}"]`);
+    if (el && !el.textContent.includes(word)) issues.push(`${part} has no label`);
   }
+  // Standard: the bar's collection picker is a visitor's only.
+  if (!menu && !!bar.querySelector('[data-part="collection-trigger"]') !== anonymous) issues.push(`collection picker ${anonymous ? "missing for a visitor" : "in the bar"}`);
 
   // What follows the bar starts at its bottom edge.
   const next = [...bar.parentElement.children].filter((e) => e !== bar && vis(e) && getComputedStyle(e).position !== "fixed")[0];
@@ -246,7 +280,7 @@ const check = async (p, where, layout, { axe = true, scope = null, anonymous = f
 
 /* 1. Every layout, signed in (live preview on the theme page) and as a
       visitor (saved, on the Library), under both header bars. */
-for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
+if (run(1)) for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
   const { ctx, p } = await open(w, theme);
   await makePublic(p);
   for (const barName of ["design", "teal"]) {
@@ -273,21 +307,21 @@ for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
     }
     await choose(p, "standard");
     await save(p);
-    await p.click(`${BAR} [data-part="library"]`);
+    await goLibrary(p);
     await p.waitForTimeout(600);
   }
   await ctx.close();
 }
 
 /* 2. The menu: the current link, a group by keyboard, a page link, the fold. */
-for (const theme of ["light", "dark"]) {
+if (run(2)) for (const theme of ["light", "dark"]) {
   const { ctx, p } = await open(1360, theme);
   await useSample(p);
   await openThemePage(p);
   await importFile(p, tealFile(await exportFile(p)));
   await choose(p, "menu-centred");
   await save(p);
-  await p.click(`${BAR} [data-part="library"]`);
+  await goLibrary(p);
   await p.waitForTimeout(1200);
   const menu = p.locator(`${BAR} [data-part="menu"]`);
   const current = await menu.locator('[aria-current="page"]').allTextContents();
@@ -335,7 +369,7 @@ for (const theme of ["light", "dark"]) {
       await openThemePage(p);
       await choose(p, layout);
       await save(p);
-      await p.click(`${BAR} [data-part="library"]`);
+      await goLibrary(p);
       await p.waitForTimeout(800);
     }
     const more = p.locator(`${BAR} [data-part="more"] [data-part="group-trigger"]`);
@@ -365,13 +399,13 @@ for (const theme of ["light", "dark"]) {
 }
 
 /* 3. The bar's height reaches the Library and an entity view; the Settings
-      menu carries what the menu layouts take out of the bar. */
-for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (const w of [1360, 900]) {
+      menu carries the collection and, in the menu layouts, Tools. */
+if (run(3)) for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (const w of [1360, 900]) {
   const { ctx, p } = await open(w, theme);
   await openThemePage(p);
   await choose(p, layout);
   await save(p);
-  await p.click(`${BAR} [data-part="library"]`);
+  await goLibrary(p);
   await p.waitForTimeout(1200);
   await check(p, `${theme} ${w} ${layout} library`, layout);
   if (w === 1360) await p.screenshot({ path: `${out}/header-${theme}-${layout}-library.png` });
@@ -390,15 +424,12 @@ for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (c
       const r = m.getBoundingClientRect();
       return { text: m.textContent, fits: r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth };
     });
-    for (const want of ["Collection", "Tools", "User settings"]) if (!rows.text.includes(want)) fail(`${theme} settings menu`, `no ${want}`);
-    for (const gone of ["Interface language", "Log out"]) if (rows.text.includes(gone)) fail(`${theme} settings menu`, `still lists ${gone}`);
+    for (const want of ["Collection", "Tools", "User settings", "Interface language", "Live translate", "Log out"]) if (!rows.text.includes(want)) fail(`${theme} settings menu`, `no ${want}`);
     if (!rows.fits) fail(`${theme} settings menu`, "leaves the window");
     await check(p, `${theme} 1360 ${layout} settings menu`, layout);
     await p.screenshot({ path: `${out}/header-${theme}-${layout}-settings-menu.png` });
-    await p.keyboard.press("Escape");
-    await p.mouse.click(400, 500);
-    // Log out is the power icon.
-    await p.click(`${BAR} [data-part="log-out"]`);
+    // Log out is in the dropdown.
+    await p.click(`${BAR} [data-part="settings-menu"] [data-part="log-out"]`);
     await p.waitForTimeout(600);
     if (!(await p.locator('[data-view="login"]').count())) fail(`${theme} log out`, "a private collection did not go to the login screen");
   }
@@ -406,7 +437,7 @@ for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (c
 }
 
 /* 4. RTL mirrors. */
-{
+if (run(4)) {
   const { ctx, p } = await open(1360, "light");
   await useSample(p);
   await openThemePage(p);
@@ -428,7 +459,7 @@ for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (c
 
 /* 5. Discard reverts; the theme file; the phone keeps its bar and lists the
       menu in its sheet. */
-{
+if (run(5)) {
   const { ctx, p } = await open(1360, "light");
   await useSample(p);
   await openThemePage(p);
@@ -510,7 +541,7 @@ for (const theme of ["light", "dark"]) for (const layout of MENU_LAYOUTS) for (c
 /* 6. Header height: Default, Tall and Extra tall under the three layouts
       that take it, with a wide wordmark and a square badge as the logo, on
       both bars. */
-for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
+if (run(6)) for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
   const { ctx, p } = await open(w, theme);
   const shots = (theme === "light" && w === 1360) || (theme === "dark" && w === 900);
   await openThemePage(p);
@@ -546,7 +577,7 @@ for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
         const i = strip.querySelector("img").getBoundingClientRect();
         return { strip: strip.getBoundingClientRect().height, img: `${Math.round(i.width)}×${Math.round(i.height)}`, text: strip.parentElement.textContent };
       });
-      if (adjust.strip !== 88 || adjust.img !== "240×48" || !adjust.text.includes("240×48")) fail(`${theme} adjust logo`, JSON.stringify(adjust));
+      if (adjust.strip !== 88 || adjust.img !== "128×26" || !adjust.text.includes("128×26")) fail(`${theme} adjust logo`, JSON.stringify(adjust));
       console.log(`${theme} adjust logo at Extra tall: ${JSON.stringify(adjust)}`);
       await p.screenshot({ path: `${out}/height-${theme}-adjust-logo-extra-tall.png` });
       await p.keyboard.press("Escape");
@@ -566,7 +597,7 @@ for (const theme of ["light", "dark"]) for (const w of [1360, 900]) {
 
 /* 7. Extra tall reaches everything measured from the bar: the Library, the
       Library with its drawer, an entity view, the Live translate strip. */
-for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for (const w of [1360, 900]) {
+if (run(7)) for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for (const w of [1360, 900]) {
   const { ctx, p } = await open(w, theme);
   await openThemePage(p);
   await uploadLogo(p, "badge");
@@ -574,7 +605,7 @@ for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for 
   await chooseHeight(p, "extra-tall");
   await save(p);
   const opts = { height: "extra-tall", logo: "badge" };
-  await p.click(`${BAR} [data-part="library"]`);
+  await goLibrary(p);
   await p.waitForTimeout(1200);
   await check(p, `${theme} ${w} ${layout} extra-tall library`, layout, opts);
   if (w === 1360) await p.screenshot({ path: `${out}/height-${theme}-${layout}-extra-tall-library.png` });
@@ -588,7 +619,7 @@ for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for 
   if (w === 1360) await p.screenshot({ path: `${out}/height-${theme}-${layout}-extra-tall-entity.png` });
   if (theme === "light" && layout === "menu-end") {
     if (w === 900) {
-      // The fold with the larger links: More is there, last, and opens in view.
+      // The fold under the tallest bar: More is there, last, and opens in view.
       const more = p.locator(`${BAR} [data-part="more"] [data-part="group-trigger"]`);
       if (!(await more.count())) fail("extra-tall fold", "no More at 900");
       else {
@@ -614,7 +645,7 @@ for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for 
 
 /* 8. Height is part of the theme: Discard, the file, a preset, the Activity
       log, the phone. */
-{
+if (run(8)) {
   const { ctx, p } = await open(1360, "light");
   await openThemePage(p);
   await chooseHeight(p, "tall");
@@ -652,6 +683,101 @@ for (const theme of ["light", "dark"]) for (const layout of HEIGHT_LAYOUTS) for 
   const phone = await p.evaluate((sel) => ({ h: document.querySelector(sel).getBoundingClientRect().height, attr: document.documentElement.dataset.headerHeight ?? null }), BAR);
   if (phone.h !== 52 || phone.attr) fail("height phone", JSON.stringify(phone));
   console.log(`height phone: ${JSON.stringify(phone)}`);
+  await ctx.close();
+}
+
+/* 9. The Settings dropdown: every layout carries the collection, the
+      language, Live translate and Log out. The Collection row opens its list
+      in the dropdown with every name and description in full, by keyboard
+      too; the Interface language list opens over the panel's edge unclipped. */
+if (run(9)) for (const theme of ["light", "dark"]) for (const w of [1360, 900]) for (const layout of ["standard", "menu-end", "compact"]) for (const rtl of [false, true]) {
+  if (rtl && !(theme === "light" && layout !== "compact")) continue;
+  const where = `${theme} ${w} ${layout}${rtl ? " rtl" : ""} settings`;
+  const { ctx, p } = await open(w, theme);
+  await openThemePage(p);
+  await choose(p, layout);
+  await save(p);
+  if (rtl) {
+    await p.click('[data-part="settings-trigger"]');
+    await p.getByText("Test RTL layout").first().click();
+    await p.waitForTimeout(400);
+  }
+  await goLibrary(p);
+  await p.waitForTimeout(1200);
+  await p.keyboard.press("Escape");
+  const trigger = p.locator(`${BAR} [data-part="settings-trigger"]`);
+  await trigger.focus();
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(200);
+  const text = await p.locator('[data-part="settings-menu"]').textContent();
+  for (const want of ["Collection", "Interface language", "Live translate", "User settings", "Log out"]) if (!text.includes(want)) fail(where, `no ${want}`);
+  if (text.includes("Tools") !== (layout !== "standard")) fail(where, `Tools section ${layout === "standard" ? "listed beside the bar's Tools" : "missing"}`);
+  /** Nothing in `sel` is cut: its text fits its box, the box is in the
+   *  window, and the panel does not paint over or clip its corners. */
+  const unclipped = (sel) => p.evaluate((sel) => {
+    const out = [];
+    for (const e of document.querySelectorAll(sel)) {
+      const r = e.getBoundingClientRect();
+      const n = e.textContent.trim().slice(0, 30);
+      if (e.scrollWidth > e.clientWidth) out.push(`${n}: text ${e.scrollWidth}px in ${e.clientWidth}px`);
+      if (r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight) out.push(`${n}: outside the window`);
+      // Inset past the rounded corners.
+      for (const [x, y] of [[r.left + 6, r.top + 6], [r.right - 6, r.bottom - 6]]) {
+        const hit = document.elementFromPoint(x, y);
+        if (!hit || !(e.contains(hit) || hit.contains(e))) out.push(`${n}: covered or clipped at ${Math.round(x)},${Math.round(y)}`);
+      }
+    }
+    return out;
+  }, sel);
+  // The Collection row by keyboard: Enter opens on the current collection.
+  await p.locator(`${BAR} [data-part="collection-row"]`).focus();
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(200);
+  const names = await p.locator('[data-part="collection-menu"] [data-part="option-name"]').allTextContents();
+  const details = await p.locator('[data-part="collection-menu"] [data-part="option-detail"]').allTextContents();
+  if (names.length !== 6 || details.some((d) => !d.trim())) fail(where, `collection list: ${names.join(" | ")}`);
+  for (const i of await unclipped('[data-part="collection-menu"] [data-part="option-name"], [data-part="collection-menu"] [data-part="option-detail"], [data-part="collection-menu"] [data-part="option"]')) fail(where, `collection list, ${i}`);
+  const panel = await p.evaluate(() => { const r = document.querySelector('[data-part="settings-menu"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight; });
+  if (!panel) fail(where, "the dropdown leaves the window with the collection list open");
+  let at = await p.evaluate(() => ({ selected: document.activeElement.getAttribute("aria-selected"), name: document.activeElement.querySelector('[data-part="option-name"]')?.textContent }));
+  if (at.selected !== "true") fail(where, `opening did not focus the current collection: ${JSON.stringify(at)}`);
+  await check(p, `${where}, collection list`, layout);
+  if (theme === "light" || layout === "menu-end") await p.screenshot({ path: `${out}/settings-${theme}-${layout}-${w}${rtl ? "-rtl" : ""}-collection-list.png`, clip: { x: 0, y: 0, width: w, height: 420 } });
+  await p.keyboard.press("End");
+  await p.keyboard.press("ArrowUp");
+  at = await p.evaluate(() => document.activeElement.querySelector('[data-part="option-name"]')?.textContent);
+  if (at !== names[names.length - 2]) fail(where, `End then ArrowUp is on "${at}"`);
+  // Escape returns to the row and keeps the dropdown; the next one closes it.
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(150);
+  let state = await p.evaluate(() => ({ focus: document.activeElement.dataset.part, list: !!document.querySelector('[data-part="collection-menu"]'), menu: !!document.querySelector('[data-part="settings-menu"]') }));
+  if (state.focus !== "collection-row" || state.list || !state.menu) fail(where, `first Escape: ${JSON.stringify(state)}`);
+  // The Interface language list opens over the panel's edge, whole.
+  await p.locator('[data-part="settings-menu"] [data-component="Select"] button').first().click();
+  await p.waitForTimeout(250);
+  for (const i of await unclipped('[data-part="settings-menu"] [data-part="listbox"], [data-part="settings-menu"] [data-part="listbox"] [role="option"]')) fail(where, `language list, ${i}`);
+  if (w === 1360 && theme === "light" && layout === "standard" && !rtl) await p.screenshot({ path: `${out}/settings-light-standard-1360-language-list.png`, clip: { x: 0, y: 0, width: w, height: 420 } });
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(150);
+  if (!(await p.locator('[data-part="settings-menu"]').count())) fail(where, "closing the language list closed the dropdown");
+  await p.locator(`${BAR} [data-part="collection-row"]`).focus();
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(150);
+  state = await p.evaluate(() => ({ focus: document.activeElement.dataset.part, menu: !!document.querySelector('[data-part="settings-menu"]') }));
+  if (state.focus !== "settings-trigger" || state.menu) fail(where, `second Escape: ${JSON.stringify(state)}`);
+  // Arrow to another collection and Enter: the Library opens on it.
+  await p.keyboard.press("Enter");
+  await p.locator(`${BAR} [data-part="collection-row"]`).focus();
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(150);
+  await p.keyboard.press("Home");
+  const first = await p.evaluate(() => document.activeElement.querySelector('[data-part="option-name"]').textContent);
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(1500);
+  await p.click(`${BAR} [data-part="settings-trigger"]`);
+  const now = await p.locator('[data-part="collection-current"]').textContent();
+  if (now !== first) fail(where, `Enter on "${first}" left the collection at "${now}"`);
+  console.log(`${where}: ${names.length} collections in full; Enter, arrows, Escape twice; switched to ${now}`);
   await ctx.close();
 }
 

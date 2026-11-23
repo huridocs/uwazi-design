@@ -9,7 +9,7 @@ import { t } from "../../utils/i18n";
  *  Navbar's props: the icon is the only thing in the tree that has to re-render
  *  when the theme changes, so the subscription belongs at the leaf. Read higher
  *  up, it re-rendered the entire view underneath (see `ThemeEffect`). */
-export function ThemeToggle({ variant = "icon", dense = false }: { variant?: "icon" | "row"; dense?: boolean }) {
+export function ThemeToggle({ variant = "icon" }: { variant?: "icon" | "row" }) {
   const [theme, setTheme] = useAtom(themeAtom);
   const Icon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
   const label = t("System", theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light");
@@ -43,8 +43,7 @@ export function ThemeToggle({ variant = "icon", dense = false }: { variant?: "ic
       data-component="ThemeToggle"
       data-variant="icon"
       data-theme-value={theme}
-      // `dense`: a 2rem box, the Compact header layout's control size.
-      className={`${dense ? "flex items-center justify-center w-8 h-8" : "p-1.5"} text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors`}
+      className={`p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors`}
       aria-label={`${t("System", "Theme")}: ${label}`}
       title={`${t("System", "Theme")}: ${label}`}
     >

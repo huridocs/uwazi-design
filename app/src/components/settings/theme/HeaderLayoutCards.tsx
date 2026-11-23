@@ -65,8 +65,6 @@ const Nav = ({ wide = false }: { wide?: boolean }) => (
 );
 const Utility = () => <span className="h-1.5 w-2.5 shrink-0 rounded-[1px] opacity-30" style={fill} />;
 const Icon = () => <span className="h-1.5 w-1.5 shrink-0 rounded-[1px] opacity-30" style={fill} />;
-/** The language dropdown: an outlined box. */
-const Language = () => <span className="h-2 w-3 shrink-0 rounded-[1px] border opacity-40" style={{ borderColor: "currentColor" }} />;
 /** The collection's menu: the first link is the current page. */
 const Links = ({ small = false }: { small?: boolean }) => (
   <span className="flex items-center gap-[3px] shrink-0">
@@ -78,10 +76,11 @@ const Links = ({ small = false }: { small?: boolean }) => (
     ))}
   </span>
 );
-const MenuUtilities = () => (
+/** The end of the bar, the same in every layout. */
+const Utilities = () => (
   <Group end>
-    <Language />
-    <Icon />
+    <Utility />
+    <Utility />
     <Icon />
   </Group>
 );
@@ -101,11 +100,7 @@ function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors })
             <Nav wide />
             <Nav />
           </Group>
-          <Group end>
-            <Utility />
-            <Utility />
-            <Icon />
-          </Group>
+          <Utilities />
         </span>
       )}
       {id === "menu-centred" && (
@@ -115,7 +110,7 @@ function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors })
           <span className="absolute inset-0 flex items-center justify-center">
             <Links />
           </span>
-          <MenuUtilities />
+          <Utilities />
         </span>
       )}
       {id === "menu-end" && (
@@ -123,7 +118,7 @@ function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors })
           <Logo />
           <span className="flex items-center gap-1.5">
             <Links />
-            <MenuUtilities />
+            <Utilities />
           </span>
         </span>
       )}
@@ -133,7 +128,7 @@ function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors })
             <Logo small />
             <Links small />
           </span>
-          <MenuUtilities />
+          <Utilities />
         </span>
       )}
     </span>

@@ -32,12 +32,11 @@ const kindColor: Record<NotificationKind, string> = {
  * live-task pill → transient flash) and, on click, opens the notifications
  * drawer (the history log). The pill is the indicator; the drawer is the log.
  *
- * `dense`: a 2rem box, the control size of the header layouts that draw the
- * collection's menu. `overlay`: the box keeps its collapsed size in the bar
+ * `overlay` (the header layouts that draw the collection's menu): the box keeps its collapsed size in the bar
  * and the expanded rail opens over what is beside it, toward the bar's start,
  * so the menu links next to it neither move nor fold.
  */
-export function Beacon({ rtl = false, dense = false, overlay = false }: { rtl?: boolean; dense?: boolean; overlay?: boolean }) {
+export function Beacon({ rtl = false, overlay = false }: { rtl?: boolean; overlay?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [tasks, setTasks] = useAtom(tasksAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
@@ -195,7 +194,7 @@ export function Beacon({ rtl = false, dense = false, overlay = false }: { rtl?: 
   const hasContent = !!flash || hasTask || unread > 0;
   const isExpanded = !isMobile && hasContent && (!!flash || hovered || (hasTask && taskIntro));
 
-  const width = !isMobile && flash ? "17rem" : isExpanded ? "15rem" : dense ? "2rem" : "1.75rem";
+  const width = !isMobile && flash ? "17rem" : isExpanded ? "15rem" : "1.75rem";
 
   const LeadIcon = topUnread ? kindIcon[topUnread.kind] : null;
   const moreCount = unread - 1;
@@ -211,7 +210,7 @@ export function Beacon({ rtl = false, dense = false, overlay = false }: { rtl?: 
         dir="ltr"
         data-component="Beacon"
         data-state={flash ? "flash" : isExpanded ? "expanded" : "collapsed"}
-        className={`relative shrink-0 ${overlay ? (dense ? "w-8 h-8" : "w-7 h-7") : ""}`}
+        className={`relative shrink-0 ${overlay ? "w-7 h-7" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -231,7 +230,7 @@ export function Beacon({ rtl = false, dense = false, overlay = false }: { rtl?: 
               type="button"
               onClick={() => { setOpen(true); setFlash(null); }}
               data-part="trigger"
-              className={`relative flex items-center w-full ${dense ? "h-8" : "h-7"} px-2.5 hover:bg-parchment transition-colors`}
+              className={`relative flex items-center w-full h-7 px-2.5 hover:bg-parchment transition-colors`}
               aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
               aria-haspopup="dialog"
               aria-expanded={open}
