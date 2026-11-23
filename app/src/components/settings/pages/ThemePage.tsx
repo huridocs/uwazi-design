@@ -18,6 +18,8 @@ import {
   type PickableImage,
 } from "../../shared/ImagePickerModal";
 import { LogoAdjustModal } from "../theme/LogoAdjustModal";
+import { HeaderLayoutCards } from "../theme/HeaderLayoutCards";
+import { headerLayoutLabel, headerLayoutOf, withHeaderLayout } from "../../../utils/theme/headerLayout";
 import {
   brandImageLookupAtom,
   BUILTIN_FAVICONS,
@@ -439,6 +441,22 @@ export function ThemePage() {
         <PresetCards vars={vars} selected={selectedPreset} onSelect={selectPreset} />
       </SettingsSection>
 
+      <SettingsSection
+        title="Header layout"
+        description="How the header arranges its items on desktops and tablets. Every layout holds the same items. Phones keep their own bar for every layout."
+      >
+        <HeaderLayoutCards
+          selected={headerLayoutOf(vars)}
+          colors={{
+            bar: chrome[BAR_KEY],
+            text: chrome["--color-theme-chrome-app-bar-fg"],
+            separator: chrome["--color-theme-chrome-app-bar-separator"],
+            page: resolved["--color-theme-bg-primary"],
+          }}
+          onSelect={(id) => setVars((current) => withHeaderLayout(current, id))}
+        />
+      </SettingsSection>
+
       <SettingsSection title="Logo and favicon" description="The logo shows in the header and on the sign-in screens. The favicon is the browser tab's icon.">
         <SettingsFieldRow>
           <BrandImageField
@@ -713,7 +731,7 @@ function ContrastStatus({ failed }: { failed: { id: string; label: string; resul
 /* ── Activity log ───────────────────────────────────────────────────────── */
 
 /** One change per colour that paints differently, per mode, plus the preset,
- *  the logo and the favicon. Compared as painted, so choosing a preset lists
+ *  the header layout, the logo and the favicon. Compared as painted, so choosing a preset lists
  *  the colours it moved. */
 function themeChanges(
   before: ThemeSettings,
@@ -723,6 +741,8 @@ function themeChanges(
   const out: ActivityChange[] = [];
   const preset = (t: ThemeSettings) => PRESET_DEFINITIONS[getPresetId(t.vars)].label;
   if (preset(before) !== preset(after)) out.push({ field: "Preset", before: preset(before), after: preset(after) });
+  const layout = (t: ThemeSettings) => headerLayoutLabel(headerLayoutOf(t.vars));
+  if (layout(before) !== layout(after)) out.push({ field: "Header layout", before: layout(before), after: layout(after) });
   for (const mode of THEME_MODES) {
     const painted = (t: ThemeSettings): Record<string, string> => ({ ...appliedTheme(t.vars, mode), ...resolvedChrome(t.vars, mode) });
     const a = painted(before);

@@ -870,6 +870,20 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   (`faviconSrcAtom`). Choosing a stock preset resets the logo, as in Uwazi.
 - `ImagePickerModal` takes `builtins` and a rule with a policy: strict (favicon) lists only
   what fits and refuses the rest; soft (logo) lists everything and asks with "Use image".
+- Header layout (not in Uwazi) is part of the theme: `vars.__headerLayout` is `centred`,
+  `two-rows` or `compact`, and no key is Standard (`utils/theme/headerLayout.ts`,
+  `headerLayoutAtom`). Preset changes keep it. The theme file carries it as a top-level
+  `"__headerLayout"` line, which Uwazi's import skips; a file without it loads as Standard.
+- `Navbar` builds its pieces once (logo, locator or collection picker, Tools, utilities) and
+  arranges them per layout; DOM order is the visual order. Centred is a `1fr auto 1fr` grid, the
+  Beacon expands only into the room its column has (`fit`), and on a tablet the utilities are
+  icons. Two rows puts Library, Tools, User settings and System settings on a second row and
+  takes the two settings entries out of the Settings menu. Compact is a 2.5rem bar with 2rem
+  controls and icon-only utilities with a `Hint`. Phones and the catalog always draw Standard.
+- The Navbar marks the root `data-header-layout` and `index.css` sets `--spacing-navbar` from
+  it (3.25rem, 2.5rem Compact, 5.75rem Two rows). Anything measured from the bar reads that
+  variable. `scripts/check-header-layouts.mjs <dir>` checks all four (overlap, centring, 32px
+  controls, height, tab order, axe).
 
 ### Login and account
 - Behaviour follows Research's inventory of Uwazi (`dev/results/uwazi-auth-flows.md` in the main

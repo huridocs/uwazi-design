@@ -10,6 +10,7 @@ import { accessibleForeground, checkContrast, INK, mixHex, WHITE } from "./color
  *    `__themeSimpleBase`   the preset a custom theme's simple mode derives from
  *    `light:<key>` / `dark:<key>`   one colour, per mode
  *    `backup:<key>`        the custom theme, kept while a stock preset is chosen
+ *    `__headerLayout`      the app bar's layout (`headerLayout.ts`); not in Uwazi
  *
  *  The keys are Uwazi's (`--color-theme-*`). `themeCss.ts` maps them onto the
  *  prototype's tokens. Uwazi's "Uwazi Design" preset is this prototype's

@@ -31,8 +31,12 @@ const kindColor: Record<NotificationKind, string> = {
  * Navbar Beacon — a morphing pill that signals live task (idle bell →
  * live-task pill → transient flash) and, on click, opens the notifications
  * drawer (the history log). The pill is the indicator; the drawer is the log.
+ *
+ * `dense`: a 2rem box, the Compact header layout's control size. `fit`: the
+ * expanded rail takes only the room its row has left and never pushes past
+ * it (the Centred layout, where the row ends at the logo).
  */
-export function Beacon({ rtl = false }: { rtl?: boolean }) {
+export function Beacon({ rtl = false, dense = false, fit = false }: { rtl?: boolean; dense?: boolean; fit?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [tasks, setTasks] = useAtom(tasksAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
@@ -190,7 +194,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
   const hasContent = !!flash || hasTask || unread > 0;
   const isExpanded = !isMobile && hasContent && (!!flash || hovered || (hasTask && taskIntro));
 
-  const width = !isMobile && flash ? "17rem" : isExpanded ? "15rem" : "1.75rem";
+  const width = !isMobile && flash ? "17rem" : isExpanded ? "15rem" : dense ? "2rem" : "1.75rem";
 
   const LeadIcon = topUnread ? kindIcon[topUnread.kind] : null;
   const moreCount = unread - 1;
@@ -206,7 +210,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
         dir="ltr"
         data-component="Beacon"
         data-state={flash ? "flash" : isExpanded ? "expanded" : "collapsed"}
-        className="relative shrink-0"
+        className={`relative ${fit ? "shrink min-w-7" : "shrink-0"}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -216,6 +220,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
           } ${pop ? "animate-beacon-pop" : ""}`}
           style={{
             width,
+            maxWidth: fit ? "100%" : undefined,
             transitionProperty: "width, box-shadow",
             transitionDuration: "0.42s",
           }}
@@ -226,7 +231,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
               type="button"
               onClick={() => { setOpen(true); setFlash(null); }}
               data-part="trigger"
-              className="relative flex items-center w-full h-7 px-2.5 hover:bg-parchment transition-colors"
+              className={`relative flex items-center w-full ${dense ? "h-8" : "h-7"} px-2.5 hover:bg-parchment transition-colors`}
               aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
               aria-haspopup="dialog"
               aria-expanded={open}

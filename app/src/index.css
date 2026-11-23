@@ -68,7 +68,20 @@
    * and bottom border. The published-view toggle centres on the strip from
    * these and `stack`, so it follows either if it changes. */
   --spacing-navbar: 3.25rem;
+  /* Two rows: the navigation row under the masthead. */
+  --spacing-navbar-tabs: 2.5rem;
   --spacing-tabstrip: calc(var(--text-tab) * 1.5 + 0.75rem + 2px);
+}
+
+/* HEADER LAYOUT (Settings › Theme and branding). The Navbar marks the root
+ * with the layout it draws, and the bar's height follows here, in the one
+ * variable everything measured from the bar reads. Standard and Centred keep
+ * the default; phones never set the attribute. */
+:root[data-header-layout="compact"] {
+  --spacing-navbar: 2.5rem;
+}
+:root[data-header-layout="two-rows"] {
+  --spacing-navbar: calc(3.25rem + var(--spacing-navbar-tabs));
 }
 
 /* THE LAYOUT OWNS THE GUTTER.

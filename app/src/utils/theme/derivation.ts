@@ -1,3 +1,4 @@
+import { HEADER_LAYOUT_KEY } from "./headerLayout";
 import {
   checkContrast,
   colorPaletteFromHex,
@@ -337,6 +338,14 @@ function restoredCustom(vars: ThemeVars): Record<string, string> | undefined {
 /** Choose a preset. Leaving Custom for a stock preset keeps the custom
  *  colours as `backup:` keys; choosing Custom again brings them back. */
 export function selectThemePreset(vars: ThemeVars, presetId: ThemePresetId): ThemeVars {
+  // The header layout is not a colour: it stays as it is under every preset,
+  // and is never put in the backup.
+  const { [HEADER_LAYOUT_KEY]: layout, [`${BACKUP}${HEADER_LAYOUT_KEY}`]: _stale, ...colors } = vars;
+  const next = selectPresetColors(colors, presetId);
+  return layout ? { ...next, [HEADER_LAYOUT_KEY]: layout } : next;
+}
+
+function selectPresetColors(vars: ThemeVars, presetId: ThemePresetId): ThemeVars {
   if (presetId === "custom") return restoredCustom(vars) ?? { [THEME_PRESET_KEY]: "custom" };
   const backup: Record<string, string> = {};
   const fromCustom = getPresetId(vars) === "custom";

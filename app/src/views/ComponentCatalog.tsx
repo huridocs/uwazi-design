@@ -307,7 +307,7 @@ export function ComponentCatalog({ onReturn }: Props) {
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
       {/* Sidebar — sticky to top:52 (below the header). Self-scrolls if its
           own item list exceeds viewport height. */}
-      <nav className="sticky top-13 z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - 3.25rem)" }}>
+      <nav className="sticky top-navbar z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - var(--spacing-navbar))" }}>
         <h2 className="text-meta font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
           Component Catalog
         </h2>

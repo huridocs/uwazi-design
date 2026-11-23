@@ -1,5 +1,5 @@
 import { liveTranslateAtom } from "../../atoms/liveTranslate";
-import { Fragment, useState, useRef, useEffect } from "react";
+import { Fragment, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
@@ -32,6 +32,7 @@ import {
   settingsToolsItems,
   settingsAccessAtom,
   settingsEntryOf,
+  settingsGroupOf,
   settingsDocumentation,
   settingsItemLabelAtom,
 } from "../../atoms/settings";
@@ -51,6 +52,9 @@ import { NotebookButton } from "../notebook/NotebookButton";
 import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
+import { Hint } from "../shared/Hint";
+import { headerLayoutAtom } from "../../atoms/branding";
+import type { HeaderLayout } from "../../utils/theme/headerLayout";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -63,6 +67,13 @@ interface NavbarProps {
 /** Both builds deploy to one site: `main` at the root, this branch under
  *  /playground/. Vite bakes the base URL in at build time, so it tells them apart. */
 const IS_PLAYGROUND = import.meta.env.BASE_URL.includes("/playground/");
+
+
+/** A navigation entry: warm at rest, vellum when it is where the reader is. */
+const navTab = (active: boolean) =>
+  `flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors shrink-0 ${
+    active ? "text-ink bg-vellum" : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+  }`;
 
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -117,6 +128,28 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
 
   const showingCatalog = appView === "catalog";
 
+  // Header layout (Settings › Theme and branding). Phones keep their own bar
+  // for every layout, and the catalog's bar has no navigation to arrange.
+  const chosenLayout = useAtomValue(headerLayoutAtom);
+  const layout: HeaderLayout = isMobile || showingCatalog ? "standard" : chosenLayout;
+  const compact = layout === "compact";
+  const twoRows = layout === "two-rows";
+  /** Compact: every control is a 2rem box in the 2.5rem bar. */
+  const ctlH = compact ? "h-8" : "";
+  // Utilities drop their labels in Compact, and in Centred on a tablet, where
+  // the two side columns are too narrow for words on both sides of the logo.
+  const iconOnly = compact || (layout === "centred" && breakpoint === "tablet");
+  /** An icon-only control: the bar's control height, squared. */
+  const iconBox = compact ? "justify-center w-8 h-8" : "justify-center w-7 h-7";
+  // The root carries the layout the bar draws: `--spacing-navbar` follows it
+  // (`index.css`), so `h-navbar` and anything else measured from the bar agree.
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    if (layout === "standard") return;
+    root.dataset.headerLayout = layout;
+    return () => root.removeAttribute("data-header-layout");
+  }, [layout]);
+
   // Each collection reads as its saved name (Settings › Collection ›
   // "Collection Name"); the detail line says which demo dataset it is.
   const names: Record<DataSource, string> = {
@@ -149,6 +182,11 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     .filter((i) => settingsAllowed(i.id))
     .map((i) => ({ ...i, label: itemLabel(i) }));
   const systemAllowed = settingsAllowed(settingsEntryOf("system"));
+  /** The settings group the open page belongs to, when Settings is open. */
+  const settingsGroup = appView === "settings" ? settingsGroupOf(settingsSection).id : undefined;
+  // In Two rows the Tools tab is also marked on a Tools page, as its sibling
+  // tabs are; the other layouts keep the dropdown's own mark.
+  const toolsActive = toolsOpen || appView === "import-csv" || (twoRows && settingsGroup === "tools");
 
   /** Open a settings destination. The rail scopes itself to the group the
    *  section belongs to, so this is also what picks User vs System vs Tools.
@@ -181,513 +219,212 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     });
   };
 
-  return (
-    // px-3 matches the content gutter below (Library toolbar, card grid,
-    // MainTabs, DocMeta), so the logo and right cluster share their edges.
-    <header
-      data-component="Navbar"
-      className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
-      style={{ borderBottom: "1px solid var(--border-primary)" }}
+  /* ── The bar's pieces. Every layout draws the same ones; only their
+        arrangement and density change (Settings › Theme and branding). ──── */
+
+  const menuButton = isMobile && !showingCatalog && (
+    <button
+      type="button"
+      onClick={() => setMobileMenuOpen(true)}
+      data-part="menu-trigger"
+      aria-haspopup="dialog"
+      aria-expanded={mobileMenuOpen}
+      className="flex items-center justify-center rounded-md hover:bg-warm transition-colors w-8 h-8"
+      style={{ color: "var(--text-secondary)" }}
+      aria-label="Open menu"
     >
-      {/* The page's one h1. The logo is an image inside a button, so it can't
-          carry the heading itself without changing what the button announces. */}
-      <h1 className="sr-only">Uwazi</h1>
-      {/* Left: Logo + (mobile hamburger | desktop nav) */}
-      <div data-part="start" className="flex items-center gap-3 md:gap-4">
-        {isMobile && !showingCatalog && (
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            data-part="menu-trigger"
-            aria-haspopup="dialog"
-            aria-expanded={mobileMenuOpen}
-            className="flex items-center justify-center rounded-md hover:bg-warm transition-colors w-8 h-8"
-            style={{ color: "var(--text-secondary)" }}
-            aria-label="Open menu"
-          >
-            <Menu size={18} />
-          </button>
-        )}
+      <Menu size={18} />
+    </button>
+  );
+
+  const logo = (
+    <button
+      type="button"
+      onClick={onLogoClick}
+      data-part="logo"
+      className={`flex items-center shrink-0 ${ctlH}`}
+    >
+      <Wordmark size={compact ? "sm" : "md"} />
+    </button>
+  );
+
+  const buildTag = IS_PLAYGROUND && (
+    <span
+      data-part="build-tag"
+      className="px-1.5 py-0.5 text-meta font-medium rounded bg-warm text-ink-secondary shrink-0"
+      title="This build is the playground branch — it carries what main no longer does"
+    >
+      playground
+    </span>
+  );
+
+  // Locator/breadcrumb: Library (back) › current entity.
+  const locator = (
+    <div data-part="locator" className="flex items-center gap-1 min-w-0">
+      <button
+        type="button"
+        onClick={() => onNavigate?.("library")}
+        data-part="library"
+        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink shrink-0 ${ctlH}`}
+      >
+        <BookOpen size={14} /> {t("System", "Library")}
+      </button>
+      <ChevronRight size={14} aria-hidden className="text-ink-tertiary shrink-0" />
+      <span
+        title={focalTitle}
+        data-part="current-entity"
+        aria-current="page"
+        className={`flex items-center min-w-0 px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md max-w-[16rem] ${ctlH}`}
+      >
+        <span className="truncate">{focalTitle}</span>
+      </span>
+    </div>
+  );
+
+  // Library + its collection picker. The dataset belongs to the destination,
+  // not the view, so it is not in the Library toolbar. `standalone` is the
+  // picker without the Library button (Two rows: Library is a tab below).
+  const collectionControl = (standalone: boolean) => (
+    <div ref={collectionRef} data-part="collection" className="relative flex items-center">
+      {!standalone && (
         <button
           type="button"
-          onClick={onLogoClick}
-          data-part="logo"
-          className="flex items-center"
+          onClick={() => onNavigate?.("library")}
+          data-part="library"
+          aria-current={appView === "library" ? "page" : undefined}
+          className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${ctlH} ${
+            appView === "library"
+              ? "text-ink bg-vellum"
+              : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+          }`}
         >
-          <Wordmark />
+          <BookOpen size={14} /> {t("System", "Library")}
         </button>
-        {IS_PLAYGROUND && (
-          <span
-            data-part="build-tag"
-            className="px-1.5 py-0.5 text-meta font-medium rounded bg-warm text-ink-secondary shrink-0"
-            title="This build is the playground branch — it carries what main no longer does"
-          >
-            playground
-          </span>
-        )}
-        {!showingCatalog && !isMobile && (
-          <nav data-part="primary-nav" aria-label="Primary" className="flex items-center gap-2">
-            {appView === "entity" ? (
-              // Locator/breadcrumb: Library (back) › current entity.
-              <div data-part="locator" className="flex items-center gap-1 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => onNavigate?.("library")}
-                  data-part="library"
-                  className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-                >
-                  <BookOpen size={14} /> {t("System", "Library")}
-                </button>
-                <ChevronRight size={14} aria-hidden className="text-ink-tertiary shrink-0" />
-                <span
-                  title={focalTitle}
-                  data-part="current-entity"
-                  aria-current="page"
-                  className="px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md truncate max-w-[16rem]"
-                >
-                  {focalTitle}
-                </span>
-              </div>
-            ) : (
-              // Library + its collection picker. The dataset belongs to the
-              // destination, not the view, so it is not in the Library toolbar.
-              <div ref={collectionRef} data-part="collection" className="relative flex items-center">
-                <button
-                  type="button"
-                  onClick={() => onNavigate?.("library")}
-                  data-part="library"
-                  aria-current={appView === "library" ? "page" : undefined}
-                  className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${
-                    appView === "library"
-                      ? "text-ink bg-vellum"
-                      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-                  }`}
-                >
-                  <BookOpen size={14} /> {t("System", "Library")}
-                </button>
-                <button
-                  type="button"
-                  data-part="collection-trigger"
-                  onClick={() => {
-                    setCollectionOpen((o) => !o);
-                    setToolsOpen(false);
-                    setSettingsOpen(false);
-                  }}
-                  aria-haspopup="listbox"
-                  aria-expanded={collectionOpen}
-                  aria-label={`Collection: ${collection.label}`}
-                  title={`Collection: ${collection.label}`}
-                  className={`flex items-center gap-1 ps-1.5 pe-2 py-1 text-tab font-medium rounded-e-md transition-colors ${
-                    collectionOpen || appView === "library"
-                      ? "text-ink bg-vellum"
-                      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-                  }`}
-                  style={{ borderInlineStart: "1px solid var(--border-primary)" }}
-                >
-                  <span className="text-ink-tertiary truncate max-w-[12rem]">{collection.label}</span>
-                  <ChevronDown
-                    size={13}
-                    className={`text-ink-tertiary transition-transform ${collectionOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {collectionOpen && (
-                  <div
-                    role="listbox"
-                    data-part="collection-menu"
-                    aria-label="Collection"
-                    className="absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1"
-                  >
-                    <SectionLabel as="p" className="px-3 pt-1 pb-1">
-                      Collection
-                    </SectionLabel>
-                    {COLLECTIONS.map((c) => {
-                      const on = c.id === dataSource;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          role="option"
-                          data-part="option"
-                          aria-selected={on}
-                          onClick={() => {
-                            setCollectionOpen(false);
-                            switchCollection(c.id);
-                          }}
-                          className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${
-                            on ? "bg-vellum" : "hover:bg-warm"
-                          }`}
-                        >
-                          <span className="w-4 shrink-0 pt-0.5 text-carbon">
-                            {on && <Check size={13} />}
-                          </span>
-                          <span className="min-w-0">
-                            <span
-                              className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
-                            >
-                              {c.label}
-                            </span>
-                            <span className="block text-meta text-ink-tertiary">{c.detail}</span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-            <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
+      )}
+      <button
+        type="button"
+        data-part="collection-trigger"
+        onClick={() => {
+          setCollectionOpen((o) => !o);
+          setToolsOpen(false);
+          setSettingsOpen(false);
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={collectionOpen}
+        aria-label={`Collection: ${collection.label}`}
+        title={`Collection: ${collection.label}`}
+        className={`flex items-center py-1 text-tab font-medium transition-colors ${ctlH} ${
+          standalone ? "gap-1.5 ps-2.5 pe-2 rounded-md" : "gap-1 ps-1.5 pe-2 rounded-e-md"
+        } ${
+          collectionOpen || (!standalone && appView === "library")
+            ? "text-ink bg-vellum"
+            : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+        }`}
+        style={standalone ? undefined : { borderInlineStart: "1px solid var(--border-primary)" }}
+      >
+        {standalone && <Database size={14} aria-hidden className="shrink-0" />}
+        <span className="text-ink-tertiary truncate max-w-[12rem]">{collection.label}</span>
+        <ChevronDown
+          size={13}
+          className={`text-ink-tertiary transition-transform ${collectionOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      {collectionOpen && (
+        <div
+          role="listbox"
+          data-part="collection-menu"
+          aria-label="Collection"
+          className={`absolute top-full mt-1.5 ${standalone ? "start-0" : "end-0"} w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1`}
+        >
+          <SectionLabel as="p" className="px-3 pt-1 pb-1">
+            Collection
+          </SectionLabel>
+          {COLLECTIONS.map((c) => {
+            const on = c.id === dataSource;
+            return (
               <button
+                key={c.id}
                 type="button"
-                onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
-                data-part="tools-trigger"
-                aria-expanded={toolsOpen}
-                className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
-                  toolsOpen || appView === "import-csv"
-                    ? "text-ink bg-vellum"
-                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                role="option"
+                data-part="option"
+                aria-selected={on}
+                onClick={() => {
+                  setCollectionOpen(false);
+                  switchCollection(c.id);
+                }}
+                className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${
+                  on ? "bg-vellum" : "hover:bg-warm"
                 }`}
               >
-                <Wrench size={14} /> {t("System", "Tools")}
+                <span className="w-4 shrink-0 pt-0.5 text-carbon">
+                  {on && <Check size={13} />}
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
+                  >
+                    {c.label}
+                  </span>
+                  <span className="block text-meta text-ink-tertiary">{c.detail}</span>
+                </span>
               </button>
-              {toolsOpen && (
-                <div
-                  data-part="tools-menu"
-                  dir="ltr"
-                  className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
-                  style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
-                >
-                  <div className="py-1">
-                    {toolsItems.map((item, i) => {
-                      const Icon = item.icon;
-                      // Same subsections as the rail behind it — "ML tools" reads
-                      // as its own shelf in both places.
-                      const startsSub =
-                        !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup;
-                      const cls =
-                        "flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer";
-                      const inner = (
-                        <>
-                          <span className="flex items-center gap-2">
-                            <Icon size={14} className="text-ink-tertiary" />
-                            {item.label}
-                          </span>
-                          {item.external ? (
-                            <ExternalLink size={12} className="text-ink-muted" />
-                          ) : (
-                            ((item.navigateTo && appView === item.navigateTo) ||
-                              (appView === "settings" && settingsSection === item.id)) && (
-                              <span className="w-1.5 h-1.5 rounded-[1px] bg-carbon" />
-                            )
-                          )}
-                        </>
-                      );
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
-                      const sub = startsSub && (
-                        <SectionLabel className="px-3 pt-2 pb-1 border-t border-border-soft">
-                          {item.subgroup}
-                        </SectionLabel>
-                      );
-
-                      if (item.external) {
-                        return (
-                          <Fragment key={item.id}>
-                            {sub}
-                            <a
-                              href={item.external}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={cls}
-                              onClick={() => setToolsOpen(false)}
-                            >
-                              {inner}
-                            </a>
-                          </Fragment>
-                        );
-                      }
-
-                      return (
-                        <Fragment key={item.id}>
-                          {sub}
-                          <button
-                            type="button"
-                            data-part="tools-item"
-                            onClick={() => {
-                              // Import CSV is its own top-level view; the rest are
-                              // settings pages.
-                              if (item.navigateTo) onNavigate?.(item.navigateTo);
-                              else openSettings(item.id);
-                              setToolsOpen(false);
-                            }}
-                            className={cls}
-                          >
-                            {inner}
-                          </button>
-                        </Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </nav>
-        )}
-      </div>
-
-      {/* Right: Notifications + Assistant + Settings + Theme toggle */}
-      <div data-part="end" className="flex items-center gap-2">
-        {!showingCatalog && <Beacon rtl={rtl} />}
-        {/* Full width puts the Notebook on the Library's rail, with its count. */}
-        {!showingCatalog && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile} />}
-        {!showingCatalog && (
-          <button
-            type="button"
-            onClick={() => openAgent(true)}
-            data-part="ask-bert"
-            className="flex items-center gap-1.5 px-2.5 h-7 text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
-            title={`${t("System", "Ask Bert")} (${shortcutLabel})`}
-          >
-            <Sparkles size={14} className="text-carbon" />
-            {!isMobile && t("System", "Ask Bert")}
-          </button>
-        )}
-        {showingCatalog ? (
-          <button
-            type="button"
-            onClick={onLogoClick}
-            data-part="return"
-            className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
-          >
-            <ArrowLeft size={14} /> Return to app
-          </button>
-        ) : signedOut ? (
-          <button
-            type="button"
-            onClick={() => onNavigate?.("login")}
-            data-part="log-in"
-            className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
-          >
-            <LogIn size={14} className="rtl:-scale-x-100" aria-hidden /> {t("System", "Log in")}
-          </button>
-        ) : !isMobile ? (
-          <div className="relative" ref={settingsRef} data-part="settings">
-            <button
-              type="button"
-              onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
-              data-part="settings-trigger"
-              aria-expanded={settingsOpen}
-              className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
-                settingsOpen
-                  ? "text-ink bg-vellum"
-                  : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-              }`}
-            >
-              <Settings size={14} /> {t("System", "Settings")}
-            </button>
-            {/* No `dir="ltr"` on the panel: this menu is chrome and mirrors
-                under RTL like every other; the left/right anchoring below flips. */}
-            {settingsOpen && (
-              <div
-                data-part="settings-menu"
-                // w-72: the language row carries a control in its trailing slot.
-                // Sized for the longest UI language label ("Idioma de la
-                // interfaz"); at w-64 it wraps and its row grows taller.
-                className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
-                style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
-              >
-                {/* The icon leads, as in the Tools dropdown and SettingsNav. The
-                    trailing slot is reserved for state or a hint: the RTL pill,
-                    ExternalLink for "leaves the app", a chevron for "goes deeper". */}
-                <div className="py-1">
-                  <button
-                    onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
-                    className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Languages size={14} className="text-ink-tertiary" />
-                      {t("System", "Test RTL layout")}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
-                        rtl
-                          ? "bg-success-light text-success"
-                          : "bg-warm text-ink-tertiary"
-                      }`}
-                    >
-                      {rtl ? "ON" : "OFF"}
-                    </span>
-                  </button>
-                  {/* Interface language: the chrome's language, not the
-                      document's reading language or System › Languages. It sits
-                      with the RTL toggle because both are switches, not
-                      destinations; choosing writes `uiLanguageAtom` and closes the menu. */}
-                  <div className="flex items-center justify-between gap-2 px-3 py-2">
-                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
-                      <Globe size={14} className="text-ink-tertiary" />
-                      {t("System", "Interface language")}
-                    </span>
-                    <Select
-                      value={uiLang}
-                      onChange={(v) => { setUiLang(v as UiLanguage); setSettingsOpen(false); }}
-                      ariaLabel={t("System", "Interface language")}
-                      align="end"
-                      options={UI_LANGUAGES}
-                      steady
-                    />
-                  </div>
-                  {/* Live translate (Uwazi: the language menu's footer, admins
-                      only). The row says whether it is on; the strip under the
-                      navbar is where it ends. */}
-                  {systemAllowed && (
-                    <button
-                      onClick={() => { setLiveTranslate((v) => !v); setSettingsOpen(false); }}
-                      data-part="live-translate"
-                      className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Languages size={14} className="text-ink-tertiary" />
-                        {t("System", "Live translate")}
-                      </span>
-                      <span
-                        className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
-                          liveTranslate ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
-                        }`}
-                      >
-                        {liveTranslate ? "ON" : "OFF"}
-                      </span>
-                    </button>
-                  )}
-                  {/* Library layout: experimental, a session switch like the two
-                      above. It applies from 1024px; on a tablet the row stays and
-                      the options say so. Phones never get it (no dropdown there,
-                      and the layout does not apply). */}
-                  <div className="flex items-center justify-between gap-2 px-3 py-2">
-                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
-                      <Columns2 size={14} className="text-ink-tertiary" />
-                      {t("System", "Library layout")}
-                    </span>
-                    <Select
-                      value={libraryLayout}
-                      onChange={(v) => { setLibraryLayout(v as LibraryLayout); setSettingsOpen(false); }}
-                      ariaLabel={t("System", "Library layout")}
-                      align="end"
-                      options={[
-                        { value: "drawer", label: t("System", "Drawer") },
-                        {
-                          value: "full",
-                          label: t("System", "Full width"),
-                          hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
-                        },
-                        {
-                          value: "split",
-                          label: t("System", "Split"),
-                          hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
-                        },
-                      ]}
-                      steady
-                    />
-                  </div>
-                  {/* User settings and System settings each open their own
-                      group's entry section, so the rail shows only that group. */}
-                  <button
-                    onClick={() => {
-                      openSettings(settingsEntryOf("user"));
-                      setSettingsOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
-                  >
-                    <User size={14} className="text-ink-tertiary" />
-                    {t("System", "User settings")}
-                  </button>
-                  {systemAllowed && <button
-                    onClick={() => {
-                      openSettings(settingsEntryOf("system"));
-                      setSettingsOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
-                  >
-                    <Server size={14} className="text-ink-tertiary" />
-                    {t("System", "System settings")}
-                  </button>}
-                  <DocumentationLink onDone={() => setSettingsOpen(false)} />
-                  <button
-                    onClick={() => {
-                      setSettingsOpen(false);
-                      guard(() => logOut());
-                    }}
-                    data-part="log-out"
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
-                    style={{ borderTop: "1px solid var(--border-soft)" }}
-                  >
-                    <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
-                    {t("System", "Log out")}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : null}
-        {!isMobile && <ThemeToggle />}
-      </div>
-
-      {/* Mobile menu sheet */}
-      {isMobile && (
-        <MobileBottomSheet
-          open={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(false)}
-          title="Menu"
-          // Full height: at half, Settings (theme, RTL, language, User/System)
-          // sat below the fold with only a fade to say so.
-          defaultSnap="full"
+  const toolsControl = (
+    <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
+      <button
+        type="button"
+        onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
+        data-part="tools-trigger"
+        aria-expanded={toolsOpen}
+        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${ctlH} ${
+          toolsActive
+            ? "text-ink bg-vellum"
+            : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+        }`}
+      >
+        <Wrench size={14} /> {t("System", "Tools")}
+      </button>
+      {toolsOpen && (
+        <div
+          data-part="tools-menu"
+          dir="ltr"
+          className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+          style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
         >
-          <nav data-part="mobile-nav" aria-label="Primary" className="flex flex-col py-2">
-            {/* Library */}
-            <button
-              onClick={() => { onNavigate?.("library"); setMobileMenuOpen(false); }}
-              className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
-                appView === "library" || appView === "entity" ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
-              }`}
-            >
-              <BookOpen size={16} className="text-ink-tertiary" />
-              {t("System", "Library")}
-            </button>
-
-            {/* Collection: the desktop crumb's picker, as one row so the menu's
-                Settings stay above the fold. Choosing opens the Library on it. */}
-            <div data-part="mobile-collection" className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
-              <div className="flex items-center gap-3">
-                <Database size={16} className="text-ink-tertiary" />
-                Collection
-              </div>
-              <Select
-                value={dataSource}
-                onChange={(v) => {
-                  setMobileMenuOpen(false);
-                  switchCollection(v as DataSource);
-                }}
-                ariaLabel="Collection"
-                align="end"
-                options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label, hint: c.detail }))}
-                steady
-              />
-            </div>
-
-            {/* Tools section */}
-            {toolsItems.length > 0 && (
-              <SectionLabel className="px-4 pt-4 pb-1">
-                {t("System", "Tools")}
-              </SectionLabel>
-            )}
+          <div className="py-1">
             {toolsItems.map((item, i) => {
               const Icon = item.icon;
-              const active =
-                (item.navigateTo && appView === item.navigateTo) ||
-                (appView === "settings" && settingsSection === item.id);
-              const cls = `flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
-                active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
-              }`;
-              // Same "ML tools" shelf as the rail and the desktop dropdown.
-              const sub = !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup && (
-                <SectionLabel className="px-4 pt-3 pb-1">
+              // Same subsections as the rail behind it — "ML tools" reads
+              // as its own shelf in both places.
+              const startsSub =
+                !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup;
+              const cls =
+                "flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer";
+              const inner = (
+                <>
+                  <span className="flex items-center gap-2">
+                    <Icon size={14} className="text-ink-tertiary" />
+                    {item.label}
+                  </span>
+                  {item.external ? (
+                    <ExternalLink size={12} className="text-ink-muted" />
+                  ) : (
+                    ((item.navigateTo && appView === item.navigateTo) ||
+                      (appView === "settings" && settingsSection === item.id)) && (
+                      <span className="w-1.5 h-1.5 rounded-[1px] bg-carbon" />
+                    )
+                  )}
+                </>
+              );
+
+              const sub = startsSub && (
+                <SectionLabel className="px-3 pt-2 pb-1 border-t border-border-soft">
                   {item.subgroup}
                 </SectionLabel>
               );
@@ -701,10 +438,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cls}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => setToolsOpen(false)}
                     >
-                      <Icon size={16} className="text-ink-tertiary" />
-                      {item.label}
+                      {inner}
                     </a>
                   </Fragment>
                 );
@@ -714,88 +450,560 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 <Fragment key={item.id}>
                   {sub}
                   <button
+                    type="button"
+                    data-part="tools-item"
                     onClick={() => {
+                      // Import CSV is its own top-level view; the rest are
+                      // settings pages.
                       if (item.navigateTo) onNavigate?.(item.navigateTo);
                       else openSettings(item.id);
-                      setMobileMenuOpen(false);
+                      setToolsOpen(false);
                     }}
                     className={cls}
                   >
-                    <Icon size={16} className="text-ink-tertiary" />
-                    {item.label}
+                    {inner}
                   </button>
                 </Fragment>
               );
             })}
-            {/* Settings section */}
-            <SectionLabel className="px-4 pt-4 pb-1">
-              {t("System", "Settings")}
-            </SectionLabel>
-            <ThemeToggle variant="row" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Notifications + Notebook + Assistant + Settings + Theme toggle.
+  const utilities = (
+    // Centred: the group ends at its column, so the logo keeps the centre.
+    <div
+      data-part="end"
+      className={`flex items-center gap-2 justify-self-end ${
+        layout === "centred" ? "min-w-0 max-w-full [&>:not([data-component=Beacon])]:shrink-0" : "shrink-0"
+      }`}
+    >
+      {!showingCatalog && <Beacon rtl={rtl} dense={compact} fit={layout === "centred"} />}
+      {/* Full width puts the Notebook on the Library's rail, with its count. */}
+      {!showingCatalog && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile || iconOnly} dense={compact} hinted={iconOnly} />}
+      {!showingCatalog && (
+        <Hint text={`${t("System", "Ask Bert")} (${shortcutLabel})`} describe={false} placement="below" muted={!iconOnly}>
+          {(hint) => (
             <button
-              onClick={() => { onToggleRtl?.(); }}
-              className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+              {...hint}
+              type="button"
+              onClick={() => openAgent(true)}
+              data-part="ask-bert"
+              className={`flex items-center text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors ${
+                iconOnly ? iconBox : "gap-1.5 px-2.5 h-7"
+              }`}
+              aria-label={iconOnly ? t("System", "Ask Bert") : undefined}
+              title={iconOnly ? undefined : `${t("System", "Ask Bert")} (${shortcutLabel})`}
             >
-              <div className="flex items-center gap-3">
-                <Languages size={16} className="text-ink-tertiary" />
-                {t("System", "Test RTL layout")}
-              </div>
-              <span
-                className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
-                  rtl ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
+              <Sparkles size={14} className="text-carbon" />
+              {!isMobile && !iconOnly && t("System", "Ask Bert")}
+            </button>
+          )}
+        </Hint>
+      )}
+      {showingCatalog ? (
+        <button
+          type="button"
+          onClick={onLogoClick}
+          data-part="return"
+          className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
+        >
+          <ArrowLeft size={14} /> Return to app
+        </button>
+      ) : signedOut ? (
+        <Hint text={t("System", "Log in")} describe={false} placement="below" muted={!iconOnly}>
+          {(hint) => (
+            <button
+              {...hint}
+              type="button"
+              onClick={() => onNavigate?.("login")}
+              data-part="log-in"
+              aria-label={iconOnly ? t("System", "Log in") : undefined}
+              className={`flex items-center text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors ${
+                iconOnly ? iconBox : "gap-1.5 px-3 py-1"
+              }`}
+            >
+              <LogIn size={14} className="rtl:-scale-x-100" aria-hidden /> {!iconOnly && t("System", "Log in")}
+            </button>
+          )}
+        </Hint>
+      ) : !isMobile ? (
+        <div className="relative" ref={settingsRef} data-part="settings">
+          <Hint text={t("System", "Settings")} describe={false} placement="below" muted={!iconOnly || settingsOpen}>
+            {(hint) => (
+              <button
+                {...hint}
+                type="button"
+                onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
+                data-part="settings-trigger"
+                aria-expanded={settingsOpen}
+                aria-label={iconOnly ? t("System", "Settings") : undefined}
+                className={`flex items-center text-tab font-medium rounded-md transition-colors ${
+                  iconOnly ? iconBox : "gap-1.5 px-3 py-1"
+                } ${
+                  settingsOpen
+                    ? "text-ink bg-vellum"
+                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 }`}
               >
-                {rtl ? "ON" : "OFF"}
-              </span>
-            </button>
-            {/* Same control as the desktop Settings dropdown. Choosing leaves the
-                sheet open so the user sees the menu strings change language. */}
-            <div className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
-              <div className="flex items-center gap-3">
-                <Globe size={16} className="text-ink-tertiary" />
-                {t("System", "Interface language")}
+                <Settings size={14} /> {!iconOnly && t("System", "Settings")}
+              </button>
+            )}
+          </Hint>
+          {/* No `dir="ltr"` on the panel: this menu is chrome and mirrors
+              under RTL like every other; the left/right anchoring below flips. */}
+          {settingsOpen && (
+            <div
+              data-part="settings-menu"
+              // w-72: the language row carries a control in its trailing slot.
+              // Sized for the longest UI language label ("Idioma de la
+              // interfaz"); at w-64 it wraps and its row grows taller.
+              className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+              style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
+            >
+              {/* The icon leads, as in the Tools dropdown and SettingsNav. The
+                  trailing slot is reserved for state or a hint: the RTL pill,
+                  ExternalLink for "leaves the app", a chevron for "goes deeper". */}
+              <div className="py-1">
+                <button
+                  onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
+                  className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Languages size={14} className="text-ink-tertiary" />
+                    {t("System", "Test RTL layout")}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
+                      rtl
+                        ? "bg-success-light text-success"
+                        : "bg-warm text-ink-tertiary"
+                    }`}
+                  >
+                    {rtl ? "ON" : "OFF"}
+                  </span>
+                </button>
+                {/* Interface language: the chrome's language, not the
+                    document's reading language or System › Languages. It sits
+                    with the RTL toggle because both are switches, not
+                    destinations; choosing writes `uiLanguageAtom` and closes the menu. */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                  <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
+                    <Globe size={14} className="text-ink-tertiary" />
+                    {t("System", "Interface language")}
+                  </span>
+                  <Select
+                    value={uiLang}
+                    onChange={(v) => { setUiLang(v as UiLanguage); setSettingsOpen(false); }}
+                    ariaLabel={t("System", "Interface language")}
+                    align="end"
+                    options={UI_LANGUAGES}
+                    steady
+                  />
+                </div>
+                {/* Live translate (Uwazi: the language menu's footer, admins
+                    only). The row says whether it is on; the strip under the
+                    navbar is where it ends. */}
+                {systemAllowed && (
+                  <button
+                    onClick={() => { setLiveTranslate((v) => !v); setSettingsOpen(false); }}
+                    data-part="live-translate"
+                    className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Languages size={14} className="text-ink-tertiary" />
+                      {t("System", "Live translate")}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
+                        liveTranslate ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
+                      }`}
+                    >
+                      {liveTranslate ? "ON" : "OFF"}
+                    </span>
+                  </button>
+                )}
+                {/* Library layout: experimental, a session switch like the two
+                    above. It applies from 1024px; on a tablet the row stays and
+                    the options say so. Phones never get it (no dropdown there,
+                    and the layout does not apply). */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                  <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
+                    <Columns2 size={14} className="text-ink-tertiary" />
+                    {t("System", "Library layout")}
+                  </span>
+                  <Select
+                    value={libraryLayout}
+                    onChange={(v) => { setLibraryLayout(v as LibraryLayout); setSettingsOpen(false); }}
+                    ariaLabel={t("System", "Library layout")}
+                    align="end"
+                    options={[
+                      { value: "drawer", label: t("System", "Drawer") },
+                      {
+                        value: "full",
+                        label: t("System", "Full width"),
+                        hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
+                      },
+                      {
+                        value: "split",
+                        label: t("System", "Split"),
+                        hint: breakpoint === "desktop" ? undefined : t("System", "From 1024px"),
+                      },
+                    ]}
+                    steady
+                  />
+                </div>
+                {/* User settings and System settings each open their own
+                    group's entry section, so the rail shows only that group. */}
+                {!twoRows && <button
+                  onClick={() => {
+                    openSettings(settingsEntryOf("user"));
+                    setSettingsOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                >
+                  <User size={14} className="text-ink-tertiary" />
+                  {t("System", "User settings")}
+                </button>}
+                {!twoRows && systemAllowed && <button
+                  onClick={() => {
+                    openSettings(settingsEntryOf("system"));
+                    setSettingsOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                >
+                  <Server size={14} className="text-ink-tertiary" />
+                  {t("System", "System settings")}
+                </button>}
+                <DocumentationLink onDone={() => setSettingsOpen(false)} />
+                <button
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    guard(() => logOut());
+                  }}
+                  data-part="log-out"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                  style={{ borderTop: "1px solid var(--border-soft)" }}
+                >
+                  <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
+                  {t("System", "Log out")}
+                </button>
               </div>
-              <Select
-                value={uiLang}
-                onChange={(v) => setUiLang(v as UiLanguage)}
-                ariaLabel={t("System", "Interface language")}
-                align="end"
-                options={UI_LANGUAGES}
-                steady
-              />
             </div>
-            {!signedOut && (
+          )}
+        </div>
+      ) : null}
+      {!isMobile && <ThemeToggle dense={compact} />}
+    </div>
+  );
+
+  const mobileSheet = isMobile && (
+    <MobileBottomSheet
+      open={mobileMenuOpen}
+      onClose={() => setMobileMenuOpen(false)}
+      title="Menu"
+      // Full height: at half, Settings (theme, RTL, language, User/System)
+      // sat below the fold with only a fade to say so.
+      defaultSnap="full"
+    >
+      <nav data-part="mobile-nav" aria-label="Primary" className="flex flex-col py-2">
+        {/* Library */}
+        <button
+          onClick={() => { onNavigate?.("library"); setMobileMenuOpen(false); }}
+          className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
+            appView === "library" || appView === "entity" ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
+          }`}
+        >
+          <BookOpen size={16} className="text-ink-tertiary" />
+          {t("System", "Library")}
+        </button>
+
+        {/* Collection: the desktop crumb's picker, as one row so the menu's
+            Settings stay above the fold. Choosing opens the Library on it. */}
+        <div data-part="mobile-collection" className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
+          <div className="flex items-center gap-3">
+            <Database size={16} className="text-ink-tertiary" />
+            Collection
+          </div>
+          <Select
+            value={dataSource}
+            onChange={(v) => {
+              setMobileMenuOpen(false);
+              switchCollection(v as DataSource);
+            }}
+            ariaLabel="Collection"
+            align="end"
+            options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label, hint: c.detail }))}
+            steady
+          />
+        </div>
+
+        {/* Tools section */}
+        {toolsItems.length > 0 && (
+          <SectionLabel className="px-4 pt-4 pb-1">
+            {t("System", "Tools")}
+          </SectionLabel>
+        )}
+        {toolsItems.map((item, i) => {
+          const Icon = item.icon;
+          const active =
+            (item.navigateTo && appView === item.navigateTo) ||
+            (appView === "settings" && settingsSection === item.id);
+          const cls = `flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
+            active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
+          }`;
+          // Same "ML tools" shelf as the rail and the desktop dropdown.
+          const sub = !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup && (
+            <SectionLabel className="px-4 pt-3 pb-1">
+              {item.subgroup}
+            </SectionLabel>
+          );
+
+          if (item.external) {
+            return (
+              <Fragment key={item.id}>
+                {sub}
+                <a
+                  href={item.external}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cls}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Icon size={16} className="text-ink-tertiary" />
+                  {item.label}
+                </a>
+              </Fragment>
+            );
+          }
+
+          return (
+            <Fragment key={item.id}>
+              {sub}
               <button
-                onClick={() => { openSettingsList("user"); setMobileMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+                onClick={() => {
+                  if (item.navigateTo) onNavigate?.(item.navigateTo);
+                  else openSettings(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={cls}
               >
-                <User size={16} className="text-ink-tertiary" />
-                {t("System", "User settings")}
+                <Icon size={16} className="text-ink-tertiary" />
+                {item.label}
               </button>
-            )}
-            {systemAllowed && (
-              <button
-                onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            </Fragment>
+          );
+        })}
+        {/* Settings section */}
+        <SectionLabel className="px-4 pt-4 pb-1">
+          {t("System", "Settings")}
+        </SectionLabel>
+        <ThemeToggle variant="row" />
+        <button
+          onClick={() => { onToggleRtl?.(); }}
+          className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Languages size={16} className="text-ink-tertiary" />
+            {t("System", "Test RTL layout")}
+          </div>
+          <span
+            className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
+              rtl ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
+            }`}
+          >
+            {rtl ? "ON" : "OFF"}
+          </span>
+        </button>
+        {/* Same control as the desktop Settings dropdown. Choosing leaves the
+            sheet open so the user sees the menu strings change language. */}
+        <div className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
+          <div className="flex items-center gap-3">
+            <Globe size={16} className="text-ink-tertiary" />
+            {t("System", "Interface language")}
+          </div>
+          <Select
+            value={uiLang}
+            onChange={(v) => setUiLang(v as UiLanguage)}
+            ariaLabel={t("System", "Interface language")}
+            align="end"
+            options={UI_LANGUAGES}
+            steady
+          />
+        </div>
+        {!signedOut && (
+          <button
+            onClick={() => { openSettingsList("user"); setMobileMenuOpen(false); }}
+            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+          >
+            <User size={16} className="text-ink-tertiary" />
+            {t("System", "User settings")}
+          </button>
+        )}
+        {systemAllowed && (
+          <button
+            onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
+            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+          >
+            <Server size={16} className="text-ink-tertiary" />
+            {t("System", "System settings")}
+          </button>
+        )}
+        {!signedOut && (
+          <button
+            onClick={() => { setMobileMenuOpen(false); guard(() => logOut()); }}
+            data-part="log-out"
+            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            style={{ borderTop: "1px solid var(--border-soft)" }}
+          >
+            <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
+            {t("System", "Log out")}
+          </button>
+        )}
+      </nav>
+    </MobileBottomSheet>
+  );
+
+  const showNav = !showingCatalog && !isMobile;
+  const border = { borderBottom: "1px solid var(--border-primary)" };
+  // The page's one h1. The logo is an image inside a button, so it can't
+  // carry the heading itself without changing what the button announces.
+  const heading = <h1 className="sr-only">Uwazi</h1>;
+
+  if (layout === "two-rows") {
+    const tabs: { id: string; label: string; icon: typeof BookOpen; active: boolean; onClick: () => void }[] = [
+      ...(signedOut
+        ? []
+        : [
+            {
+              id: "user",
+              label: t("System", "User settings"),
+              icon: User,
+              active: settingsGroup === "user",
+              onClick: () => openSettings(settingsEntryOf("user")),
+            },
+          ]),
+      ...(systemAllowed
+        ? [
+            {
+              id: "system",
+              label: t("System", "System settings"),
+              icon: Server,
+              active: settingsGroup === "system",
+              onClick: () => openSettings(settingsEntryOf("system")),
+            },
+          ]
+        : []),
+    ];
+    return (
+      // Masthead: the logo, the collection and the utilities on the first
+      // row, the navigation as a row of its own below. Both rows are inside
+      // the Navbar, so both take the theme's header colours.
+      <header data-component="Navbar" data-layout={layout} className="relative h-navbar bg-paper flex flex-col shrink-0" style={border}>
+        {heading}
+        <div data-part="masthead" className="flex-1 min-h-0 flex items-center justify-between gap-3 px-3">
+          <div data-part="start" className="flex items-center gap-4 min-w-0">
+            {logo}
+            {buildTag}
+            {appView === "entity" ? (
+              <span
+                title={focalTitle}
+                data-part="current-entity"
+                aria-current="page"
+                className="flex items-center min-w-0 px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md max-w-[16rem]"
               >
-                <Server size={16} className="text-ink-tertiary" />
-                {t("System", "System settings")}
-              </button>
+                <span className="truncate">{focalTitle}</span>
+              </span>
+            ) : (
+              collectionControl(true)
             )}
-            {!signedOut && (
-              <button
-                onClick={() => { setMobileMenuOpen(false); guard(() => logOut()); }}
-                data-part="log-out"
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-                style={{ borderTop: "1px solid var(--border-soft)" }}
-              >
-                <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
-                {t("System", "Log out")}
-              </button>
-            )}
-          </nav>
-        </MobileBottomSheet>
-      )}
+          </div>
+          {utilities}
+        </div>
+        <nav
+          data-part="primary-nav"
+          aria-label="Primary"
+          className="h-10 shrink-0 flex items-center gap-2 px-3 border-t border-border"
+        >
+          <button
+            type="button"
+            onClick={() => onNavigate?.("library")}
+            data-part="library"
+            // An entity is read inside the Library: the tab stays marked, and
+            // the page itself is the entity named on the row above.
+            aria-current={appView === "library" ? "page" : appView === "entity" ? "true" : undefined}
+            className={navTab(appView === "library" || appView === "entity")}
+          >
+            <BookOpen size={14} /> {t("System", "Library")}
+          </button>
+          {toolsControl}
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              data-part={`${tab.id}-settings`}
+              onClick={tab.onClick}
+              aria-current={tab.active ? "page" : undefined}
+              className={navTab(tab.active)}
+            >
+              <tab.icon size={14} /> {tab.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+    );
+  }
+
+  const nav = showNav && (
+    <nav data-part="primary-nav" aria-label="Primary" className="flex items-center gap-2 min-w-0">
+      {appView === "entity" ? locator : collectionControl(false)}
+      {toolsControl}
+    </nav>
+  );
+
+  if (layout === "centred") {
+    return (
+      // Three columns, the outer two equal: the logo sits on the bar's centre
+      // whatever the navigation and the utilities measure.
+      <header
+        data-component="Navbar"
+        data-layout={layout}
+        className="relative h-navbar bg-paper grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-3 shrink-0"
+        style={border}
+      >
+        {heading}
+        <div data-part="start" className="flex items-center gap-3 min-w-0">
+          {nav}
+          {buildTag}
+        </div>
+        {logo}
+        {utilities}
+      </header>
+    );
+  }
+
+  return (
+    // px-3 matches the content gutter below (Library toolbar, card grid,
+    // MainTabs, DocMeta), so the logo and right cluster share their edges.
+    <header
+      data-component="Navbar"
+      data-layout={layout}
+      className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
+      style={border}
+    >
+      {heading}
+      {/* Start: Logo + (mobile hamburger | desktop nav) */}
+      <div data-part="start" className="flex items-center gap-3 md:gap-4 min-w-0">
+        {menuButton}
+        {logo}
+        {buildTag}
+        {nav}
+      </div>
+      {utilities}
+      {mobileSheet}
     </header>
   );
 }

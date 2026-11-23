@@ -1,4 +1,5 @@
 import { isValidHex, normalizeHex } from "./color";
+import { HEADER_LAYOUT_KEY, headerLayoutFrom, headerLayoutOf, withHeaderLayout, type HeaderLayout } from "./headerLayout";
 import { recomputeSimpleFromAnchors, settingsColorsFromRail, themeVarsForExport, type StockPresetId } from "./derivation";
 import {
   appliedTheme,
@@ -21,7 +22,15 @@ import {
 /** The "theme instance file": a theme as JSON, grouped by what it colours,
  *  each line followed by a `#` note. The format is huridocs/uwazi's
  *  (`themeInstanceExport.ts`, `themeInstanceImport.ts`), so a file written by
- *  either is read by the other. */
+ *  either is read by the other.
+ *
+ *  One line is the prototype's own: `"__headerLayout"`, at the top level
+ *  beside `id`. Uwazi's import reads `id`, `editorMode`, `assetPreset`,
+ *  `light`, `dark` and `chrome` from the top level and nothing else
+ *  (`parseThemeInstanceImportJson`, PR 10039 at 5d4014dc), so it skips the
+ *  line; a key inside `light` or `dark` would be refused there as an unknown
+ *  colour. A file without the line, which is every file from Uwazi, loads
+ *  as Standard. */
 
 const GROUPS: { name: string; keys: readonly string[] }[] = [
   { name: "header", keys: CHROME_OVERRIDE_VAR_KEYS.slice(0, 5) },
@@ -75,9 +84,10 @@ export function buildThemeInstanceExport(vars: ThemeVars, assetPreset?: StockPre
   const id = stock(source[THEME_SIMPLE_BASE_KEY]) ?? stock(source[THEME_PRESET_KEY]) ?? (assetPreset === "legacy" ? "legacy" : "custom");
   const editorMode = source[THEME_EDITOR_MODE_KEY] === "advanced" ? "advanced" : "simple";
   const assetLine = assetPreset ? `,\n  "assetPreset": "${assetPreset}"` : "";
+  const layoutLine = `,\n  "${HEADER_LAYOUT_KEY}": "${headerLayoutOf(source)}"`;
   return `{
   "id": "${id}",
-  "editorMode": "${editorMode}"${assetLine},
+  "editorMode": "${editorMode}"${assetLine}${layoutLine},
   "light": {
 ${modeBlock(source, "light")}
   },
@@ -109,6 +119,8 @@ export interface ThemeInstanceImport {
   editorMode: "simple" | "advanced";
   presetId?: ThemePresetId;
   assetPreset?: StockPresetId;
+  /** Standard when the file does not say. */
+  headerLayout: HeaderLayout;
 }
 
 /** Uwazi's four refusals. */
@@ -187,6 +199,7 @@ export function parseThemeInstanceImportText(text: string): ThemeInstanceImport 
     editorMode: raw.editorMode === "advanced" ? "advanced" : "simple",
     presetId: id === "legacy" || id === "default" || id === "custom" ? id : undefined,
     assetPreset: stock(typeof raw.assetPreset === "string" ? raw.assetPreset : undefined),
+    headerLayout: headerLayoutFrom(raw[HEADER_LAYOUT_KEY]),
   };
 }
 
@@ -199,6 +212,10 @@ const SIMPLE_DERIVED = ["--color-theme-bg-muted", "--color-theme-text-secondary"
 /** An imported theme is always Custom. In simple mode the derived colours
  *  are recomputed from the file's anchors, as an edit would. */
 export function themeVarsFromInstanceImport(file: ThemeInstanceImport): ThemeVars {
+  return withHeaderLayout(importedColors(file), file.headerLayout);
+}
+
+function importedColors(file: ThemeInstanceImport): ThemeVars {
   const basePreset = simpleBaseFromFile(file.presetId, file.assetPreset);
   const base: ThemeVars = {
     [THEME_PRESET_KEY]: "custom",
