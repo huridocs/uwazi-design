@@ -32,11 +32,12 @@ const kindColor: Record<NotificationKind, string> = {
  * live-task pill → transient flash) and, on click, opens the notifications
  * drawer (the history log). The pill is the indicator; the drawer is the log.
  *
- * `dense`: a 2rem box, the Compact header layout's control size. `fit`: the
- * expanded rail takes only the room its row has left and never pushes past
- * it (the Centred layout, where the row ends at the logo).
+ * `dense`: a 2rem box, the control size of the header layouts that draw the
+ * collection's menu. `overlay`: the box keeps its collapsed size in the bar
+ * and the expanded rail opens over what is beside it, toward the bar's start,
+ * so the menu links next to it neither move nor fold.
  */
-export function Beacon({ rtl = false, dense = false, fit = false }: { rtl?: boolean; dense?: boolean; fit?: boolean }) {
+export function Beacon({ rtl = false, dense = false, overlay = false }: { rtl?: boolean; dense?: boolean; overlay?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [tasks, setTasks] = useAtom(tasksAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
@@ -210,17 +211,16 @@ export function Beacon({ rtl = false, dense = false, fit = false }: { rtl?: bool
         dir="ltr"
         data-component="Beacon"
         data-state={flash ? "flash" : isExpanded ? "expanded" : "collapsed"}
-        className={`relative ${fit ? "shrink min-w-7" : "shrink-0"}`}
+        className={`relative shrink-0 ${overlay ? (dense ? "w-8 h-8" : "w-7 h-7") : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
         <div
-          className={`relative rounded-md beacon-spring ${
-            open ? "bg-vellum" : "bg-warm"
-          } ${pop ? "animate-beacon-pop" : ""}`}
+          className={`rounded-md beacon-spring ${
+            overlay ? `absolute top-0 z-30 ${rtl ? "left-0" : "right-0"} ${isExpanded || flash ? "shadow-md" : ""}` : "relative"
+          } ${open ? "bg-vellum" : "bg-warm"} ${pop ? "animate-beacon-pop" : ""}`}
           style={{
             width,
-            maxWidth: fit ? "100%" : undefined,
             transitionProperty: "width, box-shadow",
             transitionDuration: "0.42s",
           }}

@@ -319,13 +319,19 @@ export function appliedTheme(vars: ThemeVars | undefined, mode: ThemeMode): Reso
 
 /* ── Chrome: the header bar and the Settings sidebar ────────────────────── */
 
-export const HEADER_CHROME_VAR_KEYS = [
+/** Uwazi's five header keys: the ones a theme file carries under `header`. */
+export const UWAZI_HEADER_CHROME_VAR_KEYS = [
   "--color-theme-chrome-app-bar",
   "--color-theme-chrome-app-bar-fg",
   "--color-theme-chrome-app-bar-hover",
   "--color-theme-chrome-app-bar-active",
   "--color-theme-chrome-app-bar-separator",
 ] as const;
+/** The active menu link's text and underline in the header layouts that draw
+ *  the collection's menu. Not in Uwazi; with nothing stored it is the header
+ *  text. */
+export const HEADER_ACCENT_KEY = "--color-theme-chrome-app-bar-accent" as const;
+export const HEADER_CHROME_VAR_KEYS = [...UWAZI_HEADER_CHROME_VAR_KEYS, HEADER_ACCENT_KEY] as const;
 export const SETTINGS_CHROME_VAR_KEYS = [
   "--color-theme-chrome-settings-rail-bg",
   "--color-theme-chrome-settings-nav-item-active-bg",
@@ -339,6 +345,7 @@ export const CHROME_VAR_LABELS: Record<ChromeOverrideVarKey, string> = {
   "--color-theme-chrome-app-bar-hover": "Header bar hover background",
   "--color-theme-chrome-app-bar-active": "Header bar active background",
   "--color-theme-chrome-app-bar-separator": "Header bar divider",
+  "--color-theme-chrome-app-bar-accent": "Header bar active link",
   "--color-theme-chrome-settings-rail-bg": "Settings sidebar background",
   "--color-theme-chrome-settings-nav-item-active-bg": "Settings navigation active background",
 };
@@ -348,6 +355,7 @@ export const CHROME_VAR_HINTS: Record<ChromeOverrideVarKey, string> = {
   "--color-theme-chrome-app-bar-hover": "Resting fill of language, library and settings",
   "--color-theme-chrome-app-bar-active": "Current link and header button hover",
   "--color-theme-chrome-app-bar-separator": "Line under the header",
+  "--color-theme-chrome-app-bar-accent": "Current page in the header menu: its text and underline",
   "--color-theme-chrome-settings-rail-bg": "Settings sidebar",
   "--color-theme-chrome-settings-nav-item-active-bg": "Active settings navigation item",
 };
@@ -379,6 +387,7 @@ export function resolvedChrome(vars: ThemeVars | undefined, mode: ThemeMode): Ch
     "--color-theme-chrome-app-bar-hover": resolved["--color-theme-bg-warm"],
     "--color-theme-chrome-app-bar-active": resolved["--color-theme-bg-muted"],
     "--color-theme-chrome-app-bar-separator": resolved["--color-theme-border-primary"],
+    "--color-theme-chrome-app-bar-accent": "",
     "--color-theme-chrome-settings-rail-bg": legacy ? resolved["--color-theme-bg-muted"] : surface,
     "--color-theme-chrome-settings-nav-item-active-bg": legacy
       ? resolved["--color-theme-bg-selected"]
@@ -388,6 +397,8 @@ export function resolvedChrome(vars: ThemeVars | undefined, mode: ThemeMode): Ch
   const bar = stored["--color-theme-chrome-app-bar"];
   if (bar && !stored["--color-theme-chrome-app-bar-fg"])
     merged["--color-theme-chrome-app-bar-fg"] = accessibleForeground(bar, text);
+  // The active link is the header's text until a theme gives it a colour.
+  if (!merged[HEADER_ACCENT_KEY]) merged[HEADER_ACCENT_KEY] = merged["--color-theme-chrome-app-bar-fg"];
   return merged;
 }
 

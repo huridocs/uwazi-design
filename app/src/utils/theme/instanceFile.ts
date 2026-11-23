@@ -4,6 +4,9 @@ import { recomputeSimpleFromAnchors, settingsColorsFromRail, themeVarsForExport,
 import {
   appliedTheme,
   CHROME_OVERRIDE_VAR_KEYS,
+  HEADER_ACCENT_KEY,
+  SETTINGS_CHROME_VAR_KEYS,
+  UWAZI_HEADER_CHROME_VAR_KEYS,
   fillChromeImportDefaults,
   resolvedChrome,
   SEMANTIC_VAR_KEYS,
@@ -12,6 +15,7 @@ import {
   THEME_SIMPLE_BASE_KEY,
   themeKeyHint,
   themeStorageKey,
+  THEME_MODES,
   type ChromeOverrideVarKey,
   type SemanticVarKey,
   type ThemeMode,
@@ -30,10 +34,12 @@ import {
  *  (`parseThemeInstanceImportJson`, PR 10039 at 5d4014dc), so it skips the
  *  line; a key inside `light` or `dark` would be refused there as an unknown
  *  colour. A file without the line, which is every file from Uwazi, loads
- *  as Standard. */
+ *  as Standard. `"__headerAccent"` (`{ "light": …, "dark": … }`) is the
+ *  second: the active menu link's colour, written only when the theme stores
+ *  one, at the top level for the same reason. */
 
 const GROUPS: { name: string; keys: readonly string[] }[] = [
-  { name: "header", keys: CHROME_OVERRIDE_VAR_KEYS.slice(0, 5) },
+  { name: "header", keys: UWAZI_HEADER_CHROME_VAR_KEYS },
   {
     name: "actions",
     keys: [
@@ -62,8 +68,10 @@ const GROUPS: { name: string; keys: readonly string[] }[] = [
       "--color-theme-text-muted",
     ],
   },
-  { name: "settings", keys: CHROME_OVERRIDE_VAR_KEYS.slice(5) },
+  { name: "settings", keys: SETTINGS_CHROME_VAR_KEYS },
 ];
+
+const HEADER_ACCENT_FILE_KEY = "__headerAccent";
 
 const modeBlock = (vars: ThemeVars, mode: ThemeMode): string => {
   const colors: Record<string, string> = { ...appliedTheme(vars, mode), ...resolvedChrome(vars, mode) };
@@ -84,7 +92,11 @@ export function buildThemeInstanceExport(vars: ThemeVars, assetPreset?: StockPre
   const id = stock(source[THEME_SIMPLE_BASE_KEY]) ?? stock(source[THEME_PRESET_KEY]) ?? (assetPreset === "legacy" ? "legacy" : "custom");
   const editorMode = source[THEME_EDITOR_MODE_KEY] === "advanced" ? "advanced" : "simple";
   const assetLine = assetPreset ? `,\n  "assetPreset": "${assetPreset}"` : "";
-  const layoutLine = `,\n  "${HEADER_LAYOUT_KEY}": "${headerLayoutOf(source)}"`;
+  const accents = THEME_MODES.map((mode) => [mode, source[themeStorageKey(mode, HEADER_ACCENT_KEY)]] as const).filter(([, hex]) => hex);
+  const accentLine = accents.length
+    ? `,\n  "${HEADER_ACCENT_FILE_KEY}": { ${accents.map(([mode, hex]) => `"${mode}": "${hex}"`).join(", ")} }`
+    : "";
+  const layoutLine = `,\n  "${HEADER_LAYOUT_KEY}": "${headerLayoutOf(source)}"${accentLine}`;
   return `{
   "id": "${id}",
   "editorMode": "${editorMode}"${assetLine}${layoutLine},
@@ -193,6 +205,12 @@ export function parseThemeInstanceImportText(text: string): ThemeInstanceImport 
     absorbMode(chrome?.dark, "dark", flat);
   if (error) return { error };
   if (Object.keys(flat).length === 0) return { error: "empty theme" };
+  const accent = raw[HEADER_ACCENT_FILE_KEY];
+  if (isRecord(accent))
+    for (const mode of THEME_MODES) {
+      const hex = typeof accent[mode] === "string" ? normalizeHex(accent[mode].trim()) : "";
+      if (isValidHex(hex)) flat[themeStorageKey(mode, HEADER_ACCENT_KEY)] = hex.toUpperCase();
+    }
   const id = raw.id;
   return {
     flat,

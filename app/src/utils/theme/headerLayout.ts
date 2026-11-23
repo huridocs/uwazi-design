@@ -1,6 +1,9 @@
 /** Settings › Theme and branding › Header layout: how the app bar arranges
- *  its items on desktops and tablets. Every layout holds the same items and
- *  controls; phones keep one bar whatever is chosen.
+ *  its items on desktops and tablets. Standard is the app bar with no menu
+ *  links. The other three draw the collection's menu (Settings › Menu) in the
+ *  bar, as a public site does, and their utilities are the language, the
+ *  Library, Settings and Log in or Log out. Phones keep one bar whatever is
+ *  chosen and list the menu in their menu sheet.
  *
  *  The choice is part of the theme and is stored with it, under
  *  `__headerLayout` beside `__preset` (`model.ts`). Standard is stored as no
@@ -9,20 +12,25 @@
 
 export const HEADER_LAYOUT_KEY = "__headerLayout";
 
-export const HEADER_LAYOUT_IDS = ["standard", "centred", "two-rows", "compact"] as const;
+export const HEADER_LAYOUT_IDS = ["standard", "menu-centred", "menu-end", "compact"] as const;
 export type HeaderLayout = (typeof HEADER_LAYOUT_IDS)[number];
 
 export const HEADER_LAYOUTS: { id: HeaderLayout; label: string; description: string }[] = [
-  { id: "standard", label: "Standard", description: "Logo and navigation at the start, utilities at the end." },
-  { id: "centred", label: "Centred", description: "Navigation at the start, the logo in the middle, utilities at the end." },
-  { id: "two-rows", label: "Two rows", description: "Logo, collection and utilities on top; navigation as a row below." },
-  { id: "compact", label: "Compact", description: "A shorter bar: a smaller logo, and utilities as icons." },
+  { id: "standard", label: "Standard", description: "The app bar: logo and navigation at the start, utilities at the end. No menu links." },
+  { id: "menu-centred", label: "Menu centred", description: "Logo at the start, the collection's menu centred in the bar, utilities at the end." },
+  { id: "menu-end", label: "Menu at end", description: "Logo at the start; the collection's menu, then the utilities, at the end." },
+  { id: "compact", label: "Compact", description: "A shorter bar: the collection's menu after the logo at a smaller size, utilities at the end." },
 ];
+
+/** The layouts that draw the collection's menu in the bar. */
+export const hasMenuLinks = (layout: HeaderLayout) => layout !== "standard";
 
 const isHeaderLayout = (value: unknown): value is HeaderLayout => HEADER_LAYOUT_IDS.some((id) => id === value);
 
-/** The layout a stored value names; anything else is Standard. */
-export const headerLayoutFrom = (value: unknown): HeaderLayout => (isHeaderLayout(value) ? value : "standard");
+/** The layout a stored value names; anything else is Standard, the removed
+ *  Two rows (`two-rows`) included. `centred` is what Menu centred replaced. */
+export const headerLayoutFrom = (value: unknown): HeaderLayout =>
+  isHeaderLayout(value) ? value : value === "centred" ? "menu-centred" : "standard";
 
 export const headerLayoutOf = (vars: Record<string, string | undefined> | undefined): HeaderLayout =>
   headerLayoutFrom(vars?.[HEADER_LAYOUT_KEY]);

@@ -53,23 +53,45 @@ export function HeaderLayoutCards({
   );
 }
 
-/* The drawing's marks, all in the header's text colour: the logo solid,
-   navigation at half strength, utilities fainter. */
+/* The drawing's marks, all in the header's text colour: the logo solid, the
+   app's navigation at half strength, menu links as short bars (the current
+   one solid over its rule), utilities fainter. */
+const fill = { backgroundColor: "currentColor" };
 const Logo = ({ small = false }: { small?: boolean }) => (
-  <span className={`${small ? "h-1 w-4" : "h-1.5 w-5"} shrink-0 rounded-[1px]`} style={{ backgroundColor: "currentColor" }} />
+  <span className={`${small ? "h-1 w-4" : "h-1.5 w-5"} shrink-0 rounded-[1px]`} style={fill} />
 );
 const Nav = ({ wide = false }: { wide?: boolean }) => (
-  <span className={`h-1.5 ${wide ? "w-4" : "w-3"} shrink-0 rounded-[1px] opacity-50`} style={{ backgroundColor: "currentColor" }} />
+  <span className={`h-1.5 ${wide ? "w-4" : "w-3"} shrink-0 rounded-[1px] opacity-50`} style={fill} />
 );
-const Utility = () => <span className="h-1.5 w-2.5 shrink-0 rounded-[1px] opacity-30" style={{ backgroundColor: "currentColor" }} />;
-const Icon = () => <span className="h-1.5 w-1.5 shrink-0 rounded-[1px] opacity-30" style={{ backgroundColor: "currentColor" }} />;
+const Utility = () => <span className="h-1.5 w-2.5 shrink-0 rounded-[1px] opacity-30" style={fill} />;
+const Icon = () => <span className="h-1.5 w-1.5 shrink-0 rounded-[1px] opacity-30" style={fill} />;
+/** The language dropdown: an outlined box. */
+const Language = () => <span className="h-2 w-3 shrink-0 rounded-[1px] border opacity-40" style={{ borderColor: "currentColor" }} />;
+/** The collection's menu: the first link is the current page. */
+const Links = ({ small = false }: { small?: boolean }) => (
+  <span className="flex items-center gap-[3px] shrink-0">
+    {[0, 1, 2, 3].map((i) => (
+      <span key={i} className="relative flex">
+        <span className={`h-0.5 ${small ? "w-1.5" : "w-2"} rounded-[1px] ${i === 0 ? "" : "opacity-55"}`} style={fill} />
+        {i === 0 && <span className="absolute inset-x-0 top-[3px] h-px" style={fill} />}
+      </span>
+    ))}
+  </span>
+);
+const MenuUtilities = () => (
+  <Group end>
+    <Language />
+    <Icon />
+    <Icon />
+  </Group>
+);
 const Group = ({ children, end = false }: { children: ReactNode; end?: boolean }) => (
   <span className={`flex items-center gap-1 min-w-0 ${end ? "justify-end" : ""}`}>{children}</span>
 );
 
 function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors }) {
   const bar: CSSProperties = { backgroundColor: colors.bar, color: colors.text, borderColor: colors.separator };
-  const row = "flex items-center justify-between gap-1 px-1.5";
+  const row = "relative flex items-center justify-between gap-1 px-1.5";
   return (
     <span aria-hidden className="flex flex-col h-14 overflow-hidden rounded-md border border-border-soft" style={{ backgroundColor: colors.page }}>
       {id === "standard" && (
@@ -86,53 +108,32 @@ function Thumb({ id, colors }: { id: HeaderLayout; colors: HeaderLayoutColors })
           </Group>
         </span>
       )}
-      {id === "centred" && (
-        <span className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 px-1.5 h-4 border-b" style={bar}>
-          <Group>
-            <Nav wide />
-            <Nav />
-          </Group>
+      {id === "menu-centred" && (
+        <span className={`${row} h-4 border-b`} style={bar}>
           <Logo />
-          <Group end>
-            <Utility />
-            <Utility />
-            <Icon />
-          </Group>
+          {/* On the bar's centre, whatever the two sides measure. */}
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Links />
+          </span>
+          <MenuUtilities />
         </span>
       )}
-      {id === "two-rows" && (
-        <span className="flex flex-col border-b" style={bar}>
-          <span className={`${row} h-4`}>
-            <Group>
-              <Logo />
-              <Nav wide />
-            </Group>
-            <Group end>
-              <Utility />
-              <Utility />
-              <Icon />
-            </Group>
-          </span>
-          <span className="flex items-center gap-1 px-1.5 h-3 border-t" style={{ borderColor: colors.separator }}>
-            <Nav />
-            <Nav />
-            <Nav wide />
+      {id === "menu-end" && (
+        <span className={`${row} h-4 border-b`} style={bar}>
+          <Logo />
+          <span className="flex items-center gap-1.5">
+            <Links />
+            <MenuUtilities />
           </span>
         </span>
       )}
       {id === "compact" && (
         <span className={`${row} h-2.5 border-b`} style={bar}>
-          <Group>
+          <span className="flex items-center gap-1.5">
             <Logo small />
-            <Nav wide />
-            <Nav />
-          </Group>
-          <Group end>
-            <Icon />
-            <Icon />
-            <Icon />
-            <Icon />
-          </Group>
+            <Links small />
+          </span>
+          <MenuUtilities />
         </span>
       )}
     </span>

@@ -45,6 +45,7 @@ import {
   CHROME_VAR_HINTS,
   CHROME_VAR_LABELS,
   getPresetId,
+  HEADER_ACCENT_KEY,
   HEADER_CHROME_VAR_KEYS,
   NAMED_THEMES,
   PRESET_DEFINITIONS,
@@ -282,7 +283,7 @@ export function ThemePage() {
         };
       };
       return [
-        { title: "Header bar", rows: HEADER_CHROME_VAR_KEYS.slice(0, 3).map((k) => headerRow(k, true)) },
+        { title: "Header bar", rows: [...HEADER_CHROME_VAR_KEYS.slice(0, 3), HEADER_ACCENT_KEY].map((k) => headerRow(k, true)) },
         { title: "Actions", rows: SIMPLE_SEMANTIC_ANCHOR_KEYS.filter((k) => k.startsWith("--color-theme-accent")).map(anchorRow) },
         { title: "Page", rows: SIMPLE_SEMANTIC_ANCHOR_KEYS.filter((k) => !k.startsWith("--color-theme-accent")).map(anchorRow) },
       ];
@@ -361,6 +362,7 @@ export function ThemePage() {
       { id: "header-text", label: "Header bar text", result: checkContrast(chrome[BAR_KEY], fg) },
       { id: "header-buttons", label: "Header bar hover background", result: checkContrast(chrome["--color-theme-chrome-app-bar-hover"], fg) },
       { id: "header-active", label: "Header bar active background", result: checkContrast(chrome["--color-theme-chrome-app-bar-active"], fg) },
+      { id: "header-accent", label: "Header bar active link", result: checkContrast(chrome[BAR_KEY], chrome[HEADER_ACCENT_KEY]) },
       { id: "surface-primary", label: "Surface text", result: checkContrast(surface, resolved["--color-theme-text-primary"]) },
       { id: "surface-secondary", label: "Secondary text", result: checkContrast(surface, resolved["--color-theme-text-secondary"]) },
       { id: "accent-primary", label: "Primary action", result: checkContrast(accent, accessibleForeground(accent, surface)) },
@@ -443,7 +445,7 @@ export function ThemePage() {
 
       <SettingsSection
         title="Header layout"
-        description="How the header arranges its items on desktops and tablets. Every layout holds the same items. Phones keep their own bar for every layout."
+        description="How the header arranges its items on desktops and tablets. Standard is the app bar. The other three draw the collection's menu (Settings › Menu) in the bar, with the language, the Library and Settings as utilities. Phones keep their own bar and list the menu in their menu sheet."
       >
         <HeaderLayoutCards
           selected={headerLayoutOf(vars)}

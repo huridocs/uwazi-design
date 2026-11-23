@@ -1,5 +1,5 @@
 import { liveTranslateAtom } from "../../atoms/liveTranslate";
-import { Fragment, useState, useRef, useEffect, useLayoutEffect } from "react";
+import { Fragment, useCallback, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
@@ -20,6 +20,8 @@ import {
   LogOut,
   Database,
   Columns2,
+  LayoutGrid,
+  Power,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
@@ -32,7 +34,6 @@ import {
   settingsToolsItems,
   settingsAccessAtom,
   settingsEntryOf,
-  settingsGroupOf,
   settingsDocumentation,
   settingsItemLabelAtom,
 } from "../../atoms/settings";
@@ -54,7 +55,10 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
 import { Hint } from "../shared/Hint";
 import { headerLayoutAtom } from "../../atoms/branding";
-import type { HeaderLayout } from "../../utils/theme/headerLayout";
+import { hasMenuLinks, type HeaderLayout } from "../../utils/theme/headerLayout";
+import { NavMenu, NavMenuSheetSection } from "./NavMenuLinks";
+import { sitePagesAtom, type SitePage } from "../../atoms/sitePages";
+import { PageViewModal } from "../settings/pages/site/PageViewModal";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -68,12 +72,6 @@ interface NavbarProps {
  *  /playground/. Vite bakes the base URL in at build time, so it tells them apart. */
 const IS_PLAYGROUND = import.meta.env.BASE_URL.includes("/playground/");
 
-
-/** A navigation entry: warm at rest, vellum when it is where the reader is. */
-const navTab = (active: boolean) =>
-  `flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors shrink-0 ${
-    active ? "text-ink bg-vellum" : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-  }`;
 
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -133,14 +131,13 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const chosenLayout = useAtomValue(headerLayoutAtom);
   const layout: HeaderLayout = isMobile || showingCatalog ? "standard" : chosenLayout;
   const compact = layout === "compact";
-  const twoRows = layout === "two-rows";
-  /** Compact: every control is a 2rem box in the 2.5rem bar. */
-  const ctlH = compact ? "h-8" : "";
-  // Utilities drop their labels in Compact, and in Centred on a tablet, where
-  // the two side columns are too narrow for words on both sides of the logo.
-  const iconOnly = compact || (layout === "centred" && breakpoint === "tablet");
+  /** The bar draws the collection's menu (Menu centred, Menu at end, Compact):
+   *  its controls are 2rem boxes and its utilities are icons with a Hint. */
+  const menuBar = hasMenuLinks(layout);
+  const ctlH = menuBar ? "h-8" : "";
+  const iconOnly = menuBar;
   /** An icon-only control: the bar's control height, squared. */
-  const iconBox = compact ? "justify-center w-8 h-8" : "justify-center w-7 h-7";
+  const iconBox = "justify-center w-8 h-8";
   // The root carries the layout the bar draws: `--spacing-navbar` follows it
   // (`index.css`), so `h-navbar` and anything else measured from the bar agree.
   useLayoutEffect(() => {
@@ -182,11 +179,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     .filter((i) => settingsAllowed(i.id))
     .map((i) => ({ ...i, label: itemLabel(i) }));
   const systemAllowed = settingsAllowed(settingsEntryOf("system"));
-  /** The settings group the open page belongs to, when Settings is open. */
-  const settingsGroup = appView === "settings" ? settingsGroupOf(settingsSection).id : undefined;
-  // In Two rows the Tools tab is also marked on a Tools page, as its sibling
-  // tabs are; the other layouts keep the dropdown's own mark.
-  const toolsActive = toolsOpen || appView === "import-csv" || (twoRows && settingsGroup === "tools");
+  const toolsActive = toolsOpen || appView === "import-csv";
 
   /** Open a settings destination. The rail scopes itself to the group the
    *  section belongs to, so this is also what picks User vs System vs Tools.
@@ -219,8 +212,24 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     });
   };
 
-  /* ── The bar's pieces. Every layout draws the same ones; only their
-        arrangement and density change (Settings › Theme and branding). ──── */
+  // The collection's menu (Settings › Menu), in the layouts that draw it. A
+  // page link opens the page as visitors see it, over the view it was opened
+  // from, and is the current link while it is open.
+  const [viewedPageId, setViewedPageId] = useState<string | null>(null);
+  const viewedPage = useAtomValue(sitePagesAtom).find((pg) => pg.id === viewedPageId) ?? null;
+  const openLibrary = useCallback(() => onNavigate?.("library"), [onNavigate]);
+  const openPage = useCallback((pg: SitePage) => setViewedPageId(pg.id), []);
+  const menuHandlers = {
+    libraryActive: appView === "library" || appView === "entity",
+    activePageId: viewedPage?.id ?? null,
+    onLibrary: openLibrary,
+    onPage: openPage,
+  };
+  const pageView = viewedPage && <PageViewModal page={viewedPage} onClose={() => setViewedPageId(null)} />;
+
+  /* ── The bar's pieces. Standard arranges the app's own navigation; the
+        menu layouts draw the collection's menu and fold the app's
+        navigation into icon utilities (Settings › Theme and branding). ──── */
 
   const menuButton = isMobile && !showingCatalog && (
     <button
@@ -265,7 +274,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         type="button"
         onClick={() => onNavigate?.("library")}
         data-part="library"
-        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink shrink-0 ${ctlH}`}
+        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink shrink-0`}
       >
         <BookOpen size={14} /> {t("System", "Library")}
       </button>
@@ -274,7 +283,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         title={focalTitle}
         data-part="current-entity"
         aria-current="page"
-        className={`flex items-center min-w-0 px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md max-w-[16rem] ${ctlH}`}
+        className={`flex items-center min-w-0 px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md max-w-[16rem]`}
       >
         <span className="truncate">{focalTitle}</span>
       </span>
@@ -282,25 +291,22 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   );
 
   // Library + its collection picker. The dataset belongs to the destination,
-  // not the view, so it is not in the Library toolbar. `standalone` is the
-  // picker without the Library button (Two rows: Library is a tab below).
-  const collectionControl = (standalone: boolean) => (
+  // not the view, so it is not in the Library toolbar.
+  const collectionControl = (
     <div ref={collectionRef} data-part="collection" className="relative flex items-center">
-      {!standalone && (
-        <button
-          type="button"
-          onClick={() => onNavigate?.("library")}
-          data-part="library"
-          aria-current={appView === "library" ? "page" : undefined}
-          className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${ctlH} ${
-            appView === "library"
-              ? "text-ink bg-vellum"
-              : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-          }`}
-        >
-          <BookOpen size={14} /> {t("System", "Library")}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => onNavigate?.("library")}
+        data-part="library"
+        aria-current={appView === "library" ? "page" : undefined}
+        className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${
+          appView === "library"
+            ? "text-ink bg-vellum"
+            : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+        }`}
+      >
+        <BookOpen size={14} /> {t("System", "Library")}
+      </button>
       <button
         type="button"
         data-part="collection-trigger"
@@ -313,16 +319,13 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         aria-expanded={collectionOpen}
         aria-label={`Collection: ${collection.label}`}
         title={`Collection: ${collection.label}`}
-        className={`flex items-center py-1 text-tab font-medium transition-colors ${ctlH} ${
-          standalone ? "gap-1.5 ps-2.5 pe-2 rounded-md" : "gap-1 ps-1.5 pe-2 rounded-e-md"
-        } ${
-          collectionOpen || (!standalone && appView === "library")
+        className={`flex items-center gap-1 ps-1.5 pe-2 py-1 rounded-e-md text-tab font-medium transition-colors ${
+          collectionOpen || appView === "library"
             ? "text-ink bg-vellum"
             : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
         }`}
-        style={standalone ? undefined : { borderInlineStart: "1px solid var(--border-primary)" }}
+        style={{ borderInlineStart: "1px solid var(--border-primary)" }}
       >
-        {standalone && <Database size={14} aria-hidden className="shrink-0" />}
         <span className="text-ink-tertiary truncate max-w-[12rem]">{collection.label}</span>
         <ChevronDown
           size={13}
@@ -334,7 +337,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           role="listbox"
           data-part="collection-menu"
           aria-label="Collection"
-          className={`absolute top-full mt-1.5 ${standalone ? "start-0" : "end-0"} w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1`}
+          className={`absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1`}
         >
           <SectionLabel as="p" className="px-3 pt-1 pb-1">
             Collection
@@ -375,30 +378,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     </div>
   );
 
-  const toolsControl = (
-    <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
-      <button
-        type="button"
-        onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
-        data-part="tools-trigger"
-        aria-expanded={toolsOpen}
-        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${ctlH} ${
-          toolsActive
-            ? "text-ink bg-vellum"
-            : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-        }`}
-      >
-        <Wrench size={14} /> {t("System", "Tools")}
-      </button>
-      {toolsOpen && (
-        <div
-          data-part="tools-menu"
-          dir="ltr"
-          className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
-          style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
-        >
-          <div className="py-1">
-            {toolsItems.map((item, i) => {
+  /** The Tools entries as menu rows: the Tools dropdown, and a section of the
+   *  Settings menu in the layouts whose bar has no Tools button. */
+  const toolsRows = (done: () => void) =>
+    toolsItems.map((item, i) => {
               const Icon = item.icon;
               // Same subsections as the rail behind it — "ML tools" reads
               // as its own shelf in both places.
@@ -424,7 +407,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               );
 
               const sub = startsSub && (
-                <SectionLabel className="px-3 pt-2 pb-1 border-t border-border-soft">
+                <SectionLabel as="p" className="px-3 pt-2 pb-1 border-t border-border-soft">
                   {item.subgroup}
                 </SectionLabel>
               );
@@ -438,7 +421,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cls}
-                      onClick={() => setToolsOpen(false)}
+                      onClick={() => done()}
                     >
                       {inner}
                     </a>
@@ -457,7 +440,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       // settings pages.
                       if (item.navigateTo) onNavigate?.(item.navigateTo);
                       else openSettings(item.id);
-                      setToolsOpen(false);
+                      done();
                     }}
                     className={cls}
                   >
@@ -465,26 +448,83 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   </button>
                 </Fragment>
               );
-            })}
+    });
+
+  const toolsControl = (
+    <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
+      <button
+        type="button"
+        onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
+        data-part="tools-trigger"
+        aria-expanded={toolsOpen}
+        className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
+          toolsActive
+            ? "text-ink bg-vellum"
+            : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+        }`}
+      >
+        <Wrench size={14} /> {t("System", "Tools")}
+      </button>
+      {toolsOpen && (
+        <div
+          data-part="tools-menu"
+          dir="ltr"
+          className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+          style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
+        >
+          <div className="py-1">
+            {toolsRows(() => setToolsOpen(false))}
           </div>
         </div>
       )}
     </div>
   );
 
-  // Notifications + Notebook + Assistant + Settings + Theme toggle.
+  // Notifications + Notebook + Assistant + Settings + Theme toggle. In the
+  // menu layouts, after the first three: the language as a bordered dropdown,
+  // the Library as a grid icon, Settings as a gear and Log in / Log out as a
+  // power icon, the order public Uwazi sites use.
+  const appTools = !menuBar || !signedOut;
+  const utilityIcon = (active: boolean) =>
+    `flex items-center ${iconBox} rounded-md transition-colors ${
+      active ? "text-ink bg-vellum" : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+    }`;
+  const languageAndLibrary = menuBar && (
+    <>
+      <Select
+        value={uiLang}
+        onChange={(v) => setUiLang(v as UiLanguage)}
+        ariaLabel={t("System", "Interface language")}
+        align="end"
+        options={UI_LANGUAGES}
+        triggerIcon={<Globe size={14} aria-hidden />}
+        steady
+      />
+      <Hint text={t("System", "Library")} describe={false} placement="below">
+        {(hint) => (
+          <button
+            {...hint}
+            type="button"
+            onClick={() => onNavigate?.("library")}
+            data-part="library"
+            aria-label={t("System", "Library")}
+            aria-current={appView === "library" ? "page" : undefined}
+            className={utilityIcon(appView === "library")}
+          >
+            <LayoutGrid size={14} aria-hidden />
+          </button>
+        )}
+      </Hint>
+    </>
+  );
   const utilities = (
-    // Centred: the group ends at its column, so the logo keeps the centre.
-    <div
-      data-part="end"
-      className={`flex items-center gap-2 justify-self-end ${
-        layout === "centred" ? "min-w-0 max-w-full [&>:not([data-component=Beacon])]:shrink-0" : "shrink-0"
-      }`}
-    >
-      {!showingCatalog && <Beacon rtl={rtl} dense={compact} fit={layout === "centred"} />}
+    <div data-part="end" className="flex items-center gap-2 shrink-0">
+      {/* The menu layouts keep the app's own tools for people who are signed
+          in: a visitor gets the menu, the language, the Library and Log in. */}
+      {!showingCatalog && appTools && <Beacon rtl={rtl} dense={menuBar} overlay={menuBar} />}
       {/* Full width puts the Notebook on the Library's rail, with its count. */}
-      {!showingCatalog && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile || iconOnly} dense={compact} hinted={iconOnly} />}
-      {!showingCatalog && (
+      {!showingCatalog && appTools && !libraryFullWidth && <NotebookButton rtl={rtl} compact={isMobile || iconOnly} dense={menuBar} hinted={iconOnly} />}
+      {!showingCatalog && appTools && (
         <Hint text={`${t("System", "Ask Bert")} (${shortcutLabel})`} describe={false} placement="below" muted={!iconOnly}>
           {(hint) => (
             <button
@@ -504,6 +544,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           )}
         </Hint>
       )}
+      {languageAndLibrary}
       {showingCatalog ? (
         <button
           type="button"
@@ -526,7 +567,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 iconOnly ? iconBox : "gap-1.5 px-3 py-1"
               }`}
             >
-              <LogIn size={14} className="rtl:-scale-x-100" aria-hidden /> {!iconOnly && t("System", "Log in")}
+              {iconOnly ? <Power size={14} aria-hidden /> : <LogIn size={14} className="rtl:-scale-x-100" aria-hidden />} {!iconOnly && t("System", "Log in")}
             </button>
           )}
         </Hint>
@@ -568,6 +609,22 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   trailing slot is reserved for state or a hint: the RTL pill,
                   ExternalLink for "leaves the app", a chevron for "goes deeper". */}
               <div className="py-1">
+                {/* The menu layouts have no collection picker in the bar. */}
+                {menuBar && (
+                  <div data-part="collection" className="flex items-center justify-between gap-2 px-3 py-2">
+                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
+                      <Database size={14} className="text-ink-tertiary" />
+                      Collection
+                    </span>
+                    <Select
+                      value={dataSource}
+                      onChange={(v) => { setSettingsOpen(false); switchCollection(v as DataSource); }}
+                      ariaLabel="Collection"
+                      align="end"
+                      options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label, hint: c.detail }))}
+                    />
+                  </div>
+                )}
                 <button
                   onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
                   className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
@@ -589,8 +646,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 {/* Interface language: the chrome's language, not the
                     document's reading language or System › Languages. It sits
                     with the RTL toggle because both are switches, not
-                    destinations; choosing writes `uiLanguageAtom` and closes the menu. */}
-                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    destinations; choosing writes `uiLanguageAtom` and closes the menu.
+                    The menu layouts carry it in the bar instead. */}
+                {!menuBar && <div className="flex items-center justify-between gap-2 px-3 py-2">
                   <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
                     <Globe size={14} className="text-ink-tertiary" />
                     {t("System", "Interface language")}
@@ -603,7 +661,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                     options={UI_LANGUAGES}
                     steady
                   />
-                </div>
+                </div>}
                 {/* Live translate (Uwazi: the language menu's footer, admins
                     only). The row says whether it is on; the strip under the
                     navbar is where it ends. */}
@@ -658,7 +716,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 </div>
                 {/* User settings and System settings each open their own
                     group's entry section, so the rail shows only that group. */}
-                {!twoRows && <button
+                <button
                   onClick={() => {
                     openSettings(settingsEntryOf("user"));
                     setSettingsOpen(false);
@@ -667,8 +725,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 >
                   <User size={14} className="text-ink-tertiary" />
                   {t("System", "User settings")}
-                </button>}
-                {!twoRows && systemAllowed && <button
+                </button>
+                {systemAllowed && <button
                   onClick={() => {
                     openSettings(settingsEntryOf("system"));
                     setSettingsOpen(false);
@@ -678,8 +736,16 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   <Server size={14} className="text-ink-tertiary" />
                   {t("System", "System settings")}
                 </button>}
+                {/* The menu layouts have no Tools button in the bar. */}
+                {menuBar && toolsItems.length > 0 && (
+                  <div data-part="tools" style={{ borderTop: "1px solid var(--border-soft)" }}>
+                    <SectionLabel as="p" className="px-3 pt-2 pb-1">{t("System", "Tools")}</SectionLabel>
+                    {toolsRows(() => setSettingsOpen(false))}
+                  </div>
+                )}
                 <DocumentationLink onDone={() => setSettingsOpen(false)} />
-                <button
+                {/* Log out is the power icon in the menu layouts' bar. */}
+                {!menuBar && <button
                   onClick={() => {
                     setSettingsOpen(false);
                     guard(() => logOut());
@@ -690,13 +756,29 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 >
                   <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
                   {t("System", "Log out")}
-                </button>
+                </button>}
               </div>
             </div>
           )}
         </div>
       ) : null}
-      {!isMobile && <ThemeToggle dense={compact} />}
+      {menuBar && !signedOut && (
+        <Hint text={t("System", "Log out")} describe={false} placement="below">
+          {(hint) => (
+            <button
+              {...hint}
+              type="button"
+              onClick={() => guard(() => logOut())}
+              data-part="log-out"
+              aria-label={t("System", "Log out")}
+              className={utilityIcon(false)}
+            >
+              <Power size={14} aria-hidden />
+            </button>
+          )}
+        </Hint>
+      )}
+      {!isMobile && <ThemeToggle dense={menuBar} />}
     </div>
   );
 
@@ -740,6 +822,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             steady
           />
         </div>
+
+        {/* The collection's menu, when the header layout draws one. */}
+        {hasMenuLinks(chosenLayout) && <NavMenuSheetSection {...menuHandlers} onDone={() => setMobileMenuOpen(false)} />}
 
         {/* Tools section */}
         {toolsItems.length > 0 && (
@@ -873,117 +958,39 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // carry the heading itself without changing what the button announces.
   const heading = <h1 className="sr-only">Uwazi</h1>;
 
-  if (layout === "two-rows") {
-    const tabs: { id: string; label: string; icon: typeof BookOpen; active: boolean; onClick: () => void }[] = [
-      ...(signedOut
-        ? []
-        : [
-            {
-              id: "user",
-              label: t("System", "User settings"),
-              icon: User,
-              active: settingsGroup === "user",
-              onClick: () => openSettings(settingsEntryOf("user")),
-            },
-          ]),
-      ...(systemAllowed
-        ? [
-            {
-              id: "system",
-              label: t("System", "System settings"),
-              icon: Server,
-              active: settingsGroup === "system",
-              onClick: () => openSettings(settingsEntryOf("system")),
-            },
-          ]
-        : []),
-    ];
+  if (menuBar) {
     return (
-      // Masthead: the logo, the collection and the utilities on the first
-      // row, the navigation as a row of its own below. Both rows are inside
-      // the Navbar, so both take the theme's header colours.
-      <header data-component="Navbar" data-layout={layout} className="relative h-navbar bg-paper flex flex-col shrink-0" style={border}>
+      // One row, as a public site's header: the logo, the collection's menu,
+      // the utilities. The menu takes the room between the two and folds what
+      // does not fit; where it sits in that room is the layout.
+      <header
+        data-component="Navbar"
+        data-layout={layout}
+        className="relative h-navbar bg-paper flex items-center gap-3 px-3 shrink-0"
+        style={border}
+      >
         {heading}
-        <div data-part="masthead" className="flex-1 min-h-0 flex items-center justify-between gap-3 px-3">
-          <div data-part="start" className="flex items-center gap-4 min-w-0">
-            {logo}
-            {buildTag}
-            {appView === "entity" ? (
-              <span
-                title={focalTitle}
-                data-part="current-entity"
-                aria-current="page"
-                className="flex items-center min-w-0 px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md max-w-[16rem]"
-              >
-                <span className="truncate">{focalTitle}</span>
-              </span>
-            ) : (
-              collectionControl(true)
-            )}
-          </div>
-          {utilities}
+        <div data-part="start" className="flex items-center gap-3 shrink-0">
+          {logo}
+          {buildTag}
         </div>
-        <nav
-          data-part="primary-nav"
-          aria-label="Primary"
-          className="h-10 shrink-0 flex items-center gap-2 px-3 border-t border-border"
-        >
-          <button
-            type="button"
-            onClick={() => onNavigate?.("library")}
-            data-part="library"
-            // An entity is read inside the Library: the tab stays marked, and
-            // the page itself is the entity named on the row above.
-            aria-current={appView === "library" ? "page" : appView === "entity" ? "true" : undefined}
-            className={navTab(appView === "library" || appView === "entity")}
-          >
-            <BookOpen size={14} /> {t("System", "Library")}
-          </button>
-          {toolsControl}
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              data-part={`${tab.id}-settings`}
-              onClick={tab.onClick}
-              aria-current={tab.active ? "page" : undefined}
-              className={navTab(tab.active)}
-            >
-              <tab.icon size={14} /> {tab.label}
-            </button>
-          ))}
-        </nav>
+        <NavMenu
+          {...menuHandlers}
+          align={layout === "menu-centred" ? "center" : layout === "menu-end" ? "end" : "start"}
+          small={compact}
+        />
+        {utilities}
+        {pageView}
       </header>
     );
   }
 
   const nav = showNav && (
     <nav data-part="primary-nav" aria-label="Primary" className="flex items-center gap-2 min-w-0">
-      {appView === "entity" ? locator : collectionControl(false)}
+      {appView === "entity" ? locator : collectionControl}
       {toolsControl}
     </nav>
   );
-
-  if (layout === "centred") {
-    return (
-      // Three columns, the outer two equal: the logo sits on the bar's centre
-      // whatever the navigation and the utilities measure.
-      <header
-        data-component="Navbar"
-        data-layout={layout}
-        className="relative h-navbar bg-paper grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-3 shrink-0"
-        style={border}
-      >
-        {heading}
-        <div data-part="start" className="flex items-center gap-3 min-w-0">
-          {nav}
-          {buildTag}
-        </div>
-        {logo}
-        {utilities}
-      </header>
-    );
-  }
 
   return (
     // px-3 matches the content gutter below (Library toolbar, card grid,
@@ -1004,6 +1011,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       </div>
       {utilities}
       {mobileSheet}
+      {pageView}
     </header>
   );
 }

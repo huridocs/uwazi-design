@@ -2,6 +2,7 @@ import { accessibleForeground, checkContrast, fillForWhiteText, INK, inkFor, mix
 import {
   appliedTheme,
   getPresetId,
+  HEADER_ACCENT_KEY,
   HEADER_CHROME_VAR_KEYS,
   PRESET_DEFINITIONS,
   resolvedChrome,
@@ -157,6 +158,7 @@ function modeCss(vars: ThemeVars, mode: ThemeMode): string[] {
         "--border-soft": separator,
         ...chromeText(bar, fg),
         "--logo-filter": logoFilter(fg),
+        "--header-accent": chrome[HEADER_ACCENT_KEY],
         ...RESCOPE,
       }),
     );

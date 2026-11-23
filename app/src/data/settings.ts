@@ -314,16 +314,18 @@ export interface SettingsMenuLink {
 export const seedMenuLinks: SettingsMenuLink[] = [
   { id: "m1", title: "Library", url: "/library", type: "link", sublinks: [] },
   { id: "m2", title: "About", url: "/page/about", type: "link", sublinks: [] },
+  { id: "m4", title: "Methodology", url: "/page/methodology", type: "link", sublinks: [] },
   {
     id: "m3",
     title: "Resources",
     url: "",
     type: "group",
     sublinks: [
-      { id: "m4", title: "Methodology", url: "/page/methodology" },
-      { id: "m5", title: "Contact", url: "/page/contact" },
+      { id: "m6", title: "Partners", url: "/page/partners" },
+      { id: "m7", title: "Documentation", url: "https://uwazi.io/page/9852italrtk/support" },
     ],
   },
+  { id: "m5", title: "Contact", url: "/page/contact", type: "link", sublinks: [] },
 ];
 
 

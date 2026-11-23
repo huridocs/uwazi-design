@@ -870,20 +870,49 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   (`faviconSrcAtom`). Choosing a stock preset resets the logo, as in Uwazi.
 - `ImagePickerModal` takes `builtins` and a rule with a policy: strict (favicon) lists only
   what fits and refuses the rest; soft (logo) lists everything and asks with "Use image".
-- Header layout (not in Uwazi) is part of the theme: `vars.__headerLayout` is `centred`,
-  `two-rows` or `compact`, and no key is Standard (`utils/theme/headerLayout.ts`,
+- Header layout (not in Uwazi) is part of the theme: `vars.__headerLayout` is `menu-centred`,
+  `menu-end` or `compact`, and no key is Standard (`utils/theme/headerLayout.ts`,
   `headerLayoutAtom`). Preset changes keep it. The theme file carries it as a top-level
-  `"__headerLayout"` line, which Uwazi's import skips; a file without it loads as Standard.
-- `Navbar` builds its pieces once (logo, locator or collection picker, Tools, utilities) and
-  arranges them per layout; DOM order is the visual order. Centred is a `1fr auto 1fr` grid, the
-  Beacon expands only into the room its column has (`fit`), and on a tablet the utilities are
-  icons. Two rows puts Library, Tools, User settings and System settings on a second row and
-  takes the two settings entries out of the Settings menu. Compact is a 2.5rem bar with 2rem
-  controls and icon-only utilities with a `Hint`. Phones and the catalog always draw Standard.
+  `"__headerLayout"` line, which Uwazi's import skips; a file without it loads as Standard, and
+  so does the removed `two-rows`. A stored `centred` reads as `menu-centred`.
+- Standard is the app bar: logo, Library with the collection picker (or the locator), Tools,
+  then the utilities with their labels. It draws no menu links.
+- Menu centred, Menu at end and Compact (`hasMenuLinks`) draw the bar partners run as a public
+  site: logo, the collection's menu (Settings › Menu, `menuSettings`), utilities. One row; Compact
+  is 2.5rem with the menu after the logo at `text-xs`. In these three:
+  - `NavMenu` (`layout/NavMenuLinks.tsx`) takes the room between the logo and the utilities
+    and folds what does not fit into "More" at the end of the row. The measure is that room
+    (a `ResizeObserver` on the nav and on a hidden copy of every item), never the viewport.
+  - Menu centred centres the links on the bar, not on their room: the narrower side is padded
+    to match the wider one and the links fold to that window. Where that would keep fewer than
+    half of them (tablets), they keep every link the room holds and sit off the centre.
+  - A `/library` link opens the Library; `/page/<id, slug or alias>` opens `PageViewModal` from
+    the Navbar; an absolute URL opens a new tab; anything else is drawn and goes nowhere. The
+    current link takes `--header-accent` on its text and a 2px rule, with `aria-current="page"`:
+    the open page, or the plain Library link while the Library or an entity is open. A Library
+    link with a query is never current.
+  - A group and "More" are a button with a list under it: Enter, Space and ArrowDown open
+    (ArrowDown lands on the first link), the arrows move, Escape closes and returns focus.
+  - Utilities are 2rem icon buttons with a `Hint`: Beacon, Notebook and Ask Bert for signed-in
+    users, then the language as a bordered `Select` with a globe, the Library (grid), Settings
+    (gear), Log out or Log in (power) and the theme toggle. A visitor on a public collection
+    gets the menu, the language, the Library, Log in and the theme toggle.
+  - The Settings menu drops Interface language and Log out (both are in the bar) and gains the
+    Collection picker and the Tools entries, which have no button in the bar.
+  - The Beacon is `overlay`: its box keeps its collapsed size and the expanded rail opens over
+    the links beside it, so they neither move nor fold.
+- Phones and the catalog always draw Standard; under a menu layout the phone menu sheet lists
+  the menu as its own section (`NavMenuSheetSection`), a group as a label over its links.
+- `--header-accent` is "Header bar active link" in Theme and branding's Header bar group
+  (`HEADER_ACCENT_KEY`, not in Uwazi). Unset, it is the header's text (`index.css` declares it
+  on the Navbar). The theme file carries it as a top-level `"__headerAccent"` object, written
+  only when set: inside `light` or `dark` Uwazi would refuse it as an unknown colour.
 - The Navbar marks the root `data-header-layout` and `index.css` sets `--spacing-navbar` from
-  it (3.25rem, 2.5rem Compact, 5.75rem Two rows). Anything measured from the bar reads that
-  variable. `scripts/check-header-layouts.mjs <dir>` checks all four (overlap, centring, 32px
-  controls, height, tab order, axe).
+  it (3.25rem, 2.5rem Compact). Anything measured from the bar reads that variable.
+  `scripts/check-header-layouts.mjs <dir>` checks all four in light and dark at 1360 and 900,
+  with a full-colour bar, signed in and as a visitor (overlap, centring, 32px controls, height,
+  tab order, the fold, a group by keyboard, RTL, the phone sheet, the file round trip, axe). A
+  reload returns to CEJIL, whose menu has six links and no group; the Sample's seed has one.
 
 ### Login and account
 - Behaviour follows Research's inventory of Uwazi (`dev/results/uwazi-auth-flows.md` in the main

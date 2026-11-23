@@ -13,6 +13,7 @@ import {
 import {
   appliedTheme,
   getPresetId,
+  HEADER_ACCENT_KEY,
   HEADER_CHROME_VAR_KEYS,
   PRESET_DEFINITIONS,
   SEMANTIC_VAR_KEYS,
@@ -178,12 +179,14 @@ export function headerPickerColors({
     INK,
     WHITE,
   ];
-  const textOnBar = key === "--color-theme-chrome-app-bar-fg" || key === "--color-theme-chrome-app-bar-separator";
+  const textOnBar =
+    key === "--color-theme-chrome-app-bar-fg" || key === "--color-theme-chrome-app-bar-separator" || key === HEADER_ACCENT_KEY;
   const passes = (swatch: string) => checkContrast(textOnBar ? bar : swatch, textOnBar ? swatch : text).passesAA;
   const ordered = colorsByContrast(palette, textOnBar ? bar : text, !textOnBar);
   const compatible = ordered.filter(passes);
   const shown = compatible.length ? compatible : ordered.slice(0, 1);
-  const proposed = key === "--color-theme-chrome-app-bar-fg" ? inkFor(bar) : headerCompanions(bar, text)[key];
+  const proposed =
+    key === "--color-theme-chrome-app-bar-fg" ? inkFor(bar) : key === HEADER_ACCENT_KEY ? text : headerCompanions(bar, text)[key];
   const suggestion = proposed && passes(proposed) ? proposed.toUpperCase() : shown[0];
   if (!suggestion) return shown;
   return [suggestion, ...shown.filter((s) => !sameHex(s, suggestion))];
