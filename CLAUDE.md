@@ -875,8 +875,9 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   `headerLayoutAtom`). Preset changes keep it. The theme file carries it as a top-level
   `"__headerLayout"` line, which Uwazi's import skips; a file without it loads as Standard, and
   so does the removed `two-rows`. A stored `centred` reads as `menu-centred`.
-- Standard is the app bar: logo, Library with the collection picker (or the locator), Tools,
-  then the utilities with their labels. It draws no menu links.
+- Standard is the app bar: logo, Library (or the locator), Tools, then the utilities with their
+  labels. It draws no menu links. A visitor, who has no Settings dropdown, keeps the collection
+  picker beside Library.
 - Menu centred, Menu at end and Compact (`hasMenuLinks`) draw the bar partners run as a public
   site: logo, the collection's menu (Settings › Menu, `menuSettings`), utilities. One row; Compact
   is 2.5rem with the menu after the logo at `text-xs`. In these three:
@@ -893,14 +894,17 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
     link with a query is never current.
   - A group and "More" are a button with a list under it: Enter, Space and ArrowDown open
     (ArrowDown lands on the first link), the arrows move, Escape closes and returns focus.
-  - Utilities are 2rem icon buttons with a `Hint`: Beacon, Notebook and Ask Bert for signed-in
-    users, then the language as a bordered `Select` with a globe, the Library (grid), Settings
-    (gear), Log out or Log in (power) and the theme toggle. A visitor on a public collection
-    gets the menu, the language, the Library, Log in and the theme toggle.
-  - The Settings menu drops Interface language and Log out (both are in the bar) and gains the
-    Collection picker and the Tools entries, which have no button in the bar.
+  - The utilities are Standard's in every layout: Beacon, Notebook, Ask Bert, Settings (or Log in
+    for a visitor) and the theme toggle, with their labels. The menu layouts add only the links.
+  - The Settings menu gains the Tools entries, which have no button in the bar.
   - The Beacon is `overlay`: its box keeps its collapsed size and the expanded rail opens over
     the links beside it, so they neither move nor fold.
+- The collection is chosen in the Settings dropdown in every layout: the Collection row goes
+  deeper, and its list takes the dropdown's place, one collection per row, name over
+  description, the current one `bg-parchment` with a check. Enter opens on the current
+  collection; arrows, Home and End move; Escape returns to the row, and the next Escape closes
+  the dropdown and returns focus to Settings. The dropdown panel is not `overflow-hidden`: a
+  `Select` in a row opens over its edge.
 - Phones and the catalog always draw Standard at the default height; under a menu layout the
   phone menu sheet lists the menu as its own section (`NavMenuSheetSection`), a group as a label
   over its links.
@@ -913,23 +917,21 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   theme file carries a top-level `"__headerHeight"` line. Steps (`HEADER_HEIGHTS`): Default
   3.25rem, Tall 4.5rem, Extra tall 5.5rem. Compact keeps its 2.5rem: the control is disabled
   there with a note, and the stored step comes back with another layout.
-- The logo's box follows the bar (`LOGO_SIZES`, `logoSizeFor`, `utils/theme/logoFrame.ts`;
-  `Wordmark`'s `size`): Compact 112 × 24, Default 128 × 28, Tall 192 × 44, Extra tall 240 × 56
-  px. A custom logo is never enlarged; the built-in wordmark scales with the box (0.919,
-  1.444, 1.838rem). The logo adjust dialog's readout and preview strip use the chosen frame.
+- The logo keeps its box at every height (`LOGO_FRAME`, `utils/theme/logoFrame.ts`): 128 × 28 px,
+  the built-in wordmark 0.919rem; Compact 112 × 24 (`Wordmark` `size="sm"`). A custom logo is
+  never enlarged.
 - Under a taller bar controls keep their size and sit on the centre line; menu links stay
   `text-sm` at every height (`text-xs` in Compact). The current link's 2px rule is on the
-  bar's bottom edge at every height. In Standard on a tablet with Tall or Extra tall, the
-  utilities drop their labels (icons with a `Hint`): the larger logo leaves no room for them.
+  bar's bottom edge at every height.
 - The Navbar marks the root `data-header-layout` and `data-header-height`, and `index.css` sets
   `--spacing-navbar` from them (3.25rem; 2.5rem Compact; 4.5rem, 5.5rem). The Navbar never sets
   both. Anything measured from the bar reads that variable.
   `scripts/check-header-layouts.mjs <dir>` checks all four in light and dark at 1360 and 900,
-  with a full-colour bar, signed in and as a visitor (overlap, centring, 32px controls, height,
+  with a full-colour bar, signed in and as a visitor (overlap, centring, 32px menu links, link size, the utilities, the default logo box, height,
   tab order, the fold, a group by keyboard, RTL, the phone sheet, the file round trip, axe),
   then the three heights with an uploaded wide wordmark and a square badge. It takes about
-  fifteen minutes. A
-  reload returns to CEJIL, whose menu has six links and no group; the Sample's seed has one.
+  fifteen minutes. `SECTIONS=6,7` runs chosen sections; section 9 opens the Settings
+  dropdown's Collection and language lists and fails on clipped text. A reload returns to CEJIL, whose menu has six links and no group; the Sample's seed has one.
 
 ### Login and account
 - Behaviour follows Research's inventory of Uwazi (`dev/results/uwazi-auth-flows.md` in the main
